@@ -1,0 +1,388 @@
+# Tauri + Vue 3 桌面应用开发规则
+
+## 项目概述
+这是一个基于 Tauri 2.0 + Vue 3 + TypeScript 的现代化桌面应用程序，专注于PC管理功能。项目采用前后端分离架构，前端使用Vue 3 Composition API，后端使用Rust提供系统级功能。
+
+## 技术栈规范
+
+### 前端技术栈
+- **框架**: Vue 3.5+ (Composition API + `<script setup>`)
+- **语言**: TypeScript 5.6+
+- **构建工具**: Vite 6.0+
+- **包管理器**: pnpm (推荐版本 8.0+)
+- **状态管理**: Pinia (如需要)
+- **路由**: Vue Router 4+
+- **UI组件**: 优先使用原生HTML/CSS，必要时引入轻量级UI库
+
+### 后端技术栈
+- **框架**: Tauri 2.0+
+- **语言**: Rust (最新稳定版)
+- **系统API**: 通过Tauri API访问系统功能
+- **权限管理**: 遵循最小权限原则
+
+## 代码规范
+
+### Vue 3 开发规范
+```typescript
+// ✅ 推荐：使用 Composition API + <script setup>
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
+
+// 响应式数据
+const count = ref(0)
+const state = reactive({
+  loading: false,
+  data: null
+})
+
+// 计算属性
+const doubleCount = computed(() => count.value * 2)
+
+// 生命周期
+onMounted(() => {
+  // 初始化逻辑
+})
+
+// 方法定义
+const handleClick = async () => {
+  try {
+    state.loading = true
+    const result = await invoke('my_command')
+    state.data = result
+  } catch (error) {
+    console.error('操作失败:', error)
+  } finally {
+    state.loading = false
+  }
+}
+</script>
+
+<template>
+  <div class="container">
+    <h1>{{ title }}</h1>
+    <button @click="handleClick" :disabled="state.loading">
+      {{ state.loading ? '加载中...' : '点击我' }}
+    </button>
+  </div>
+</template>
+
+<style scoped>
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+</style>
+```
+
+### TypeScript 规范
+- 所有变量、函数、组件都必须有明确的类型定义
+- 使用接口定义复杂数据结构
+- 优先使用 `interface` 而非 `type` 定义对象结构
+- 使用泛型提高代码复用性
+
+```typescript
+// ✅ 推荐：明确的类型定义
+interface UserInfo {
+  id: number
+  name: string
+  email: string
+  avatar?: string
+}
+
+interface ApiResponse<T> {
+  code: number
+  message: string
+  data: T
+}
+
+const fetchUserInfo = async (id: number): Promise<ApiResponse<UserInfo>> => {
+  // 实现逻辑
+}
+```
+
+### Rust 后端规范
+```rust
+// ✅ 推荐：清晰的模块结构和错误处理
+use tauri::{command, AppHandle, Manager};
+use serde::{Deserialize, Serialize};
+use anyhow::Result;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SystemInfo {
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub disk_usage: f64,
+}
+
+#[command]
+pub async fn get_system_info() -> Result<SystemInfo, String> {
+    // 实现系统信息获取逻辑
+    Ok(SystemInfo {
+        cpu_usage: 0.0,
+        memory_usage: 0.0,
+        disk_usage: 0.0,
+    })
+}
+
+// 错误处理
+#[command]
+pub async fn risky_operation() -> Result<String, String> {
+    match some_risky_function() {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("操作失败: {}", e);
+            Err(format!("操作失败: {}", e))
+        }
+    }
+}
+```
+
+## 项目结构规范
+
+```
+PCManagement/
+├── src/                          # Vue前端源码
+│   ├── components/               # 可复用组件
+│   │   ├── common/              # 通用组件
+│   │   └── business/            # 业务组件
+│   ├── views/                   # 页面组件
+│   ├── stores/                  # Pinia状态管理
+│   ├── utils/                   # 工具函数
+│   ├── types/                   # TypeScript类型定义
+│   ├── assets/                  # 静态资源
+│   ├── App.vue                  # 根组件
+│   └── main.ts                  # 应用入口
+├── src-tauri/                   # Tauri后端源码
+│   ├── src/                     # Rust源码
+│   │   ├── commands/            # Tauri命令
+│   │   ├── utils/               # 工具函数
+│   │   ├── lib.rs               # 库入口
+│   │   └── main.rs              # 应用入口
+│   ├── Cargo.toml               # Rust项目配置
+│   └── tauri.conf.json          # Tauri应用配置
+├── public/                      # 公共静态文件
+├── .cursorrules                 # Cursor开发规则
+├── package.json                 # Node.js项目配置
+├── tsconfig.json                # TypeScript配置
+├── vite.config.ts               # Vite构建配置
+└── README.md                    # 项目文档
+```
+
+## 开发最佳实践
+
+### 1. 组件设计原则
+- **单一职责**: 每个组件只负责一个功能
+- **可复用性**: 设计通用的、可配置的组件
+- **类型安全**: 所有props和emits都要有类型定义
+- **性能优化**: 合理使用`v-memo`、`v-once`等指令
+
+### 2. 状态管理
+- 使用Pinia进行全局状态管理
+- 本地状态优先使用`ref`和`reactive`
+- 复杂状态逻辑使用`composables`
+
+### 3. 错误处理
+- 前端：使用try-catch包装异步操作
+- 后端：使用Result类型处理错误
+- 用户友好的错误提示
+
+### 4. 性能优化
+- 使用Vite的代码分割功能
+- 图片资源优化和懒加载
+- 合理使用缓存策略
+
+### 5. 安全性
+- 输入验证和清理
+- 最小权限原则
+- 敏感信息保护
+
+## Tauri 特定规范
+
+### 1. 命令定义
+```rust
+// ✅ 推荐：清晰的命令结构
+#[command]
+pub async fn get_app_info() -> Result<AppInfo, String> {
+    // 实现逻辑
+}
+
+#[command]
+pub async fn update_settings(settings: Settings) -> Result<(), String> {
+    // 实现逻辑
+}
+```
+
+### 2. 前端调用
+```typescript
+// ✅ 推荐：类型安全的API调用
+import { invoke } from '@tauri-apps/api/core'
+
+interface AppInfo {
+  name: string
+  version: string
+}
+
+const getAppInfo = async (): Promise<AppInfo> => {
+  return await invoke<AppInfo>('get_app_info')
+}
+```
+
+### 3. 权限配置
+```json
+// tauri.conf.json
+{
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'",
+      "pattern": {
+        "use": "isolation",
+        "options": {
+          "dir": "../dist-isolation"
+        }
+      }
+    }
+  },
+  "permissions": [
+    "core:default",
+    "fs:default",
+    "shell:default"
+  ]
+}
+```
+
+### 4. 安全隔离 (Isolation) 规范
+- **启用isolation**: 所有生产环境必须启用isolation
+- **CSP策略**: 配置严格的内容安全策略
+- **隔离层设计**: 保持隔离层代码简洁，只包含安全验证
+- **API安全**: 通过Tauri命令暴露安全的API接口
+- **输入验证**: 在隔离层中处理所有用户输入验证
+
+```rust
+// ✅ 推荐：安全的命令定义
+#[command]
+pub async fn secure_operation(input: String) -> Result<String, String> {
+    // 输入验证
+    if input.is_empty() || input.len() > 1000 {
+        return Err("输入无效".to_string());
+    }
+    
+    // 业务逻辑
+    match process_input(input) {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("操作失败: {}", e);
+            Err("操作失败，请重试".to_string())
+        }
+    }
+}
+```
+
+## 代码质量要求
+
+### 1. 代码风格
+- 使用Prettier进行代码格式化
+- 使用ESLint进行代码检查
+- 遵循Vue 3官方风格指南
+
+### 2. 注释规范
+```typescript
+/**
+ * 获取系统信息
+ * @param includeDetails 是否包含详细信息
+ * @returns Promise<SystemInfo> 系统信息对象
+ */
+const getSystemInfo = async (includeDetails: boolean = false): Promise<SystemInfo> => {
+  // 实现逻辑
+}
+```
+
+### 3. 测试要求
+- 关键业务逻辑必须有单元测试
+- 组件测试使用Vue Test Utils
+- 集成测试覆盖主要用户流程
+
+## 部署和构建
+
+### 1. 开发环境
+```bash
+# 启动开发模式
+pnpm tauri dev
+
+# 仅启动前端
+pnpm dev
+
+# 类型检查
+pnpm vue-tsc --noEmit
+```
+
+### 2. 生产构建
+```bash
+# 构建桌面应用
+pnpm tauri build
+
+# 构建前端
+pnpm build
+```
+
+### 3. 发布准备
+- 版本号管理遵循语义化版本
+- 更新CHANGELOG.md
+- 准备发布说明
+
+## 商业化考虑
+
+### 1. 用户体验
+- 应用启动速度优化
+- 界面响应流畅
+- 错误处理友好
+- 多语言支持准备
+
+### 2. 安全性
+- 代码混淆和加密
+- 敏感信息保护
+- 权限最小化
+- 安全更新机制
+
+### 3. 可维护性
+- 清晰的代码结构
+- 完善的文档
+- 自动化测试
+- 持续集成
+
+### 4. 扩展性
+- 插件化架构
+- 配置化管理
+- 模块化设计
+- API版本控制
+
+## 开发工具配置
+
+### VS Code 推荐插件
+- Vue - Official (Volar)
+- Tauri
+- rust-analyzer
+- TypeScript Importer
+- Prettier
+- ESLint
+
+### 开发环境变量
+```bash
+# .env.development
+VITE_APP_TITLE=PC管理工具
+VITE_APP_VERSION=1.0.0
+VITE_TAURI_DEBUG=true
+```
+
+## 注意事项
+
+1. **首次开发**: 确保Rust环境正确安装
+2. **热重载**: 前端代码修改会实时更新，Rust代码需要重启
+3. **调试**: 使用浏览器开发者工具调试前端
+4. **性能**: 注意内存使用和CPU占用
+5. **兼容性**: 测试不同Windows版本的兼容性
+
+---
+
+**遵循这些规范，确保代码质量和项目的商业化成功！** 🚀

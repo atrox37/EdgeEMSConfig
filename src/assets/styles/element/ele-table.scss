@@ -1,0 +1,328 @@
+/**
+ * Element Plus Table 组件样式定制
+ * 统一表格样式，提供现代化的视觉效�? */
+
+// 表格主体样式
+.voltage-class {
+  .el-table {
+    background-color: transparent !important; // 使el-table背景透明，优先级提升
+    .el-table__inner-wrapper {
+      &::before {
+        height: 0.01rem;
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      // 表头样式
+      .el-table__header-wrapper,
+      .el-table__body-header {
+        background: rgba(84, 98, 140, 0.2);
+
+        th {
+          background: transparent;
+
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 400;
+          font-size: 0.14rem;
+          line-height: 0.22rem;
+          // border-bottom: 0.01rem solid #e5e7eb;
+          // text-align: center !important;
+
+          &:first-child {
+            border-left: none;
+          }
+
+          &:last-child {
+            border-right: none;
+          }
+          &.el-table-fixed-column--right {
+            background-color: #243b65;
+            // box-shadow: -0.01rem 0 0.01rem 0.01rem rgba(255, 255, 255, 0.1);
+            // border-left: 0.02rem solid rgba(255, 255, 255, 0.1);
+          }
+          .cell {
+            padding: 0;
+            line-height: 0.22rem;
+            // text-align: center !important;
+            // justify-content: center;
+            // display: flex;
+            // align-items: center;
+          }
+        }
+
+        .el-table__cell {
+          padding: 0.09rem 0.2rem;
+          border: none;
+        }
+      }
+
+      // 表格主体样式
+      .el-table__body-wrapper {
+        // background-color: transparent !important; // 保证表格内容区背景透明
+        .el-scrollbar__bar.is-horizontal {
+          height: 0.06rem;
+          left: 0.02rem;
+        }
+        .el-scrollbar__bar.is-vertical {
+          top: 0.02rem;
+          width: 0.06rem;
+        }
+        td {
+          border-color: rgba(255, 255, 255, 0.1);
+          color: #fff;
+          font-size: 0.14rem;
+          line-height: 0.4rem;
+          // background-color: transparent !important; // 保证每个单元格背景透明
+          padding: 0.09rem 0.2rem;
+          &:first-child {
+            border-left: none;
+          }
+
+          &:last-child {
+            border-right: none;
+          }
+          &.el-table__cell {
+            border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+          }
+          &.el-table-fixed-column--right {
+            background-color: #203a67;
+            // box-shadow: -0.01rem 0 0.01rem 0.01rem rgba(255, 255, 255, 0.1);
+          }
+          .cell {
+            padding: 0;
+            height: 0.22rem;
+            line-height: 0.22rem;
+            display: flex;
+            align-items: center;
+            // justify-content: center;
+            text-align: center;
+          }
+        }
+        .el-table__row {
+          transition:
+            background 0.2s,
+            box-shadow 0.2s,
+            color 0.2s;
+
+          // 鼠标悬停时的行样式增�?
+          &:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            // cursor: pointer;
+            .el-table-fixed-column--right {
+              background: transparent;
+            }
+            // td {
+            //   color: #3b82f6;
+            //   font-weight: 500;
+            //   transition: color 0.2s;
+            // }
+          }
+
+          .el-table__expand-icon {
+            color: #fff;
+            font-size: 0.14rem;
+            height: 0.2rem;
+            & > .el-icon {
+              font-size: 0.14rem;
+            }
+          }
+        }
+      }
+
+      // 空数据状�?
+      .el-table__empty-block {
+        background-color: transparent; // 空数据时背景也透明
+
+        .el-table__empty-text {
+          color: #9ca3af;
+          font-size: 0.14rem;
+        }
+      }
+
+      // 固定列样�?
+      .el-table__fixed {
+        background-color: transparent; // 固定列背景透明
+        // background-color: red !important;
+        box-shadow: 0.02rem 0 0.06rem rgba(0, 0, 0, 0.06);
+
+        &.el-table__fixed--right {
+          // box-shadow: -0.02rem 0 0.06rem rgba(0, 0, 0, 0.06);
+          // background-color: red !important;
+        }
+      }
+
+      // 排序图标样式
+      .el-table__column-filter-trigger,
+      .el-table__column-resize-proxy {
+        border-color: #d1d5db;
+      }
+
+      .caret-wrapper {
+        .sort-caret {
+          border-color: #d1d5db;
+
+          &.ascending {
+            border-bottom-color: #3b82f6;
+          }
+
+          &.descending {
+            border-top-color: #3b82f6;
+          }
+        }
+      }
+      th,
+      tr,
+      td {
+        background-color: transparent;
+      }
+    }
+  }
+  .el-popper {
+    padding: 0.05rem 0.11rem;
+    font-size: 0.12rem;
+    line-height: 0.2rem;
+    .el-popper__arrow,
+    .el-popper__arrow:before {
+      height: 0.1rem;
+      width: 0.1rem;
+    }
+    &.is-dark,
+    &.is-dark > .el-popper__arrow:before {
+      border: 0.01rem solid #303133;
+    }
+  }
+  .el-pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 0.32rem;
+    margin-top: 0.2rem;
+    button {
+      height: 0.32rem;
+      font-size: 0.14rem;
+      padding: 0 0.04rem;
+      min-width: 0.32rem;
+      &.btn-prev {
+        margin-left: 0.16rem;
+      }
+      .el-icon {
+        font-size: 0.12rem;
+      }
+    }
+    .el-pagination__total {
+      color: #fff;
+      font-size: 0.14rem;
+      margin-right: 0.16rem;
+    }
+
+    .el-pagination__sizes {
+      margin-left: 0.16rem;
+      display: flex;
+      .el-select {
+        width: 1.28rem;
+        .el-select__input-wrapper {
+          height: 0.32rem;
+        }
+        .el-input__inner {
+          height: 0.32rem;
+        }
+        .el-select__input {
+          height: 0.24rem;
+        }
+      }
+    }
+    .el-pager {
+      li {
+        background-color: transparent;
+        border-radius: 0;
+        margin: 0 0.02rem;
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.14rem;
+        padding: 0 0.04rem;
+        height: 0.32rem;
+        line-height: 0.32rem;
+        min-width: 0.32rem;
+
+        &:hover {
+          background-color: transparent;
+        }
+
+        &.is-active {
+          color: #ffffff;
+          background-color: rgba(255, 255, 255, 0.1);
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        }
+      }
+    }
+
+    .btn-prev,
+    .btn-next {
+      border-radius: 0;
+      background-color: transparent;
+      color: #fff;
+
+      &:hover {
+        color: #3b82f6;
+        background-color: #f3f4f6;
+      }
+
+      &:disabled {
+        color: #d1d5db;
+        cursor: not-allowed;
+
+        &:hover {
+          background-color: transparent;
+        }
+      }
+    }
+
+    .el-pagination__jump {
+      color: #6b7280;
+      font-size: 0.14rem;
+
+      .el-input__inner {
+        border-radius: 0.06rem;
+        border-color: #d1d5db;
+        text-align: center;
+
+        &:hover {
+          border-color: #9ca3af;
+        }
+
+        &:focus {
+          border-color: #3b82f6;
+        }
+      }
+    }
+  }
+
+  // 表格操作按钮样式
+  .table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.08rem;
+
+    .el-button {
+      font-weight: 500;
+
+      &.is-small {
+        padding: 0.06rem 0.12rem;
+        font-size: 0.12rem;
+      }
+
+      &.is-text {
+        color: #3b82f6;
+
+        &:hover {
+          background-color: #eff6ff;
+        }
+      }
+    }
+    .el-table__expanded-cell {
+      background-color: transparent !important;
+    }
+  }
+}
