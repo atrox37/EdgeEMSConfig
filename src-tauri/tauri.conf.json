@@ -47,7 +47,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY4MTk5MjE3MDI2ODRCNTIKUldSU1MyZ0NGNUlaYU9lcGcrWW9laDFEazI2dlRBUmFNKzlrVnVzUmpZVzFCbXgwbi9tQUxGRkcK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc2RjE4RDFEQTJGMzE1NEQKUldSTkZmT2lIWTN4ZG5kY3VsSUtTK3NuR0N1MW5iY2I3WDI0bEQ2cVRscDFGMUpTaFBhNDk4bm8K",
       "endpoints": [
         "https://edge-desktop-configuration-application.s3.us-east-2.amazonaws.com/latest.json"
       ],
