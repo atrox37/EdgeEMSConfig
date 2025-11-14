@@ -42,7 +42,20 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-
+     
+      - name: Install Linux system dependencies
+        shell: bash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libglib2.0-dev \
+            libwebkit2gtk-4.0-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            pkg-config \
+            patchelf
       - name: Install frontend deps (pnpm)
         run: pnpm install
 
