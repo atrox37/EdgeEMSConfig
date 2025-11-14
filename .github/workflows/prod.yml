@@ -3,7 +3,7 @@ name: Build & Publish Tauri App (pnpm + S3 + 3 platforms)
 on:
   push:
     tags:
-      - "v*.*.*"   # 推 tag 时触发，例如 v1.0.0
+      - "v*.*.*"   # 推 tag 时触发，例如 v0.1.0、v1.0.0
 
 jobs:
   build:
@@ -42,9 +42,9 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-     
+
+      # 只在 Linux 安装系统依赖（Ubuntu 24.04 / noble）
       - name: Install Linux system dependencies
-        shell: bash
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
@@ -56,27 +56,30 @@ jobs:
             librsvg2-dev \
             pkg-config \
             patchelf
+
       - name: Install frontend deps (pnpm)
         run: pnpm install
 
-      # 如果你在 tauri.conf.json 的 beforeBuildCommand 里已经 build 前端，可删掉这一段
+      # 如果 tauri.conf.json 里已经配置 beforeBuildCommand，可以去掉这一步
       - name: Build frontend (optional)
         run: pnpm build
         continue-on-error: true
 
-      # 使用官方 Tauri Action 打包，对当前 OS 打出对应安装包
+      # 使用官方 Tauri Action 打包当前平台
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          # Tauri 自动更新签名私钥（从 GitHub Secrets 注入）
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # 如果你的 key 有密码，解开下面这行，并在 Secrets 配置 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }} # e.g. v1.0.0
+          tagName: ${{ github.ref_name }} # 例如 v0.1.0
           releaseName: "Edge Desktop ${{ github.ref_name }}"
           releaseBody: "Auto build from GitHub Actions"
 
-      # 收集当前平台的安装包和 .sig，放到 upload/xxx 下，准备作为 artifact
+      # 收集当前平台的安装包 + .sig，打包成 artifact
       - name: Collect bundle artifact
         shell: bash
         run: |
@@ -93,7 +96,6 @@ jobs:
           mkdir -p upload/${{ matrix.artifact_name }}
           cp "$FILE" "$SIG" "upload/${{ matrix.artifact_name }}/"
 
-      # 上传当前平台的产物为 GitHub Artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -114,7 +116,7 @@ jobs:
         with:
           node-version: 20
 
-      # 下载三个平台的 artifact
+      # 下载三个平台的构建产物
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
@@ -133,7 +135,7 @@ jobs:
           name: macos-bundle
           path: artifacts/macos
 
-      # 统一整理到 dist/{windows,linux,macos}
+      # 整理成 dist/windows | dist/linux | dist/macos 目录结构
       - name: Prepare dist layout
         shell: bash
         run: |
@@ -145,7 +147,7 @@ jobs:
           echo "dist layout:"
           ls -R dist
 
-      # 生成 latest.json（下面会给你 scripts/generate-latest.js）
+      # 生成 latest.json（脚本里会用 dist 下的文件名和 .sig）
       - name: Generate latest.json
         shell: bash
         env:
@@ -154,7 +156,7 @@ jobs:
         run: |
           node scripts/generate-latest.js ${{ github.ref_name }}
 
-      # 配置 AWS 凭证 & CLI
+      # 配好 AWS 凭证
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -165,7 +167,7 @@ jobs:
       - name: Setup AWS CLI
         uses: aws-actions/aws-cli-setup@v4
 
-      # 上传 dist（每个版本放在 releases/{tag}/ 下），并上传 latest.json 到根目录
+      # 上传 dist 和 latest.json 到 S3
       - name: Upload to S3
         shell: bash
         env:
