@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class rule-management__expand-content">
     <div class="rule-management__config-section">
       <div class="rule-management__config-header">
@@ -336,22 +336,22 @@ const handlePublish = (configRow: ActionConfig) => {
 
 <style scoped lang="scss">
 .voltage-class .rule-management__expand-content {
-  padding: 0.2rem;
+  padding: 20px;
   background-color: rgba(255, 255, 255, 0.02);
-  border-radius: 0.04rem;
-  margin: 0.1rem 0;
+  border-radius: 4px;
+  margin: 10px 0;
 
   .rule-management__config-section {
     .rule-management__config-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.15rem;
-      padding-bottom: 0.08rem;
-      border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
       .rule-management__config-title {
-        font-size: 0.16rem;
+        font-size: 16px;
         font-weight: 600;
         color: #fff;
         margin: 0;
@@ -359,13 +359,13 @@ const handlePublish = (configRow: ActionConfig) => {
 
       .rule-management__config-actions {
         display: flex;
-        gap: 0.08rem;
+        gap: 8px;
       }
     }
 
     .rule-management__tabs {
       .el-tabs__content {
-        padding: 0.1rem 0;
+        padding: 10px 0;
       }
     }
 
@@ -373,7 +373,7 @@ const handlePublish = (configRow: ActionConfig) => {
       .rule-management__table-header {
         display: flex;
         justify-content: flex-end;
-        padding-bottom: 0.1rem;
+        padding-bottom: 10px;
       }
 
       .rule-management__config-table {
@@ -381,7 +381,7 @@ const handlePublish = (configRow: ActionConfig) => {
         :deep(.el-table__body-wrapper) {
           td {
             .cell {
-              min-height: 0.32rem;
+              min-height: 32px;
             }
           }
         }
@@ -389,7 +389,7 @@ const handlePublish = (configRow: ActionConfig) => {
         .rule-management__config-cell {
           display: flex;
           align-items: center;
-          gap: 0.08rem;
+          gap: 8px;
           justify-content: center;
 
           .rule-management__config-tag {
@@ -401,7 +401,7 @@ const handlePublish = (configRow: ActionConfig) => {
 
           .rule-management__setting-icon {
             cursor: pointer;
-            font-size: 0.16rem;
+            font-size: 16px;
 
             &:hover {
               // color: #66b1ff;
@@ -413,14 +413,14 @@ const handlePublish = (configRow: ActionConfig) => {
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 0.04rem;
+          gap: 4px;
 
           &:hover {
             // color: #f78989;
           }
 
           .el-icon {
-            font-size: 0.14rem;
+            font-size: 14px;
           }
         }
 
@@ -428,14 +428,14 @@ const handlePublish = (configRow: ActionConfig) => {
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 0.04rem;
+          gap: 4px;
 
           &:hover {
             // color: #85ce61;
           }
 
           .el-icon {
-            font-size: 0.14rem;
+            font-size: 14px;
           }
         }
       }

@@ -29,7 +29,7 @@ installElMessage(app)
 // 注册自定义指令 v-permission
 app.directive('permission', permissionDirective)
 
-// 初始化响应式配置
+// 初始化响应式配置 (已禁用 rem 自适应)
 initResponsive()
 
 // 启动应用

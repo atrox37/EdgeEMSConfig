@@ -13,14 +13,14 @@
     }
     .el-menu-item,
     .el-sub-menu__title {
-      height: 0.42rem;
-      font-size: 0.14rem;
-      line-height: 0.42rem;
+      height: 42px;
+      font-size: 14px;
+      line-height: 42px;
       border-radius: 0;
-      margin-bottom: 0.28rem;
+      margin-bottom: 28px;
       background-color: transparent;
       // padding: 0 !important;
-      padding-left: 0.2rem !important;
+      padding-left: 20px !important;
       display: flex;
       align-items: center;
       .el-icon.el-sub-menu__icon-arrow {
@@ -67,13 +67,13 @@
       background: transparent !important;
       .el-menu-item {
         padding: 0;
-        padding-left: 0.65rem !important;
-        margin-bottom: 0.1rem;
-        font-size: 0.12rem;
+        padding-left: 65px !important;
+        margin-bottom: 10px;
+        font-size: 12px;
         color: #fff;
         font-weight: 700;
         font-style: Bold;
-        height: 0.36rem;
+        height: 36px;
         line-height: 100%;
         letter-spacing: 0%;
         vertical-align: middle;
@@ -97,7 +97,7 @@
   }
   // 菜单收缩时的样式
   .el-menu--collapse {
-    width: 0.44rem;
+    width: 44px;
     transition: all 0.3s ease;
     .el-menu-item,
     .el-sub-menu__title {
@@ -119,8 +119,8 @@
 }
 .el-popper.is-pure:has(.el-menu--vertical:first-child) {
   position: relative;
-  margin-left: 0.22rem;
-  border: 0.01rem solid;
+  margin-left: 22px;
+  border: 1px solid;
   border-image: linear-gradient(
       117.64deg,
       rgba(148, 166, 197, 0.3) 2.73%,
@@ -132,17 +132,17 @@
     1 !important;
 
   background: rgba(84, 98, 140, 0.2) !important;
-  backdrop-filter: blur(1rem);
+  backdrop-filter: blur(100px);
   .el-menu--popup {
-    padding: 0.1rem 0.2rem;
+    padding: 10px 20px;
     border-radius: 0;
-    min-width: 2rem;
+    min-width: 200px;
     .el-menu-item {
-      font-size: 0.12rem;
-      margin-bottom: 0.1rem;
-      height: 0.36rem;
-      line-height: 0.36rem;
-      padding-left: 0.3rem;
+      font-size: 12px;
+      margin-bottom: 10px;
+      height: 36px;
+      line-height: 36px;
+      padding-left: 30px;
       &.is-active {
         background: rgba(255, 105, 0, 0.2);
         color: rgba(255, 105, 0, 1);
@@ -155,16 +155,16 @@
   }
   &::after {
     content: '';
-    width: 0.1rem;
-    height: 0.1rem;
+    width: 10px;
+    height: 10px;
     position: absolute;
-    top: 0.1rem;
-    left: -0.055rem;
+    top: 10px;
+    left: -5.5px;
     background: linear-gradient(45deg, #374b73 50%, transparent 50%);
     // background-color: #213961;
     transform: rotate(45deg);
-    border-bottom: 0.01rem solid #415479;
-    border-left: 0.01rem solid #415479;
+    border-bottom: 1px solid #415479;
+    border-left: 1px solid #415479;
     z-index: 99;
   }
 }

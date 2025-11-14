@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="voltage-class action-change-value-form">
-    <el-form ref="formRef" label-width="1.2rem" :model="cardData">
+    <el-form ref="formRef" label-width="120px" :model="cardData">
       <!-- 基础设置 -->
       <div class="section">
         <div class="section__header">
@@ -11,7 +11,7 @@
             <el-input v-model="cardData.label" />
           </el-form-item>
           <el-form-item label="description" prop="description" style="margin-bottom: 0">
-            <el-input v-model="cardData.description" style="width: 3.48rem !important" />
+            <el-input v-model="cardData.description" style="width: 348px !important" />
           </el-form-item>
         </div>
       </div>
@@ -48,7 +48,7 @@
             <el-input v-model="row.value" class="data-row__value" placeholder="value" />
             <el-button
               class="data-row__delete"
-              style="width: 0.38rem !important"
+              style="width: 38px !important"
               type="warning"
               @click="removeRule(idx)"
             >
@@ -115,31 +115,31 @@ defineExpose({ validateForm })
 .voltage-class {
   .action-change-value-form {
     .section {
-      margin-bottom: 0.24rem;
+      margin-bottom: 24px;
 
       .section__header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 0.12rem;
+        margin-bottom: 12px;
 
         .section__title {
           font-weight: 700;
           color: #fff;
-          font-size: 0.18rem;
+          font-size: 18px;
         }
 
         .section__add-btn {
-          padding: 0 0.04rem;
+          padding: 0 4px;
         }
       }
 
       .section__body {
         display: flex;
         flex-direction: column;
-        gap: 0.12rem;
+        gap: 12px;
         &.data {
-          max-height: 2.5rem;
+          max-height: 250px;
           overflow-y: auto;
         }
       }
@@ -148,16 +148,16 @@ defineExpose({ validateForm })
     .data-row {
       display: flex;
       align-items: center;
-      gap: 0.08rem;
+      gap: 8px;
     }
     .data-row__select {
-      width: 2rem;
+      width: 200px;
     }
     .data-row__value {
-      width: 2rem;
+      width: 200px;
     }
     .data-row__delete {
-      padding: 0 0.04rem;
+      padding: 0 4px;
     }
   }
 }

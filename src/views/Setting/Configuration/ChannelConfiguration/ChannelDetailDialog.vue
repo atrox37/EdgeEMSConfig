@@ -1,11 +1,11 @@
-<template>
-  <FormDialog ref="formDialogRef" title="Channel Details" width="9.24rem" @close="handleClose">
+﻿<template>
+  <FormDialog ref="formDialogRef" title="Channel Details" width="924px" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class channel-detail-dialog">
         <el-form
           :model="form"
           :inline="true"
-          label-width="1.4rem"
+          label-width="140px"
           :disabled="!isEditing"
           ref="formRef"
         >
@@ -44,7 +44,7 @@
               </template>
               <el-switch v-else v-model="form.enabled" />
             </el-form-item>
-            <el-form-item label="Description:" style="width: calc(100% - 0.1rem); margin-right: 0">
+            <el-form-item label="Description:" style="width: calc(100% - 10px); margin-right: 0">
               <span v-if="!isEditing" class="channel-detail__text">{{
                 form.description || '-'
               }}</span>
@@ -75,7 +75,7 @@
                     v-else
                     v-model="(form.parameters.parameters as any).host"
                     placeholder="Host"
-                    style="width: calc(100% - 0.1rem) !important"
+                    style="width: calc(100% - 10px) !important"
                   />
                 </el-form-item>
                 <el-form-item label="Port:" class="channel-detail__parameter-item">
@@ -646,39 +646,39 @@ defineExpose({
 
 <style scoped lang="scss">
 .voltage-class .channel-detail-dialog {
-  max-height: 6rem;
+  max-height: 600px;
   overflow-y: auto;
   .channel-detail__section {
-    margin-bottom: 0.3rem;
-    padding-bottom: 0.2rem;
-    border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
     &:last-child {
       border-bottom: none;
     }
 
     .channel-detail__section-title {
-      font-size: 0.16rem;
+      font-size: 16px;
       font-weight: 600;
       color: #fff;
-      margin: 0 0 0.15rem 0;
+      margin: 0 0 15px 0;
     }
 
     .channel-detail__parameters {
       .channel-detail__parameter-item {
-        // margin-bottom: 0.1rem;
-        // width: calc(50% - 0.1rem);
+        // margin-bottom: 10px;
+        // width: calc(50% - 10px);
       }
     }
   }
 
   .el-form-item {
-    margin-bottom: 0.15rem;
+    margin-bottom: 15px;
   }
 
   .channel-detail__text {
     color: #fff;
-    font-size: 0.14rem;
+    font-size: 14px;
     line-height: 1.5;
   }
 }

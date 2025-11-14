@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="card">
     <div class="card__container">
       <div class="card__left">
@@ -45,11 +45,11 @@ const props = defineProps<{
     .card__left {
       display: flex;
       align-items: center;
-      margin-right: 0.23rem;
+      margin-right: 23px;
 
       .card__left-icon {
-        width: 0.536rem;
-        height: 0.586rem;
+        width: 53.6px;
+        height: 58.6px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -73,24 +73,24 @@ const props = defineProps<{
       .card__right-top {
         .card__right-title {
           font-weight: 400;
-          font-size: 0.16rem;
-          line-height: 0.22rem;
+          font-size: 16px;
+          line-height: 22px;
         }
       }
 
       .card__right-bottom {
-        margin-top: 0.05rem;
-        height: 0.32rem;
+        margin-top: 5px;
+        height: 32px;
 
         .card__right-value {
           font-weight: 700;
-          font-size: 0.3rem;
-          line-height: 0.32rem;
+          font-size: 30px;
+          line-height: 32px;
           color: #ffffff;
 
           .card__right-unit {
             font-weight: 700;
-            font-size: 0.14rem;
+            font-size: 14px;
             color: rgba(255, 255, 255, 0.6);
           }
         }

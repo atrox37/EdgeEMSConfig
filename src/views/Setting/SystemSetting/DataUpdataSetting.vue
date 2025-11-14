@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class data-update-setting">
     <ModuleCard title="Data Upload">
       <el-form
@@ -6,7 +6,7 @@
         :model="formData"
         :rules="rules"
         class="data-update-form"
-        label-width="1.35rem"
+        label-width="135px"
         label-position="right"
       >
         <!-- Enable 开关，仅展示，不改动原有逻辑 -->
@@ -354,7 +354,7 @@ const handleUpdate = async () => {
   .data-update-form {
     width: 100%;
     height: 100%;
-    // margin: 0.2rem 0;
+    // margin: 20px 0;
     overflow-y: auto;
 
     // 折叠面板样式
@@ -363,7 +363,7 @@ const handleUpdate = async () => {
       background: transparent;
 
       & > div {
-        margin-bottom: 0.2rem;
+        margin-bottom: 20px;
 
         &:last-child {
           margin-bottom: 0;
@@ -371,26 +371,26 @@ const handleUpdate = async () => {
       }
 
       // :deep(.el-collapse-item) {
-      //   margin-bottom: 0.2rem;
+      //   margin-bottom: 20px;
       //   border: 1px solid rgba(255, 255, 255, 0.1);
-      //   border-radius: 0.08rem;
+      //   border-radius: 8px;
       //   overflow: hidden;
       //   background: rgba(44, 66, 106, 0.1);
 
       //   .el-collapse-item__header {
       //     background: linear-gradient(90deg, rgba(44, 66, 106, 0.8) 0%, rgba(44, 66, 106, 0.4) 100%);
       //     color: #ffffff;
-      //     font-size: 0.16rem;
+      //     font-size: 16px;
       //     font-weight: 600;
-      //     padding: 0.12rem 0.2rem;
+      //     padding: 12px 20px;
       //     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       //     height: auto;
       //     line-height: 1.5;
 
       //     .el-collapse-item__arrow {
       //       color: #ffffff;
-      //       font-size: 0.14rem;
-      //       margin-right: 0.1rem;
+      //       font-size: 14px;
+      //       margin-right: 10px;
       //     }
 
       //     &:hover {
@@ -416,11 +416,11 @@ const handleUpdate = async () => {
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      padding-right: 0.1rem;
+      padding-right: 10px;
 
       .collapse-title__text {
         flex: 1;
-        font-size: 0.16rem;
+        font-size: 16px;
         font-weight: 600;
         color: #ffffff;
       }
@@ -428,10 +428,10 @@ const handleUpdate = async () => {
 
     // 折叠面板内容样式
     .collapse-content {
-      padding: 0.2rem;
+      padding: 20px;
 
       .el-form-item {
-        margin-bottom: 0.2rem;
+        margin-bottom: 20px;
 
         &:last-child {
           margin-bottom: 0;
@@ -449,10 +449,10 @@ const handleUpdate = async () => {
   .connection-status {
     display: flex;
     align-items: center;
-    gap: 0.1rem;
+    gap: 10px;
 
     .loading-icon {
-      font-size: 0.16rem;
+      font-size: 16px;
       color: #ff6900;
       animation: rotate 1s linear infinite;
     }
@@ -468,11 +468,11 @@ const handleUpdate = async () => {
   }
   .card__content-footer {
     display: flex;
-    padding: 0.3rem 0 0.1rem 0;
+    padding: 30px 0 10px 0;
     width: 100%;
     justify-content: space-between;
     align-items: center;
-    // gap: 0.1rem;
+    // gap: 10px;
   }
 }
 </style>

@@ -1,5 +1,5 @@
-<template>
-  <FormDialog title="Device Instance Detail" width="8rem" ref="dialogRef" @close="handleClose">
+﻿<template>
+  <FormDialog title="Device Instance Detail" width="800px" ref="dialogRef" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class instance-detail">
         <!-- 基础信息 -->
@@ -9,7 +9,7 @@
             ref="formRef"
             :model="form"
             :rules="rules"
-            label-width="1.2rem"
+            label-width="120px"
             class="instance-detail__form"
           >
             <el-form-item v-if="!isCreateMode" label="Instance ID:" prop="instance_id">
@@ -108,7 +108,7 @@
                 type="primary"
                 size="small"
                 @click="addProperty('', '')"
-                style="margin-left: 0.1rem"
+                style="margin-left: 10px"
                 circle
               >
                 <el-icon>
@@ -335,71 +335,71 @@ defineExpose({ open, close })
 
 <style scoped lang="scss">
 .voltage-class .instance-detail {
-  //   max-height: 8rem;
+  //   max-height: 800px;
   overflow-y: auto;
 
   .instance-detail__section-title {
-    font-size: 0.16rem;
+    font-size: 16px;
     font-weight: 600;
     color: #fff;
-    margin-bottom: 0.1rem;
-    // border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 10px;
+    // border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .instance-detail__form {
     .el-form-item {
-      // margin-bottom: 0.15rem;
-      // margin-right: 0.2rem;
+      // margin-bottom: 15px;
+      // margin-right: 20px;
       align-items: flex-start !important;
     }
   }
 
   .instance-detail__readonly-text {
     color: #fff;
-    font-size: 0.14rem;
+    font-size: 14px;
   }
   :deep(.el-form-item__content) {
     align-items: flex-start !important;
   }
   .instance-detail__properties {
-    max-height: 3rem;
+    max-height: 300px;
     overflow-y: auto;
     overflow-x: visible;
-    // border: 0.01rem solid #dcdfe6;
-    // border-radius: 0.04rem;
-    // padding: 0.1rem;
+    // border: 1px solid #dcdfe6;
+    // border-radius: 4px;
+    // padding: 10px;
     background-color: transparent;
     position: relative;
-    padding: 0.05rem 0;
+    padding: 5px 0;
 
     .instance-detail__property-item {
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 0.05rem;
-      // padding: 0.04rem;
+      gap: 5px;
+      // padding: 4px;
       background-color: transparent;
-      // border-radius: 0.03rem;
-      border-top: 0.01rem solid #e4e7ed;
-      min-height: 0.32rem;
+      // border-radius: 3px;
+      border-top: 1px solid #e4e7ed;
+      min-height: 32px;
       position: relative;
-      padding: 0.05rem 0;
+      padding: 5px 0;
 
       &:last-child {
-        // padding-bottom: 0.05rem;
-        border-bottom: 0.01rem solid #e4e7ed;
+        // padding-bottom: 5px;
+        border-bottom: 1px solid #e4e7ed;
       }
     }
 
     .instance-detail__property-content {
       display: flex;
       align-items: center;
-      gap: 0.05rem;
+      gap: 5px;
       flex: 1;
     }
 
     .instance-detail__property-key-container {
-      // flex: 0 0 1.2rem; // 固定宽度，较小
+      // flex: 0 0 120px; // 固定宽度，较小
     }
 
     .instance-detail__property-value-container {
@@ -416,14 +416,14 @@ defineExpose({ open, close })
 
     .instance-detail__property-key,
     .instance-detail__property-value {
-      font-size: 0.14rem;
+      font-size: 14px;
       color: #fff;
       word-break: break-all;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       display: block;
-      min-width: 2.4rem;
+      min-width: 240px;
     }
 
     .instance-detail__property-key {
@@ -433,9 +433,9 @@ defineExpose({ open, close })
     .instance-detail__property-separator {
       color: #fff;
       font-weight: bold;
-      margin: 0 0.02rem;
+      margin: 0 2px;
       flex-shrink: 0;
-      font-size: 0.16rem;
+      font-size: 16px;
     }
   }
 }

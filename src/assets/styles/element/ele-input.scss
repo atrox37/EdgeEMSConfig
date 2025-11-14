@@ -5,8 +5,8 @@
   // Input 基础样式
 
   .el-input {
-    height: 0.32rem !important;
-    width: 2.4rem !important;
+    height: $size-input-height !important;
+    width: $size-input-width !important;
     // 输入框容�?
     &.is-disabled {
       .el-input__wrapper {
@@ -15,13 +15,13 @@
     }
     .el-input__wrapper {
       padding: 0 !important;
-      height: 0.32rem !important;
+      height: $size-input-height !important;
       display: flex !important;
       align-items: center !important;
       position: relative !important;
       background-color: $bg-color-input !important;
       box-shadow: none !important;
-      border: 0.01rem solid $border-color-base !important;
+      border: 1px solid $border-color-base !important;
       border-radius: $border-radius-base !important;
       // outline: none !important;
       // 聚焦状�?
@@ -38,7 +38,7 @@
 
       // 禁用状�?
       &.is-disabled {
-        background-color: transparent !important;
+        background-color: $bg-transparent !important;
       }
 
       // 只读状�?
@@ -49,13 +49,13 @@
     .el-input__inner {
       border: none !important;
       outline: none !important;
-      background: transparent !important;
+      background: $bg-transparent !important;
       color: $text-color-primary !important;
       font-size: $font-size-base !important;
       line-height: $line-height-normal !important;
       width: 100% !important;
       height: 100% !important;
-      padding: 0 0.12rem !important;
+      padding: 0 $spacing-sm !important;
       border-radius: $border-radius-base !important;
       border-color: $border-color-base !important;
       &::placeholder {
@@ -63,12 +63,12 @@
       }
 
       &:disabled {
-        color: #999 !important;
+        color: $color-gray !important;
         cursor: not-allowed !important;
       }
 
       &:read-only {
-        color: #fff !important ;
+        color: $color-white !important ;
       }
     }
 
@@ -83,36 +83,35 @@
       justify-content: center !important;
       .el-input__prefix-inner,
       .el-input__suffix-inner {
-        line-height: 0.16rem !important;
+        line-height: $size-icon-base !important;
         width: 100% !important;
         height: 100% !important;
         .el-input__icon {
           width: 100% !important;
           height: 100% !important;
-          font-size: 0.16rem !important;
+          font-size: $size-icon-base !important;
           margin: 0 !important;
         }
       }
     }
     .el-input__prefix {
-      padding-left: 0.05rem !important;
+      padding-left: $spacing-tiny !important;
     }
     .el-input__suffix {
-      padding-right: 0.05rem !important;
+      padding-right: $spacing-tiny !important;
     }
 
     // 密码显示切换按钮
     .el-input__password {
-      width: 0.16rem !important;
-      height: 0.16rem !important;
-      font-size: 0.16rem !important;
+      width: $size-icon-base !important;
+      height: $size-icon-base !important;
+      font-size: $size-icon-base !important;
       // color: rgb(168, 171, 178) !important;
       cursor: pointer !important;
       transition: color $transition-fast !important;
-      // margin-right: 0.1rem !important;
 
       // &:hover {
-      //   color: #fff !important;
+      //   color: $color-white !important;
       // }
     }
 
@@ -164,15 +163,15 @@
   // Input 类型变体
   .el-textarea {
     .el-textarea__inner {
-      border-radius: 0 !important;
-      border: 0.01rem solid rgba(148, 166, 197, 0.3) !important;
+      border-radius: $border-radius-base !important;
+      border: 1px solid $border-color-base !important;
       background-color: $bg-color-input !important;
       color: $text-color-primary !important;
-      font-size: 0.14rem !important;
+      font-size: $font-size-base !important;
       line-height: $line-height-relaxed !important;
       padding: $spacing-sm !important;
       resize: vertical !important;
-      min-height: 0.64rem !important;
+      min-height: 64px !important;
       transition: all $transition-base !important;
       box-shadow: none !important;
       &:focus {
@@ -195,24 +194,24 @@
   }
 
   .el-input-number {
-    line-height: 0.32rem;
-    width: 2.4rem !important;
+    line-height: $size-input-height;
+    width: $size-input-width !important;
     .el-input {
       width: 100% !important;
     }
     .el-input-number__decrease,
     .el-input-number__increase {
-      width: 0.32rem;
-      font-size: 0.13rem;
-      top: 0.01rem;
-      bottom: 0.01rem;
-      border-radius: 0;
+      width: $size-input-height;
+      font-size: $font-size-small;
+      top: 1px;
+      bottom: 1px;
+      border-radius: $border-radius-base;
     }
     .el-input-number__decrease {
-      border-right: 0.01rem solid $border-color-base;
+      border-right: 1px solid $border-color-base;
     }
     .el-input-number__increase {
-      border-left: 0.01rem solid $border-color-base;
+      border-left: 1px solid $border-color-base;
     }
   }
 }

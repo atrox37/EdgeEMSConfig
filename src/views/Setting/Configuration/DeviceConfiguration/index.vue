@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class rule-management">
     <LoadingBg :loading="loading">
       <div class="rule-management__header">
@@ -10,7 +10,6 @@
                 placeholder="Please select productName"
                 clearable
                 filterable
-                :append-to="levelSelectRef"
               >
                 <el-option
                   v-for="opt in productOptions"
@@ -58,26 +57,51 @@
           <el-table-column prop="instance_id" label="ID" />
           <el-table-column prop="instance_name" label="Instance Name" />
           <el-table-column prop="product_name" label="Product Name" />
-          <el-table-column label="Operation" fixed="right">
+          <el-table-column label="Operation" fixed="right" :width="isNarrow ? 80 : 380">
             <template #default="{ row }">
-              <div class="rule-management__operation">
-                <div class="rule-management__operation-item" @click="handleDetail(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Detail</span>
-                </div>
-                <div class="rule-management__operation-item" @click="openPointsDialog(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Points</span>
-                </div>
-                <div class="rule-management__operation-item" @click="openMappingsDialog(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Mappings</span>
-                </div>
-                <div class="rule-management__operation-item" @click="handleDelete(row)">
-                  <img :src="tableDeleteIcon" />
-                  <span class="rule-management__operation-text">Delete</span>
-                </div>
-              </div>
+              <OperationDropdown @command="(cmd) => handleOperationCommand(cmd, row)">
+                <!-- 宽屏：显示所有按钮 -->
+                <template #buttons>
+                  <div class="rule-management__operation">
+                    <div class="rule-management__operation-item" @click="handleDetail(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Detail</span>
+                    </div>
+                    <div class="rule-management__operation-item" @click="openPointsDialog(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Points</span>
+                    </div>
+                    <div class="rule-management__operation-item" @click="openMappingsDialog(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Mappings</span>
+                    </div>
+                    <div class="rule-management__operation-item" @click="handleDelete(row)">
+                      <img :src="tableDeleteIcon" />
+                      <span class="rule-management__operation-text">Delete</span>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- 窄屏：下拉菜单项 -->
+                <template #dropdown>
+                  <el-dropdown-item command="detail">
+                    <img :src="tableEditIcon" />
+                    Detail
+                  </el-dropdown-item>
+                  <el-dropdown-item command="points">
+                    <img :src="tableEditIcon" />
+                    Points
+                  </el-dropdown-item>
+                  <el-dropdown-item command="mappings">
+                    <img :src="tableEditIcon" />
+                    Mappings
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete">
+                    <img :src="tableDeleteIcon" />
+                    Delete
+                  </el-dropdown-item>
+                </template>
+              </OperationDropdown>
             </template>
           </el-table-column>
         </el-table>
@@ -118,10 +142,12 @@ import tableEditIcon from '@/assets/icons/table-edit.svg'
 import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import InstanceDetailDialog from './InstanceDetailDialog.vue'
 import PointsTablesDialog from './PointsTablesDialog.vue'
+import OperationDropdown from '@/components/common/OperationDropdown.vue'
 import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { getProducts } from '@/api/devicesManagement'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
+import { useResponsive } from '@/composables/useResponsive'
 import MappingsDialog from './components/MappingsDialog.vue'
 const tableConfig: TableConfig = {
   listUrl: '/modApi/api/instances',
@@ -140,6 +166,9 @@ const {
 } = useTableData<DeviceInstanceBasic>(tableConfig)
 
 filters.product_name = ''
+
+// 使用响应式监听
+const { isNarrow } = useResponsive()
 
 const levelSelectRef = ref<HTMLElement | null>(null)
 
@@ -220,6 +249,24 @@ const handleSearch = () => {
 const handleDetailSubmit = () => {
   fetchTableData()
 }
+
+// 处理操作下拉菜单命令
+const handleOperationCommand = (command: string, row: DeviceInstanceBasic) => {
+  switch (command) {
+    case 'detail':
+      handleDetail(row)
+      break
+    case 'points':
+      openPointsDialog(row)
+      break
+    case 'mappings':
+      openMappingsDialog(row)
+      break
+    case 'delete':
+      handleDelete(row)
+      break
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -231,57 +278,58 @@ const handleDetailSubmit = () => {
   flex-direction: column;
 
   .rule-management__header {
-    margin: 0.2rem 0;
+    margin: 20px 0;
 
     .rule-management__search-form {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      //   padding-bottom: 0.2rem;
+      //   padding-bottom: 20px;
       :deep(.el-form-item) {
         margin: 0;
       }
       .form-oprations {
         display: flex;
         align-items: flex-start;
-        gap: 0.1rem;
+        gap: 10px;
       }
     }
 
     .rule-management__table-operations {
       width: 100%;
-      //   padding-top: 0.2rem;
-      //   border-top: 0.01rem solid rgba(255, 255, 255, 0.1);
+      //   padding-top: 20px;
+      //   border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .rule-management__btn {
       display: flex;
       align-items: center;
-      gap: 0.08rem;
+      gap: 8px;
 
       .rule-management__btn-icon {
-        width: 0.14rem;
-        height: 0.14rem;
-        margin-right: 0.08rem;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
       }
     }
   }
 
   .rule-management__table {
-    height: calc(100% - 0.72rem);
-    // max-width: 16.6rem;
+    // height: calc(100% - 72px);
+    flex: 1;
+    // max-width: 1660px;
     display: flex;
     flex-direction: column;
 
     .rule-management__table-content {
-      height: calc(100% - 0.92rem);
+      height: calc(100% - 92px);
       overflow-y: auto;
 
       .rule-management__operation {
         display: flex;
         align-items: center;
-        gap: 0.2rem;
+        gap: 20px;
 
         .rule-management__operation-item {
           cursor: pointer;
@@ -289,17 +337,17 @@ const handleDetailSubmit = () => {
           align-items: center;
 
           img {
-            width: 0.14rem;
-            height: 0.14rem;
-            margin-right: 0.04rem;
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
             object-fit: contain;
           }
         }
       }
 
       .rule-management__table-icon {
-        width: 0.46rem;
-        height: 0.2rem;
+        width: 46px;
+        height: 20px;
         object-fit: contain;
       }
     }
@@ -307,7 +355,7 @@ const handleDetailSubmit = () => {
     .rule-management__pagination {
       display: flex;
       justify-content: flex-end;
-      margin: 0.2rem 0;
+      // margin: 20px 0;
     }
   }
 }

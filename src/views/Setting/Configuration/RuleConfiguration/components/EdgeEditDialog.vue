@@ -1,8 +1,8 @@
-<template>
-  <FormDialog ref="formDialogRef" title="Edit Connection" width="5rem" @close="handleClose">
+﻿<template>
+  <FormDialog ref="formDialogRef" title="Edit Connection" width="500px" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class edge-edit-dialog">
-        <el-form label-width="1.2rem">
+        <el-form label-width="120px">
           <el-form-item v-if="ruleLabelOptions && ruleLabelOptions.length" label="ruleLabel:">
             <el-select v-model="localEdge.label" placeholder="Select rule label">
               <el-option v-for="opt in ruleLabelOptions" :key="opt" :label="opt" :value="opt" />

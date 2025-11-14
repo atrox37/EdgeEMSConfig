@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="null"
+    :title="title"
     :modal="true"
     :close-on-click-modal="false"
     :append-to-body="true"

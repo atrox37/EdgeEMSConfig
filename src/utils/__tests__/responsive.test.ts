@@ -52,9 +52,12 @@ describe('Responsive Utils', () => {
   })
 
   describe('pxToRem', () => {
-    it('should convert design px to rem', () => {
+    it('should convert design px to px (previously converted to rem)', () => {
+      // 注意：项目已从 rem 转换为固定 px 值
+      // 原先：100px 设计稿值 → 1rem
+      // 现在：100px 设计稿值 → 100px
       const result = pxToRem(100)
-      expect(result).toBe('1rem')
+      expect(result).toBe('100px')
     })
   })
 

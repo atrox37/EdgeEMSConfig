@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class loginPage">
     <header class="loginPage__header">
       <div class="loginPage__head-title">
@@ -15,7 +15,9 @@
             <el-form-item label="Password" prop="password">
               <el-input v-model="form.password" type="password" />
             </el-form-item>
-            <el-button type="primary" @click="handleLogin(formRef)">Log in</el-button>
+            <el-button type="primary" @click="handleLogin(formRef)" :loading="isLoading"
+              >Log in</el-button
+            >
           </el-form>
         </div>
       </ModuleCard>
@@ -28,7 +30,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
-import wsManager from '@/utils/websocket'
+// import wsManager from '@/utils/websocket'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
@@ -37,6 +39,7 @@ const form = reactive<LoginParams>({
   username: '',
   password: '',
 })
+const isLoading = ref(false)
 const formRules = reactive<FormRules<LoginParams>>({
   username: [{ required: true, message: 'Please enter your username', trigger: 'blur' }],
   password: [
@@ -53,23 +56,30 @@ const userStore = useUserStore()
 const handleLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate(async (valid: boolean) => {
-    if (valid) {
-      const res = await userStore.login(form)
-      if (res.success) {
-        const userInfo = await userStore.getUserInfo()
-        if (userInfo.success) {
-          wsManager.connect()
-          const redirect = router.currentRoute.value.query.redirect as string
-          if (redirect) {
-            router.push({ path: redirect })
-          } else {
-            router.push({ path: '/' })
+    try {
+      if (valid) {
+        isLoading.value = true
+        const res = await userStore.login(form)
+        if (res.success) {
+          const userInfo = await userStore.getUserInfo()
+          if (userInfo.success) {
+            // wsManager.connect()
+            const redirect = router.currentRoute.value.query.redirect as string
+            if (redirect) {
+              router.push({ path: redirect })
+            } else {
+              router.push({ path: '/' })
+            }
           }
         }
+        // 这里可以添加登录请求逻辑
+      } else {
+        console.log('表单校验未通过')
       }
-      // 这里可以添加登录请求逻辑
-    } else {
-      console.log('表单校验未通过')
+    } catch (error) {
+      console.error('登录失败:', error)
+    } finally {
+      isLoading.value = false
     }
   })
 }

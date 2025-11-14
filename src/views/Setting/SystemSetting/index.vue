@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class system-setting">
     <div class="system-setting-left">
       <TimeSetting />
@@ -21,12 +21,12 @@ import DataUpdataSetting from './DataUpdataSetting.vue'
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.2rem;
+  gap: 20px;
 
   .system-setting-left,
   .system-setting-right {
-    width: calc((50% - 0.1rem));
-    height: 3.12rem;
+    width: calc((50% - 10px));
+    height: 312px;
   }
 }
 </style>

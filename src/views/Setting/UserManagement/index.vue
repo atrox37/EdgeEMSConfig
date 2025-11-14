@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class user-management">
     <div class="user-management__header">
       <IconButton
@@ -190,45 +190,45 @@ const getAvatarName = (name: string): string => {
   .user-management__header {
     display: flex;
     align-items: center;
-    margin-bottom: 0.2rem;
+    margin-bottom: 20px;
 
     .user-management__add-btn {
       display: flex;
       align-items: center;
-      gap: 0.08rem;
+      gap: 8px;
 
       .user-management__add-btn-icon {
-        width: 0.14rem;
-        height: 0.14rem;
-        margin-right: 0.08rem;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
       }
     }
   }
 
   .user-management__table {
-    height: calc(100% - 0.52rem);
+    height: calc(100% - 52px);
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 0.1rem;
-      height: 0.4rem;
+      gap: 10px;
+      height: 40px;
 
       .user-avatar {
-        width: 0.4rem;
-        height: 0.4rem;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         background-color: rgba(29, 134, 255, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.19rem;
+        font-size: 19px;
         letter-spacing: 0%;
         color: rgba(29, 134, 255, 1);
       }
 
       .user-name {
-        font-size: 0.16rem;
+        font-size: 16px;
         letter-spacing: 0%;
         color: rgba(255, 255, 255, 1);
       }
@@ -236,13 +236,13 @@ const getAvatarName = (name: string): string => {
 
     .user-management__table-content {
       width: 100%;
-      height: calc(100% - 0.92rem);
+      height: calc(100% - 92px);
       overflow-y: auto;
 
       .user-management__operation {
         display: flex;
         align-items: center;
-        gap: 0.2rem;
+        gap: 20px;
 
         .user-management__operation-item {
           cursor: pointer;
@@ -250,9 +250,9 @@ const getAvatarName = (name: string): string => {
           align-items: center;
 
           img {
-            width: 0.14rem;
-            height: 0.14rem;
-            margin-right: 0.04rem;
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
             object-fit: contain;
           }
         }
@@ -262,19 +262,19 @@ const getAvatarName = (name: string): string => {
     .user-management__pagination {
       display: flex;
       justify-content: flex-end;
-      margin: 0.2rem 0;
+      margin: 20px 0;
     }
   }
 }
 
 :deep(.el-form.el-form--inline .el-form-item) {
-  margin-bottom: 0.4rem !important;
+  margin-bottom: 40px !important;
 }
 
 :deep(.el-table .el-table__inner-wrapper .el-table__body-wrapper td .cell) {
-  height: 0.4rem !important;
+  height: 40px !important;
 }
 .user-management__operation-column {
-  width: 1.2rem !important;
+  width: 120px !important;
 }
 </style>

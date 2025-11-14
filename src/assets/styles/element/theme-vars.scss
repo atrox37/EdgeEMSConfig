@@ -1,26 +1,56 @@
 /* Element Plus 主题变量定义 */
 
-// 主色�?
+/* ==================== 颜色变量 ==================== */
+
+// 主题色
 $primary-color: rgba(255, 105, 0, 1);
-$primary-color-hover: #5a6fd8;
-$primary-color-active: #4f5fc6;
+$primary-color-hover: #ff8733;
+$primary-color-alpha-10: rgba(255, 105, 0, 0.1);
+$primary-color-alpha-20: rgba(255, 105, 0, 0.2);
 
-// 功能�?
+// 功能色
 $success-color: #52c41a;
-$success-color-hover: #49aa15;
-$success-color-active: #409611;
-
 $warning-color: #faad14;
-$warning-color-hover: #e6a017;
-$warning-color-active: #d29213;
-
 $danger-color: #ff4d4f;
-$danger-color-hover: #e64447;
-$danger-color-active: #cc3b3f;
-
 $info-color: #8c8c8c;
-$info-color-hover: #7a7a7a;
-$info-color-active: #686868;
+
+// 白色透明度系列
+$color-white: #ffffff;
+$color-white-alpha-05: rgba(255, 255, 255, 0.05);
+$color-white-alpha-10: rgba(255, 255, 255, 0.1);
+$color-white-alpha-15: rgba(255, 255, 255, 0.15);
+$color-white-alpha-20: rgba(255, 255, 255, 0.2);
+$color-white-alpha-25: rgba(255, 255, 255, 0.25);
+$color-white-alpha-30: rgba(255, 255, 255, 0.3);
+$color-white-alpha-50: rgba(255, 255, 255, 0.5);
+$color-white-alpha-60: rgba(255, 255, 255, 0.6);
+
+// 深蓝色背景系列
+$bg-dark-blue-main: #212c49;
+$bg-dark-blue-light: rgba(84, 98, 140, 0.2);
+$bg-dark-blue-hover: rgba(30, 47, 80, 0.3);
+$bg-dark-blue-deeper: rgba(84, 98, 140, 0.1);
+$bg-dark-blue-alt1: #1f2e4a;
+$bg-dark-blue-alt2: #243b65;
+$bg-dark-blue-alt3: #203a67;
+$bg-dark-blue-alt4: #12274a;
+$bg-dark-blue-alt5: #253c67;
+$bg-time-picker: rgba(26, 48, 86, 1);
+$bg-button-hover: #505f79;
+
+// 其他背景色
+$bg-table-row-hover: rgba(255, 255, 255, 0.05);
+$bg-transparent: transparent;
+
+// 灰色系
+$color-gray: #999;
+$color-gray-light: #9ca3af;
+$color-gray-border: rgba(128, 128, 128, 0.5);
+$color-gray-border-solid: #7a8092;
+$color-scrollbar-thumb: rgba(39, 68, 113, 0.7);
+$color-scrollbar-track-alt: #f1f1f1;
+$color-scrollbar-thumb-alt: #c1c1c1;
+$color-scrollbar-thumb-alt-hover: #a8a8a8;
 
 // 中性色
 $text-color-primary: rgba(255, 255, 255, 1);
@@ -29,31 +59,58 @@ $text-color-secondary: #8c8c8c;
 $text-color-placeholder: #bfbfbf;
 $text-color-disabled: #c0c4cc;
 
-// 背景�?
+// 背景色
 $bg-color-page: #f5f5f5;
 $bg-color-overlay: #ffffff;
 $bg-color-input: rgba(84, 98, 140, 0.2);
-//边框
+
+// 边框色
 $border-color-base: rgba(148, 166, 197, 0.3);
 
-// 圆角
-$border-radius-base: 0rem;
-$border-radius-small: 0.04rem;
-$border-radius-round: 0.2rem;
+/* ==================== 边框渐变 ==================== */
+
+$border-gradient-default: linear-gradient(
+    117.64deg,
+    rgba(148, 166, 197, 0.3) 2.73%,
+    rgba(148, 166, 197, 0) 25.27%,
+    rgba(148, 166, 197, 0.3) 41.05%,
+    rgba(148, 166, 197, 0.103266) 61.63%,
+    rgba(148, 166, 197, 0.3) 97.67%
+  )
+  1;
+
+$border-gradient-dialog: linear-gradient(
+    118.59deg,
+    rgba(148, 166, 197, 0.3) 2.74%,
+    rgba(148, 166, 197, 0) 31.8%,
+    rgba(148, 166, 197, 0.103266) 71.77%,
+    rgba(148, 166, 197, 0.3) 97.88%
+  )
+  1;
+
+/* ==================== 阴影和模糊 ==================== */
+
+$shadow-card: 0px 4px 10px 0px rgba(0, 0, 0, 0.25);
+$backdrop-blur: blur(20px);
+$box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+
+/* ==================== 圆角 ==================== */
+
+$border-radius-base: 0px;
+$border-radius-small: 4px;
+$border-radius-round: 20px;
 $border-radius-circle: 50%;
 
-// 阴影
-$box-shadow-base:
-  0 0.02rem 0.04rem rgba(0, 0, 0, 0.12),
-  0 0 0.06rem rgba(0, 0, 0, 0.04);
+/* ==================== 字体 ==================== */
 
 // 字体大小
-$font-size-extra-large: 0.2rem;
-$font-size-large: 0.18rem;
-$font-size-medium: 0.16rem;
-$font-size-base: 0.14rem;
-$font-size-small: 0.13rem;
-$font-size-extra-small: 0.12rem;
+$font-size-extra-large: 20px;
+$font-size-large: 18px;
+$font-size-medium: 16px;
+$font-size-base: 12px;
+$font-size-small: 13px;
+$font-size-extra-small: 12px;
+$font-size-tiny: 10px;
 
 // 字体权重
 $font-weight-normal: 400;
@@ -67,39 +124,74 @@ $line-height-normal: 1.4;
 $line-height-relaxed: 1.5;
 $line-height-loose: 1.6;
 
-// 间距
-$spacing-xs: 0.04rem;
-$spacing-sm: 0.08rem;
-$spacing-md: 0.16rem;
-$spacing-lg: 0.24rem;
-$spacing-xl: 0.32rem;
-$spacing-xxl: 0.48rem;
+/* ==================== 间距 ==================== */
 
-// 过渡动画
-$transition-fast: 0.15s ease;
-$transition-base: 0.3s ease;
-$transition-slow: 0.5s ease;
+$spacing-xxs: 2px;
+$spacing-tiny: 5px;
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
 
-// 透明�?
-$opacity-disabled: 0.6;
-$opacity-loading: 0.8;
-$opacity-hover: 0.9;
+/* ==================== 尺寸变量 ==================== */
+
+// 通用尺寸
+$size-input-height: 32px;
+$size-input-width: 240px;
+$size-icon-base: 16px;
+$size-icon-small: 14px;
+$size-icon-large: 18px;
+$size-icon-extra-small: 12px;
+$size-icon-medium: 24px;
 
 // 按钮尺寸
-$button-height-small: 0.28rem;
-$button-height-base: 0.32rem;
-$button-height-large: 0.4rem;
+$button-height-small: 28px;
+$button-height-base: 32px;
+$button-height-large: 40px;
 
-$button-padding-small: 0 0.12rem;
-$button-padding-base: 0 0.16rem;
-$button-padding-large: 0 0.2rem;
+$button-padding-small: 0 12px;
+$button-padding-base: 0 16px;
+$button-padding-large: 0 20px;
 
 // 按钮字体大小
-$button-font-size-small: 0.13rem;
-$button-font-size-base: 0.14rem;
-$button-font-size-large: 0.16rem;
+$button-font-size-small: 13px;
+$button-font-size-base: 14px;
+$button-font-size-large: 16px;
 
 // 按钮行高
 $button-line-height-small: 1.4;
 $button-line-height-base: 1.5;
 $button-line-height-large: 1.6;
+
+// 特定组件尺寸
+$checkbox-size: 16px;
+$checkbox-size-small: 14px;
+$checkbox-size-large: 18px;
+$radio-size: 12px;
+$radio-inner-size: 6px;
+$switch-width: 40px;
+$switch-height: 20px;
+$switch-ball-size: 16px;
+$tag-height: 24px;
+
+/* ==================== 滚动条 ==================== */
+
+$scrollbar-width: 6px;
+$scrollbar-thumb-bg: rgba(148, 166, 197, 0.3);
+$scrollbar-thumb-bg-hover: rgba(148, 166, 197, 0.5);
+$scrollbar-track-bg: transparent;
+$scrollbar-border-radius: 3px;
+
+/* ==================== 过渡动画 ==================== */
+
+$transition-fast: 0.15s ease;
+$transition-base: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+/* ==================== 透明度 ==================== */
+
+$opacity-disabled: 0.6;
+$opacity-loading: 0.8;
+$opacity-hover: 0.9;

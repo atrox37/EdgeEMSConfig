@@ -1,8 +1,8 @@
-<template>
-  <FormDialog ref="formDialogRef" title="Execute" width="4.8rem" @close="close">
+﻿<template>
+  <FormDialog ref="formDialogRef" title="Execute" width="480px" @close="close">
     <template #dialog-body>
       <div class="voltage-class execute-dialog">
-        <el-form label-width="0.9rem" ref="formRef" :model="form" :rules="rules">
+        <el-form label-width="90px" ref="formRef" :model="form" :rules="rules">
           <el-form-item label="Value" required>
             <el-input-number v-model="form.value" :controls="false" align="left" />
           </el-form-item>

@@ -13,9 +13,14 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Norton creek solar energy center",
-        "width": 800,
-        "height": 600
+        "width": 1500,
+        "height": 800,
+        "minWidth": 920,
+        "minHeight": 630,
+        "decorations": false,
+        "center": true
       }
     ],
     "security": {
@@ -31,6 +36,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,5 +44,16 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFBQzA2MEY1NTk5QzNBOUMKUldTY09weFo5V0RBcWhacUxOZG5FcVdtWFg1T2VtSEs4b1Y1K2Q2eDFzUTFJRmVxeFM0aVpmNkMK",
+      "endpoints": [
+        "https://edge-desktop-configuration-application.s3.us-east-2.amazonaws.com/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

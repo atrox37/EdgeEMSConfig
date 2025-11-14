@@ -2,45 +2,32 @@
 
 @use './theme-vars.scss' as *;
 
-// 公共变量
-$popper-border-image: linear-gradient(
-    117.64deg,
-    rgba(148, 166, 197, 0.3) 2.73%,
-    rgba(148, 166, 197, 0) 25.27%,
-    rgba(148, 166, 197, 0.3) 41.05%,
-    rgba(148, 166, 197, 0.103266) 61.63%,
-    rgba(148, 166, 197, 0.3) 97.67%
-  )
-  1;
-
-$popper-shadow: 0rem 0.04rem 0.1rem 0rem rgba(0, 0, 0, 0.25);
-$popper-backdrop: blur(0.2rem);
-$hover-bg: rgba(30, 47, 80, 0.3);
+// 移除本地公共变量,使用theme-vars中的全局变量
 
 .voltage-class {
   // Select 基础样式
   .el-select {
-    width: 2.4rem;
+    width: $size-input-width;
 
     .el-select__wrapper {
-      padding: 0 0.12rem;
-      height: 0.32rem;
+      padding: 0 $spacing-sm;
+      height: $size-input-height;
       background-color: $bg-color-input;
-      border: 0.01rem solid $border-color-base;
-      border-radius: 0;
+      border: 1px solid $border-color-base;
+      border-radius: $border-radius-base;
       box-shadow: none;
       outline: none;
       transition: none;
-      line-height: 0.32rem;
-      font-size: 0.14rem;
+      line-height: $size-input-height;
+      font-size: $font-size-base;
       min-height: unset;
       .el-select__input {
-        height: 0.32rem;
+        height: $size-input-height;
       }
     }
 
     &__placeholder {
-      color: #fff;
+      color: $color-white;
     }
     // .el-select__suffix {
     //   gap: 0.06rem;
@@ -59,19 +46,19 @@ $hover-bg: rgba(30, 47, 80, 0.3);
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      font-size: 0.16rem !important;
+      font-size: $size-icon-base !important;
       .el-select__icon {
         width: 100% !important;
         height: 100% !important;
-        font-size: 0.16rem !important;
+        font-size: $size-icon-base !important;
         margin: 0 !important;
       }
     }
     .el-select__prefix {
-      padding-left: 0.05rem !important;
+      padding-left: $spacing-tiny !important;
     }
     .el-select__suffix {
-      padding-right: 0.05rem !important;
+      padding-right: $spacing-tiny !important;
     }
 
     .is-hovering:not(.is-focused) {
@@ -101,21 +88,21 @@ $hover-bg: rgba(30, 47, 80, 0.3);
 
   // 滚动条样�?
   .el-select-dropdown {
-    border-radius: 0;
+    border-radius: $border-radius-base;
     &::-webkit-scrollbar {
-      width: 0.06rem;
+      width: $scrollbar-width;
     }
 
     &::-webkit-scrollbar-track {
-      background: transparent;
+      background: $scrollbar-track-bg;
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(148, 166, 197, 0.3);
-      border-radius: 0.03rem;
+      background-color: $scrollbar-thumb-bg;
+      border-radius: $scrollbar-border-radius;
 
       &:hover {
-        background-color: rgba(148, 166, 197, 0.5);
+        background-color: $scrollbar-thumb-bg-hover;
       }
     }
   }
@@ -123,33 +110,33 @@ $hover-bg: rgba(30, 47, 80, 0.3);
 
 // 公共下拉菜单基础样式
 %popper-base {
-  border: 0.01rem solid !important;
-  border-image: $popper-border-image !important;
-  box-shadow: $popper-shadow !important;
-  backdrop-filter: $popper-backdrop !important;
+  border: 1px solid !important;
+  border-image: $border-gradient-default !important;
+  box-shadow: $shadow-card !important;
+  backdrop-filter: $backdrop-blur !important;
 }
 
 %menu-item-base {
-  height: 0.32rem;
-  line-height: 0.32rem;
+  height: $size-input-height;
+  line-height: $size-input-height;
   font-weight: 300;
   color: $text-color-primary;
   font-size: $font-size-base;
-  padding: 0 0.12rem;
+  padding: 0 $spacing-sm;
   cursor: pointer;
-  background-color: transparent;
+  background-color: $bg-transparent;
 
   &:hover {
-    background-color: $hover-bg;
+    background-color: $bg-dark-blue-hover;
   }
 
   &.is-disabled {
     color: $text-color-disabled;
     cursor: not-allowed;
-    background-color: transparent;
+    background-color: $bg-transparent;
 
     &:hover {
-      background-color: transparent;
+      background-color: $bg-transparent;
       color: $text-color-disabled;
     }
   }
@@ -168,12 +155,12 @@ $hover-bg: rgba(30, 47, 80, 0.3);
   font-weight: $font-weight-medium;
   padding: $spacing-sm $spacing-md;
   background-color: rgba(84, 98, 140, 0.1);
-  border-bottom: 0.01rem solid $border-color-base;
+  border-bottom: 1px solid $border-color-base;
 }
 
 // Select 下拉菜单样式
 .el-select__popper.el-popper {
-  top: 0.44rem !important;
+  // top: 44px !important;
   @extend %popper-base;
   // background-color: rgba(84, 98, 140, 0.4) !important;
   // inset: 2.1rem auto auto 3.96rem !important;
@@ -191,7 +178,7 @@ $hover-bg: rgba(30, 47, 80, 0.3);
         @extend %menu-item-base;
 
         &.selected {
-          background-color: $hover-bg !important;
+          background-color: $bg-dark-blue-hover !important;
           color: $text-color-primary;
         }
       }
@@ -223,53 +210,53 @@ $hover-bg: rgba(30, 47, 80, 0.3);
 // Dropdown 下拉菜单样式
 .el-dropdown__popper.el-popper {
   @extend %popper-base;
-  background-color: transparent !important;
-  // inset: 0.78rem auto auto 16.55rem !important;
-  top: 0.78rem !important;
+  background-color: $bg-transparent !important;
+  // inset: 78px auto auto 1655px !important;
+  // top: 78px !important;
   .el-dropdown__list {
     padding: 0;
     margin: 0;
     box-shadow: none !important;
 
     .el-dropdown-menu {
-      min-width: 1.5rem;
-      padding: 0.2rem 0;
+      min-width: 150px;
+      padding: $spacing-lg 0;
       overflow-y: auto;
-      border-radius: 0 !important;
-      background-color: transparent;
+      border-radius: $border-radius-base !important;
+      background-color: $bg-transparent;
       box-shadow: none !important;
 
       .el-dropdown-menu__item {
         display: flex;
         align-items: center;
-        padding: 0 0.2rem;
-        height: 0.32rem;
+        padding: 0 $spacing-lg;
+        height: $size-input-height;
         font-family: Arimo;
         font-weight: 500;
         font-style: Medium;
-        font-size: 0.14rem;
+        font-size: $font-size-base;
         line-height: 100%;
         letter-spacing: 0%;
-        color: #ffffff;
-        background-color: transparent;
+        color: $color-white;
+        background-color: $bg-transparent;
 
         &:hover {
-          background-color: $hover-bg !important;
+          background-color: $bg-dark-blue-hover !important;
         }
 
         &.selected,
         &.is-active {
-          background-color: $hover-bg !important;
+          background-color: $bg-dark-blue-hover !important;
           color: $text-color-primary;
         }
 
         &.is-disabled {
           color: $text-color-disabled;
           cursor: not-allowed;
-          background-color: transparent;
+          background-color: $bg-transparent;
 
           &:hover {
-            background-color: transparent;
+            background-color: $bg-transparent;
             color: $text-color-disabled;
           }
         }
@@ -295,18 +282,18 @@ $hover-bg: rgba(30, 47, 80, 0.3);
   }
 
   &.is-light {
-    background-color: transparent !important;
+    background-color: $bg-transparent !important;
     & > .el-popper__arrow {
-      top: -0.05rem !important;
+      top: -$spacing-tiny !important;
     }
     .el-popper__arrow {
       visibility: visible !important;
     }
     & > .el-popper__arrow:before {
-      background-color: #12274a !important;
-      border-color: rgba(255, 255, 255, 0.2) !important;
+      background-color: $bg-dark-blue-alt4 !important;
+      border-color: $color-white-alpha-20 !important;
       border-bottom: none;
-      border-radius: 0 !important;
+      border-radius: $border-radius-base !important;
       border-right: none;
       z-index: 999;
     }
@@ -315,23 +302,23 @@ $hover-bg: rgba(30, 47, 80, 0.3);
 
 // 通用 Popper 样式
 .el-popper.is-light {
-  border-radius: 0 !important;
-  background-color: rgba(84, 98, 140, 0.2) !important;
+  border-radius: $border-radius-base !important;
+  background-color: $bg-color-input !important;
   & > .el-popper__arrow:before {
-    background-color: #253c67 !important;
-    border-radius: 0 !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: $bg-dark-blue-alt5 !important;
+    border-radius: $border-radius-base !important;
+    border-color: $color-white-alpha-20 !important;
     z-index: 999;
   }
   .el-popper__arrow {
-    top: -0.05rem !important;
+    top: -$spacing-tiny !important;
   }
   .el-popper__arrow,
   .el-popper__arrow::before {
     visibility: hidden !important;
-    height: 0.1rem;
-    width: 0.1rem;
-    border-radius: 0 !important;
-    border-width: 0.01rem !important;
+    height: 10px;
+    width: 10px;
+    border-radius: $border-radius-base !important;
+    border-width: 1px !important;
   }
 }

@@ -6,7 +6,7 @@
   // Radio 基础样式
   .el-radio {
     color: rgba(255, 255, 255, 0.6);
-    height: 0.32rem;
+    height: 32px;
     font-size: $font-size-base;
     font-weight: $font-weight-normal;
     line-height: $line-height-normal;
@@ -68,7 +68,7 @@
     &.is-focus {
       .el-radio__inner {
         border-color: $primary-color;
-        box-shadow: 0 0 0 0.02rem rgba(255, 105, 0, 0.2);
+        box-shadow: 0 0 0 2px rgba(255, 105, 0, 0.2);
       }
     }
 
@@ -113,10 +113,10 @@
 
   // Radio 圆形按钮样式
   .el-radio__inner {
-    border: 0.01rem solid rgba(148, 166, 197, 0.3);
+    border: 1px solid rgba(148, 166, 197, 0.3);
     border-radius: 50%;
-    width: 0.12rem;
-    height: 0.12rem;
+    width: 12px;
+    height: 12px;
     background-color: transparent;
     position: relative;
     cursor: pointer;
@@ -126,8 +126,8 @@
 
     // 选中状态的内部圆点
     &::after {
-      width: 0.06rem;
-      height: 0.06rem;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background-color: #ffffff;
       content: '';
@@ -140,7 +140,7 @@
 
     // 悬停效果
     &:hover {
-      border: 0.01rem solid rgba(148, 166, 197, 0.3);
+      border: 1px solid rgba(148, 166, 197, 0.3);
     }
   }
 
@@ -183,7 +183,7 @@
 
       .el-radio {
         margin-right: 0;
-        border: 0.01rem solid $border-color-base;
+        border: 1px solid $border-color-base;
         background-color: transparent;
         padding: $spacing-xs $spacing-md;
         border-radius: 0;

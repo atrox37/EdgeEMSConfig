@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="voltage-class points-table">
-    <el-table :data="rows" class="points-table__el" height="5rem">
+    <el-table :data="rows" class="points-table__el" height="500px">
       <el-table-column prop="point_index" label="Point Index" width="120" />
 
       <el-table-column prop="name" label="Name" width="240" show-overflow-tooltip />
@@ -101,15 +101,15 @@ const editable = props.editable ?? false
   }
   .point-table__operation-cell {
     display: flex;
-    gap: 0.08rem;
+    gap: 8px;
     align-items: center;
   }
   .point-table__operation-btn {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.04rem;
-    font-size: 0.12rem;
+    gap: 4px;
+    font-size: 12px;
   }
 }
 </style>

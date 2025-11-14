@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <FormDialog
     ref="dialogRef"
     title="Mappings"
-    width="14rem"
+    width="1400px"
     :appendToBody="false"
     @close="handleClose"
   >
@@ -155,7 +155,7 @@ defineExpose({ open })
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.1rem;
+  gap: 10px;
 }
 ::deep(.el-tabs__content) {
   position: static;

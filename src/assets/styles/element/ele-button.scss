@@ -1,31 +1,33 @@
 /* Element Plus Button 组件样式重写 */
 
+// 引入 Sass color 模块
+@use "sass:color";
 // 引入主题变量
 @use './theme-vars.scss' as *;
 
 // 基础按钮样式
 .el-button {
   // 重置默认样式
-  height: 0.32rem !important;
-  font-size: 0.14rem !important;
-  padding: 0.05rem 0.16rem !important;
+  height: $size-input-height !important;
+  font-size: $font-size-base !important;
+  padding: $spacing-tiny $spacing-md !important;
   border: none !important;
   outline: none !important;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all $transition-base;
   position: relative;
   overflow: hidden;
   font-family: Arimo, sans-serif;
-  font-weight: 400 !important;
+  font-weight: $font-weight-normal !important;
   vertical-align: middle;
-  color: #fff !important;
-  border-radius: 0 !important;
-  background: rgba(255, 255, 255, 0.1) !important;
+  color: $color-white !important;
+  border-radius: $border-radius-base !important;
+  background: $color-white-alpha-10 !important;
   &:hover {
-    background: #505f79 !important;
+    background: $bg-button-hover !important;
   }
   &:active {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: $color-white-alpha-10 !important;
   }
   &:focus {
     box-shadow: none !important;
@@ -34,18 +36,18 @@
   // 主要按钮
   &.el-button--primary,
   &.el-picker-panel__link-btn {
-    background: rgba(255, 105, 0, 1) !important;
-    color: rgba(255, 255, 255, 1);
+    background: $primary-color !important;
+    color: $text-color-primary;
     box-shadow: none;
 
     &:hover {
-      background: #ff8733 !important;
-      color: rgba(255, 255, 255, 1) !important;
+      background: $primary-color-hover !important;
+      color: $text-color-primary !important;
     }
 
     &:active {
-      background: #ff8733 !important;
-      color: rgba(255, 255, 255, 1) !important;
+      background: $primary-color-hover !important;
+      color: $text-color-primary !important;
     }
 
     &:focus {
@@ -70,15 +72,15 @@
   &,
   &.el-button--warning,
   &.is-text {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #ffffff;
+    background: $color-white-alpha-10 !important;
+    color: $color-white;
 
     &:hover {
-      background: #505f79 !important;
+      background: $bg-button-hover !important;
     }
 
     &:active {
-      background: #505f79 !important;
+      background: $bg-button-hover !important;
     }
 
     &:focus {
@@ -89,62 +91,62 @@
   // 信息按钮
   &.el-button--info {
     background: linear-gradient(135deg, $info-color 0%, #096dd9 100%);
-    color: #ffffff;
-    box-shadow: 0 0.02rem 0.08rem rgba(24, 144, 255, 0.3);
+    color: $color-white;
+    box-shadow: 0 $spacing-xxs 8px rgba(24, 144, 255, 0.3);
 
     &:hover {
-      background: linear-gradient(135deg, $info-color-hover 0%, #0050b3 100%);
-      box-shadow: 0 0.04rem 0.12rem rgba(24, 144, 255, 0.4);
-      transform: translateY(-0.01rem);
+      background: linear-gradient(135deg, color.adjust($info-color, $lightness: -5%) 0%, #0050b3 100%);
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+      transform: translateY(-1px);
     }
 
     &:active {
-      background: linear-gradient(135deg, $info-color-active 0%, #003a8c 100%);
-      box-shadow: 0 0.02rem 0.04rem rgba(24, 144, 255, 0.3);
+      background: linear-gradient(135deg, color.adjust($info-color, $lightness: -10%) 0%, #003a8c 100%);
+      box-shadow: 0 $spacing-xxs 4px rgba(24, 144, 255, 0.3);
       transform: translateY(0);
     }
 
     &:focus {
-      box-shadow: 0 0 0 0.02rem rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 $spacing-xxs rgba(24, 144, 255, 0.2);
     }
   }
 
   // 默认按钮
   &.el-button--default {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border: 0.01rem solid rgba(255, 255, 255, 0.2);
+    background: $color-white-alpha-10;
+    color: $color-white;
+    border: 1px solid $color-white-alpha-20;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-0.01rem);
+      background: $color-white-alpha-20;
+      border-color: $color-white-alpha-30;
+      transform: translateY(-1px);
     }
 
     &:active {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: $color-white-alpha-15;
+      border-color: $color-white-alpha-25;
       transform: translateY(0);
     }
 
     &:focus {
-      box-shadow: 0 0 0 0.02rem rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 0 $spacing-xxs $color-white-alpha-20;
     }
   }
 
   // 链接按钮
   &.is-link {
-    background: transparent !important;
-    padding: 0.05rem 0.08rem !important;
+    background: $bg-transparent !important;
+    padding: $spacing-tiny $spacing-sm !important;
     text-decoration: underline;
 
     &:hover {
-      background: transparent !important;
-      // padding: 0.05rem 0.08rem !important;
+      background: $bg-transparent !important;
+      // padding: $spacing-tiny $spacing-sm !important;
     }
 
     &:focus {
-      box-shadow: 0 0 0 0.02rem rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 $spacing-xxs rgba(24, 144, 255, 0.2);
     }
   }
 
@@ -171,7 +173,7 @@
 
   // 圆角按钮
   &.is-round {
-    border-radius: 0.04rem;
+    border-radius: $border-radius-small;
   }
 
   // 加载状态
@@ -197,7 +199,7 @@
 
   // 按钮间距
   & + .el-button {
-    margin-left: 0.08rem !important;
+    margin-left: $spacing-sm !important;
   }
 }
 
@@ -206,21 +208,21 @@
   display: inline-flex;
 
   .el-button {
-    border-radius: 0;
+    border-radius: $border-radius-base;
     margin-left: 0;
 
     &:first-child {
-      border-top-left-radius: 0.04rem;
-      border-bottom-left-radius: 0.04rem;
+      border-top-left-radius: $border-radius-small;
+      border-bottom-left-radius: $border-radius-small;
     }
 
     &:last-child {
-      border-top-right-radius: 0.04rem;
-      border-bottom-right-radius: 0.04rem;
+      border-top-right-radius: $border-radius-small;
+      border-bottom-right-radius: $border-radius-small;
     }
 
     &:not(:first-child) {
-      margin-left: -0.01rem;
+      margin-left: -1px;
     }
 
     &:hover {
@@ -232,6 +234,6 @@
     }
   }
   .el-icon {
-    font-size: 0.14rem !important;
+    font-size: $font-size-base !important;
   }
 }

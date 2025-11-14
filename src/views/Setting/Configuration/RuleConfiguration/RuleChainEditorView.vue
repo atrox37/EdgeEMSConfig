@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class rule-chain-editor" :class="{ 'is-fullscreen': isFullscreen }">
     <div class="rule-chain-editor__header">
       <el-button :type="isFullscreen ? 'warning' : 'primary'" @click="toggleFullscreen">
@@ -54,7 +54,7 @@
               :key="category.type"
               :name="category.type"
               :title="category.title"
-              style="margin-bottom: 0.2rem"
+              style="margin-bottom: 20px"
             >
               <template #title>
                 <div class="rule-chain-editor__category-title">
@@ -680,27 +680,27 @@ watch(
     }
 
     .rule-chain-editor__header {
-      height: 0.6rem;
+      height: 60px;
       width: 100%;
       display: flex;
       align-items: center;
-      gap: 0.12rem;
-      padding: 0.12rem;
+      gap: 12px;
+      padding: 12px;
       // background: linear-gradient(135deg, #f0f8ff 0%, #e8f4fd 100%);
       background-color: #132c54;
-      border-bottom: 0.01rem solid #435678;
+      border-bottom: 1px solid #435678;
       // box-shadow: var(--shadow-light);
     }
 
     .rule-chain-editor__content {
       display: flex;
-      height: calc(100% - 0.6rem);
+      height: calc(100% - 60px);
 
       .rule-chain-editor__left-panel {
-        width: 3rem;
+        width: 300px;
         // background: linear-gradient(180deg, #f8fcff 0%, #f0f8ff 100%);
         background-color: rgba(19, 44, 84, 0.2);
-        border-right: 0.01rem solid #435678;
+        border-right: 1px solid #435678;
         display: flex;
         flex-direction: column;
         transition: width 0.3s ease;
@@ -712,8 +712,8 @@ watch(
         }
 
         .rule-chain-editor__chain-selector {
-          padding: 0.16rem;
-          // border-bottom: 0.01rem solid var(--border-light);
+          padding: 16px;
+          // border-bottom: 1px solid var(--border-light);
           position: relative;
           // background: rgba(255, 255, 255, 0.5);
           // background-color: #132c54;
@@ -722,7 +722,7 @@ watch(
         .rule-chain-editor__card-categories {
           flex: 1;
           overflow-y: auto;
-          padding: 0.16rem;
+          padding: 16px;
 
           :deep(.el-collapse) {
             border: none;
@@ -731,7 +731,7 @@ watch(
           :deep(.el-collapse-item__header) {
             background-color: transparent;
             border: none;
-            padding: 0.12rem 0;
+            padding: 12px 0;
             font-weight: 600;
           }
 
@@ -742,7 +742,7 @@ watch(
           .rule-chain-editor__category-title {
             display: flex;
             align-items: center;
-            gap: 0.08rem;
+            gap: 8px;
 
             .rule-chain-editor__tooltip-icon {
               margin-left: auto;
@@ -755,18 +755,18 @@ watch(
         .rule-chain-editor__cards {
           display: flex;
           flex-direction: column;
-          gap: 0.08rem;
+          gap: 8px;
 
           .rule-chain-editor__card {
             display: flex;
             align-items: center;
-            padding: 0.12rem;
+            padding: 12px;
             // background: linear-gradient(135deg, #ffffff 0%, #f8fcff 100%);
-            border-radius: 0.08rem;
+            border-radius: 8px;
             cursor: grab;
             transition: all 0.2s ease;
-            min-width: 2rem;
-            box-shadow: 0 0.02rem 0.04rem rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
             &:hover {
               // border-color: var(--primary-color);
@@ -795,18 +795,18 @@ watch(
             }
 
             .rule-chain-editor__card-icon {
-              width: 0.36rem;
-              height: 0.36rem;
+              width: 36px;
+              height: 36px;
               display: flex;
               align-items: center;
               justify-content: center;
               background: linear-gradient(135deg, #e8f4fd 0%, #d1e7f5 100%);
-              border-radius: 0.06rem;
-              margin-right: 0.12rem;
+              border-radius: 6px;
+              margin-right: 12px;
               // color: var(--primary-color);
-              font-size: 0.2rem;
+              font-size: 20px;
               .el-icon {
-                font-size: 0.2rem;
+                font-size: 20px;
               }
               &.icon--function-switch {
                 background: #3b78c2;
@@ -829,12 +829,12 @@ watch(
             .rule-chain-editor__card-name {
               font-weight: 600;
               color: #2c3e50;
-              margin-bottom: 0.04rem;
-              font-size: 0.14rem;
+              margin-bottom: 4px;
+              font-size: 14px;
             }
 
             .rule-chain-editor__card-description {
-              font-size: 0.12rem;
+              font-size: 12px;
               color: #909399;
               line-height: 1.4;
             }
@@ -855,7 +855,7 @@ watch(
           transform: translateY(-50%);
           z-index: 2;
           background-color: #132c54;
-          font-size: 0.24rem;
+          font-size: 24px;
           cursor: pointer;
         }
 
@@ -866,10 +866,10 @@ watch(
       }
 
       .rule-chain-editor__right-panel {
-        width: 3.5rem;
+        width: 350px;
         // background: linear-gradient(180deg, #f8fcff 0%, #f0f8ff 100%);
         background-color: #132c54;
-        border-left: 0.01rem solid var(--border-base);
+        border-left: 1px solid var(--border-base);
         display: flex;
         flex-direction: column;
         transition: width 0.3s ease;
@@ -891,25 +891,25 @@ watch(
 
         .rule-chain-editor__edit-content {
           flex: 1;
-          padding: 0.2rem;
+          padding: 20px;
           overflow-y: auto;
-          border-left: 0.01rem solid #435678;
+          border-left: 1px solid #435678;
           .rule-chain-editor__edit-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.2rem;
-            padding: 0.16rem;
+            margin-bottom: 20px;
+            padding: 16px;
             // background: rgba(255, 255, 255, 0.7);
             background-color: #132c54;
-            border-radius: 0.08rem;
-            border-left: 0.01rem solid #67c23a;
+            border-radius: 8px;
+            border-left: 1px solid #67c23a;
             box-shadow: var(--shadow-light);
 
             h3 {
               margin: 0;
               color: var(--text-primary);
-              font-size: 0.18rem;
+              font-size: 18px;
               font-weight: 600;
             }
           }
@@ -917,13 +917,13 @@ watch(
           .rule-chain-editor__edit-form {
             // background: rgba(255, 255, 255, 0.5);
             background-color: #132c54;
-            padding: 0.2rem;
-            border-radius: 0.08rem;
-            border: 0.01rem solid var(--border-light);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
             box-shadow: var(--shadow-light);
 
             .el-form-item {
-              margin-bottom: 0.2rem;
+              margin-bottom: 20px;
 
               .el-form-item__label {
                 font-weight: 600;
@@ -934,14 +934,14 @@ watch(
 
           .rule-chain-editor__edit-actions {
             display: flex;
-            gap: 0.1rem;
+            gap: 10px;
             justify-content: flex-end;
-            margin-top: 0.2rem;
-            padding: 0.16rem;
+            margin-top: 20px;
+            padding: 16px;
             // background: rgba(255, 255, 255, 0.5);
             background-color: #132c54;
-            border-radius: 0.08rem;
-            border: 0.01rem solid var(--border-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
             box-shadow: var(--shadow-light);
           }
 
@@ -950,23 +950,23 @@ watch(
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 2rem;
+            height: 200px;
             color: var(--text-secondary);
             text-align: center;
             background: rgba(255, 255, 255, 0.3);
-            border-radius: 0.08rem;
-            border: 0.01rem solid var(--border-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
             box-shadow: var(--shadow-light);
 
             .rule-chain-editor__empty-icon {
-              font-size: 0.48rem;
-              margin-bottom: 0.16rem;
+              font-size: 48px;
+              margin-bottom: 16px;
               opacity: 0.6;
             }
 
             p {
               margin: 0;
-              font-size: 0.14rem;
+              font-size: 14px;
             }
           }
         }
@@ -975,7 +975,7 @@ watch(
 
     .rule-chain-editor__card-edit {
       .el-form-item {
-        margin-bottom: 0.16rem;
+        margin-bottom: 16px;
       }
     }
   }

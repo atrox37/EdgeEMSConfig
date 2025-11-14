@@ -35,12 +35,12 @@ const handleClick = () => {
 .voltage-class {
   display: flex;
   align-items: center;
-  gap: 0.08rem;
+  gap: 8px;
 
   .icon-button__icon {
-    width: 0.14rem;
-    height: 0.14rem;
-    margin-right: 0.08rem;
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
   }
 }
 </style>

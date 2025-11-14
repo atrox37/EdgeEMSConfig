@@ -1,8 +1,8 @@
-<template>
-  <FormDialog ref="formDialogRef" title="Point Mapping" width="6rem" @close="handleClose">
+﻿<template>
+  <FormDialog ref="formDialogRef" title="Point Mapping" width="600px" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class point-config-dialog">
-        <el-form :model="configForm" :inline="true" label-width="1.4rem">
+        <el-form :model="configForm" :inline="true" label-width="140px">
           <el-form-item label="Slave ID:">
             <el-input-number
               v-model="configForm.slave_id"
@@ -273,7 +273,7 @@ watch(
 <style scoped lang="scss">
 .voltage-class .point-config-dialog {
   .el-form-item {
-    margin-bottom: 0.2rem;
+    margin-bottom: 20px;
   }
 }
 </style>

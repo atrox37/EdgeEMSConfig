@@ -303,6 +303,7 @@ const getSystemInfo = async (includeDetails: boolean = false): Promise<SystemInf
 - 组件测试使用Vue Test Utils
 - 集成测试覆盖主要用户流程
 
+
 ## 部署和构建
 
 ### 1. 开发环境
@@ -382,6 +383,8 @@ VITE_TAURI_DEBUG=true
 3. **调试**: 使用浏览器开发者工具调试前端
 4. **性能**: 注意内存使用和CPU占用
 5. **兼容性**: 测试不同Windows版本的兼容性
+6. **理解性**: 每次解决完问题，都要告诉我具体的原因是什么？
+ 
 
 ---
 

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class rule-management">
     <LoadingBg :loading="loading">
       <div class="rule-management__header">
@@ -50,22 +50,39 @@
               <el-switch
                 v-model="row.enabled"
                 :loading="switchLoadings[$index]"
-                @change="(val: boolean) => handleEnabledToggle(val, row, $index)"
+                @change="(val: boolean | string | number) => handleEnabledToggle(val as boolean, row, $index)"
               />
             </template>
           </el-table-column>
-          <el-table-column label="Operation" fixed="right" width="220">
+          <el-table-column label="Operation" fixed="right" :width="isNarrow ? 80 : 220">
             <template #default="{ row }">
-              <div class="rule-management__operation">
-                <div class="rule-management__operation-item" @click="openEditDialog(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Edit</span>
-                </div>
-                <div class="rule-management__operation-item" @click="handleDelete(row)">
-                  <img :src="tableDeleteIcon" />
-                  <span class="rule-management__operation-text">Delete</span>
-                </div>
-              </div>
+              <OperationDropdown @command="(cmd) => handleOperationCommand(cmd, row)">
+                <!-- 宽屏：显示所有按钮 -->
+                <template #buttons>
+                  <div class="rule-management__operation">
+                    <div class="rule-management__operation-item" @click="openEditDialog(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Edit</span>
+                    </div>
+                    <div class="rule-management__operation-item" @click="handleDelete(row)">
+                      <img :src="tableDeleteIcon" />
+                      <span class="rule-management__operation-text">Delete</span>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- 窄屏：下拉菜单项 -->
+                <template #dropdown>
+                  <el-dropdown-item command="edit">
+                    <img :src="tableEditIcon" />
+                    Edit
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete">
+                    <img :src="tableDeleteIcon" />
+                    Delete
+                  </el-dropdown-item>
+                </template>
+              </OperationDropdown>
             </template>
           </el-table-column>
         </el-table>
@@ -95,9 +112,11 @@ import tableEditIcon from '@/assets/icons/table-edit.svg'
 import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import RuleEditDialog from './RuleEditDialog.vue'
-import { enableRule, disableRule } from '@/apis/rules'
+import OperationDropdown from '@/components/common/OperationDropdown.vue'
+import { enableRule, disableRule } from '@/api/rules'
 import type { Rule } from '@/types/rule'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
+import { useResponsive } from '@/composables/useResponsive'
 
 const tableConfig: TableConfig = {
   listUrl: '/ruleApi/api/rules',
@@ -118,6 +137,9 @@ const {
 const switchLoadings = ref<boolean[]>([])
 const levelSelectRef = ref<HTMLElement | null>(null)
 const ruleEditDialogRef = ref()
+
+// 使用响应式监听
+const { isNarrow } = useResponsive()
 
 function handleRefresh() {
   fetchTableData(true)
@@ -188,6 +210,18 @@ watch(
   },
   { deep: false },
 )
+
+// 处理操作下拉菜单命令
+const handleOperationCommand = (command: string, row: Rule) => {
+  switch (command) {
+    case 'edit':
+      openEditDialog(row)
+      break
+    case 'delete':
+      handleDelete(row)
+      break
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -199,21 +233,21 @@ watch(
   flex-direction: column;
 
   .rule-management__header {
-    margin: 0.2rem 0;
+    margin: 20px 0;
 
     .rule-management__search-form {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      //   padding-bottom: 0.2rem;
+      //   padding-bottom: 20px;
       :deep(.el-form-item) {
         margin-bottom: 0;
       }
       .form-oprations {
         display: flex;
         align-items: flex-start;
-        gap: 0.1rem;
+        gap: 10px;
       }
     }
 
@@ -224,29 +258,30 @@ watch(
     .rule-management__btn {
       display: flex;
       align-items: center;
-      gap: 0.08rem;
+      gap: 8px;
 
       .rule-management__btn-icon {
-        width: 0.14rem;
-        height: 0.14rem;
-        margin-right: 0.08rem;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
       }
     }
   }
 
   .rule-management__table {
-    height: calc(100% - 0.72rem);
+    // height: calc(100% - 72px);
+    flex:1;
     display: flex;
     flex-direction: column;
 
     .rule-management__table-content {
-      height: calc(100% - 0.92rem);
+      height: calc(100% - 92px);
       overflow-y: auto;
 
       .rule-management__operation {
         display: flex;
         align-items: center;
-        gap: 0.2rem;
+        gap: 20px;
         .position-relative {
           position: relative;
         }
@@ -256,21 +291,21 @@ watch(
           align-items: center;
 
           img {
-            width: 0.14rem;
-            height: 0.14rem;
-            margin-right: 0.04rem;
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
             object-fit: contain;
           }
           .rule-management__operation-text {
-            font-size: 0.14rem;
+            font-size: 14px;
             color: #fff;
           }
         }
       }
 
       .rule-management__table-icon {
-        width: 0.46rem;
-        height: 0.2rem;
+        width: 46px;
+        height: 20px;
         object-fit: contain;
       }
     }
@@ -278,29 +313,29 @@ watch(
     .rule-management__pagination {
       display: flex;
       justify-content: flex-end;
-      margin: 0.2rem 0;
+      // margin: 20px 0;
     }
   }
 
   .rule-management__expand-content {
     .rule-management__edit-controls {
       display: flex;
-      gap: 0.1rem;
-      margin-bottom: 0.2rem;
-      padding: 0.1rem 0;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 10px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
       .el-button {
         display: flex;
         align-items: center;
-        font-size: 0.14rem;
-        padding: 0.08rem 0.16rem;
-        border-radius: 0.04rem;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 4px;
 
         img {
-          width: 0.14rem;
-          height: 0.14rem;
-          margin-right: 0.04rem;
+          width: 14px;
+          height: 14px;
+          margin-right: 4px;
           object-fit: contain;
         }
       }

@@ -1,8 +1,8 @@
-<template>
-  <FormDialog ref="dialogRef" title="Value Publish" width="5rem" @close="handleClose">
+﻿<template>
+  <FormDialog ref="dialogRef" title="Value Publish" width="500px" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class value-publish">
-        <el-form label-width="1rem" inline ref="formRef" :model="form" :rules="rules">
+        <el-form label-width="100px" inline ref="formRef" :model="form" :rules="rules">
           <el-form-item label="Value" style="margin-right: 0" prop="value">
             <template v-if="dataType === 'boolean'">
               <el-select v-model="form.value" placeholder="Select">
@@ -125,11 +125,11 @@ defineExpose({
 
 <style scoped lang="scss">
 .voltage-class .value-publish {
-  padding: 0.1rem 0.06rem;
+  padding: 10px 6px;
 }
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.1rem;
+  gap: 10px;
 }
 </style>

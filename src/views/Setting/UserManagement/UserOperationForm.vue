@@ -1,11 +1,11 @@
-<template>
-  <FormDialog width="9.24rem" ref="dialogRef" :title="dialogTitle">
+﻿<template>
+  <FormDialog width="924px" ref="dialogRef" :title="dialogTitle">
     <template #dialog-body>
       <el-form
         ref="formRef"
         :model="form"
         :rules="rules"
-        label-width="1.24rem"
+        label-width="124px"
         class="user-form"
         label-position="right"
         inline
@@ -20,7 +20,7 @@
 
         <el-form-item label="Role:" prop="role_id">
           <div class="role-group" ref="roleGroupRef">
-            <el-select v-model="form.role_id" placeholder="Select role" :append-to="roleGroupRef">
+            <el-select v-model="form.role_id" placeholder="Select role">
               <el-option
                 v-for="item in roleOptions"
                 :key="item.value"
@@ -206,7 +206,7 @@ defineExpose({ open, close })
   .role-group,
   .condition-group {
     display: flex;
-    gap: 0.16rem;
+    gap: 16px;
   }
 
   .status-group {
@@ -215,7 +215,7 @@ defineExpose({ open, close })
   }
 
   :deep(.el-input__inner) {
-    width: 2.4rem;
+    width: 240px;
   }
 
   .user-form__status-row {
@@ -223,12 +223,12 @@ defineExpose({ open, close })
     display: block;
 
     :deep(.el-form-item__content) {
-      width: 6.6rem;
+      width: 660px;
     }
   }
 
   // :deep(.el-select__popper.el-popper) {
-  //   top: 0.44rem !important;
+  //   top: 44px !important;
   // }
 }
 </style>

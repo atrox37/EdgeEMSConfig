@@ -40,9 +40,9 @@ const initWebSocket = async () => {
             showClose: true,
             dangerouslyUseHTMLString: true,
             message: `
-              <div style="display: flex; align-items: center; gap: 0.08rem;">
+              <div style="display: flex; align-items: center; gap: 8px;">
                 <span>${alarm.message}</span>
-                <button id="to-detail-btn-${currentId}" style="padding:0.04rem 0.1rem;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:0.14rem; border-radius: 0.02rem;">to detail</button>
+                <button id="to-detail-btn-${currentId}" style="padding:4px 10px;background-color: #ff6900; color: #fff; border: none; cursor: pointer; font-size:14px; border-radius: 2px;">to detail</button>
               </div>
             `,
             duration: 0,

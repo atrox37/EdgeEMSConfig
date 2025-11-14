@@ -1,15 +1,20 @@
-<template>
+﻿<template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
     <LoadingBg :loading="loading">
       <div class="rule-management__header">
         <div class="rule-management__search-form" ref="levelSelectRef">
-          <el-form :model="filters" :inline="true" class="test-form">
+          <!-- 宽屏模式：显示完整筛选表单 -->
+          <el-form
+            v-if="!isFilterCollapsed"
+            :model="filters"
+            :inline="true"
+            class="test-form"
+          >
             <el-form-item label="Protocol:">
               <el-select
                 v-model="filters.protocol"
                 placeholder="select protocol"
                 clearable
-                :append-to="levelSelectRef"
               >
                 <el-option
                   v-for="option in PROTOCOL_OPTIONS"
@@ -24,7 +29,6 @@
                 v-model="filters.enabled"
                 placeholder="select enabled status"
                 clearable
-                :append-to="levelSelectRef"
               >
                 <el-option label="Enabled" :value="true" />
                 <el-option label="Disabled" :value="false" />
@@ -35,13 +39,96 @@
                 v-model="filters.connected"
                 placeholder="select connected status"
                 clearable
-                :append-to="levelSelectRef"
               >
                 <el-option label="Connected" :value="true" />
                 <el-option label="Disconnected" :value="false" />
               </el-select>
             </el-form-item>
           </el-form>
+
+          <!-- 窄屏模式：Filter 按钮 + 筛选标签 -->
+          <div v-else class="filter-compact">
+            <el-dropdown trigger="click" :teleported="false">
+              <el-button class="filter-button">
+                <el-icon style="margin-right: 6px"><Filter /></el-icon>
+                Filter
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu class="filter-dropdown">
+                  <div class="filter-dropdown__content">
+                    <el-form :model="filters" label-position="top">
+                      <el-form-item label="Protocol:">
+                        <el-select
+                          v-model="filters.protocol"
+                          placeholder="select protocol"
+                          clearable
+                          style="width: 100%"
+                        >
+                          <el-option
+                            v-for="option in PROTOCOL_OPTIONS"
+                            :key="option.value"
+                            :label="option.label"
+                            :value="option.value"
+                          />
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="Enabled:">
+                        <el-select
+                          v-model="filters.enabled"
+                          placeholder="select enabled status"
+                          clearable
+                          style="width: 100%"
+                        >
+                          <el-option label="Enabled" :value="true" />
+                          <el-option label="Disabled" :value="false" />
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="Connected:">
+                        <el-select
+                          v-model="filters.connected"
+                          placeholder="select connected status"
+                          clearable
+                          style="width: 100%"
+                        >
+                          <el-option label="Connected" :value="true" />
+                          <el-option label="Disconnected" :value="false" />
+                        </el-select>
+                      </el-form-item>
+                    </el-form>
+                  </div>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+
+            <!-- 已选筛选标签 -->
+            <div class="filter-tags">
+              <el-tag
+                v-if="filters.protocol"
+                closable
+                @close="filters.protocol = ''"
+                class="filter-tag"
+              >
+                Protocol: {{ filters.protocol }}
+              </el-tag>
+              <el-tag
+                v-if="filters.enabled !== null"
+                closable
+                @close="filters.enabled = null"
+                class="filter-tag"
+              >
+                Enabled: {{ filters.enabled ? 'Yes' : 'No' }}
+              </el-tag>
+              <el-tag
+                v-if="filters.connected !== null"
+                closable
+                @close="filters.connected = null"
+                class="filter-tag"
+              >
+                Connected: {{ filters.connected ? 'Yes' : 'No' }}
+              </el-tag>
+            </div>
+          </div>
+
           <div class="form-oprations">
             <IconButton
               type="warning"
@@ -73,23 +160,21 @@
           :data="tableData"
           class="rule-management__table-content"
           align="left"
-          table-layout="fixed"
-          :expand-row-keys="expandedRows"
-          row-key="id"
+          
         >
           <el-table-column prop="id" label="ID" show-overflow-tooltip width="100" />
-          <el-table-column prop="name" label="Name" width="270" show-overflow-tooltip />
-          <el-table-column prop="description" label="Description" show-overflow-tooltip>
+          <el-table-column prop="name" label="Name" min-width="200" show-overflow-tooltip />
+          <el-table-column prop="description" label="Description" min-width="200" show-overflow-tooltip>
             <template #default="{ row }">
               <span>{{ row.description || '-' }}</span>
             </template>
           </el-table-column>
           <el-table-column prop="protocol" label="Protocol" show-overflow-tooltip width="140" />
-          <el-table-column prop="enabled" label="Enabled" width="100">
+          <el-table-column prop="enabled" label="Enabled" width="120">
             <template #default="{ row, $index }">
               <el-switch
                 v-model="row.enabled"
-                @change="handleEnabledChange($event, row, $index)"
+                @change="handleEnabledChange($event as boolean, row, $index)"
                 :loading="channelControlLoadings[$index][0]"
               />
             </template>
@@ -106,59 +191,61 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="error_count" label="Error Count" width="120" />
-          <el-table-column label="Operation" fixed="right" width="380">
+          <el-table-column prop="error_count" label="Error Count" width="140" />
+          <el-table-column label="Operation" fixed="right" :width="isNarrow ? 140 : 380">
             <template #default="{ row }">
-              <div class="rule-management__operation">
-                <div class="rule-management__operation-item" @click="handleDetail(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Detail</span>
-                </div>
-                <div class="rule-management__operation-item" @click="handlePointsTables(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Points</span>
-                </div>
-                <div class="rule-management__operation-item" @click="handleMappings(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Mappings</span>
-                </div>
-                <div
-                  class="rule-management__operation-item"
-                  @click="
-                    deleteRow(
-                      row.id,
-                      `Are you sure you want to delete channel ${row.name}?`,
-                      ruleManagementRef,
-                    )
-                  "
-                >
-                  <img :src="tableDeleteIcon" />
-                  <span class="rule-management__operation-text">Delete</span>
-                </div>
-
-                <!-- <el-dropdown
-                  trigger="click"
-                  placement="bottom"
-                  :show-arrow="false"
-                  :teleported="false"
-                >
-                  <div class="rule-management__operation-item">
-                    <img :src="tableDeleteIcon" />
-                    <span class="rule-management__operation-text">control</span>
+              <OperationDropdown @command="(cmd) => handleOperationCommand(cmd, row)">
+                <!-- 宽屏：显示所有按钮 -->
+                <template #buttons>
+                  <div class="rule-management__operation">
+                    <div class="rule-management__operation-item" @click="handleDetail(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Detail</span>
+                    </div>
+                    <div class="rule-management__operation-item" @click="handlePointsTables(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Points</span>
+                    </div>
+                    <div class="rule-management__operation-item" @click="handleMappings(row)">
+                      <img :src="tableEditIcon" />
+                      <span class="rule-management__operation-text">Mappings</span>
+                    </div>
+                    <div
+                      class="rule-management__operation-item"
+                      @click="
+                        deleteRow(
+                          row.id,
+                          `Are you sure you want to delete channel ${row.name}?`,
+                          ruleManagementRef,
+                        )
+                      "
+                    >
+                      <img :src="tableDeleteIcon" />
+                      <span class="rule-management__operation-text">Delete</span>
+                    </div>
                   </div>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item @click="handleControl(row, 'start')"
-                        >Start</el-dropdown-item
-                      >
-                      <el-dropdown-item @click="handleControl(row, 'stop')">Stop</el-dropdown-item>
-                      <el-dropdown-item @click="handleControl(row, 'restart')"
-                        >Restart</el-dropdown-item
-                      >
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown> -->
-              </div>
+                </template>
+
+                <!-- 窄屏：下拉菜单项 -->
+                <template #dropdown>
+                  <el-dropdown-item command="detail">
+                    <img :src="tableEditIcon" />
+                    Detail
+                  </el-dropdown-item>
+                  <el-dropdown-item command="points">
+                    <img :src="tableEditIcon" />
+                    Points
+                  </el-dropdown-item>
+                  <el-dropdown-item command="mappings">
+                    <img :src="tableEditIcon" />
+                    Mappings
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete">
+                    <img :src="tableDeleteIcon" />
+                    Delete
+                  </el-dropdown-item>
+                </template>
+              </OperationDropdown>
             </template>
           </el-table-column>
         </el-table>
@@ -199,12 +286,15 @@ import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import ChannelDetailDialog from './ChannelDetailDialog.vue'
 import PointsTablesDialog from './PointsTablesDialog.vue'
 import MappingsDialog from './MappingsDialog.vue'
+import OperationDropdown from '@/components/common/OperationDropdown.vue'
 import { ChangeChannelEnabled } from '@/api/channelsManagement'
 import type { ChannelListItem, ChannelDetail, PointInfo } from '@/types/channelConfiguration'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import { Filter } from '@element-plus/icons-vue'
 
 import { useTableData, type TableConfig } from '@/composables/useTableData'
+import { useResponsive } from '@/composables/useResponsive'
 
 const tableConfig: TableConfig = {
   listUrl: '/comApi/api/channels',
@@ -225,6 +315,9 @@ const {
 filters.productName = ''
 filters.enabled = null
 filters.connected = null
+
+// 使用响应式监听
+const { isNarrow, isFilterCollapsed } = useResponsive()
 
 const levelSelectRef = ref<HTMLElement | null>(null)
 const ChannelDetailDialogRef = ref()
@@ -362,6 +455,30 @@ const handleChannelDetailSubmit = (data: ChannelDetail) => {
 const handleChannelDetailCancel = () => {
   console.log('Channel detail cancelled')
 }
+
+// 处理操作下拉菜单命令
+const handleOperationCommand = (command: string, row: ChannelListItem) => {
+  switch (command) {
+    case 'detail':
+      handleDetail(row)
+      break
+    case 'points':
+      handlePointsTables(row)
+      break
+    case 'mappings':
+      handleMappings(row)
+      break
+    case 'delete':
+      if(row.id) {
+      deleteRow(
+        row.id,
+          `Are you sure you want to delete channel ${row.name}?`,
+          ruleManagementRef.value,
+        )
+      }
+      break
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -373,57 +490,88 @@ const handleChannelDetailCancel = () => {
   flex-direction: column;
 
   .rule-management__header {
-    margin: 0.2rem 0;
+    margin-bottom: 20px;
 
     .rule-management__search-form {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      //   padding-bottom: 0.2rem;
+      gap: 10px;
+      flex-wrap: wrap;
+
       :deep(.el-form-item) {
         margin-bottom: 0;
       }
+
       .form-oprations {
         display: flex;
         align-items: flex-start;
-        gap: 0.1rem;
+        gap: 10px;
+      }
+
+      // 窄屏筛选样式
+      .filter-compact {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        flex: 1;
+
+        .filter-button {
+          display: flex;
+          align-items: center;
+        }
+
+        .filter-tags {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          .filter-tag {
+            font-size: 12px;
+            height: 24px;
+            line-height: 24px;
+          }
+        }
       }
     }
 
     .rule-management__table-operations {
       width: 100%;
-      //   padding-top: 0.2rem;
-      //   border-top: 0.01rem solid rgba(255, 255, 255, 0.1);
+      //   padding-top: 20px;
+      //   border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .rule-management__btn {
       display: flex;
       align-items: center;
-      gap: 0.08rem;
+      gap: 8px;
 
       .rule-management__btn-icon {
-        width: 0.14rem;
-        height: 0.14rem;
-        margin-right: 0.08rem;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
       }
     }
   }
 
   .rule-management__table {
-    height: calc(100% - 0.72rem);
-    // max-width: 16.6rem;
+    // height: calc(100% - px);
+    flex: 1;
+    // max-width: 1660px;
     display: flex;
     flex-direction: column;
 
     .rule-management__table-content {
-      height: calc(100% - 0.92rem);
+      flex: 1;
       overflow-y: auto;
 
       .rule-management__operation {
         display: flex;
         align-items: center;
-        gap: 0.2rem;
+        gap: 20px;
         .position-relative {
           position: relative;
         }
@@ -433,21 +581,21 @@ const handleChannelDetailCancel = () => {
           align-items: center;
 
           img {
-            width: 0.14rem;
-            height: 0.14rem;
-            margin-right: 0.04rem;
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
             object-fit: contain;
           }
           .rule-management__operation-text {
-            font-size: 0.14rem;
+            font-size: 14px;
             color: #fff;
           }
         }
       }
 
       .rule-management__table-icon {
-        width: 0.46rem;
-        height: 0.2rem;
+        width: 46px;
+        height: 20px;
         object-fit: contain;
       }
     }
@@ -455,29 +603,29 @@ const handleChannelDetailCancel = () => {
     .rule-management__pagination {
       display: flex;
       justify-content: flex-end;
-      margin: 0.2rem 0;
+      // margin: 20px 0;
     }
   }
 
   .rule-management__expand-content {
     .rule-management__edit-controls {
       display: flex;
-      gap: 0.1rem;
-      margin-bottom: 0.2rem;
-      padding: 0.1rem 0;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 10px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
       .el-button {
         display: flex;
         align-items: center;
-        font-size: 0.14rem;
-        padding: 0.08rem 0.16rem;
-        border-radius: 0.04rem;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 4px;
 
         img {
-          width: 0.14rem;
-          height: 0.14rem;
-          margin-right: 0.04rem;
+          width: 14px;
+          height: 14px;
+          margin-right: 4px;
           object-fit: contain;
         }
       }
@@ -487,6 +635,29 @@ const handleChannelDetailCancel = () => {
     overflow: visible;
     position: relative;
     z-index: 100;
+  }
+}
+
+// 筛选下拉框样式
+:deep(.filter-dropdown) {
+  .filter-dropdown__content {
+    padding: 0 16px;
+    min-width: 280px;
+
+    .el-form-item {
+      margin-bottom: 16px !important;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .el-form-item__label {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 4px !important;
+    }
   }
 }
 </style>

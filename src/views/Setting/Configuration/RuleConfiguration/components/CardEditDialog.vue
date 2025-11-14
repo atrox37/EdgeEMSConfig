@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <FormDialog
     ref="formDialogRef"
     :title="`Edit ${card?.label}`"
-    :width="widthList[card?.type as keyof typeof widthList] || '10rem'"
+    :width="widthList[card?.type as keyof typeof widthList] || '1000px'"
     @close="handleClose"
   >
     <template #dialog-body>
@@ -29,8 +29,8 @@ interface Props {
   card: RuleCard | null
 }
 const widthList = {
-  'function-switch': '14rem',
-  'action-changeValue': '10.02rem',
+  'function-switch': '1400px',
+  'action-changeValue': '1002px',
 }
 interface Emits {
   (e: 'update:visible', value: boolean): void

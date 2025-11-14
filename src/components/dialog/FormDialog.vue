@@ -60,15 +60,15 @@ defineExpose({
   align-items: center;
 
   .dialog-head-icon {
-    width: 0.2rem;
-    height: 0.2rem;
-    margin-right: 0.03rem;
+    width: 20px;
+    height: 20px;
+    margin-right: 3px;
   }
 
   .dialog-head-title {
     font-weight: 700;
-    font-size: 0.18rem;
-    line-height: 0.2rem;
+    font-size: 18px;
+    line-height: 20px;
     letter-spacing: 0%;
     color: rgba(245, 247, 255, 1);
   }
@@ -83,7 +83,7 @@ defineExpose({
 
 :deep(.el-overlay) {
   position: absolute !important;
-  top: -0.2rem;
-  left: -0.2rem;
+  top: -20px;
+  left: -20px;
 }
 </style>

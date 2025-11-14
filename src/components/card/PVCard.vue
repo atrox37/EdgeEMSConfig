@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="card">
     <div class="card__container">
       <div class="card__left">
@@ -51,29 +51,29 @@ const props = defineProps({
   width: 100%;
   height: 100%;
   background-color: rgba(84, 98, 140, 0.2);
-  padding: 0.2rem;
+  padding: 20px;
   display: flex;
   align-items: center;
-  border: 0.01rem solid;
+  border: 1px solid;
 
   border-image: linear-gradient(116.72deg,
       rgba(148, 166, 197, 0.3) 2.77%,
       rgba(148, 166, 197, 0) 32.16%,
       rgba(148, 166, 197, 0.103266) 72.59%,
       rgba(148, 166, 197, 0.3) 98.99%) 1;
-  backdrop-filter: blur(0.1rem);
+  backdrop-filter: blur(10px);
 
   .card__container {
     display: flex;
-    height: 0.5856rem;
+    height: 58.56px;
 
     .card__left {
       display: flex;
       align-items: center;
-      margin-right: 0.23rem;
+      margin-right: 23px;
 
       .card__left-icon {
-        width: 0.536rem;
+        width: 53.6px;
         height: 100%;
         display: flex;
         align-items: center;
@@ -104,26 +104,26 @@ const props = defineProps({
       .card__right-top {
         .card__right-title {
           font-weight: 700;
-          font-size: 0.18rem;
-          line-height: 0.18rem;
-          margin-bottom: 0.1rem;
+          font-size: 18px;
+          line-height: 18px;
+          margin-bottom: 10px;
         }
       }
 
       .card__right-bottom {
-        margin-top: 0.02rem;
+        margin-top: 2px;
         display: flex;
         align-items: flex-end;
 
         .card__right-value {
           font-weight: 700;
-          font-size: 0.2rem;
-          line-height: 0.16rem;
+          font-size: 20px;
+          line-height: 16px;
           color: #ffffff;
 
           .card__right-unit {
-            font-size: 0.12rem;
-            line-height: 0.16rem;
+            font-size: 12px;
+            line-height: 16px;
             color: rgba(255, 255, 255, 0.6);
           }
         }

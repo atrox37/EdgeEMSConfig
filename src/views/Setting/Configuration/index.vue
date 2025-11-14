@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="voltage-class configuration">
     <!-- Page Header -->
     <div class="configuration__header">
@@ -80,23 +80,23 @@ const handleTabClick = (
   position: relative;
 
   .configuration__header {
-    padding-bottom: 0.2rem;
-    border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
     .configuration__tabs {
       display: flex;
       align-items: center;
-      gap: 0.16rem;
+      gap: 16px;
 
       .configuration__tab-btn {
         display: flex;
         align-items: center;
-        gap: 0.1rem;
+        gap: 10px;
 
         .configuration__tab-icon {
-          width: 0.16rem;
-          height: 0.16rem;
-          margin-right: 0.08rem;
+          width: 16px;
+          height: 16px;
+          margin-right: 8px;
         }
       }
     }
@@ -104,12 +104,12 @@ const handleTabClick = (
 
   .configuration__content {
     position: relative;
-    height: calc(100% - 0.52rem);
+    height: calc(100% - 52px);
     display: flex;
     flex-direction: column;
 
     .configuration__toolbar {
-      padding: 0.2rem 0;
+      padding: 20px 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -117,22 +117,22 @@ const handleTabClick = (
       .configuration__toolbar-left {
         display: flex;
         align-items: center;
-        gap: 0.16rem;
+        gap: 16px;
       }
 
       .configuration__toolbar-right {
         display: flex;
         align-items: center;
-        gap: 0.16rem;
+        gap: 16px;
 
         .configuration__export-btn {
           display: flex;
           align-items: center;
-          gap: 0.1rem;
+          gap: 10px;
 
           .configuration__export-icon {
-            width: 0.16rem;
-            height: 0.16rem;
+            width: 16px;
+            height: 16px;
           }
         }
       }
@@ -149,7 +149,7 @@ const handleTabClick = (
       }
 
       .configuration__pagination {
-        padding: 0.2rem 0;
+        padding: 20px 0;
         display: flex;
         justify-content: flex-end;
       }

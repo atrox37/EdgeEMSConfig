@@ -11,11 +11,25 @@ router.beforeEach(async (to, from, next) => {
 
   const user = useUserStore()
 
-  // 未登录：只允许进入白名单
-  // if (!user.token && !user.userInfo) {
-  //   if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
-  //   return next({ path: '/login', query: { redirect: to.path } })
-  // }
+  // 未登录：只允许进入白名单（走登录页）
+  if (!user.token) {
+    if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
+    return next({ path: '/login', query: { redirect: to.fullPath } })
+  }
+
+  // 已有 token 但没有 userInfo：尝试获取用户信息（等价于刷新 token 检测）
+  if (!user.userInfo) {
+    try {
+      const res = await user.getUserInfo()
+      if (!res.success) {
+        user.clearUserData()
+        return next({ path: '/login', query: { redirect: to.fullPath } })
+      }
+    } catch {
+      user.clearUserData()
+      return next({ path: '/login', query: { redirect: to.fullPath } })
+    }
+  }
 
   // 已登录：确保已注入动态路由
   try {

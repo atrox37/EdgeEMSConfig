@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="battery-card" :class="{ isOnly: propNumber }">
     <div class="battery-card__title" :class="{ isOnly: propNumber }">{{ prop.title }}</div>
     <div v-if="propNumber !== undefined" class="battery-card__value">
@@ -25,9 +25,9 @@ const propNumber = computed(() => {
 .battery-card {
   width: 100%;
   height: 100%;
-  padding: 0.3rem;
+  padding: 30px;
   background: rgba(84, 98, 140, 0.5);
-  border: 0.01rem solid;
+  border: 1px solid;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -46,13 +46,13 @@ const propNumber = computed(() => {
   .battery-card__title {
     font-family: Arimo;
     font-style: regular;
-    font-size: 0.2rem;
+    font-size: 20px;
     color: rgba(255, 255, 255, 0.6);
     &.isOnly {
       font-family: Arimo;
       font-weight: 700;
       font-style: bold;
-      font-size: 0.32rem;
+      font-size: 32px;
       color: #fff;
     }
   }
@@ -60,7 +60,7 @@ const propNumber = computed(() => {
     font-family: Arimo;
     font-weight: 700;
     font-style: bold;
-    font-size: 0.4rem;
+    font-size: 40px;
     line-height: 100%;
     letter-spacing: 0%;
     text-transform: capitalize;
@@ -69,7 +69,7 @@ const propNumber = computed(() => {
       font-family: Arimo;
       font-weight: 700;
       font-style: bold;
-      font-size: 0.16rem;
+      font-size: 16px;
       color: rgba(255, 255, 255, 0.5);
     }
   }

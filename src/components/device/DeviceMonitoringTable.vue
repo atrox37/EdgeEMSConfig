@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <div class="device__content">
         <div class="device__tables">
             <!-- 左侧表格 -->
@@ -222,10 +222,10 @@ onUnmounted(() => {
         justify-content: space-between;
         width: 100%;
         height: 100%;
-        gap: 0.2rem;
+        gap: 20px;
 
         .device__table {
-            width: calc((100% - 0.2rem) / 2);
+            width: calc((100% - 20px) / 2);
             height: 100%;
 
             :deep(.el-table) {
@@ -236,7 +236,7 @@ onUnmounted(() => {
                     th {
                         background: rgba(58, 82, 121, 0.8);
                         color: #fff;
-                        border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
                         .cell {
                             color: #fff;
@@ -249,7 +249,7 @@ onUnmounted(() => {
                     td {
                         background: transparent;
                         color: #fff;
-                        border-bottom: 0.01rem solid rgba(255, 255, 255, 0.05);
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
                         .cell {
                             color: #fff;

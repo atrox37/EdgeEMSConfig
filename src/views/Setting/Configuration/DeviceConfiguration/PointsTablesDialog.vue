@@ -1,5 +1,5 @@
-<template>
-  <FormDialog ref="dialogRef" title="Points" width="12rem" @close="handleClose">
+﻿<template>
+  <FormDialog ref="dialogRef" title="Points" width="1200px" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class dc-points-dialog">
         <el-tabs v-model="activeTab" type="card">
@@ -118,7 +118,7 @@ defineExpose({ open, close })
   .dc-points-dialog {
     .dc-points-dialog__toolbar {
       display: flex;
-      gap: 0.08rem;
+      gap: 8px;
     }
   }
   :deep(.el-tabs__content) {

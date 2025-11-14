@@ -11,8 +11,8 @@
     align-items: center;
     position: relative;
     font-size: $font-size-base;
-    line-height: 0.32rem;
-    height: 0.32rem;
+    line-height: 32px;
+    height: 32px;
     vertical-align: middle;
     outline: none;
     user-select: none;
@@ -23,9 +23,9 @@
       position: relative;
       display: inline-block;
       box-sizing: border-box;
-      width: 0.4rem;
-      height: 0.2rem;
-      min-width: 0.4rem;
+      width: $switch-width;
+      height: $switch-height;
+      min-width: $switch-width;
       border: none;
       border-radius: $border-radius-round;
       background: rgba(209, 209, 214, 0.2);
@@ -35,19 +35,19 @@
       // 开关滑�?
       .el-switch__action {
         position: absolute;
-        top: 0.02rem;
-        left: 0.02rem;
+        top: $spacing-xxs;
+        left: $spacing-xxs;
         border-radius: $border-radius-circle;
         transition: all $transition-base;
-        width: 0.16rem;
-        height: 0.16rem;
+        width: $switch-ball-size;
+        height: $switch-ball-size;
         background: $bg-color-overlay;
         display: flex;
         align-items: center;
         justify-content: center;
         color: $text-color-regular;
-        font-size: 0.12rem;
-        box-shadow: 0 0.01rem 0.03rem rgba(0, 0, 0, 0.3);
+        font-size: $font-size-extra-small;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       }
     }
 
@@ -85,10 +85,10 @@
     &.is-checked {
       .el-switch__core {
         border-color: $primary-color;
-        background: #ff6900;
+        background: $primary-color;
 
         .el-switch__action {
-          left: calc(100% - 0.17rem);
+          left: calc(100% - 17px);
           color: $primary-color;
         }
       }
@@ -110,10 +110,10 @@
         &::after {
           content: '';
           position: absolute;
-          top: -0.04rem;
-          left: -0.04rem;
-          right: -0.04rem;
-          bottom: -0.04rem;
+          top: -4px;
+          left: -4px;
+          right: -4px;
+          bottom: -4px;
           border-radius: $border-radius-round;
           background: rgba($primary-color, 0.1);
           z-index: -1;
@@ -124,8 +124,8 @@
     // 聚焦状�?
     &:focus-visible {
       .el-switch__core {
-        outline: 0.02rem solid rgba($primary-color, 0.2);
-        outline-offset: 0.01rem;
+        outline: 2px solid rgba($primary-color, 0.2);
+        outline-offset: 1px;
       }
     }
 
@@ -152,7 +152,7 @@
 
       &.is-checked {
         .el-switch__core {
-          background: #ff6900 !important;
+          background: $primary-color !important;
           border-color: rgba($primary-color, 0.4);
         }
       }

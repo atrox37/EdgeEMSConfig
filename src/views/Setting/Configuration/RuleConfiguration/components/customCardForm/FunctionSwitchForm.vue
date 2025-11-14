@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="voltage-class function-switch-form">
-    <el-form ref="formRef" label-width="0.6rem" :model="cardData">
+    <el-form ref="formRef" label-width="60px" :model="cardData">
       <!-- 第一部分：基础设置 -->
       <div class="section basic-section">
         <div class="section__header">
@@ -14,7 +14,7 @@
             label="description:"
             prop="description"
             style="margin-bottom: 0; width: 100% !important"
-            label-width="1.2rem"
+            label-width="120px"
           >
             <el-input v-model="cardData.description" style="width: 100% !important" />
           </el-form-item>
@@ -179,7 +179,7 @@
               </el-form-item>
               <el-button
                 class="variable-row__delete"
-                style="width: 0.32rem !important"
+                style="width: 32px !important"
                 type="warning"
                 @click="removeVariable(idx)"
               >
@@ -264,7 +264,7 @@
                           </el-select>
 
                           <el-select
-                            :style="i == 0 ? 'margin-left: 1.08rem;' : ''"
+                            :style="i == 0 ? 'margin-left: 108px;' : ''"
                             v-model="sub.variables"
                             class="rule-row__select"
                             placeholder="variable"
@@ -338,7 +338,7 @@
                 </el-form-item>
                 <el-button
                   class="rule-row__delete"
-                  style="width: 0.32rem !important"
+                  style="width: 32px !important"
                   type="warning"
                   @click="removeRule(rIdx)"
                 >
@@ -631,47 +631,47 @@ defineExpose({ validateForm })
 .function-switch-form {
   .main-section {
     display: flex;
-    gap: 0.1rem;
+    gap: 10px;
   }
   .section {
     &.variable-section {
-      padding-right: 0.1rem;
+      padding-right: 10px;
       width: 50%;
       border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
     &.rule-section {
-      width: calc(50% - 0.1rem);
+      width: calc(50% - 10px);
     }
     &.basic-section {
       width: 100%;
-      padding-bottom: 0.2rem;
+      padding-bottom: 20px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     .section__header {
-      margin-top: 0.2rem;
+      margin-top: 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.12rem;
+      margin-bottom: 12px;
 
       .section__title {
         font-weight: 700;
         color: #fff;
-        font-size: 0.18rem;
+        font-size: 18px;
       }
 
       .section__add-btn {
-        padding: 0 0.04rem;
+        padding: 0 4px;
       }
     }
 
     .section__body {
       display: flex;
       flex-direction: column;
-      gap: 0.12rem;
+      gap: 12px;
       &.variable,
       &.rule {
-        height: 4rem;
+        height: 400px;
         overflow-y: auto;
       }
     }
@@ -681,22 +681,22 @@ defineExpose({ validateForm })
   .combined-row {
     display: flex;
     align-items: center;
-    gap: 0.08rem;
+    gap: 8px;
   }
   .variable-row__select {
-    width: 1.64rem;
+    width: 164px;
   }
   .variable-row__delete {
-    padding: 0 0.04rem;
+    padding: 0 4px;
   }
 
   .rule-row {
     display: flex;
     flex-direction: column;
-    gap: 0.12rem;
-    padding-bottom: 0.2rem;
+    gap: 12px;
+    padding-bottom: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    // padding: 0.12rem;
+    // padding: 12px;
     &:last-child {
       padding-bottom: 0;
       border-bottom: none;
@@ -714,52 +714,52 @@ defineExpose({ validateForm })
     align-items: flex-start;
   }
   .rule-row__type {
-    width: 2.4rem;
+    width: 240px;
     .rule-row__delete {
-      padding: 0 0.04rem;
+      padding: 0 4px;
     }
-    // margin-left: 0.12rem;
+    // margin-left: 12px;
   }
   .rule-row__body {
     display: flex;
     align-items: center;
-    gap: 0.08rem;
-    // margin-left: 1.36rem;
+    gap: 8px;
+    // margin-left: 136px;
   }
 
   .rule-row__select {
-    width: 1.2rem;
+    width: 120px;
   }
   .rule-row__default,
   .variable-row__combined {
     display: flex;
     flex-direction: column;
-    gap: 0.08rem;
+    gap: 8px;
     & > div {
-      // margin-left: 1.36rem;
+      // margin-left: 136px;
     }
   }
   .default-cond-row {
     display: flex;
     align-items: center;
-    gap: 0.08rem;
+    gap: 8px;
   }
   .default-cond-row__relation {
-    width: 1rem !important;
+    width: 100px !important;
   }
   .default-cond-row__delete {
-    padding: 0 0.04rem;
+    padding: 0 4px;
   }
   .rule-row__default-add {
     // display: flex;
     // justify-content: flex-end;
-    // margin-right: 0.38rem;
+    // margin-right: 38px;
   }
 }
 
 // // 统一输入组件宽度
 // .voltage-class .function-switch-form :deep(.el-input),
 // .voltage-class .function-switch-form :deep(.el-select) {
-//   width: 1.2rem;
+//   width: 120px;
 // }
 </style>

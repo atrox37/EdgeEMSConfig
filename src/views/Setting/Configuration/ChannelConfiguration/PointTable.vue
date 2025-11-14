@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="voltage-class point-table">
-    <el-table :data="editPoints" class="point-table__content" table-layout="fixed" height="5rem">
+    <el-table :data="editPoints" class="point-table__content" table-layout="fixed" height="500px">
       <el-table-column prop="point_id" label="Point ID" width="100" />
       <el-table-column prop="signal_name" label="Signal Name">
         <template #default="{ row: pointRow, $index }">
@@ -290,12 +290,12 @@ defineExpose({ getEditedData, addPoint, getPublishCommands, resetPublish, hasPub
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.15rem;
-    padding-bottom: 0.08rem;
-    border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
     .point-table__title {
-      font-size: 0.14rem;
+      font-size: 14px;
       font-weight: 600;
       color: #fff;
       margin: 0;
@@ -307,7 +307,7 @@ defineExpose({ getEditedData, addPoint, getPublishCommands, resetPublish, hasPub
     :deep(.el-table__body-wrapper) {
       td {
         .cell {
-          min-height: 0.32rem;
+          min-height: 32px;
         }
       }
     }
@@ -315,7 +315,7 @@ defineExpose({ getEditedData, addPoint, getPublishCommands, resetPublish, hasPub
     .point-table__operation-cell {
       display: flex;
 
-      gap: 0.08rem;
+      gap: 8px;
       align-items: center;
 
       .point-table__setting-btn,
@@ -324,8 +324,8 @@ defineExpose({ getEditedData, addPoint, getPublishCommands, resetPublish, hasPub
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.04rem;
-        font-size: 0.12rem;
+        gap: 4px;
+        font-size: 12px;
       }
     }
   }

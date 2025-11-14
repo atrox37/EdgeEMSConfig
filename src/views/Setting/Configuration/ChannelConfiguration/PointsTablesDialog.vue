@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <FormDialog
     ref="dialogRef"
     title="Points Tables"
-    width="14rem"
+    width="1400px"
     :appendToBody="false"
     @close="handleClose"
   >
@@ -91,7 +91,7 @@
           v-if="!isEditing && (activeTab === 'control' || activeTab === 'adjustment')"
           :type="isPublish ? 'warning' : 'primary'"
           @click="toggleisPublish"
-          style="margin-left: 0.12rem"
+          style="margin-left: 12px"
         >
           {{ isPublish ? 'Cancel Publish' : 'Batch Publish' }}
         </el-button>
@@ -318,13 +318,13 @@ defineExpose({
   .rule-management__edit-controls {
     display: flex;
     justify-content: flex-end;
-    gap: 0.1rem;
+    gap: 10px;
 
     .el-button {
       img {
-        width: 0.14rem;
-        height: 0.14rem;
-        margin-right: 0.04rem;
+        width: 14px;
+        height: 14px;
+        margin-right: 4px;
         object-fit: contain;
       }
     }
@@ -334,7 +334,7 @@ defineExpose({
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.1rem;
+  gap: 10px;
 }
 :deep(.el-tabs__content) {
   position: static;

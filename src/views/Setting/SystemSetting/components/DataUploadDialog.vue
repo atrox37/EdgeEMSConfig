@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <FormDialog
     ref="formDialogRef"
     :title="'Data Upload Detail'"
-    width="8.94rem"
+    width="894px"
     @close="handleClose"
   >
     <template #dialog-body>
@@ -10,7 +10,7 @@
         ref="FormRef"
         :model="formData"
         :rules="rules"
-        label-width="1.35rem"
+        label-width="135px"
         label-position="right"
         class="data-upload-dialog"
         inline
@@ -31,7 +31,7 @@
               placeholder="Enter port number"
             />
           </el-form-item>
-          <el-form-item label="Host:" prop="host" style="width: 8.02rem !important">
+          <el-form-item label="Host:" prop="host" style="width: 802px !important">
             <el-input
               v-model="formData.host"
               placeholder="Enter host address"
@@ -63,7 +63,7 @@
             <el-form-item
               label="CA Certificate:"
               prop="ssl.ca_cert.path"
-              style="width: 8.02rem !important"
+              style="width: 802px !important"
             >
               <el-input
                 v-model="formData.ssl.ca_cert.path"
@@ -99,7 +99,7 @@
             <el-form-item
               label="Client Certificate:"
               prop="ssl.client_cert.path"
-              style="width: 8.02rem !important"
+              style="width: 802px !important"
             >
               <el-input
                 v-model="formData.ssl.client_cert.path"
@@ -138,7 +138,7 @@
             <el-form-item
               label="Client Key:"
               prop="ssl.client_key.path"
-              style="width: 8.02rem !important"
+              style="width: 802px !important"
             >
               <el-input
                 v-model="formData.ssl.client_key.path"
@@ -577,47 +577,47 @@ defineExpose({ open })
 <style scoped lang="scss">
 .voltage-class {
   .data-upload-dialog {
-    max-height: 6rem;
+    max-height: 600px;
     overflow-y: auto;
   }
   .config-title {
-    font-size: 0.16rem;
+    font-size: 16px;
     color: #fff;
-    margin-bottom: 0.16rem;
+    margin-bottom: 16px;
     font-weight: 700;
-    padding-bottom: 0.1rem;
-    border-bottom: 0.01rem solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   .config-collapse {
     border: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.2rem;
+    gap: 20px;
     // flex-direction: column;
     // :deep(.el-input) {
     //   width: 100% !important;
     // }
     :deep(.el-form-item) {
-      width: 3.91rem !important;
+      width: 391px !important;
       position: relative;
       margin-right: 0 !important;
-      margin-bottom: 0.2rem !important;
+      margin-bottom: 20px !important;
     }
   }
 
   .upload-hint {
     position: absolute;
-    top: 0.27rem;
+    top: 27px;
     left: 0;
     display: flex;
     align-items: center;
-    gap: 0.08rem;
-    font-size: 0.12rem;
+    gap: 8px;
+    font-size: 12px;
     color: #fff;
-    // margin-top: 0.06rem;
+    // margin-top: 6px;
 
     .upload-hint__name {
-      // max-width: 2.6rem;
+      // max-width: 260px;
       // overflow: hidden;
       // text-overflow: ellipsis;
       // white-space: nowrap;
@@ -630,7 +630,7 @@ defineExpose({ open })
   .dialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 0.1rem;
+    gap: 10px;
   }
 }
 </style>

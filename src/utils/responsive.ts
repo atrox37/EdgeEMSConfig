@@ -5,7 +5,8 @@ const DESIGN_WIDTH = 1920
 const DESIGN_HEIGHT = 1080
 
 // 基准字体大小（设计稿在1920px宽度下的字体大小）
-const BASE_FONT_SIZE = 100 // 100px = 1rem
+// 注意：项目已从 rem 转换为固定 px 值，此配置已不再使用
+const BASE_FONT_SIZE = 100 // 原先的换算关系：100px = 1rem
 
 /**
  * 设置根字体大小，实现响应式布局
@@ -47,16 +48,17 @@ export function pxToResponsive(designPx: number): number {
 }
 
 /**
- * 将设计稿中的px值转换为rem值
+ * 将设计稿中的px值转换为px值（原先转换为rem值）
+ * 注意：项目已从 rem 转换为固定 px 值，此函数已不再转换为 rem
  * @param designPx 设计稿中的px值
- * @returns 对应的rem值
+ * @returns 对应的px值字符串
  */
 export function pxToRem(designPx: number): string {
   const screenWidth = window.innerWidth
   const scale = screenWidth / DESIGN_WIDTH
   const currentBaseFontSize = BASE_FONT_SIZE * scale
-  const remValue = designPx / currentBaseFontSize
-  return `${remValue}rem`
+  const pxValue = designPx / currentBaseFontSize * 100 // 使用原先的 rem 换算关系：1rem = 100px
+  return `${pxValue}px`
 }
 
 /**

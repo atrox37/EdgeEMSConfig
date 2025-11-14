@@ -1,8 +1,8 @@
-<template>
-  <FormDialog ref="dialogRef" title="Setting" width="6rem" @close="close">
+﻿<template>
+  <FormDialog ref="dialogRef" title="Setting" width="600px" @close="close">
     <template #dialog-body>
       <div class="voltage-class dc-points-dialog__setting">
-        <el-form label-width="1.2rem">
+        <el-form label-width="120px">
           <el-form-item label="Channel Name">
             <el-select
               v-model="settingForm.channel_id"
@@ -134,7 +134,7 @@ function onChannelTypeChange() {
 <style scoped lang="scss">
 .voltage-class {
   .dc-points-dialog__setting {
-    min-height: 0.01rem;
+    min-height: 1px;
   }
 }
 </style>

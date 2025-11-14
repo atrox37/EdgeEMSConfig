@@ -1,9 +1,11 @@
 // 弹窗主体样式（包含表单弹窗样式和全屏弹窗样式�?
+@use './theme-vars.scss' as *;
+
 .voltage-class {
   // 弹窗遮罩�?
   .el-overlay {
-    // height: calc(100% + 0.4rem);
-    // width: calc(100% + 0.4rem);
+    // height: calc(100% + 40px);
+    // width: calc(100% + 40px);
     height: 100%;
     width: 100%;
     position: absolute !important;
@@ -11,7 +13,7 @@
     top: 50%;
     transform: translate(-50%, -50%);
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(0.04rem);
+    backdrop-filter: blur(4px);
     transition: all 0.3s ease;
 
     .el-overlay-dialog {
@@ -22,92 +24,85 @@
 
     // 普通弹窗样�?
     .el-dialog {
-      padding: 0.2rem;
+      padding: $spacing-lg;
       margin: 0 !important;
-      border-radius: 0;
-      box-shadow: 0rem 0.04rem 0.1rem 0rem rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(0.2rem);
-      background: #212c49;
-      border: 0.01rem solid;
-      border-image: linear-gradient(
-          118.59deg,
-          rgba(148, 166, 197, 0.3) 2.74%,
-          rgba(148, 166, 197, 0) 31.8%,
-          rgba(148, 166, 197, 0.103266) 71.77%,
-          rgba(148, 166, 197, 0.3) 97.88%
-        )
-        1;
+      border-radius: $border-radius-base;
+      box-shadow: $shadow-card;
+      backdrop-filter: $backdrop-blur;
+      background: $bg-dark-blue-main;
+      border: 1px solid;
+      border-image: $border-gradient-dialog;
       overflow: hidden;
 
       // 弹窗头部
       .el-dialog__header {
-        background: transparent;
-        padding: 0.2rem 0.24rem;
+        background: $bg-transparent;
+        padding: $spacing-lg $spacing-lg;
         border-bottom: none;
         position: relative;
 
         .el-dialog__title {
-          color: #ffffff;
-          font-size: 0.18rem;
-          font-weight: 600;
-          line-height: 1.4;
+          color: $color-white;
+          font-size: $font-size-large;
+          font-weight: $font-weight-semibold;
+          line-height: $line-height-normal;
           margin: 0;
         }
 
         // 关闭按钮
         .el-dialog__headerbtn {
-          top: 0.05rem;
-          right: 0.15rem;
-          height: 0.48rem;
-          width: 0.48rem;
+          top: $spacing-tiny;
+          right: 15px;
+          height: 48px;
+          width: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: all 0.2s ease;
 
           .el-dialog__close {
-            color: #ffffff;
-            font-size: 0.16rem;
-            font-weight: bold;
+            color: $color-white;
+            font-size: $size-icon-base;
+            font-weight: $font-weight-bold;
           }
         }
       }
       .el-dialog__body {
-        padding: 0 0.2rem;
-        background: transparent;
+        padding: 0 $spacing-lg;
+        background: $bg-transparent;
         min-height: 0;
 
         // 针对表单弹窗的特殊内边距
         .el-dialog--form & {
-          padding: 0.24rem 0.24rem 0.12rem;
+          padding: $spacing-lg $spacing-lg $spacing-sm;
         }
 
         // 滚动条样�?
         &::-webkit-scrollbar {
-          width: 0.06rem;
+          width: $scrollbar-width;
         }
 
         &::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 0.03rem;
+          background: $color-scrollbar-track-alt;
+          border-radius: $scrollbar-border-radius;
         }
 
         &::-webkit-scrollbar-thumb {
-          background: #c1c1c1;
-          border-radius: 0.03rem;
+          background: $color-scrollbar-thumb-alt;
+          border-radius: $scrollbar-border-radius;
 
           &:hover {
-            background: #a8a8a8;
+            background: $color-scrollbar-thumb-alt-hover;
           }
         }
       }
 
       // 弹窗底部
       .el-dialog__footer {
-        padding: 0.4rem 0 0.2rem 0;
-        margin: 0 0.2rem;
-        background: transparent;
-        border-top: 0.01rem solid rgba(255, 255, 255, 0.1);
+        padding: 40px 0 $spacing-lg 0;
+        margin: 0 $spacing-lg;
+        background: $bg-transparent;
+        border-top: 1px solid $color-white-alpha-10;
         display: flex;
         justify-content: flex-end;
       }
@@ -122,92 +117,85 @@
   height: 100vh !important;
   max-width: 100vw;
   max-height: 100vh;
-  border-radius: 0;
-  box-shadow: 0rem 0.04rem 0.1rem 0rem rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(0.2rem);
-  background: #212c49;
-  border: 0.01rem solid;
-  border-image: linear-gradient(
-      118.59deg,
-      rgba(148, 166, 197, 0.3) 2.74%,
-      rgba(148, 166, 197, 0) 31.8%,
-      rgba(148, 166, 197, 0.103266) 71.77%,
-      rgba(148, 166, 197, 0.3) 97.88%
-    )
-    1;
+  border-radius: $border-radius-base;
+  box-shadow: $shadow-card;
+  backdrop-filter: $backdrop-blur;
+  background: $bg-dark-blue-main;
+  border: 1px solid;
+  border-image: $border-gradient-dialog;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 
   .el-dialog__header {
-    background: transparent;
-    padding: 0.2rem 0.24rem;
+    background: $bg-transparent;
+    padding: $spacing-lg $spacing-lg;
     border-bottom: none;
     position: relative;
-    color: #ffffff;
-    font-size: 0.24rem;
-    font-weight: 600;
-    line-height: 1.4;
+    color: $color-white;
+    font-size: $spacing-lg;
+    font-weight: $font-weight-semibold;
+    line-height: $line-height-normal;
     margin: 0;
 
     .el-dialog__title {
     }
 
     .el-dialog__headerbtn {
-      top: 0.05rem;
-      right: 0.15rem;
-      height: 0.48rem;
-      width: 0.48rem;
+      top: $spacing-tiny;
+      right: 15px;
+      height: 48px;
+      width: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
 
       .el-dialog__close {
-        color: #ffffff;
-        font-size: 0.16rem;
-        font-weight: bold;
+        color: $color-white;
+        font-size: $size-icon-base;
+        font-weight: $font-weight-bold;
       }
     }
   }
 
   .el-dialog__body {
     flex: 1 1 auto;
-    padding: 0.2rem 0.2rem 0 0.2rem;
-    background: transparent;
+    padding: $spacing-lg $spacing-lg 0 $spacing-lg;
+    background: $bg-transparent;
     min-height: 0;
     overflow: auto;
 
     // 针对表单弹窗的特殊内边距
     .el-dialog--form & {
-      padding: 0.24rem 0.24rem 0.12rem;
+      padding: $spacing-lg $spacing-lg $spacing-sm;
     }
 
     // 滚动条样�?
     &::-webkit-scrollbar {
-      width: 0.06rem;
+      width: $scrollbar-width;
     }
 
     &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 0.03rem;
+      background: $color-scrollbar-track-alt;
+      border-radius: $scrollbar-border-radius;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 0.03rem;
+      background: $color-scrollbar-thumb-alt;
+      border-radius: $scrollbar-border-radius;
 
       &:hover {
-        background: #a8a8a8;
+        background: $color-scrollbar-thumb-alt-hover;
       }
     }
   }
 
   // .el-dialog__footer {
-  //   padding: 0.4rem 0 0.2rem 0;
-  //   margin: 0 0.2rem;
-  //   background: transparent;
-  //   border-top: 0.01rem solid rgba(255, 255, 255, 0.1);
+  //   padding: 40px 0 $spacing-lg 0;
+  //   margin: 0 $spacing-lg;
+  //   background: $bg-transparent;
+  //   border-top: 1px solid $color-white-alpha-10;
   //   display: flex;
   //   justify-content: flex-end;
   // }

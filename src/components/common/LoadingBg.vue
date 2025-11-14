@@ -60,7 +60,7 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 0.4rem;
+  min-height: 40px;
   display: flex;
   flex-direction: column;
 }
@@ -84,8 +84,8 @@ onBeforeUnmount(() => {
 }
 
 :deep(.circular) {
-  height: 0.42rem;
-  width: 0.42rem;
+  height: 42px;
+  width: 42px;
   animation: loading-rotate 1.2s linear infinite;
 
 }
@@ -98,7 +98,7 @@ onBeforeUnmount(() => {
 
 :deep(.el-loading-text) {
   color: #ff6900 !important;
-  font-size: 0.14rem;
-  margin: 0.03rem 0;
+  font-size: 14px;
+  margin: 3px 0;
 }
 </style>

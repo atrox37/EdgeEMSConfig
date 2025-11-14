@@ -1,52 +1,46 @@
+@use './theme-vars.scss' as *;
+
 .voltage-class {
   .el-picker__popper.el-popper {
-    top: 0.44rem !important;
-    background: transparent !important;
-    border-radius: 0 !important;
-    border: 0.01rem solid !important;
-    border-image: linear-gradient(
-        117.64deg,
-        rgba(148, 166, 197, 0.3) 2.73%,
-        rgba(148, 166, 197, 0) 25.27%,
-        rgba(148, 166, 197, 0.3) 41.05%,
-        rgba(148, 166, 197, 0.103266) 61.63%,
-        rgba(148, 166, 197, 0.3) 97.67%
-      )
-      1 !important;
-    box-shadow: 0rem 0.04rem 0.1rem 0rem rgba(0, 0, 0, 0.25) !important;
-    backdrop-filter: blur(0.2rem) !important;
-    background-color: rgba(30, 47, 80, 0.3) !important;
+    top: 44px !important;
+    background: $bg-transparent !important;
+    border-radius: $border-radius-base !important;
+    border: 1px solid !important;
+    border-image: $border-gradient-default !important;
+    box-shadow: $shadow-card !important;
+    backdrop-filter: $backdrop-blur !important;
+    background-color: $bg-dark-blue-hover !important;
     .el-date-picker {
-      width: 3.32rem !important;
+      width: 332px !important;
     }
     .el-picker-panel {
       background: transparent !important;
-      line-height: 0.3rem;
+      line-height: 30px;
       .el-picker-panel__body {
         color: #fff !important;
         .el-date-picker__time-header {
-          border-bottom: 0.01rem solid rgb(128, 128, 128);
-          font-size: 0.12rem;
-          padding: 0.08rem 0.05rem 0.05rem;
+          border-bottom: 1px solid rgb(128, 128, 128);
+          font-size: 12px;
+          padding: 8px 5px 5px;
           .el-date-picker__editor-wrap {
-            padding: 0 0.05rem;
+            padding: 0 5px;
             // 时间选择�?
             .el-time-panel {
               // 时间选择器头
-              width: 1.8rem;
-              border-radius: 0.02rem;
-              border: 0.01rem solid rgba(128, 128, 128, 0.5);
-              background-color: rgba(26, 48, 86, 1) !important;
+              width: 180px;
+              border-radius: 2px;
+              border: 1px solid rgba(128, 128, 128, 0.5);
+              background-color: $bg-time-picker !important;
 
               margin: 0;
               .el-time-panel__header {
-                padding: 0.16rem 0.2rem;
-                color: #fff;
-                border-bottom: 0.01rem solid rgb(128, 128, 128);
-                background: transparent;
+                padding: $spacing-md $spacing-lg;
+                color: $color-white;
+                border-bottom: 1px solid $color-gray-border;
+                background: $bg-transparent;
 
                 .el-time-panel__title {
-                  font-size: 0.14rem;
+                  font-size: 14px;
                   font-weight: 600;
                   color: #fff;
                 }
@@ -54,42 +48,42 @@
 
               // 时间选择器内�?
               .el-time-panel__content {
-                // padding: 0.16rem 0.2rem;
-                max-height: 1.92rem;
+                // padding: 16px 20px;
+                max-height: 192px;
                 &::before {
-                  border-bottom: 0.01rem solid rgb(128, 128, 128);
-                  border-top: 0.01rem solid rgb(128, 128, 128);
+                  border-bottom: 1px solid rgb(128, 128, 128);
+                  border-top: 1px solid rgb(128, 128, 128);
                 }
                 &:after {
-                  height: 0.32rem;
-                  margin-top: -0.16rem;
-                  padding-top: 0.06rem;
+                  height: 32px;
+                  margin-top: -16px;
+                  padding-top: 6px;
                 }
                 // 时间列表
                 .el-time-spinner__wrapper {
-                  max-height: 1.92rem;
+                  max-height: 192px;
                 }
                 .el-time-spinner__list {
                   &::before {
-                    height: 0.8rem;
+                    height: 80px;
                   }
 
                   // 缩小滚动条滑块样式
                   &::-webkit-scrollbar {
-                    width: 0.06rem;
+                    width: 6px;
                   }
                   &::-webkit-scrollbar-thumb {
                     background: rgba(39, 68, 113, 0.7);
-                    border-radius: 0.03rem;
+                    border-radius: 3px;
                   }
                   &::-webkit-scrollbar-track {
                     background: transparent;
                   }
 
                   .el-time-spinner__item {
-                    height: 0.36rem;
-                    line-height: 0.36rem;
-                    font-size: 0.14rem;
+                    height: 36px;
+                    line-height: 36px;
+                    font-size: 14px;
                     color: #fff;
                     transition: all 0.3s ease;
 
@@ -103,7 +97,7 @@
                       background: rgba(39, 68, 113, 1);
                       color: #ffffff;
                       font-weight: 600;
-                      // box-shadow: 0 0.02rem 0.08rem rgba(64, 158, 255, 0.3);
+                      // box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
                     }
 
                     &.is-disabled {
@@ -114,13 +108,13 @@
                 }
                 .el-scrollbar {
                   .el-scrollbar__bar {
-                    border-radius: 0.04rem;
-                    right: 0.02rem;
+                    border-radius: 4px;
+                    right: 2px;
                     &.is-vertical {
-                      top: 0.02rem;
-                      width: 0.06rem;
+                      top: 2px;
+                      width: 6px;
                       .el-scrollbar__thumb {
-                        height: 0.2rem !important;
+                        height: 20px !important;
                       }
                     }
                   }
@@ -129,19 +123,19 @@
 
               // 时间选择器底�?
               .el-time-panel__footer {
-                // padding: 0.16rem 0.2rem;
-                height: 0.36rem;
-                line-height: 0.25rem;
-                padding: 0.04rem;
-                border-top: 0.01rem solid rgb(128, 128, 128);
+                // padding: 16px 20px;
+                height: 36px;
+                line-height: 25px;
+                padding: 4px;
+                border-top: 1px solid rgb(128, 128, 128);
                 background-color: rgba(26, 48, 86, 1) !important;
                 .el-time-panel__btn {
-                  font-size: 0.14rem;
+                  font-size: 14px;
                   color: #fff;
                   transition: all 0.3s ease;
-                  margin: 0.05rem;
-                  line-height: 0.16rem;
-                  padding: 0 0.05rem;
+                  margin: 5px;
+                  line-height: 16px;
+                  padding: 0 5px;
                   &.confirm {
                     font-weight: 400;
                   }
@@ -151,9 +145,9 @@
           }
         }
         .el-date-picker__header {
-          padding: 0.12rem 0.12rem 0;
+          padding: 12px 12px 0;
           .el-date-picker__header-label {
-            font-size: 0.14rem;
+            font-size: 14px;
             color: #fff;
           }
 
@@ -161,8 +155,8 @@
           .el-date-picker__next-btn {
             .el-picker-panel__icon-btn {
               color: #fff;
-              font-size: 0.12rem;
-              margin-top: 0.08rem;
+              font-size: 12px;
+              margin-top: 8px;
               &:hover {
                 color: #fff;
               }
@@ -170,19 +164,19 @@
           }
         }
         .el-picker-panel__content {
-          width: 2.92rem !important;
-          margin: 0.15rem;
+          width: 292px !important;
+          margin: 15px;
           .el-date-table {
-            font-size: 0.12rem;
+            font-size: 12px;
             th {
               color: #fff;
-              padding: 0.05rem;
-              border-bottom: 0.01rem solid rgb(128, 128, 128);
+              padding: 5px;
+              border-bottom: 1px solid rgb(128, 128, 128);
             }
             td {
-              height: 0.3rem;
-              width: 0.32rem;
-              padding: 0.04rem 0;
+              height: 30px;
+              width: 32px;
+              padding: 4px 0;
               &.available:hover {
                 color: rgba(255, 105, 0, 1);
               }
@@ -192,11 +186,11 @@
       }
       .el-picker-panel__footer {
         background: transparent !important;
-        padding: 0.04rem 0.12rem;
-        border-top: 0.01rem solid rgb(128, 128, 128);
+        padding: 4px 12px;
+        border-top: 1px solid rgb(128, 128, 128);
         .el-picker-panel__link-btn {
           color: #fff !important;
-          padding: 0.04rem 0.12rem;
+          padding: 4px 12px;
           &.is-disabled {
             background: #3a5279 !important;
             color: #fff !important;
@@ -215,23 +209,23 @@
   }
 }
 .el-date-table td .el-date-table-cell {
-  height: 0.3rem !important;
-  padding: 0.03rem 0 !important;
-  line-height: 0.3rem !important;
+  height: 30px !important;
+  padding: 3px 0 !important;
+  line-height: 30px !important;
 }
 .el-date-table td.current:not(.disabled) .el-date-table-cell__text {
-  height: 0.24rem;
-  width: 0.24rem;
-  line-height: 0.24rem;
-  background-color: rgba(255, 105, 0, 1) !important;
+  height: $spacing-lg;
+  width: $spacing-lg;
+  line-height: $spacing-lg;
+  background-color: $primary-color !important;
 }
 
 .el-date-table td .el-date-table-cell .el-date-table-cell__text {
-  height: 0.24rem !important;
-  line-height: 0.24rem !important;
-  width: 0.24rem !important;
-  color: #fff !important;
+  height: $spacing-lg !important;
+  line-height: $spacing-lg !important;
+  width: $spacing-lg !important;
+  color: $color-white !important;
 }
 .el-date-table td.today .el-date-table-cell__text {
-  color: rgba(255, 105, 0, 1);
+  color: $primary-color;
 }

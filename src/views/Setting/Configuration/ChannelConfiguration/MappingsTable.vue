@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="voltage-class mappings-table">
-    <el-table :data="editItems" class="mappings-table__content" table-layout="fixed" height="5rem">
+    <el-table :data="editItems" class="mappings-table__content" table-layout="fixed" height="500px">
       <el-table-column prop="point_id" label="Point ID" width="100" />
       <el-table-column prop="signal_name" label="Signal Name" />
 
@@ -527,7 +527,7 @@ defineExpose({ getEditedData })
     :deep(.el-table__body-wrapper) {
       td {
         .cell {
-          min-height: 0.32rem;
+          min-height: 32px;
         }
       }
     }

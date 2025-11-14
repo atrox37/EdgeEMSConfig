@@ -1,7 +1,7 @@
-<template>
-  <el-dialog v-model="visible" :title="isEdit ? 'Edit Rule' : 'Create Rule'" width="6rem">
+﻿<template>
+  <el-dialog v-model="visible" :title="isEdit ? 'Edit Rule' : 'Create Rule'" width="600px">
     <div class="voltage-class rule-edit-dialog">
-      <el-form :model="form" label-width="1.2rem" :rules="rules" ref="formRef">
+      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="ID" prop="id">
           <el-input v-model="form.id" :disabled="isEdit" placeholder="unique id" />
         </el-form-item>
@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import type { Rule } from '@/types/rule'
-import { createRule, updateRule } from '@/apis/rules'
+import { createRule, updateRule } from '@/api/rules'
 
 const visible = ref(false)
 const isEdit = ref(false)
@@ -109,7 +109,7 @@ defineExpose({ open })
   .dialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 0.1rem;
+    gap: 10px;
   }
 }
 </style>
