@@ -73,7 +73,7 @@ jobs:
           # Tauri 自动更新签名私钥（从 GitHub Secrets 注入）
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # 如果你的 key 有密码，解开下面这行，并在 Secrets 配置 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }} # 例如 v0.1.0
           releaseName: "Edge Desktop ${{ github.ref_name }}"
