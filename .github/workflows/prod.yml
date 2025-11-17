@@ -65,19 +65,17 @@ jobs:
         run: pnpm build
         continue-on-error: true
 
-      # 把 Secret 写回私钥文件，并做调试输出（不会泄露密钥内容）
-      - name: Restore Tauri private key and debug
+      # 从 base64 还原 Tauri 私钥文件，并做调试输出（不会泄露内容）
+      - name: Restore Tauri private key from base64 and debug
         shell: bash
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_BASE64: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_BASE64 }}
         run: |
-          # 写入到文件 tauri.key（内容就是你在 Secrets 中的多行私钥）
-          cat << EOF > tauri.key
-          $TAURI_SIGNING_PRIVATE_KEY
-          EOF
+          # 将 Base64 解码为二进制私钥文件 tauri.key
+          echo "$TAURI_SIGNING_PRIVATE_KEY_BASE64" | base64 -d > tauri.key
 
           echo "==== KEY CHECKSUM (sha256) ===="
-          sha256sum tauri.key || shasum -a 256 tauri.key
+          sha256sum tauri.key 2>/dev/null || shasum -a 256 tauri.key
 
           echo "==== KEY LINE COUNT ===="
           wc -l < tauri.key
@@ -93,7 +91,6 @@ jobs:
           # 这里传的是“私钥文件路径”，不是内容
           TAURI_SIGNING_PRIVATE_KEY: ${{ github.workspace }}/tauri.key
           # ⚠ 已经不用 PASSWORD（请确认你用的是无密码 key）
-          # 如果你重新生成了无密码私钥，就不要配置 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
         with:
           tagName: ${{ github.ref_name }} # 例如 v0.1.0
           releaseName: "Edge Desktop ${{ github.ref_name }}"
