@@ -65,15 +65,35 @@ jobs:
         run: pnpm build
         continue-on-error: true
 
+      # 把 Secret 写回私钥文件，并做调试输出（不会泄露密钥内容）
+      - name: Restore Tauri private key and debug
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          # 写入到文件 tauri.key（内容就是你在 Secrets 中的多行私钥）
+          cat << EOF > tauri.key
+$TAURI_SIGNING_PRIVATE_KEY
+EOF
+
+          echo "==== KEY CHECKSUM (sha256) ===="
+          sha256sum tauri.key || shasum -a 256 tauri.key
+
+          echo "==== KEY LINE COUNT ===="
+          wc -l < tauri.key
+
+          echo "==== KEY HEADER (first line) ===="
+          head -n 1 tauri.key
+
       # 使用官方 Tauri Action 打包当前平台
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Tauri 自动更新签名私钥（从 GitHub Secrets 注入）
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # 如果你的 key 有密码，解开下面这行，并在 Secrets 配置 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # 这里传的是“私钥文件路径”，不是内容
+          TAURI_SIGNING_PRIVATE_KEY: ${{ github.workspace }}/tauri.key
+          # ⚠ 已经不用 PASSWORD（请确认你用的是无密码 key）
+          # 如果你重新生成了无密码私钥，就不要配置 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
         with:
           tagName: ${{ github.ref_name }} # 例如 v0.1.0
           releaseName: "Edge Desktop ${{ github.ref_name }}"

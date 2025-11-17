@@ -44,6 +44,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.9.4",
     "@tsconfig/node22": "^22.0.2",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.15.32",
