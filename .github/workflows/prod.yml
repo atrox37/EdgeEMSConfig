@@ -3,7 +3,7 @@ name: Build & Publish Tauri App (pnpm + S3 + 3 platforms)
 on:
   push:
     tags:
-      - "v*.*.*"   # 推 tag 时触发，例如 v0.1.0、v1.0.0
+      - "v*.*.*"   # push tag to release, e.g. v0.1.0
 
 jobs:
   build:
@@ -43,7 +43,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # 只在 Linux 安装系统依赖（Ubuntu 24.04 / noble）
+      # Only install system deps on Ubuntu
       - name: Install Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -60,19 +60,33 @@ jobs:
       - name: Install frontend deps (pnpm)
         run: pnpm install
 
-      # 如果 tauri.conf.json 里已经配置 beforeBuildCommand，可以去掉这一步
+      # Optional: skip if beforeBuildCommand already builds
       - name: Build frontend (optional)
         run: pnpm build
         continue-on-error: true
 
-      # 从 base64 还原 Tauri 私钥文件，并做调试输出（不会泄露内容）
+      # Restore Tauri private key from base64 and sanity-check format
       - name: Restore Tauri private key from base64 and debug
         shell: bash
         env:
           TAURI_SIGNING_PRIVATE_KEY_BASE64: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_BASE64 }}
         run: |
-          # 将 Base64 解码为二进制私钥文件 tauri.key
+          set -euo pipefail
+
+          if [ -z "${TAURI_SIGNING_PRIVATE_KEY_BASE64:-}" ]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY_BASE64 is not set" >&2
+            exit 1
+          fi
+
+          # Base64 decode into tauri.key (minisign format expected)
           echo "$TAURI_SIGNING_PRIVATE_KEY_BASE64" | base64 -d > tauri.key
+
+          # Ensure the minisign header exists to avoid "Missing comment in secret key"
+          COMMENT="$(head -n 1 tauri.key || true)"
+          if [ -z "$COMMENT" ]; then
+            { echo "untrusted comment: tauri updater key"; cat tauri.key; } > tauri.key.tmp
+            mv tauri.key.tmp tauri.key
+          fi
 
           echo "==== KEY CHECKSUM (sha256) ===="
           sha256sum tauri.key 2>/dev/null || shasum -a 256 tauri.key
@@ -83,20 +97,19 @@ jobs:
           echo "==== KEY HEADER (first line) ===="
           head -n 1 tauri.key
 
-      # 使用官方 Tauri Action 打包当前平台
+      # Build Tauri for current matrix platform
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 这里传的是“私钥文件路径”，不是内容
           TAURI_SIGNING_PRIVATE_KEY: ${{ github.workspace }}/tauri.key
-          # ⚠ 确保你用的是无密码 key，否则需要 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }} # 例如 v0.1.0
+          tagName: ${{ github.ref_name }}
           releaseName: "Edge Desktop ${{ github.ref_name }}"
           releaseBody: "Auto build from GitHub Actions"
 
-      # 收集当前平台的安装包 + .sig，打包成 artifact
+      # Collect bundle + .sig into per-platform artifact
       - name: Collect bundle artifact
         shell: bash
         run: |
@@ -133,7 +146,7 @@ jobs:
         with:
           node-version: 20
 
-      # 下载三个平台的构建产物
+      # Download the three platform artifacts
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
@@ -152,7 +165,7 @@ jobs:
           name: macos-bundle
           path: artifacts/macos
 
-      # 整理成 dist/windows | dist/linux | dist/macos 目录结构
+      # Arrange dist/windows | dist/linux | dist/macos
       - name: Prepare dist layout
         shell: bash
         run: |
@@ -164,16 +177,16 @@ jobs:
           echo "dist layout:"
           ls -R dist
 
-      # 生成 latest.json（脚本里会用 dist 下的文件名和 .sig）
+      # Generate latest.json (uses dist file names and .sig files)
       - name: Generate latest.json
         shell: bash
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          node scripts/generate-latest.js ${{ github.ref_name }}
+          node script/generate-latest.js ${{ github.ref_name }}
 
-      # 配好 AWS 凭证（官方 Action）
+      # Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -181,11 +194,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # （可选）检查一下 AWS CLI 版本
       - name: Check AWS CLI version
         run: aws --version
 
-      # 上传 dist 和 latest.json 到 S3
+      # Upload dist/ + latest.json to S3
       - name: Upload to S3
         shell: bash
         env:
