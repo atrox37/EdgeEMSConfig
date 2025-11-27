@@ -90,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # 这里传的是“私钥文件路径”，不是内容
           TAURI_SIGNING_PRIVATE_KEY: ${{ github.workspace }}/tauri.key
-          # ⚠ 已经不用 PASSWORD（请确认你用的是无密码 key）
+          # ⚠ 确保你用的是无密码 key，否则需要 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
         with:
           tagName: ${{ github.ref_name }} # 例如 v0.1.0
           releaseName: "Edge Desktop ${{ github.ref_name }}"
@@ -173,7 +173,7 @@ jobs:
         run: |
           node scripts/generate-latest.js ${{ github.ref_name }}
 
-      # 配好 AWS 凭证
+      # 配好 AWS 凭证（官方 Action）
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -181,8 +181,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Setup AWS CLI
-        uses: aws-actions/aws-cli-setup@v4
+      # （可选）检查一下 AWS CLI 版本
+      - name: Check AWS CLI version
+        run: aws --version
 
       # 上传 dist 和 latest.json 到 S3
       - name: Upload to S3
