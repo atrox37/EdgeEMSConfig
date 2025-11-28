@@ -65,44 +65,12 @@ jobs:
         run: pnpm build
         continue-on-error: true
 
-      # Restore Tauri private key from base64 and sanity-check format
-      - name: Restore Tauri private key from base64 and debug
-        shell: bash
-        env:
-          TAURI_SIGNING_PRIVATE_KEY_BASE64: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_BASE64 }}
-        run: |
-          set -euo pipefail
-
-          if [ -z "${TAURI_SIGNING_PRIVATE_KEY_BASE64:-}" ]; then
-            echo "TAURI_SIGNING_PRIVATE_KEY_BASE64 is not set" >&2
-            exit 1
-          fi
-
-          # Base64 decode into tauri.key (minisign format expected)
-          echo "$TAURI_SIGNING_PRIVATE_KEY_BASE64" | base64 -d > tauri.key
-
-          # Ensure the minisign header exists to avoid "Missing comment in secret key"
-          COMMENT="$(head -n 1 tauri.key || true)"
-          if [ -z "$COMMENT" ]; then
-            { echo "untrusted comment: tauri updater key"; cat tauri.key; } > tauri.key.tmp
-            mv tauri.key.tmp tauri.key
-          fi
-
-          echo "==== KEY CHECKSUM (sha256) ===="
-          sha256sum tauri.key 2>/dev/null || shasum -a 256 tauri.key
-
-          echo "==== KEY LINE COUNT ===="
-          wc -l < tauri.key
-
-          echo "==== KEY HEADER (first line) ===="
-          head -n 1 tauri.key
-
       # Build Tauri for current matrix platform
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ github.workspace }}/tauri.key
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
