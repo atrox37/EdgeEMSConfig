@@ -21,10 +21,6 @@ jobs:
             artifact_name: linux-bundle
             bundle_subdir: appimage
             ext: .AppImage
-          - os: macos-latest
-            artifact_name: macos-bundle
-            bundle_subdir: dmg
-            ext: .dmg
 
     steps:
       - name: Checkout
