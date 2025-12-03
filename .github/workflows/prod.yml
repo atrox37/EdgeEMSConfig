@@ -1,57 +1,44 @@
-﻿name: 使用 pnpm 构建并发布 Tauri 应用（Windows + Linux + S3）
+name: Build and Publish Tauri (Win/Linux/macOS) to S3
 
 on:
   push:
     tags:
-      - "v*.*.*"   # 推送形如 v0.1.0 的 tag 时触发工作流
+      - 'v*.*.*'
 
 jobs:
   build:
-    name: 按平台构建 Tauri 应用
+    name: Build per platform
     environment: prod
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
-
     strategy:
       matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
           - os: windows-latest
-            artifact_name: windows-bundle
-            bundle_subdir: msi        # 对应 src-tauri/target/release/bundle/msi 下的安装包
-            ext: .msi
-            fallback_exts: ".msi.zip,.exe"
+            bundle_subdir: msi
           - os: ubuntu-latest
-            artifact_name: linux-bundle
-            bundle_subdir: appimage   # 对应 src-tauri/target/release/bundle/appimage 下的 AppImage
-            ext: .AppImage
-            fallback_exts: ".AppImage.tar.gz"
-          # 暂时注释掉 macOS 打包，后续需要时再打开
+            bundle_subdir: appimage
           - os: macos-latest
-            artifact_name: macos-bundle
-            bundle_subdir: dmg      # 按你的实际 tauri 配置调整
-            ext: .dmg
-            fallback_exts: ".app.tar.gz"
+            bundle_subdir: dmg
 
     steps:
-      - name: 检出仓库代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 安装 Node（用于前端构建）
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: 安装 pnpm（官方动作，跨平台稳定）
+
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10.15.1
           run_install: false
 
-
-      - name: 安装 Rust（用于构建 Tauri 后端）
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: 安装 Linux 系统依赖（仅 Ubuntu）
+      - name: Install Linux dependencies (Ubuntu only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
@@ -64,188 +51,66 @@ jobs:
             pkg-config \
             patchelf
 
-      - name: 安装前端依赖（pnpm install）
+      - name: Install frontend deps
         run: pnpm install
 
-      - name: 构建前端代码（可选，失败不阻塞）
-        run: pnpm build
-        continue-on-error: true
-
-      # 仅在 Linux 上打印签名相关环境变量的长度和哈希，方便和本地对比
-      - name: 调试签名环境变量（仅 Linux，打印长度与哈希）
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: |
-          echo "====== 调试 TAURI 签名环境变量（Linux） ======"
-          echo "私钥长度: ${#TAURI_SIGNING_PRIVATE_KEY}"
-          echo "密码长度: ${#TAURI_SIGNING_PRIVATE_KEY_PASSWORD}"
-
-          echo "私钥 sha256 哈希:"
-          echo -n "$TAURI_SIGNING_PRIVATE_KEY" | sha256sum || echo "计算私钥哈希失败"
-
-          echo "密码 sha256 哈希:"
-          echo -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" | sha256sum || echo "计算密码哈希失败"
-          echo "==========================================="
-
-      - name: 使用 tauri-action 构建并签名应用
+      - name: Build app (Tauri)
         uses: tauri-apps/tauri-action@v0
         env:
-          # GitHub 提供的内置 token，用于创建 Release 等操作
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Tauri 更新签名私钥（外层 base64，那串 dW50...）
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # 你的加密私钥需要密码，这里继续传入密码（后面可以用上面的哈希对比本地与 CI）
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        with:
-          # 使用当前 tag 作为 Release tag，例如 v0.1.0
-          tagName: ${{ github.ref_name }}
-          releaseName: "Edge Desktop ${{ github.ref_name }}"
-          releaseBody: "通过 GitHub Actions 自动构建的版本。"
-          # 如果你主要用 S3 做更新分发，可以保留为草稿；要直接在 GitHub Release 发布可以改成 false
-          releaseDraft: true
-          prerelease: false
 
-      - name: 收集每个平台的安装包与签名文件
-        shell: bash
-        run: |
-          BUNDLE_DIR="src-tauri/target/release/bundle/${{ matrix.bundle_subdir }}"
-          echo "打包输出目录: $BUNDLE_DIR"
-          ls -R "$BUNDLE_DIR"
-
-          choose_with_sig() {
-            local ext_list="$1"
-            IFS=',' read -ra exts <<< "$ext_list"
-            for ext in "${exts[@]}"; do
-              local candidate
-              candidate=$(ls "$BUNDLE_DIR"/*"${ext}" 2>/dev/null | head -n 1)
-              if [[ -n "$candidate" && -f "${candidate}.sig" ]]; then
-                echo "$candidate"
-                return 0
-              fi
-            done
-            return 1
-          }
-
-          # 优先使用 matrix.ext，如果没有对应 sig，再尝试 fallback 列表；最后兜底选择目录下第一个与 .sig 成对的文件
-          FILE=$(choose_with_sig "${{ matrix.ext }}" || true)
-
-          if [[ -z "$FILE" && -n "${{ matrix.fallback_exts }}" ]]; then
-            FILE=$(choose_with_sig "${{ matrix.fallback_exts }}" || true)
-          fi
-
-          if [[ -z "$FILE" ]]; then
-            FIRST_SIG=$(ls "$BUNDLE_DIR"/*.sig 2>/dev/null | head -n 1)
-            if [[ -n "$FIRST_SIG" ]]; then
-              BASE="${FIRST_SIG%.sig}"
-              if [[ -f "$BASE" ]]; then
-                FILE="$BASE"
-              fi
-            fi
-          fi
-
-          if [[ -z "$FILE" ]]; then
-            echo "未找到与签名文件成对的安装包，检查目录输出排查。" >&2
-            exit 1
-          fi
-
-          # 在同级目录中查找与文件同名的 .sig（防止路径或扩展与预期不完全一致）
-          SIG=$(find "$BUNDLE_DIR" -maxdepth 1 -type f -name "$(basename "$FILE").sig" | head -n 1)
-          if [[ -z "$SIG" ]]; then
-            echo "已找到安装包但缺少签名文件: $(basename "$FILE").sig" >&2
-            ls -l "$BUNDLE_DIR"
-            exit 1
-          fi
-
-          echo "找到安装包: $FILE"
-          echo "找到签名文件: $SIG"
-
-          mkdir -p upload/${{ matrix.artifact_name }}
-          cp "$FILE" "$SIG" "upload/${{ matrix.artifact_name }}/"
-
-      - name: 上传当前平台构建产物为 Artifact
+      - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: upload/${{ matrix.artifact_name }}
+          name: ${{ matrix.os }}-bundle
+          path: src-tauri/target/release/bundle/${{ matrix.bundle_subdir }}/
 
   publish:
-    name: 从 Artifact 发布到 S3
+    name: Publish to S3
+    environment: prod
     runs-on: ubuntu-latest
     needs: build
-
     steps:
-      - name: 检出仓库代码（用于获取脚本等）
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 安装 Node（用于执行生成 latest.json 的脚本）
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: 下载 Windows 构建产物
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: windows-bundle
-          path: artifacts/windows
+          path: artifacts
 
-      - name: 下载 Linux 构建产物
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-bundle
-          path: artifacts/linux
-
-      # 暂时注释掉 macOS 相关步骤
-      # - name: 下载 macOS 构建产物
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: macos-bundle
-      #     path: artifacts/macos
-
-      - name: 整理 dist 目录结构（dist/windows | dist/linux）
-        shell: bash
+      - name: Organize dist (windows/linux/macos)
         run: |
-          mkdir -p dist/windows dist/linux
-          cp artifacts/windows/* dist/windows/
-          cp artifacts/linux/* dist/linux/
-
-          # 如果以后恢复 macOS 构建，这里再增加：
-          # mkdir -p dist/macos
-          # cp artifacts/macos/* dist/macos/
-
-          echo "dist 目录结构："
+          mkdir -p dist/windows dist/linux dist/macos
+          cp -R artifacts/windows-latest-bundle/* dist/windows/ || true
+          cp -R artifacts/ubuntu-latest-bundle/* dist/linux/ || true
+          cp -R artifacts/macos-latest-bundle/* dist/macos/ || true
           ls -R dist
 
-      - name: 生成 latest.json（基于 dist 中的文件名和 sig）
-        shell: bash
+      - name: Generate latest.json
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          # script/generate-latest.js 内部根据 dist 目录和版本号生成 latest.json
-          node script/generate-latest.js ${{ github.ref_name }}
+        run: node script/generate-latest.js ${{ github.ref_name }}
 
-      - name: 配置 AWS 凭证（用于上传到 S3）
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: 查看 AWS CLI 版本（调试用）
-        run: aws --version
-
-      - name: 将 dist 与 latest.json 上传到 S3
-        shell: bash
+      - name: Upload dist and latest.json to S3
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
           TAG=${GITHUB_REF_NAME}
-          echo "上传 dist 到 s3://${S3_BUCKET}/releases/${TAG}/"
           aws s3 sync dist "s3://${S3_BUCKET}/releases/${TAG}/"
-
-          echo "上传 latest.json 到 s3://${S3_BUCKET}/latest.json"
           aws s3 cp latest.json "s3://${S3_BUCKET}/latest.json" --content-type "application/json"
+
