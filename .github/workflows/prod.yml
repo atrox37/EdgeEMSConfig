@@ -10,6 +10,8 @@ jobs:
     name: 按平台构建 Tauri 应用
     environment: prod
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
 
     strategy:
       matrix:
@@ -23,10 +25,10 @@ jobs:
             bundle_subdir: appimage   # 对应 src-tauri/target/release/bundle/appimage 下的 AppImage
             ext: .AppImage
           # 暂时注释掉 macOS 打包，后续需要时再打开
-          # - os: macos-latest
-          #   artifact_name: macos-bundle
-          #   bundle_subdir: dmg      # 按你的实际 tauri 配置调整
-          #   ext: .dmg
+          - os: macos-latest
+            artifact_name: macos-bundle
+            bundle_subdir: dmg      # 按你的实际 tauri 配置调整
+            ext: .dmg
 
     steps:
       - name: 检出仓库代码
