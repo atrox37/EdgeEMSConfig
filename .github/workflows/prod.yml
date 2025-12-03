@@ -1,13 +1,13 @@
-name: Build & Publish Tauri App (pnpm + S3 + 3 platforms)
+name: 使用 pnpm 构建并发布 Tauri 应用（Windows + Linux + macOS + S3）
 
 on:
   push:
     tags:
-      - "v*.*.*"   # push tag to release, e.g. v0.1.0
+      - "v*.*.*"   # 推送形如 v0.1.0 的 tag 时触发工作流
 
 jobs:
   build:
-    name: Build per platform
+    name: 按平台构建 Tauri 应用
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -15,32 +15,35 @@ jobs:
         include:
           - os: windows-latest
             artifact_name: windows-bundle
-            bundle_subdir: msi
+            bundle_subdir: msi        # 对应 src-tauri/target/release/bundle/msi 下的安装包
             ext: .msi
           - os: ubuntu-latest
             artifact_name: linux-bundle
-            bundle_subdir: appimage
+            bundle_subdir: appimage   # 对应 src-tauri/target/release/bundle/appimage 下的 AppImage
             ext: .AppImage
+          - os: macos-latest
+            artifact_name: macos-bundle
+            bundle_subdir: dmg        # 对应 src-tauri/target/release/bundle/dmg 下的 dmg 安装包
+            ext: .dmg
 
     steps:
-      - name: Checkout
+      - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: 安装 Node（用于前端构建）
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Enable corepack & install pnpm
+      - name: 启用 corepack 并安装 pnpm
         run: |
           corepack enable
           corepack prepare pnpm@latest --activate
 
-      - name: Setup Rust
+      - name: 安装 Rust（用于构建 Tauri 后端）
         uses: dtolnay/rust-toolchain@stable
 
-      # Only install system deps on Ubuntu
-      - name: Install Linux system dependencies
+      - name: 安装 Linux 系统依赖（仅 Ubuntu）
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
@@ -53,84 +56,88 @@ jobs:
             pkg-config \
             patchelf
 
-      - name: Install frontend deps (pnpm)
+      - name: 安装前端依赖（pnpm install）
         run: pnpm install
 
-      # Optional: skip if beforeBuildCommand already builds
-      - name: Build frontend (optional)
+      - name: 构建前端代码（可选，失败不阻塞）
         run: pnpm build
         continue-on-error: true
 
-      # Build Tauri for current matrix platform
-      - name: Build Tauri App
+      - name: 使用 tauri-action 构建并签名应用
         uses: tauri-apps/tauri-action@v0
         env:
+          # GitHub 提供的内置 token，用于创建 Release 等操作
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Tauri 更新签名私钥（你那串 dW50... 的 base64）
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # 如果生成私钥时设置了密码，在这里传入；否则可以为空字符串或不配置
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          # 使用当前 tag 作为 Release tag，例如 v0.1.0
           tagName: ${{ github.ref_name }}
           releaseName: "Edge Desktop ${{ github.ref_name }}"
-          releaseBody: "Auto build from GitHub Actions"
+          releaseBody: "通过 GitHub Actions 自动构建的版本。"
+          # 如果你暂时只用 S3 做分发，可以保留为草稿，也可以改为 false 直接发布
+          releaseDraft: true
+          prerelease: false
 
-      # Collect bundle + .sig into per-platform artifact
-      - name: Collect bundle artifact
+      - name: 收集每个平台的安装包与签名文件
         shell: bash
         run: |
           BUNDLE_DIR="src-tauri/target/release/bundle/${{ matrix.bundle_subdir }}"
-          echo "Bundle dir: $BUNDLE_DIR"
+          echo "打包输出目录: $BUNDLE_DIR"
           ls -R "$BUNDLE_DIR"
 
+          # 找到当前平台的第一个安装包文件（按扩展名 ext）
           FILE=$(ls "$BUNDLE_DIR"/*${{ matrix.ext }} | head -n 1)
           SIG="$FILE.sig"
 
-          echo "Found file: $FILE"
-          echo "Found sig:  $SIG"
+          echo "找到安装包: $FILE"
+          echo "找到签名文件: $SIG"
 
           mkdir -p upload/${{ matrix.artifact_name }}
           cp "$FILE" "$SIG" "upload/${{ matrix.artifact_name }}/"
 
-      - name: Upload artifact
+      - name: 上传当前平台构建产物为 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: upload/${{ matrix.artifact_name }}
 
   publish:
-    name: Publish to S3
+    name: 从 Artifact 发布到 S3
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Checkout
+      - name: 检出仓库代码（用于获取脚本等）
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: 安装 Node（用于执行生成 latest.json 的脚本）
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Download the three platform artifacts
-      - name: Download Windows artifact
+      - name: 下载 Windows 构建产物
         uses: actions/download-artifact@v4
         with:
           name: windows-bundle
           path: artifacts/windows
 
-      - name: Download Linux artifact
+      - name: 下载 Linux 构建产物
         uses: actions/download-artifact@v4
         with:
           name: linux-bundle
           path: artifacts/linux
 
-      - name: Download macOS artifact
+      - name: 下载 macOS 构建产物
         uses: actions/download-artifact@v4
         with:
           name: macos-bundle
           path: artifacts/macos
 
-      # Arrange dist/windows | dist/linux | dist/macos
-      - name: Prepare dist layout
+      - name: 整理 dist 目录结构（dist/windows | dist/linux | dist/macos）
         shell: bash
         run: |
           mkdir -p dist/windows dist/linux dist/macos
@@ -138,38 +145,36 @@ jobs:
           cp artifacts/linux/* dist/linux/
           cp artifacts/macos/* dist/macos/
 
-          echo "dist layout:"
+          echo "dist 目录结构："
           ls -R dist
 
-      # Generate latest.json (uses dist file names and .sig files)
-      - name: Generate latest.json
+      - name: 生成 latest.json（基于 dist 中的文件名和 sig）
         shell: bash
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
+          # script/generate-latest.js 内部根据 dist 目录和版本号生成 latest.json
           node script/generate-latest.js ${{ github.ref_name }}
 
-      # Configure AWS credentials
-      - name: Configure AWS credentials
+      - name: 配置 AWS 凭证（用于上传到 S3）
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Check AWS CLI version
+      - name: 查看 AWS CLI 版本（调试用）
         run: aws --version
 
-      # Upload dist/ + latest.json to S3
-      - name: Upload to S3
+      - name: 将 dist 与 latest.json 上传到 S3
         shell: bash
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
           TAG=${GITHUB_REF_NAME}
-          echo "Uploading dist to s3://${S3_BUCKET}/releases/${TAG}/"
+          echo "上传 dist 到 s3://${S3_BUCKET}/releases/${TAG}/"
           aws s3 sync dist "s3://${S3_BUCKET}/releases/${TAG}/"
 
-          echo "Uploading latest.json to s3://${S3_BUCKET}/latest.json"
+          echo "上传 latest.json 到 s3://${S3_BUCKET}/latest.json"
           aws s3 cp latest.json "s3://${S3_BUCKET}/latest.json" --content-type "application/json"
