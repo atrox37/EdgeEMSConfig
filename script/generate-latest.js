@@ -1,12 +1,16 @@
-// scripts/generate-latest.js
-// Usage: node scripts/generate-latest.js v1.0.0
+// scripts/generate-latest.js (ESM)
+// Usage: node script/generate-latest.js v1.0.0
 
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const versionTag = process.argv[2];
 if (!versionTag) {
-  console.error("Usage: node scripts/generate-latest.js v1.0.0");
+  console.error("Usage: node script/generate-latest.js v1.0.0");
   process.exit(1);
 }
 
