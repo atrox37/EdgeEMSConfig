@@ -43,24 +43,18 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: 启用 corepack 并安装 pnpm（带镜像与重试）
+      - name: 安装 pnpm（官方动作，跨平台稳定）
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+          run_install: false
+      - name: 打印 Node / pnpm / Rust 版本
         shell: bash
-        env:
-          COREPACK_NPM_REGISTRY: https://registry.npmmirror.com
         run: |
-          set -euo pipefail
-          corepack enable
-          for i in {1..3}; do
-            if corepack prepare pnpm@10.15.1 --activate; then
-              exit 0
-            fi
-            echo "corepack prepare 失败，第 ${i} 次重试..." >&2
-            sleep $((i * 5))
-          done
-
-          echo "corepack 连续失败，使用 npm fallback 安装 pnpm@10.15.1" >&2
-          npm config set registry "${COREPACK_NPM_REGISTRY}"
-          npm i -g pnpm@10.15.1
+          node -v
+          pnpm -v
+          rustc -V || true
+          cargo -V || true
 
       - name: 安装 Rust（用于构建 Tauri 后端）
         uses: dtolnay/rust-toolchain@stable
@@ -80,6 +74,14 @@ jobs:
 
       - name: 安装前端依赖（pnpm install）
         run: pnpm install
+      - name: 缓存 pnpm store（基于 pnpm-lock.yaml）
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: 构建前端代码（可选，失败不阻塞）
         run: pnpm build
