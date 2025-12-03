@@ -47,7 +47,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "untrusted comment: minisign public key: 5AAB329E6AD5F9C5\nRWTF+dVqnjKrWr+CKdpU83UJixblqtJqiX7ie5SnHZjDIH+08EV0oW43",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlERDFDMDkzNDk1RTA4MDcKUldRSENGNUprOERSblkxVk1IMXV1QzY1V0x1NEFRelRNbDViQTRoYXBRMzdwcTVTT0E3YjVUbEcK",
       "endpoints": [
         "https://edge-desktop-configuration-application.s3.us-east-2.amazonaws.com/latest.json"
       ],
