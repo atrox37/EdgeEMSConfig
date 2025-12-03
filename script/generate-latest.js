@@ -1,10 +1,10 @@
 // scripts/generate-latest.js
-// 用法：node scripts/generate-latest.js v1.0.0
+// Usage: node scripts/generate-latest.js v1.0.0
 
 const fs = require("fs");
 const path = require("path");
 
-const versionTag = process.argv[2]; // 比如 v1.0.0
+const versionTag = process.argv[2];
 if (!versionTag) {
   console.error("Usage: node scripts/generate-latest.js v1.0.0");
   process.exit(1);
@@ -15,31 +15,35 @@ const version = versionTag.replace(/^v/, "");
 const bucket = process.env.S3_BUCKET || "edge-desktop-configuration-application";
 const region = process.env.AWS_REGION || "us-east-2";
 
-// 和 workflow 中的 dist 目录对应
 const distRoot = path.join(__dirname, "..", "dist");
 
-// 根据实际打包产物扩展名配置
+// Supported bundle extensions (must have matching .sig)
 const platformConfigs = [
-  {
-    key: "windows-x86_64",
-    dir: "windows",
-    ext: ".msi"
-  },
-  {
-    key: "linux-x86_64",
-    dir: "linux",
-    ext: ".AppImage"
-  },
-  {
-    key: "darwin-x86_64", // Intel mac，若有 arm 再加一个 darwin-aarch64
-    dir: "macos",
-    ext: ".dmg"
-  }
+  { key: "windows-x86_64", dir: "windows", exts: [".msi", ".msi.zip", ".exe"] },
+  { key: "linux-x86_64", dir: "linux", exts: [".AppImage", ".AppImage.tar.gz"] },
+  { key: "darwin-x86_64", dir: "macos", exts: [".dmg", ".app.tar.gz"] }
 ];
 
 const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
 const platforms = {};
+
+function findSignedFile(files, exts = []) {
+  for (const ext of exts) {
+    const fileName = files.find((f) => f.endsWith(ext));
+    if (fileName && files.includes(`${fileName}.sig`)) {
+      return fileName;
+    }
+  }
+
+  const sig = files.find((f) => f.endsWith(".sig"));
+  if (sig) {
+    const base = sig.slice(0, -4);
+    if (files.includes(base)) return base;
+  }
+
+  return null;
+}
 
 for (const cfg of platformConfigs) {
   const pDir = path.join(distRoot, cfg.dir);
@@ -48,20 +52,16 @@ for (const cfg of platformConfigs) {
     continue;
   }
 
-  const files = fs
-    .readdirSync(pDir)
-    .filter((f) => f.endsWith(cfg.ext));
+  const files = fs.readdirSync(pDir);
+  const fileName = findSignedFile(files, cfg.exts);
 
-  if (files.length === 0) {
-    console.warn(`[warn] no ${cfg.ext} file found in ${pDir} for ${cfg.key}`);
+  if (!fileName) {
+    console.warn(`[warn] no bundle+sig pair found in ${pDir} for ${cfg.key}`);
     continue;
   }
 
-  const fileName = files[0];
-  const sigFileName = fileName + ".sig";
-
   const filePath = path.join(pDir, fileName);
-  const sigPath = path.join(pDir, sigFileName);
+  const sigPath = `${filePath}.sig`;
 
   if (!fs.existsSync(sigPath)) {
     console.error(`[error] sig file not found for ${cfg.key}: ${sigPath}`);
@@ -70,10 +70,7 @@ for (const cfg of platformConfigs) {
 
   const signature = fs.readFileSync(sigPath, "utf8").trim();
 
-  // S3 中存放路径：releases/{tag}/{dir}/{fileName}
-  const url = `${baseUrl}/releases/${versionTag}/${cfg.dir}/${encodeURIComponent(
-    fileName
-  )}`;
+  const url = `${baseUrl}/releases/${versionTag}/${cfg.dir}/${encodeURIComponent(fileName)}`;
 
   platforms[cfg.key] = {
     signature,
