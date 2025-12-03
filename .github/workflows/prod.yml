@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     name: 按平台构建 Tauri 应用
+    environment: prod
     runs-on: ${{ matrix.os }}
 
     strategy:
