@@ -41,20 +41,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-
       - name: 安装 pnpm（官方动作，跨平台稳定）
         uses: pnpm/action-setup@v4
         with:
           version: 10.15.1
           run_install: false
-      - name: 打印 Node / pnpm / Rust 版本
-        shell: bash
-        run: |
-          node -v
-          pnpm -v
-          rustc -V || true
-          cargo -V || true
+
 
       - name: 安装 Rust（用于构建 Tauri 后端）
         uses: dtolnay/rust-toolchain@stable
@@ -74,14 +66,6 @@ jobs:
 
       - name: 安装前端依赖（pnpm install）
         run: pnpm install
-      - name: 缓存 pnpm store（基于 pnpm-lock.yaml）
-        id: pnpm-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
 
       - name: 构建前端代码（可选，失败不阻塞）
         run: pnpm build
