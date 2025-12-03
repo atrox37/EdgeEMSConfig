@@ -151,7 +151,13 @@ jobs:
             exit 1
           fi
 
-          SIG="$FILE.sig"
+          # 在同级目录中查找与文件同名的 .sig（防止路径或扩展与预期不完全一致）
+          SIG=$(find "$BUNDLE_DIR" -maxdepth 1 -type f -name "$(basename "$FILE").sig" | head -n 1)
+          if [[ -z "$SIG" ]]; then
+            echo "已找到安装包但缺少签名文件: $(basename "$FILE").sig" >&2
+            ls -l "$BUNDLE_DIR"
+            exit 1
+          fi
 
           echo "找到安装包: $FILE"
           echo "找到签名文件: $SIG"
