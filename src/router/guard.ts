@@ -14,7 +14,7 @@ router.beforeEach(async (to, from, next) => {
   // 未登录：只允许进入白名单（走登录页）
   if (!user.token) {
     if (WHITE_LIST.includes(to.path) || to.meta.public) return next()
-    return next({ path: '/login', query: { redirect: to.fullPath } })
+    return next({ path: '/login' })
   }
 
   // 已有 token 但没有 userInfo：尝试获取用户信息（等价于刷新 token 检测）
@@ -23,11 +23,11 @@ router.beforeEach(async (to, from, next) => {
       const res = await user.getUserInfo()
       if (!res.success) {
         user.clearUserData()
-        return next({ path: '/login', query: { redirect: to.fullPath } })
+        return next({ path: '/login' })
       }
     } catch {
       user.clearUserData()
-      return next({ path: '/login', query: { redirect: to.fullPath } })
+      return next({ path: '/login' })
     }
   }
 

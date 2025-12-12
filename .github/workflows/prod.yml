@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest, ubuntu-22.04-arm64]
         include:
           - os: windows-latest
             bundle_subdir: msi
@@ -20,6 +20,8 @@ jobs:
             bundle_subdir: appimage
           - os: macos-latest
             bundle_subdir: dmg
+          - os: ubuntu-22.04-arm64
+            bundle_subdir: appimage
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +40,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install Linux dependencies (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-22.04-arm64'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -54,11 +56,22 @@ jobs:
         run: pnpm install
 
       - name: Build app (Tauri)
+        if: matrix.os != 'ubuntu-22.04-arm64'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Build app (Tauri ARM64)
+        if: matrix.os == 'ubuntu-22.04-arm64'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          args: --target aarch64-unknown-linux-gnu
 
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
@@ -86,10 +99,11 @@ jobs:
 
       - name: Organize dist (windows/linux/macos)
         run: |
-          mkdir -p dist/windows dist/linux dist/macos
+          mkdir -p dist/windows dist/linux dist/macos dist/linux-arm64
           cp -R artifacts/windows-latest-bundle/* dist/windows/ || true
           cp -R artifacts/ubuntu-latest-bundle/* dist/linux/ || true
           cp -R artifacts/macos-latest-bundle/* dist/macos/ || true
+          cp -R artifacts/ubuntu-22.04-arm64-bundle/* dist/linux-arm64/ || true
           ls -R dist
 
       - name: Generate latest.json

@@ -173,12 +173,12 @@ const getAvatarName = (name: string): string => {
   left: 0;
   right: 0;
   height: 40px;
-  background: rgba(84, 98, 140, 0.3);
+  background: #233c63;
   border-bottom: 1px solid rgba(148, 166, 197, 0.3);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  z-index: 9999;
+  z-index: 100;
   user-select: none;
 
   &__left {

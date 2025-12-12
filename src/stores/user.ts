@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
 import { userApi } from '@/api/user'
 import wsManager from '@/utils/websocket'
+import { setItem, getItem, removeItem } from '@/utils/secureStore'
 import MD5 from 'crypto-js/md5'
 // 用户状态管理
 export const useUserStore = defineStore(
@@ -22,6 +23,18 @@ export const useUserStore = defineStore(
       userInfo.value?.role.name_en ? [userInfo.value.role.name_en] : ['Admin'],
     )
 
+    const KEY_REFRESH = 'refresh_token'
+    const KEY_USER = 'user_info'
+
+    const loadRefreshToken = async () => {
+      try {
+        const val = (await getItem<string>(KEY_REFRESH, { asJson: false })) || ''
+        refreshToken.value = val
+      } catch (e) {
+        console.error('Failed to load refreshToken:', e)
+      }
+    }
+
     // 用户登录
     const login = async (params: LoginParams) => {
       try {
@@ -34,15 +47,18 @@ export const useUserStore = defineStore(
         const response = await userApi.login(encryptedParams)
 
         if (response.success) {
-          // 更新状态（会自动持久化）
+          // 更新内存状态，仅持久化 refreshToken 到 Tauri store
+          
           token.value = response.data.access_token
           refreshToken.value = response.data.refresh_token
+          await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
           ElMessage.success(response.message || 'Login successful')
           return { success: true, message: response.message || 'Login successful' }
         } else {
           return { success: false, message: response.message || 'Login failed' }
         }
       } catch (error: any) {
+        
         return { success: false, message: error.message || 'Login failed' }
       }
     }
@@ -55,7 +71,7 @@ export const useUserStore = defineStore(
           const res = await userApi.logout(refreshToken.value)
           if (res.success) {
             ElMessage.success('Logout successful')
-            clearUserData()
+            await clearUserData()
           } else {
             ElMessage.error(res.message || 'Logout failed')
           }
@@ -69,9 +85,11 @@ export const useUserStore = defineStore(
     const getUserInfo = async () => {
       try {
         const response = await userApi.getUserInfo()
-
+        
         if (response.success) {
           userInfo.value = response.data
+          // 持久化用户信息（可选）
+          await setItem(KEY_USER, userInfo.value, { asJson: true })
 
           return { success: true, message: response.message || 'Get user info successful' }
         } else {
@@ -82,19 +100,29 @@ export const useUserStore = defineStore(
       }
     }
 
-    // 刷新用户Token
-    const refreshUserToken = async () => {
-      try {
-        // 这里应该调用刷新Token的API
-        // 暂时返回成功，实际项目中需要实现真实的刷新逻辑
-        return { success: true, message: 'Token refreshed successfully' }
-      } catch (error: any) {
-        return { success: false, message: error.message || 'Token refresh failed' }
-      }
-    }
+    // // 刷新用户Token
+    // const refreshUserToken = async () => {
+    //   try {
+    //     // 尝试读取 refreshToken 并刷新 access token
+    //     const rt = await getItem<string>(KEY_REFRESH, { asJson: false })
+    //     if (!rt) return { success: false, message: 'No refresh token' }
+    //     // 使用全局 axios 实例请求刷新接口
+    //     const { service } = await import('@/utils/request')
+    //     const resp = await service.post('auth/refresh', { refresh_token: rt })
+    //     if (resp.data?.success) {
+    //       token.value = resp.data.data.access_token
+    //       refreshToken.value = resp.data.data.refresh_token
+    //       await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
+    //       return { success: true, message: 'Token refreshed successfully' }
+    //     }
+    //     return { success: false, message: 'Token refresh failed' }
+    //   } catch (error: any) {
+    //     return { success: false, message: error.message || 'Token refresh failed' }
+    //   }
+    // }
 
     // 清除用户数据（手动清除持久化数据）
-    const clearUserData = () => {
+    const clearUserData = async () => {
       // 断开WebSocket连接
       wsManager.disconnect()
 
@@ -102,6 +130,8 @@ export const useUserStore = defineStore(
       userInfo.value = null
       routesInjected.value = false // 清除时也重置
       refreshToken.value = ''
+      await removeItem(KEY_REFRESH)
+      await removeItem(KEY_USER)
     }
 
     return {
@@ -121,15 +151,11 @@ export const useUserStore = defineStore(
       logout,
       getUserInfo,
       clearUserData,
-      refreshUserToken,
+      // refreshUserToken,
+      loadRefreshToken,
     }
   },
   {
-    // 只持久化 token、refreshToken 和 userInfo，routesInjected 不持久化
-    persist: {
-      key: 'user',
-      storage: localStorage,
-      pick: ['token', 'refreshToken', 'userInfo'],
-    },
+    // 不使用 localStorage 持久化，刷新令牌由 Tauri store 负责
   },
 )

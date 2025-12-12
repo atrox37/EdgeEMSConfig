@@ -25,6 +25,8 @@ const distRoot = path.join(__dirname, "..", "dist");
 const platformConfigs = [
   { key: "windows-x86_64", dir: "windows", exts: [".msi", ".msi.zip", ".exe"] },
   { key: "linux-x86_64", dir: "linux", exts: [".AppImage", ".AppImage.tar.gz"] },
+  // Linux ARM64 (AppImage)
+  { key: "linux-aarch64", dir: "linux-arm64", exts: [".AppImage", ".AppImage.tar.gz"] },
   { key: "darwin-x86_64", dir: "macos", exts: [".dmg", ".app.tar.gz"] }
 ];
 

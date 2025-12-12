@@ -72,28 +72,28 @@ export default defineConfig(() => ({
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '/alarmApi': {
-        target: 'http://192.168.30.166:6002',
-        changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-      '/netApi': {
-        target: 'http://192.168.30.166:6006',
-        changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+      // '/alarmApi': {
+      //   target: 'http://192.168.30.166:6002',
+      //   changeOrigin: true,
+      //   // rewrite: (path) => path.replace(/^\/api/, ''),
+      // },
+      // '/netApi': {
+      //   target: 'http://192.168.30.166:6006',
+      //   changeOrigin: true,
+      //   // rewrite: (path) => path.replace(/^\/api/, ''),
+      // },
       '/comApi': {
-        target: 'http://192.168.40.238:6001',
+        target: 'http://192.168.30.166:6001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/comApi/, ''),
       },
       '/ruleApi': {
-        target: 'http://192.168.40.238:6003',
+        target: 'http://192.168.30.166:6003',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ruleApi/, ''),
       },
       '/modApi': {
-        target: 'http://192.168.40.238:6002',
+        target: 'http://192.168.30.166:6002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/modApi/, ''),
       },

@@ -1,10 +1,6 @@
 ﻿<template>
   <div class="voltage-class loginPage">
-    <header class="loginPage__header">
-      <div class="loginPage__head-title">
-        <div class="loginPage__head-text">Log in page</div>
-      </div>
-    </header>
+    <TitleBar />
     <div ref="loginFormContainer" class="loginPage__form">
       <ModuleCard title="Monarch">
         <div class="loginPage__form-content">
@@ -30,6 +26,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
+import TitleBar from '@/layout/TitleBar.vue'
 // import wsManager from '@/utils/websocket'
 
 const router = useRouter()
@@ -61,15 +58,15 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         isLoading.value = true
         const res = await userStore.login(form)
         if (res.success) {
+          
           const userInfo = await userStore.getUserInfo()
           if (userInfo.success) {
             // wsManager.connect()
+            
             const redirect = router.currentRoute.value.query.redirect as string
-            if (redirect) {
-              router.push({ path: redirect })
-            } else {
-              router.push({ path: '/' })
-            }
+            
+            if (redirect) router.replace({ path: redirect })
+            else router.replace({ path: '/' })
           }
         }
         // 这里可以添加登录请求逻辑
@@ -96,7 +93,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border: 0.01rem solid;
+  border: 1px solid;
 
   border-image-source: linear-gradient(
     117.31deg,
@@ -109,21 +106,21 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   // 顶部标题栏
   .loginPage__header {
     width: 100%;
-    height: 0.84rem;
+    height: 84px;
     display: flex;
     align-items: center;
     background: rgba(84, 98, 140, 0.3);
-    border-bottom: 0.01rem solid rgba(148, 166, 197, 0.3);
+    border-bottom: 1px solid rgba(148, 166, 197, 0.3);
 
     .loginPage__head-title {
       height: 100%;
       display: flex;
       align-items: center;
-      margin-left: 0.3rem;
+      margin-left: 30px;
 
       .loginpage__head-icon {
-        width: 0.24rem;
-        height: 0.24rem;
+        width: 24px;
+        height: 24px;
         background-image: url('../../assets/images/login-logo.png');
         background-size: cover;
         background-position: center;
@@ -134,34 +131,34 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         // margin-left: 0.2rem;
         font-family: 'Montserrat', sans-serif;
         font-weight: 600;
-        font-size: 0.3rem;
+        font-size: 30px;
         line-height: 1.5em;
         color: #ffffff;
       }
     }
 
     .loginPage__form-button {
-      margin-top: 0.2rem;
+      margin-top: 20px;
     }
   }
 
   // 登录表单区域
   .loginPage__form {
     position: absolute;
-    top: 3.28rem;
-    left: 14.62rem;
-    width: 3.24rem;
-
+    top: 50%;
+    right: 30px;
+    width: 324px;
+    transform: translateY(-50%);
     .loginPage__form-content {
-      padding: 0.4rem 0.21rem;
+      padding: 40px 21px;
     }
   }
 }
 
 :deep(.el-button.el-button--primary) {
-  height: 0.32rem;
-  width: 2.4rem;
-  margin-top: 0.2rem;
+  height: 32px;
+  width: 240px;
+  margin-top: 20px;
 }
 
 :deep(.el-form-item__label::before) {
@@ -173,6 +170,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 // }
 
 :deep(.el-form-item .el-form-item__label) {
-  height: 0.22rem !important;
+  height: 22px !important;
 }
 </style>

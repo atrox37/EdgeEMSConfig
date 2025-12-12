@@ -11,6 +11,7 @@ import '@vue-flow/minimap/dist/style.css'
 import App from './App.vue'
 import router from './router'
 import './router/guard' // 注册路由守卫
+import { useUserStore } from '@/stores/user'
 import { permissionDirective } from './utils/directives'
 import { initResponsive } from './utils/responsive'
 import { installElMessage } from './plugins/elMessage'
@@ -22,7 +23,6 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
-app.use(router)
 app.use(ElementPlus)
 installElMessage(app)
 
@@ -32,7 +32,8 @@ app.directive('permission', permissionDirective)
 // 初始化响应式配置 (已禁用 rem 自适应)
 initResponsive()
 
-// 启动应用
+
+app.use(router)
 app.mount('#app')
 
 // 应用启动后初始化WebSocket

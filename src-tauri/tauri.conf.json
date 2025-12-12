@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.zhiyuanwang.pcmanagement",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm web:dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm build:type-check",
     "frontendDist": "../dist",
     "removeUnusedCommands": true
   },
@@ -17,14 +17,14 @@
         "title": "Norton creek solar energy center",
         "width": 1500,
         "height": 800,
-        "minWidth": 920,
+        "minWidth": 1050,
         "minHeight": 630,
         "decorations": false,
         "center": true
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://192.168.40.238:* http://localhost:* http://127.0.0.1:*; font-src 'self' asset: data:;",
+      "csp": "default-src 'self'; img-src 'self' asset: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://192.168.30.166:* http://localhost:* http://127.0.0.1:*; font-src 'self' asset: data:;",
       "pattern": {
         "use": "isolation",
         "options": {

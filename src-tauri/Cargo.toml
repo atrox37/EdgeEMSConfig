@@ -21,7 +21,7 @@ tauri-build = { version = "2", features = ["isolation"] }
 tauri = { version = "2", features = ["isolation"] }
 tauri-plugin-http = "2"
 tauri-plugin-opener = "2"
-tauri-plugin-stronghold = "2"
+tauri-plugin-store = "2"
 tauri-plugin-log = "2"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
