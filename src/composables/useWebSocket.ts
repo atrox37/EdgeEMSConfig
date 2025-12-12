@@ -88,7 +88,7 @@ export default function useWebSocket(
   }
 
   // 定时器引用
-  const reconnectTimer = ref<number | null>(null)
+  const reconnectTimer = ref<ReturnType<typeof setInterval> | null>(null)
 
   /**
    * 尝试连接并订阅

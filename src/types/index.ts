@@ -11,6 +11,7 @@ export interface RuleChain {
 
 export interface RuleCard {
   id: string
+  name: string
   cardId?: string
   type:
     | 'filter'

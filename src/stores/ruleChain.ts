@@ -12,6 +12,7 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
       position: { x: 100, y: 100 },
       data: {
         id: 'start',
+        name: 'START',
         type: 'start',
         label: 'START',
         description: 'START',
@@ -25,6 +26,7 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
       position: { x: 500, y: 100 },
       data: {
         id: 'end',
+        name: 'END',
         type: 'end',
         label: 'END',
         description: 'END',

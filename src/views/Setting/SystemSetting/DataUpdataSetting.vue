@@ -291,11 +291,13 @@ onMounted(() => {
   getMqttStatusData()
 })
 
-const handleEnableChange = async (value: boolean) => {
+const handleEnableChange = async (value: string | number | boolean) => {
+  // el-switch 可能传入多种类型，这里统一转成布尔
+  const enabled = value === true || value === 'true' || value === 1
   try {
-    connected.value = !value
+    connected.value = !enabled
     isConnecting.value = true
-    if (value) {
+    if (enabled) {
       const response = await reconnectMqtt()
       if (response.status == 'failed') {
         connected.value = false

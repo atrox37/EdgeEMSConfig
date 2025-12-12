@@ -62,11 +62,11 @@ class WebSocketManager {
   // 当前重连次数
   private reconnectAttempts = 0
   // 心跳定时器
-  private heartbeatTimer: number | null = null
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   // 心跳超时定时器
-  private heartbeatTimeoutTimer: number | null = null
+  private heartbeatTimeoutTimer: ReturnType<typeof setTimeout> | null = null
   // 重连定时器
-  private reconnectTimer: number | null = null
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   // 消息ID计数器
   private messageIdCounter = 0
 

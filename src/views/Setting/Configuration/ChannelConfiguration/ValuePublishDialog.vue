@@ -50,12 +50,12 @@ const formRef = ref()
 const form = ref<{
   pointId: number
   dataType: string
-  value: boolean | number | string
+  value: number | string
   category: 'C' | 'A' | ''
 }>({
   pointId: 0,
   dataType: '',
-  value: '',
+  value: '' as number | string,
   category: '',
 })
 

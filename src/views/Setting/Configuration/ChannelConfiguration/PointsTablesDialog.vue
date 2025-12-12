@@ -109,6 +109,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
+import type { TabPaneName } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import PointTable from './PointTable.vue'
 import tableSubmitIcon from '@/assets/icons/btn-submit.svg'
@@ -120,7 +121,7 @@ import { ChannelIdKey, ChannelNameKey, ChannelProtocolKey } from '@/utils/key'
 // 内部状态
 const dialogRef = ref()
 const isEditing = ref(false)
-const activeTab = ref('telemetry')
+const activeTab = ref<TabPaneName>('telemetry')
 const channelId = ref(0)
 const channelName = ref('')
 const isPublish = ref(false)
@@ -209,7 +210,7 @@ const handleSubmitPublish = async () => {
   }
 }
 
-const handleTabChange = async (name: string) => {
+const handleTabChange = async (name: TabPaneName) => {
   if (isPublish.value && publishDirty) {
     const ok = confirm('You have unsent publish values. Submit them before switching?')
     if (ok) {

@@ -158,7 +158,7 @@ const formatUpdateTime = () => {
 }
 
 // 模拟数据更新
-let updateTimer: number | null = null
+let updateTimer: ReturnType<typeof setInterval> | null = null
 
 const updateData = () => {
     const currentTime = formatUpdateTime()
