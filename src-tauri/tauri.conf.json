@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "pnpm web:dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build:type-check",
+    "beforeBuildCommand": "node script/type-check-build.js",
     "frontendDist": "../dist",
     "removeUnusedCommands": true
   },

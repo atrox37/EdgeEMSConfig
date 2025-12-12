@@ -10,7 +10,7 @@
     "tauri:build": "tauri build",
     "tauri:build:arm64": "tauri build --target aarch64-unknown-linux-gnu",
     "build": "vite build",
-    "build:type-check": "vue-tsc --noEmit",
+    "build:type-check": "vue-tsc --noEmit --project tsconfig.build.json --skipLibCheck",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:coverage": "vitest run --coverage",
