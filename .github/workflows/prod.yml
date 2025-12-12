@@ -12,14 +12,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest, ubuntu-22.04-arm64]
+        # os: [windows-latest, ubuntu-latest, macos-latest, ubuntu-22.04-arm64]
+        # include:
+        #   - os: windows-latest
+        #     bundle_subdir: msi
+        #   - os: ubuntu-latest
+        #     bundle_subdir: appimage
+        #   - os: macos-latest
+        #     bundle_subdir: dmg
+        os: [ubuntu-22.04-arm64]
         include:
-          - os: windows-latest
-            bundle_subdir: msi
-          - os: ubuntu-latest
-            bundle_subdir: appimage
-          - os: macos-latest
-            bundle_subdir: dmg
           - os: ubuntu-22.04-arm64
             bundle_subdir: appimage
 
@@ -126,4 +128,3 @@ jobs:
           TAG=${GITHUB_REF_NAME}
           aws s3 sync dist "s3://${S3_BUCKET}/releases/${TAG}/"
           aws s3 cp latest.json "s3://${S3_BUCKET}/latest.json" --content-type "application/json"
-
