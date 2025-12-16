@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import en from 'element-plus/es/locale/lang/en'
+import UpdateChecker from '@/components/UpdateChecker.vue'
 // import wsManager from '@/utils/websocket'
 // import { useRouter } from 'vue-router'
 // import { useGlobalStore } from '@/stores/global'
@@ -120,6 +121,8 @@ const locale = en
 <template>
   <el-config-provider :locale="locale">
     <router-view />
+    <!-- 更新检查组件 -->
+    <UpdateChecker />
   </el-config-provider>
 </template>
 

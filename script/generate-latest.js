@@ -20,6 +20,63 @@ const bucket = process.env.S3_BUCKET || "edge-desktop-configuration-application"
 const region = process.env.AWS_REGION || "us-east-2";
 
 const distRoot = path.join(__dirname, "..", "dist");
+const changelogPath = path.join(__dirname, "..", "CHANGELOG.md");
+
+/**
+ * 从 CHANGELOG.md 中提取指定版本的更新日志
+ * @param {string} targetVersion - 目标版本号（如 "0.1.7"）
+ * @returns {string} 更新日志内容，如果找不到则返回空字符串
+ */
+function extractChangelogForVersion(targetVersion) {
+  if (!fs.existsSync(changelogPath)) {
+    console.warn(`[warn] CHANGELOG.md not found at ${changelogPath}`);
+    return "";
+  }
+
+  const changelogContent = fs.readFileSync(changelogPath, "utf8");
+  
+  // 匹配版本标题，格式：## [版本号] - 日期
+  // 支持多种格式：## [0.1.7]、## [0.1.7] - 2025-01-XX、## [v0.1.7]
+  const versionPattern = new RegExp(
+    `##\\s*\\[v?${targetVersion.replace(/\./g, "\\.")}\\][^\\n]*(?:\\n|$)`,
+    "i"
+  );
+  
+  const versionMatch = changelogContent.match(versionPattern);
+  if (!versionMatch) {
+    console.warn(`[warn] No changelog entry found for version ${targetVersion}`);
+    return "";
+  }
+
+  const startIndex = changelogContent.indexOf(versionMatch[0]);
+  if (startIndex === -1) {
+    return "";
+  }
+
+  // 查找下一个版本标题或文档结束
+  const remainingContent = changelogContent.substring(startIndex);
+  const nextVersionPattern = /^##\s*\[v?\d+\.\d+\.\d+\]/m;
+  const nextVersionMatch = remainingContent.substring(versionMatch[0].length).match(nextVersionPattern);
+  
+  let endIndex;
+  if (nextVersionMatch) {
+    // 找到下一个版本，截取到下一个版本之前
+    endIndex = startIndex + versionMatch[0].length + nextVersionMatch.index;
+  } else {
+    // 没有下一个版本，截取到文档结束
+    endIndex = changelogContent.length;
+  }
+
+  let changelog = changelogContent.substring(startIndex, endIndex).trim();
+  
+  // 移除版本标题行，只保留内容
+  changelog = changelog.replace(/^##\s*\[.*?\]\s*-?\s*.*?\n/, "");
+  
+  // 清理多余的空行
+  changelog = changelog.replace(/\n{3,}/g, "\n\n").trim();
+  
+  return changelog || "";
+}
 
 // Supported bundle extensions (must have matching .sig)
 const platformConfigs = [
@@ -91,9 +148,18 @@ if (Object.keys(platforms).length === 0) {
   process.exit(1);
 }
 
+// 从 CHANGELOG.md 中提取更新日志
+const notes = extractChangelogForVersion(version);
+if (notes) {
+  console.log(`[ok] Changelog extracted for version ${version}`);
+} else {
+  console.warn(`[warn] No changelog found for version ${version}, notes field will be empty`);
+}
+
 const latestJson = {
   version,
   pub_date: new Date().toISOString(),
+  notes: notes || undefined, // 如果没有更新日志，则不包含 notes 字段
   platforms
 };
 
