@@ -52,7 +52,8 @@ jobs:
             libappindicator3-dev \
             librsvg2-dev \
             pkg-config \
-            patchelf
+            patchelf \
+            xdg-utils
 
       - name: Install frontend deps
         run: pnpm install
