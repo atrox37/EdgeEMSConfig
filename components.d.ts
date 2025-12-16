@@ -11,6 +11,7 @@ declare module 'vue' {
     BatteryCard: typeof import('./src/components/card/BatteryCard.vue')['default']
     DeviceMonitoringTable: typeof import('./src/components/device/DeviceMonitoringTable.vue')['default']
     DoughnutChart: typeof import('./src/components/charts/DoughnutChart.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCollapse: typeof import('element-plus/es')['ElCollapse']
@@ -51,5 +52,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StackedBarChart: typeof import('./src/components/charts/StackedBarChart.vue')['default']
+    UpdateChecker: typeof import('./src/components/UpdateChecker.vue')['default']
   }
 }
