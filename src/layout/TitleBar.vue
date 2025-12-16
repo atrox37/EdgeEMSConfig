@@ -2,7 +2,7 @@
   <div class="titlebar" data-tauri-drag-region>
     <!-- 左侧:应用标题(可拖动区域) -->
     <div class="titlebar__left" data-tauri-drag-region>
-      <div class="titlebar__title" data-tauri-drag-region>Norton creek solar energy center</div>
+      <div class="titlebar__title" data-tauri-drag-region>Norton</div>
     </div>
 
     <!-- 右侧:用户信息和窗口控制按钮 -->
