@@ -20,9 +20,9 @@ jobs:
         #     bundle_subdir: appimage
         #   - os: macos-latest
         #     bundle_subdir: dmg
-        os: [ubuntu-24.04-arm]
+        os: [ubuntu-22.04-arm]
         include:
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-22.04-arm
             bundle_subdir: appimage
 
     steps:
@@ -42,7 +42,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install Linux dependencies (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-24.04-arm'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-22.04-arm'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -59,7 +59,7 @@ jobs:
         run: pnpm install
 
       - name: Build app (Tauri)
-        if: matrix.os != 'ubuntu-24.04-arm'
+        if: matrix.os != 'ubuntu-22.04-arm'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,7 +67,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Build app (Tauri ARM64)
-        if: matrix.os == 'ubuntu-24.04-arm'
+        if: matrix.os == 'ubuntu-22.04-arm'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,14 +77,14 @@ jobs:
           args: --target aarch64-unknown-linux-gnu
 
       - name: Upload bundle artifact (ARM64)
-        if: matrix.os == 'ubuntu-24.04-arm'
+        if: matrix.os == 'ubuntu-22.04-arm'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-bundle
           path: src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/appimage/
 
       - name: Upload bundle artifact (Other platforms)
-        if: matrix.os != 'ubuntu-24.04-arm'
+        if: matrix.os != 'ubuntu-22.04-arm'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-bundle
@@ -113,8 +113,8 @@ jobs:
           echo "Artifacts directory structure:"
           ls -la artifacts/ || echo "artifacts directory not found"
           echo ""
-          echo "Looking for ubuntu-24.04-arm-bundle:"
-          ls -la artifacts/ubuntu-24.04-arm-bundle/ || echo "ubuntu-24.04-arm-bundle not found"
+          echo "Looking for ubuntu-22.04-arm-bundle:"
+          ls -la artifacts/ubuntu-22.04-arm-bundle/ || echo "ubuntu-22.04-arm-bundle not found"
           echo ""
           echo "All artifacts:"
           find artifacts -type f -o -type d | head -20
@@ -122,11 +122,11 @@ jobs:
       - name: Organize dist (linux-arm64 only)
         run: |
           mkdir -p dist/linux-arm64
-          if [ -d "artifacts/ubuntu-24.04-arm-bundle" ]; then
-            cp -R artifacts/ubuntu-24.04-arm-bundle/* dist/linux-arm64/
+          if [ -d "artifacts/ubuntu-22.04-arm-bundle" ]; then
+            cp -R artifacts/ubuntu-22.04-arm-bundle/* dist/linux-arm64/
             echo "Files copied successfully"
           else
-            echo "Error: artifacts/ubuntu-24.04-arm-bundle directory not found"
+            echo "Error: artifacts/ubuntu-22.04-arm-bundle directory not found"
             exit 1
           fi
           ls -R dist
