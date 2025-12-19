@@ -17,10 +17,10 @@ const DEFAULT_TIMEOUT = 30000
 
 // 前缀映射（基于 vite.config.ts）
 const PROXY_MAP: Array<{ prefix: string; target: string; rewrite: boolean }> = [
-  { prefix: '/api', target: 'http://192.168.30.166:6005', rewrite: false },
-  { prefix: '/comApi', target: 'http://192.168.30.166:6001', rewrite: true },
-  { prefix: '/ruleApi', target: 'http://192.168.30.166:6003', rewrite: true },
-  { prefix: '/modApi', target: 'http://192.168.30.166:6002', rewrite: true },
+  { prefix: '/api', target: 'http://127.0.0.1:6005', rewrite: false },
+  { prefix: '/comApi', target: 'http://127.0.0.1:6001', rewrite: true },
+  { prefix: '/ruleApi', target: 'http://127.0.0.1:6003', rewrite: true },
+  { prefix: '/modApi', target: 'http://127.0.0.1:6002', rewrite: true },
 ]
 
 // 进行中的请求键集合（避免重复，无法真正取消，只做结果忽略）

@@ -915,7 +915,7 @@ class WebSocketManager {
 console.log(import.meta.env.VITE_WS_URL, 'import.meta.env.VITE_WS_URL')
 // 创建全局WebSocket管理器实例
 const wsManager = new WebSocketManager({
-  url: import.meta.env.VITE_WS_URL || 'ws://192.168.30.62:8080/ws',
+  url: 'ws://127.0.0.1:6005/ws',
 })
 
 export default wsManager
