@@ -1,4 +1,4 @@
-ï»¿<template>
+<template>
   <div class="voltage-class loginPage">
     <TitleBar />
     <div ref="loginFormContainer" class="loginPage__form">
@@ -69,12 +69,12 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
             else router.replace({ path: '/' })
           }
         }
-        // è¿™é‡Œå¯ä»¥æ·»åŠ ç™»å½•è¯·æ±‚é€»è¾‘
+        // ÕâÀï¿ÉÒÔÌí¼ÓµÇÂ¼ÇëÇóÂß¼­
       } else {
-        console.log('è¡¨å•æ ¡éªŒæœªé€šè¿‡')
+        console.log('±íµ¥Ð£ÑéÎ´Í¨¹ý')
       }
     } catch (error) {
-      console.error('ç™»å½•å¤±è´¥:', error)
+      console.error('µÇÂ¼Ê§°Ü:', error)
     } finally {
       isLoading.value = false
     }
@@ -83,34 +83,28 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 </script>
 
 <style lang="scss" scoped>
+
 .voltage-class.loginPage {
   width: 100%;
   height: 100%;
-  background: #02081a;
+  background: $bg-color-page;
   position: relative;
   overflow: hidden;
   background-image: url('../../assets/images/login-bg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border: 1px solid;
+  border: $border-width-base solid;
 
-  border-image-source: linear-gradient(
-    117.31deg,
-    rgba(148, 166, 197, 0.3) 2.77%,
-    rgba(148, 166, 197, 0) 32.18%,
-    rgba(148, 166, 197, 0.103266) 72.63%,
-    rgba(148, 166, 197, 0.3) 99.05%
-  );
+  border-image-source: $border-gradient-base;
 
-  // é¡¶éƒ¨æ ‡é¢˜æ 
+  // ¶¥²¿±êÌâÀ¸
   .loginPage__header {
     width: 100%;
-    height: 84px;
     display: flex;
     align-items: center;
-    background: rgba(84, 98, 140, 0.3);
-    border-bottom: 1px solid rgba(148, 166, 197, 0.3);
+    background: $bg-color-input;
+    border-bottom: $border-width-base solid $border-color-base;
 
     .loginPage__head-title {
       height: 100%;
@@ -119,8 +113,8 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       margin-left: 30px;
 
       .loginpage__head-icon {
-        width: 24px;
-        height: 24px;
+        width: $size-lg;
+        height: $size-lg;
         background-image: url('../../assets/images/login-logo.png');
         background-size: cover;
         background-position: center;
@@ -128,12 +122,11 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       }
 
       .loginPage__head-text {
-        // margin-left: 0.2rem;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
+        font-family: $font-family-montserrat;
+        font-weight: $font-weight-semibold;
         font-size: 30px;
         line-height: 1.5em;
-        color: #ffffff;
+        color: $text-color-primary;
       }
     }
 
@@ -142,7 +135,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     }
   }
 
-  // ç™»å½•è¡¨å•åŒºåŸŸ
+  // µÇÂ¼±íµ¥ÇøÓò
   .loginPage__form {
     position: absolute;
     top: 50%;
@@ -156,8 +149,8 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 }
 
 :deep(.el-button.el-button--primary) {
-  height: 32px;
-  width: 240px;
+  height: $height-base;
+  width: $width-input-base;
   margin-top: 20px;
 }
 
@@ -165,11 +158,8 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   display: none !important;
 }
 
-// :deep(.el-select__popper.el-popper) {
-//   top: 1.66rem !important;
-// }
-
 :deep(.el-form-item .el-form-item__label) {
   height: 22px !important;
 }
 </style>
+

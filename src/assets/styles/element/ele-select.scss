@@ -1,82 +1,64 @@
-/* Element Plus Select 组件样式 */
+@use "@/assets/styles/_variables.scss" as *;
+/* Element Plus Select �����ʽ */
 
-@use './theme-vars.scss' as *;
 
-// 移除本地公共变量,使用theme-vars中的全局变量
+// ��������
+$popper-border-image: $border-gradient-menu;
+
+$popper-shadow: $box-shadow-medium;
+$popper-backdrop: $backdrop-blur-base;
+$hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 
 .voltage-class {
-  // Select 基础样式
+  // Select ������ʽ
   .el-select {
-    width: $size-input-width;
+    width: 200px;
 
     .el-select__wrapper {
-      padding: 0 $spacing-sm;
-      height: $size-input-height;
+      padding: 0 12px;
+      height: 32px;
       background-color: $bg-color-input;
       border: 1px solid $border-color-base;
-      border-radius: $border-radius-base;
+      border-radius: 0;
       box-shadow: none;
       outline: none;
       transition: none;
-      line-height: $size-input-height;
-      font-size: $font-size-base;
+      line-height: 32px;
+      font-size: 14px;
       min-height: unset;
       .el-select__input {
-        height: $size-input-height;
+        height: 32px;
       }
     }
 
     &__placeholder {
-      color: $color-white;
+      color: $text-color-primary;
     }
-    // .el-select__suffix {
-    //   gap: 0.06rem;
-    //   .el-icon {
-    //     height: 0.1rem;
-    //     width: 0.1rem;
-    //     font-size: 0.14rem;
-    //   }
-    // }
-    // 前缀图标
-    .el-select__prefix,
     .el-select__suffix {
-      color: $text-color-secondary !important;
-      font-size: $font-size-base !important;
-      margin: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-size: $size-icon-base !important;
-      .el-select__icon {
-        width: 100% !important;
-        height: 100% !important;
-        font-size: $size-icon-base !important;
-        margin: 0 !important;
+      gap: 6px;
+      .el-icon {
+        height: 14px;
+        width: 14px;
+        font-size: 14px;
+        color: #000000 !important; // ��ɫͼ��
       }
     }
-    .el-select__prefix {
-      padding-left: $spacing-tiny !important;
-    }
-    .el-select__suffix {
-      padding-right: $spacing-tiny !important;
-    }
-
     .is-hovering:not(.is-focused) {
       box-shadow: none;
     }
-    // 清除按钮
-    // .el-select__close {
-    //   color: $text-color-secondary;
-    //   cursor: pointer;
-    //   transition: color $transition-fast;
-    //   margin-left: $spacing-xs;
+    // �����ť
+    .el-select__close {
+      color: $text-color-secondary;
+      cursor: pointer;
+      transition: color $transition-fast;
+      margin-left: $spacing-xs;
 
-    //   &:hover {
-    //     color: $text-color-regular;
-    //   }
-    // }
+      &:hover {
+        color: $text-color-regular;
+      }
+    }
 
-    // 可过滤和远程搜索样式
+    // �ɹ��˺�Զ��������ʽ
     &.el-select--filterable,
     &.el-select--remote {
       .el-input__inner,
@@ -86,57 +68,57 @@
     }
   }
 
-  // 滚动条样�?
+  // ��������ʽ
   .el-select-dropdown {
-    border-radius: $border-radius-base;
+    border-radius: 0;
     &::-webkit-scrollbar {
-      width: $scrollbar-width;
+      width: 6px;
     }
 
     &::-webkit-scrollbar-track {
-      background: $scrollbar-track-bg;
+      background: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: $scrollbar-thumb-bg;
-      border-radius: $scrollbar-border-radius;
+      background-color: $scrollbar-thumb-dark;
+      border-radius: $border-radius-small;
 
       &:hover {
-        background-color: $scrollbar-thumb-bg-hover;
+        background-color: $scrollbar-thumb-dark-hover;
       }
     }
   }
 }
 
-// 公共下拉菜单基础样式
+// ���������˵�������ʽ
 %popper-base {
   border: 1px solid !important;
-  border-image: $border-gradient-default !important;
-  box-shadow: $shadow-card !important;
-  backdrop-filter: $backdrop-blur !important;
+  border-image: $popper-border-image !important;
+  box-shadow: $popper-shadow !important;
+  backdrop-filter: $popper-backdrop !important;
 }
 
 %menu-item-base {
-  height: $size-input-height;
-  line-height: $size-input-height;
+  height: 32px;
+  line-height: 32px;
   font-weight: 300;
   color: $text-color-primary;
   font-size: $font-size-base;
-  padding: 0 $spacing-sm;
+  padding: 0 12px;
   cursor: pointer;
-  background-color: $bg-transparent;
+  background-color: transparent;
 
   &:hover {
-    background-color: $bg-dark-blue-hover;
+    background-color: $hover-bg;
   }
 
   &.is-disabled {
     color: $text-color-disabled;
     cursor: not-allowed;
-    background-color: $bg-transparent;
+    background-color: transparent;
 
     &:hover {
-      background-color: $bg-transparent;
+      background-color: transparent;
       color: $text-color-disabled;
     }
   }
@@ -154,22 +136,25 @@
   font-size: $font-size-small;
   font-weight: $font-weight-medium;
   padding: $spacing-sm $spacing-md;
-  background-color: rgba(84, 98, 140, 0.1);
-  border-bottom: 1px solid $border-color-base;
+        background-color: $bg-color-dark-11;
+        border-bottom: $border-width-base solid $border-color-base;
 }
 
-// Select 下拉菜单样式
+// Select �����˵���ʽ
 .el-select__popper.el-popper {
-  // top: 44px !important;
   @extend %popper-base;
   // background-color: rgba(84, 98, 140, 0.4) !important;
-  // inset: 2.1rem auto auto 3.96rem !important;
-  // top: 2.1rem !important;
+  // inset: 210px auto auto 396px !important;
+  // top: 44px !important;
+  // right: 0 !important;
   .el-select-dropdown {
     padding: 0;
     overflow-y: auto;
     box-shadow: none;
-
+    .el-select-dropdown__wrap {
+      overflow-y: scroll !important;
+      max-height: 150px;
+    }
     .el-select-dropdown__list {
       margin: 0;
       padding: 0;
@@ -178,7 +163,7 @@
         @extend %menu-item-base;
 
         &.selected {
-          background-color: $bg-dark-blue-hover !important;
+          background-color: $hover-bg !important;
           color: $text-color-primary;
         }
       }
@@ -207,56 +192,66 @@
   }
 }
 
-// Dropdown 下拉菜单样式
-.el-dropdown__popper.el-popper {
+// Dropdown �����˵���ʽ
+.el-dropdown__popper.el-popper.is-light {
   @extend %popper-base;
-  background-color: $bg-transparent !important;
+  // background-color: rgba(15, 35, 70, 0.8) !important;
+  background-color: transparent;
   // inset: 78px auto auto 1655px !important;
-  // top: 78px !important;
+  // top: 60px !important;
   .el-dropdown__list {
     padding: 0;
     margin: 0;
     box-shadow: none !important;
 
     .el-dropdown-menu {
+      z-index: 1000;
       min-width: 150px;
-      padding: $spacing-lg 0;
+      max-height: 320px;
+      padding: 20px 10px;
       overflow-y: auto;
-      border-radius: $border-radius-base !important;
-      background-color: $bg-transparent;
-      box-shadow: none !important;
+      border-radius: 0 !important;
+      background-color: transparent;
+      box-shadow: none;
+      z-index: 1000;
 
       .el-dropdown-menu__item {
         display: flex;
         align-items: center;
-        padding: 0 $spacing-lg;
-        height: $size-input-height;
+        padding: 0 10px;
         font-family: Arimo;
         font-weight: 500;
         font-style: Medium;
-        font-size: $font-size-base;
+        font-size: 14px;
         line-height: 100%;
         letter-spacing: 0%;
-        color: $color-white;
-        background-color: $bg-transparent;
-
+        color: $text-color-primary;
+        background-color: transparent;
+        margin: 10px 0;
+        border: $border-width-base solid transparent;
+        &:first-child {
+          margin-top: 0;
+        }
+        &:last-child {
+          margin-bottom: 0;
+        }
         &:hover {
-          background-color: $bg-dark-blue-hover !important;
+          background-color: $hover-bg !important;
         }
 
         &.selected,
         &.is-active {
-          background-color: $bg-dark-blue-hover !important;
+          background-color: $hover-bg !important;
           color: $text-color-primary;
         }
 
         &.is-disabled {
           color: $text-color-disabled;
           cursor: not-allowed;
-          background-color: $bg-transparent;
+          background-color: transparent;
 
           &:hover {
-            background-color: $bg-transparent;
+            background-color: transparent;
             color: $text-color-disabled;
           }
         }
@@ -282,43 +277,46 @@
   }
 
   &.is-light {
-    background-color: $bg-transparent !important;
+    // background-color: transparent !important;
     & > .el-popper__arrow {
-      top: -$spacing-tiny !important;
+      top: -5px !important;
     }
     .el-popper__arrow {
       visibility: visible !important;
     }
     & > .el-popper__arrow:before {
-      background-color: $bg-dark-blue-alt4 !important;
-      border-color: $color-white-alpha-20 !important;
+      visibility: visible !important;
+      background-color: $popper-bg-dark !important;
+      border-color: $popper-border-color !important;
       border-bottom: none;
-      border-radius: $border-radius-base !important;
+      border-radius: 0 !important;
       border-right: none;
+      border-width: 1px !important;
       z-index: 999;
     }
   }
 }
 
-// 通用 Popper 样式
+// ͨ�� Popper ��ʽ
 .el-popper.is-light {
-  border-radius: $border-radius-base !important;
-  background-color: $bg-color-input !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
   & > .el-popper__arrow:before {
-    background-color: $bg-dark-blue-alt5 !important;
+    background-color: $popper-bg-dark-alt !important;
     border-radius: $border-radius-base !important;
-    border-color: $color-white-alpha-20 !important;
+    border-color: $popper-border-color !important;
     z-index: 999;
   }
   .el-popper__arrow {
-    top: -$spacing-tiny !important;
+    top: -5px !important;
   }
   .el-popper__arrow,
   .el-popper__arrow::before {
-    visibility: hidden !important;
+    visibility: hidden;
     height: 10px;
     width: 10px;
-    border-radius: $border-radius-base !important;
+    border-radius: 0 !important;
     border-width: 1px !important;
   }
 }
+

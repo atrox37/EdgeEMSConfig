@@ -68,7 +68,7 @@ export default defineConfig(() => ({
     },
     proxy: {
       '/api': {
-        target: 'http://192.168.30.166:6005',
+        target: 'http://192.168.30.21:6005',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -83,17 +83,17 @@ export default defineConfig(() => ({
       //   // rewrite: (path) => path.replace(/^\/api/, ''),
       // },
       '/comApi': {
-        target: 'http://192.168.30.166:6001',
+        target: 'http://192.168.30.21:6001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/comApi/, ''),
       },
       '/ruleApi': {
-        target: 'http://192.168.30.166:6003',
+        target: 'http://192.168.30.21:6003',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ruleApi/, ''),
       },
       '/modApi': {
-        target: 'http://192.168.30.166:6002',
+        target: 'http://192.168.30.21:6002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/modApi/, ''),
       },
@@ -107,6 +107,7 @@ export default defineConfig(() => ({
   css: {
     preprocessorOptions: {
       scss: {
+        additionalData: '@use "@/assets/styles/_variables.scss" as *;',
         // 如果需要全局 SCSS 变量，可以在这里添加
         // additionalData: `@use "@/assets/styles/variables.scss" as *;`,
       },

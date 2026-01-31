@@ -3,6 +3,7 @@ import type { UserInfo, LoginParams } from '@/types/user'
 import { userApi } from '@/api/user'
 import wsManager from '@/utils/websocket'
 import { setItem, getItem, removeItem } from '@/utils/secureStore'
+import { clearApiConfig } from '@/utils/apiConfig'
 import MD5 from 'crypto-js/md5'
 // 用户状态管理
 export const useUserStore = defineStore(
@@ -52,7 +53,7 @@ export const useUserStore = defineStore(
           token.value = response.data.access_token
           refreshToken.value = response.data.refresh_token
           await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
-          ElMessage.success(response.message || 'Login successful')
+         
           return { success: true, message: response.message || 'Login successful' }
         } else {
           return { success: false, message: response.message || 'Login failed' }
@@ -100,26 +101,25 @@ export const useUserStore = defineStore(
       }
     }
 
-    // // 刷新用户Token
-    // const refreshUserToken = async () => {
-    //   try {
-    //     // 尝试读取 refreshToken 并刷新 access token
-    //     const rt = await getItem<string>(KEY_REFRESH, { asJson: false })
-    //     if (!rt) return { success: false, message: 'No refresh token' }
-    //     // 使用全局 axios 实例请求刷新接口
-    //     const { service } = await import('@/utils/request')
-    //     const resp = await service.post('auth/refresh', { refresh_token: rt })
-    //     if (resp.data?.success) {
-    //       token.value = resp.data.data.access_token
-    //       refreshToken.value = resp.data.data.refresh_token
-    //       await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
-    //       return { success: true, message: 'Token refreshed successfully' }
-    //     }
-    //     return { success: false, message: 'Token refresh failed' }
-    //   } catch (error: any) {
-    //     return { success: false, message: error.message || 'Token refresh failed' }
-    //   }
-    // }
+    // 刷新用户Token
+    const refreshUserToken = async () => {
+      try {
+        // 尝试读取 refreshToken 并刷新 access token
+        const rt = await getItem<string>(KEY_REFRESH, { asJson: false })
+        if (!rt) return { success: false, message: 'No refresh token' }
+        
+        const response = await userApi.refreshToken(rt)
+        if (response.success) {
+          token.value = response.data.access_token
+          refreshToken.value = response.data.refresh_token
+          await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
+          return { success: true, message: 'Token refreshed successfully' }
+        }
+        return { success: false, message: response.message || 'Token refresh failed' }
+      } catch (error: any) {
+        return { success: false, message: error.message || 'Token refresh failed' }
+      }
+    }
 
     // 清除用户数据（手动清除持久化数据）
     const clearUserData = async () => {
@@ -132,6 +132,8 @@ export const useUserStore = defineStore(
       refreshToken.value = ''
       await removeItem(KEY_REFRESH)
       await removeItem(KEY_USER)
+      // 清除API配置（可选，根据需求决定是否清除）
+      // await clearApiConfig()
     }
 
     return {
@@ -151,7 +153,7 @@ export const useUserStore = defineStore(
       logout,
       getUserInfo,
       clearUserData,
-      // refreshUserToken,
+      refreshUserToken,
       loadRefreshToken,
     }
   },

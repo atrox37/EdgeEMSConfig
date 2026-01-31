@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="voltage-class configuration">
     <!-- Page Header -->
     <div class="configuration__header">
@@ -103,7 +103,7 @@ const handleTabClick = (
   }
 
   .configuration__content {
-    position: relative;
+    // position: relative;
     height: calc(100% - 52px);
     display: flex;
     flex-direction: column;

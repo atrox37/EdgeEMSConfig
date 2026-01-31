@@ -1,8 +1,8 @@
-/* Element Plus Form 组件样式 */
+@use "@/assets/styles/_variables.scss" as *;
+/* Element Plus Form �����ʽ */
 
-@use './theme-vars.scss' as *;
 .voltage-class {
-  // Form 基础样式
+  // Form ������ʽ
   .el-form {
     .el-form-item {
       margin-bottom: $spacing-lg;
@@ -12,7 +12,7 @@
       // &:last-child {
       //   margin-bottom: 0;
       // }
-      // 标签
+      // ��ǩ
       .el-form-item__label {
         color: $text-color-primary;
         font-size: 14px;
@@ -26,36 +26,28 @@
         line-height: 32px;
         height: 32px;
 
-        // 必填标记
+        // ������
         &::before {
           // display: none !important;
           margin-right: 4px !important;
         }
       }
 
-      // 内容区域
+      // ��������
       .el-form-item__content {
         flex: 1;
-        min-width: 240px;
         display: flex;
         align-items: center;
         line-height: 32px;
 
-        // 验证错误信息
+        // ��֤������Ϣ
         .el-form-item__error {
           color: $danger-color;
-          padding-top: 2px;
           font-size: 10px;
           line-height: $line-height-normal;
-          margin-top: $spacing-xs;
-          display: block;
-          position: absolute;
-          top: 100%;
-          left: 0;
-          z-index: 1;
         }
 
-        // 帮助文本
+        // �����ı�
         .el-form-item__help {
           color: $text-color-secondary;
           font-size: $font-size-small;
@@ -65,7 +57,7 @@
         }
       }
 
-      // 验证状态（不改变label颜色和输入框边框�?
+      // ��֤״̬�����ı�label��ɫ�������߿�??
     }
 
     &.is-success {
@@ -101,7 +93,7 @@
       }
     }
 
-    // 禁用状�?
+    // ����״??
     &.is-disabled {
       .el-form-item__label {
         color: $text-color-disabled;
@@ -120,12 +112,12 @@
         }
       }
     }
-    // 行内表单
+    // ���ڱ���
     &.el-form--inline {
       .el-form-item {
         display: inline-flex;
-        margin-bottom: 40px;
-        margin-right: 40px;
+        margin-bottom: 20px;
+        margin-right: 20px;
         .el-form-item__label {
           margin-bottom: 0;
           margin-right: 16px;
@@ -137,7 +129,7 @@
         // }
       }
     }
-    // 标签顶部对齐
+    // ��ǩ��������
     &.el-form--label-top {
       .el-form-item {
         flex-direction: column;
@@ -155,11 +147,11 @@
     }
   }
 
-  // 标签右对�?
+  // ��ǩ�Ҷ�??
 
-  // Form 尺寸变体
+  // Form �ߴ����
   .el-form {
-    // 小尺�?
+    // С��??
     &.el-form--small {
       .el-form-item {
         margin-bottom: $spacing-md;
@@ -178,9 +170,9 @@
       }
     }
 
-    // Form 验证规则样式
+    // Form ��֤������ʽ
     .el-form {
-      // 验证中状�?
+      // ��֤��״??
       .el-form-item.is-validating {
         .el-form-item__content {
           position: relative;
@@ -201,7 +193,7 @@
       }
     }
 
-    // 表单操作区域
+    // ������������
     .el-form-actions {
       margin-top: $spacing-xl;
       padding-top: $spacing-lg;
@@ -214,20 +206,21 @@
         min-width: 80px;
       }
 
-      // 左对齐操�?
+      // ������??
       &.el-form-actions--left {
         justify-content: flex-start;
       }
 
-      // 居中对齐操作
+      // ���ж������
       &.el-form-actions--center {
         justify-content: center;
       }
 
-      // 两端对齐操作
+      // ���˶������
       &.el-form-actions--space-between {
         justify-content: space-between;
       }
     }
   }
 }
+

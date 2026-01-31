@@ -1,48 +1,52 @@
+@use "@/assets/styles/_variables.scss" as *;
+
 .el-overlay {
   &.is-message-box {
-    // background-color: rgba(84, 98, 140, 0.2);
+    // background-color: $bg-color-dark-11;
     .el-message-box {
-      padding: 12px;
-      background-color: #1f2e4a;
+      padding: $spacing-md;
+      background-color: $bg-color-dark-3;
       max-width: 450px;
-      border-radius: 4px;
-      font-size: 16px;
+      border-radius: $border-radius-small;
+      font-size: $font-size-medium;
       box-shadow: none;
       .el-message-box__header {
-        font-size: 16px;
-        font-weight: 700;
-        font-size: 18px;
+        font-size: $font-size-medium;
+        font-weight: $font-weight-bold;
+        font-size: $font-size-large;
         max-width: 420px;
-        padding: 12px;
-        color: #fff;
+        padding: $spacing-md;
+        color: $text-color-primary;
         .el-message-box__title {
-          font-size: 18px;
-          line-height: 24px;
-          color: #fff;
+          font-size: $font-size-large;
+          line-height: $line-height-normal;
+          color: $text-color-primary;
         }
         .el-message-box__headerbtn {
           width: 14px;
           height: 14px;
+          font-size: $font-size-medium;
           .el-icon.el-message-box__close {
-            color: #fff;
-            top: 12px;
-            right: 12px;
+            color: #000000 !important; // ºÚÉ«Í¼±ê
+            top: $spacing-md;
+            right: $spacing-md;
           }
         }
       }
       .el-message-box__content {
         .el-message-box__container {
-          gap: 12px;
+          gap: $spacing-md;
           .el-icon.el-message-box__status {
+            color: #000000 !important; // ºÚÉ«Í¼±ê
             .el-message-box-icon--warning {
-              font-size: 24px;
+              font-size: $size-lg;
             }
           }
           .el-message-box__message {
-            color: #fff;
-            font-size: 16px;
-            line-height: 24px;
-            font-weight: 400;
+            color: $text-color-primary;
+            font-size: $font-size-medium;
+            line-height: $line-height-normal;
+            font-weight: $font-weight-normal;
           }
         }
       }
@@ -59,21 +63,25 @@
   border-radius: 4px !important;
   &.el-message--error {
     .el-message__content {
-      color: #f56c6c !important;
+      color: $danger-color-error !important;
     }
   }
   .el-icon.el-message__icon {
     font-size: 24px !important;
+    color: #000000 !important; // ºÚÉ«Í¼±ê
   }
   .el-message__content {
-    font-size: 14px !important;
-    font-weight: 400 !important;
+    font-size: $font-size-base !important;
+    font-weight: $font-weight-normal !important;
+    color: #000000 !important; // ºÚÉ«ÎÄ×Ö
   }
   .el-icon.el-message__closeBtn {
     font-size: 16px !important;
+    color: #000000 !important; // ºÚÉ«Í¼±ê
   }
-  // è°ƒæ•´ç¬¬ä¸€æ¡æ¶ˆæ¯è·ç¦»é¡¶éƒ¨çš„é«˜åº¦
+  // µ÷ÕûµÚÒ»ÌõÏûÏ¢¾àÀë¶¥²¿µÄ¸ß¶È
   &:first-child {
-    top: 100px !important; // å¯ä»¥æ ¹æ®éœ€è¦è°ƒæ•´è¿™ä¸ªå€¼
+    top: 100px !important; // ¿ÉÒÔ¸ù¾İĞèÒªµ÷ÕûÕâ¸öÖµ£¬±ÈÈç 30px??0px ??  }
   }
 }
+

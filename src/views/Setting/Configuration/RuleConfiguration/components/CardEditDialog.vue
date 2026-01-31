@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <FormDialog
     ref="formDialogRef"
     :title="`Edit ${card?.label}`"
@@ -22,7 +22,7 @@
 import { ref, watch, computed } from 'vue'
 import FunctionSwitchForm from './customCardForm/FunctionSwitchForm.vue'
 import ActionChangeValue from './customCardForm/ActionChangeValue.vue'
-import type { RuleCard } from '@/types/index.ts'
+import type { RuleCard } from '@/types/ruleConfiguration'
 
 interface Props {
   visible: boolean
@@ -30,7 +30,7 @@ interface Props {
 }
 const widthList = {
   'function-switch': '1400px',
-  'action-changeValue': '1002px',
+  'action-changeValue': '1400px',
 }
 interface Emits {
   (e: 'update:visible', value: boolean): void
@@ -85,7 +85,6 @@ const handleSave = async () => {
   const result = await (childFormRef.value?.validateForm?.() ??
     Promise.resolve({ valid: true, data: localCard.value }))
   if (!result?.valid) return
-
   emit('save', result.data)
 }
 

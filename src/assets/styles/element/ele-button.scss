@@ -1,239 +1,426 @@
-/* Element Plus Button 组件样式重写 */
+@use "@/assets/styles/_variables.scss" as *;
+/* Element Plus Button �����ʽ��д */
 
-// 引入 Sass color 模块
+// �����������
 @use "sass:color";
-// 引入主题变量
-@use './theme-vars.scss' as *;
 
-// 基础按钮样式
-.el-button {
-  // 重置默认样式
-  height: $size-input-height !important;
-  font-size: $font-size-base !important;
-  padding: $spacing-tiny $spacing-md !important;
-  border: none !important;
-  outline: none !important;
-  cursor: pointer;
-  transition: all $transition-base;
-  position: relative;
-  overflow: hidden;
-  font-family: Arimo, sans-serif;
-  font-weight: $font-weight-normal !important;
-  vertical-align: middle;
-  color: $color-white !important;
-  border-radius: $border-radius-base !important;
-  background: $color-white-alpha-10 !important;
-  &:hover {
-    background: $bg-button-hover !important;
-  }
-  &:active {
-    background: $color-white-alpha-10 !important;
-  }
-  &:focus {
-    box-shadow: none !important;
-  }
+// .voltage-class {
+  // ������ť��ʽ
+  .el-button {
+    height: 32px !important;
+    font-size: 14px !important;
+    padding: 5px 16px !important;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    font-family: Arimo, sans-serif;
+    font-weight: 400 !important;
+    vertical-align: middle;
+    color: #ffffff !important; // Ĭ�ϰ�ɫ����
+    border-radius: $border-radius-base !important;
+    background-color: $secondary-color;
 
-  // 主要按钮
-  &.el-button--primary,
-  &.el-picker-panel__link-btn {
-    background: $primary-color !important;
-    color: $text-color-primary;
-    box-shadow: none;
-
-    &:hover {
-      background: $primary-color-hover !important;
-      color: $text-color-primary !important;
-    }
-
-    &:active {
-      background: $primary-color-hover !important;
-      color: $text-color-primary !important;
-    }
-
-    &:focus {
-      box-shadow: none !important;
-    }
-
-    &.is-disabled {
-      background: $bg-color-page !important;
-      color: $text-color-disabled !important;
-      box-shadow: none !important;
-      cursor: not-allowed;
-
-      &:hover {
-        background: $bg-color-page !important;
-        transform: none;
-        box-shadow: none;
-      }
-    }
-  }
-
-  // 普通按钮
-  &,
-  &.el-button--warning,
-  &.is-text {
-    background: $color-white-alpha-10 !important;
-    color: $color-white;
-
-    &:hover {
-      background: $bg-button-hover !important;
-    }
-
-    &:active {
-      background: $bg-button-hover !important;
-    }
-
-    &:focus {
-      box-shadow: none !important;
-    }
-  }
-
-  // 信息按钮
-  &.el-button--info {
-    background: linear-gradient(135deg, $info-color 0%, #096dd9 100%);
-    color: $color-white;
-    box-shadow: 0 $spacing-xxs 8px rgba(24, 144, 255, 0.3);
-
-    &:hover {
-      background: linear-gradient(135deg, color.adjust($info-color, $lightness: -5%) 0%, #0050b3 100%);
-      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      background: linear-gradient(135deg, color.adjust($info-color, $lightness: -10%) 0%, #003a8c 100%);
-      box-shadow: 0 $spacing-xxs 4px rgba(24, 144, 255, 0.3);
-      transform: translateY(0);
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 $spacing-xxs rgba(24, 144, 255, 0.2);
-    }
-  }
-
-  // 默认按钮
-  &.el-button--default {
-    background: $color-white-alpha-10;
-    color: $color-white;
-    border: 1px solid $color-white-alpha-20;
-
-    &:hover {
-      background: $color-white-alpha-20;
-      border-color: $color-white-alpha-30;
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      background: $color-white-alpha-15;
-      border-color: $color-white-alpha-25;
-      transform: translateY(0);
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 $spacing-xxs $color-white-alpha-20;
-    }
-  }
-
-  // 链接按钮
-  &.is-link {
-    background: $bg-transparent !important;
-    padding: $spacing-tiny $spacing-sm !important;
-    text-decoration: underline;
-
-    &:hover {
-      background: $bg-transparent !important;
-      // padding: $spacing-tiny $spacing-sm !important;
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 $spacing-xxs rgba(24, 144, 255, 0.2);
-    }
-  }
-
-  // 圆形按钮
-  &.is-circle {
-    border-radius: $border-radius-circle;
-    padding: 0;
-
-    &.el-button--default {
-      width: $button-height-base;
-      height: $button-height-base;
-    }
-
-    &.el-button--small {
-      width: $button-height-small;
-      height: $button-height-small;
-    }
-
-    &.el-button--large {
-      width: $button-height-large;
-      height: $button-height-large;
-    }
-  }
-
-  // 圆角按钮
-  &.is-round {
-    border-radius: $border-radius-small;
-  }
-
-  // 加载状态
-  &.is-loading {
-    pointer-events: none;
-    opacity: $opacity-loading;
 
     .el-icon {
-      animation: rotating 2s linear infinite;
-    }
-  }
-
-  // 禁用状态
-  &.is-disabled {
-    cursor: not-allowed;
-    opacity: $opacity-disabled;
-
-    &:hover {
-      transform: none;
-      box-shadow: none;
-    }
-  }
-
-  // 按钮间距
-  & + .el-button {
-    margin-left: $spacing-sm !important;
-  }
-}
-
-// 按钮组样式
-.el-button-group {
-  display: inline-flex;
-
-  .el-button {
-    border-radius: $border-radius-base;
-    margin-left: 0;
-
-    &:first-child {
-      border-top-left-radius: $border-radius-small;
-      border-bottom-left-radius: $border-radius-small;
+      color: #ffffff !important;
     }
 
-    &:last-child {
-      border-top-right-radius: $border-radius-small;
-      border-bottom-right-radius: $border-radius-small;
-    }
-
-    &:not(:first-child) {
-      margin-left: -1px;
+    img {
+      // ��ͼ��תΪ��ɫ
+      filter: brightness(0) invert(1);
     }
 
     &:hover {
-      z-index: 1;
+      background: $secondary-color-hover !important;
+    }
+
+    &:active {
+      background: $secondary-color-active !important;
     }
 
     &:focus {
-      z-index: 1;
+      box-shadow: none !important;
+    }
+
+    // ��Ҫ��ť�����ְ�ɫ���֣�
+    &.el-button--primary,
+    &.el-picker-panel__link-btn {
+      background: $primary-color;
+      color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
+      box-shadow: none;
+
+      // ͼ����ɫ��������ɫ��ͬ����ɫ��
+      .el-icon {
+        color: #ffffff !important;
+      }
+
+      img {
+        filter: brightness(0) invert(1);
+      }
+
+      &:hover {
+        background: $primary-color-hover !important;
+        color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
+      }
+
+      &:active {
+        background: $primary-color-hover !important;
+        color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
+      }
+
+      &:focus {
+        box-shadow: none !important;
+      }
+
+      &.is-disabled {
+        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        background: color.mix($primary-color, #c0c4cc, 50%) !important;
+        color: $text-color-disabled !important;
+        box-shadow: none !important;
+        cursor: not-allowed;
+
+        .el-icon {
+          color: $text-color-disabled !important;
+        }
+
+        img {
+          filter: brightness(0) saturate(100%) opacity(0.6);
+        }
+
+        &:hover {
+          background: color.mix($primary-color, #c0c4cc, 50%) !important;
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+
+    // Warning��ť - ��ɫ����
+    &.el-button--warning {
+      background: $warning-color !important; // ʹ��warning��ɫ
+      color: #ffffff !important; // ��ɫ����
+
+      .el-icon {
+        color: #ffffff !important;
+      }
+
+      img {
+        filter: brightness(0) invert(1);
+      }
+
+      &:hover {
+        background: $warning-color-hover !important;
+        color: #ffffff !important;
+      }
+
+      &:active {
+        background: $warning-color-active !important;
+        color: #ffffff !important;
+      }
+
+      &:focus {
+        box-shadow: none !important;
+      }
+
+      &.is-disabled {
+        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        background: color.mix($warning-color, #c0c4cc, 50%) !important;
+        color: $text-color-disabled !important;
+        cursor: not-allowed;
+
+        .el-icon {
+          color: $text-color-disabled !important;
+        }
+
+        img {
+          filter: brightness(0) saturate(100%) opacity(0.6);
+        }
+
+        &:hover {
+          background: color.mix($warning-color, #c0c4cc, 50%) !important;
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+
+    // �ı���ť - ����͸��������������Ϊ��ɫ�������������ɫ��
+    &.is-text {
+      background: transparent !important;
+      color: #ffffff !important; // ��ɫ����
+
+      .el-icon {
+        color: #ffffff !important;
+      }
+
+      img {
+        filter: brightness(0) invert(1);
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      &:active {
+        background: rgba(255, 255, 255, 0.2) !important;
+      }
+
+      &:focus {
+        box-shadow: none !important;
+      }
+
+      &.is-disabled {
+        color: $text-color-disabled !important;
+        cursor: not-allowed;
+
+        .el-icon {
+          color: $text-color-disabled !important;
+        }
+
+        img {
+          filter: brightness(0) saturate(100%) opacity(0.6);
+        }
+      }
+    }
+
+    // ��Ϣ��ť - ��ɫ����
+    &.el-button--info {
+      background: $gradient-info-button;
+      color: #ffffff !important; // ��ɫ����
+      box-shadow: $box-shadow-base;
+
+      .el-icon {
+        color: #ffffff !important;
+      }
+
+      img {
+        filter: brightness(0) invert(1);
+      }
+
+      &:hover {
+        background: $gradient-info-button-hover;
+        box-shadow: $box-shadow-medium;
+        transform: translateY(-1px);
+        color: #ffffff !important;
+      }
+
+      &:active {
+        background: $gradient-info-button-active;
+        box-shadow: $box-shadow-base;
+        transform: translateY(0);
+        color: #ffffff !important;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 2px $primary-color-alpha-20;
+      }
+
+      &.is-disabled {
+        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        background: color.mix($info-color, #c0c4cc, 50%) !important;
+        color: $text-color-disabled !important;
+        cursor: not-allowed;
+
+        .el-icon {
+          color: $text-color-disabled !important;
+        }
+
+        img {
+          filter: brightness(0) saturate(100%) opacity(0.6);
+        }
+
+        &:hover {
+          background: color.mix($info-color, #c0c4cc, 50%) !important;
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+
+    // Ĭ�ϰ�ť - ʹ�ø�����ɫ����ɫ����
+    &.el-button--default {
+      background: $secondary-color !important;
+      color: #ffffff !important; // ��ɫ����
+      border: $border-width-base solid $secondary-color;
+
+      .el-icon {
+        color: #ffffff !important;
+      }
+
+      img {
+        filter: brightness(0) invert(1);
+      }
+
+      &:hover {
+        background: $secondary-color-hover !important;
+        border-color: $secondary-color-hover;
+        transform: translateY(-1px);
+        color: #ffffff !important;
+      }
+
+      &:active {
+        background: $secondary-color-active !important;
+        border-color: $secondary-color-active;
+        transform: translateY(0);
+        color: #ffffff !important;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 2px $primary-color-alpha-20;
+      }
+
+      &.is-disabled {
+        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        background: color.mix($secondary-color, #c0c4cc, 50%) !important;
+        border-color: color.mix($secondary-color, #c0c4cc, 50%);
+        color: $text-color-disabled !important;
+        cursor: not-allowed;
+
+        .el-icon {
+          color: $text-color-disabled !important;
+        }
+
+        img {
+          filter: brightness(0) saturate(100%) opacity(0.6);
+        }
+
+        &:hover {
+          background: color.mix($secondary-color, #c0c4cc, 50%) !important;
+          border-color: color.mix($secondary-color, #c0c4cc, 50%);
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+
+    // ���Ӱ�ť - ��ɫ����
+    &.is-link {
+      background: transparent !important;
+      padding: 5px 8px !important;
+      text-decoration: underline;
+      color: $primary-color !important;
+
+      &:hover {
+        background: transparent !important;
+        color: $primary-color-hover !important;
+        // padding: 5px 8px !important;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 2px $primary-color-alpha-20;
+      }
+    }
+
+    // Բ�ΰ�ť
+    &.is-circle {
+      border-radius: $border-radius-circle;
+      padding: 0;
+
+      &.el-button--default {
+        width: $button-height-base;
+        height: $button-height-base;
+      }
+
+      &.el-button--small {
+        width: $button-height-small;
+        height: $button-height-small;
+      }
+
+      &.el-button--large {
+        width: $button-height-large;
+        height: $button-height-large;
+      }
+    }
+
+    // Բ�ǰ�ť
+    &.is-round {
+      border-radius: 4px;
+    }
+
+    // ����״̬
+    &.is-loading {
+      pointer-events: none;
+      opacity: $opacity-loading;
+
+      .el-icon {
+        animation: rotating 2s linear infinite;
+        color: #ffffff !important; // ����ͼ��Ϊ��ɫ
+      }
+    }
+
+    // ͨ�ý���״̬�����û���ض����͵Ľ�����ʽ��
+    &.is-disabled {
+      cursor: not-allowed;
+      opacity: $opacity-disabled;
+      // Ĭ�Ͻ���״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+      background: color.mix($secondary-color, #c0c4cc, 50%) !important;
+      color: $text-color-disabled !important;
+
+      .el-icon {
+        color: $text-color-disabled !important;
+      }
+
+      img {
+        filter: brightness(0) saturate(100%) opacity(0.6);
+      }
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+        background: color.mix($secondary-color, #c0c4cc, 50%) !important;
+      }
+    }
+
+    // ��ť���
+    &+.el-button {
+      margin-left: 8px !important;
     }
   }
-  .el-icon {
-    font-size: $font-size-base !important;
+
+  // ��ť����ʽ
+  .el-button-group {
+    display: inline-flex;
+
+    .el-button {
+      border-radius: 0;
+      margin-left: 0;
+
+      &:first-child {
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      &:not(:first-child) {
+        margin-left: -1px;
+      }
+
+      &:hover {
+        z-index: 1;
+      }
+
+      &:focus {
+        z-index: 1;
+      }
+    }
+
+    .el-icon {
+      font-size: 14px !important;
+      color: #ffffff !important; // ��ť��ͼ��Ϊ��ɫ
+    }
+
+    img {
+      // ��ͼ��תΪ��ɫ
+      filter: brightness(0) invert(1);
+    }
   }
-}
+// }
+
+

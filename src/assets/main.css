@@ -1,6 +1,4 @@
-@import './styles/fonts/index.scss';
-@import './styles/element/index.scss';
-/* @import './styles/vueflow.scss'; */
+@import './styles/index.scss';
 *,
 *::before,
 *::after {
@@ -14,7 +12,8 @@
   -ms-user-select: none;
   user-select: none;
 }
-/* 为需要文本选择的元素设置例�?*/
+
+/* 为需要文本选择的元素设置例�?*/
 input,
 textarea,
 select,
@@ -25,22 +24,23 @@ select,
   -ms-user-select: text;
   user-select: text;
 }
+
 body {
   height: 100vh;
   margin: 0;
   padding: 0;
-  color: #ffffff;
-
+  color: #000000; /* 黑色文字 */
   transition:
     color 0.5s,
     background-color 0.5s;
   font-family: Arimo sans-serif;
-  font-size: 14px; /* converted from rem */
+  font-size: 14px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
 }
+
 h1 {
   font-size: 32px;
   font-weight: 700;
@@ -108,10 +108,74 @@ ol {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(88, 114, 148, 0.4);
-    min-height: 8px;
+  background: rgba(200, 200, 200, 0.6); /* 浅灰色滚动条 */
+  min-height: 8px;
   min-width: 8px;
 }
+
 ::-webkit-scrollbar-button {
   display: none;
+}
+
+/* 变量浮层样式（全局�?*/
+.node-vars-bubble-fixed {
+  background: rgba(255, 255, 255, 0.95); /* 白色背景 */
+  border: 1px solid rgba(200, 200, 200, 0.5); /* 浅灰色边�?*/
+  border-radius: 6px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 250px;
+  max-height: 300px;
+  overflow-y: auto;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+.node-vars-bubble__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.node-vars-bubble__row+.node-vars-bubble__row {
+  margin-top: 6px;
+}
+
+.node-vars-bubble__left {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex: 1;
+  width: calc(100% - 100px);
+}
+
+.node-vars-bubble__left .var-item {
+  font-size: 12px;
+  color: #000000; /* 黑色文字 */
+  opacity: 0.9;
+  word-break: break-word;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.node-vars-bubble__right {
+  font-size: 12px;
+  color: #000000; /* 黑色文字 */
+  opacity: 0.95;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 80px;
+  text-align: right;
+}
+
+.node-vars-bubble__unit {
+  font-size: 10px;
+  color: rgba(255, 105, 0, 0.8); /* 橙色单位文字 */
+  opacity: 0.8;
 }

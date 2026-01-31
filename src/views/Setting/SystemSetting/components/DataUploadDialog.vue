@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <FormDialog
     ref="formDialogRef"
     :title="'Data Upload Detail'"

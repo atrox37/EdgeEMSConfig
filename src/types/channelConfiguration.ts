@@ -3,7 +3,7 @@ export interface ChannelBasic {
   id?: number
   name: string
   description: string | null
-  protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu'
+  protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu' | 'di_do'
   enabled: boolean
 }
 export interface ChannelListItem extends ChannelBasic {
@@ -17,6 +17,8 @@ export interface modbusTcpParams {
   port: number
   retry_count?: number
   timeout_ms?: number
+  max_batch_size: number
+  poll_interval_ms: number
 }
 export interface canParams {
   bitrate: number
@@ -39,6 +41,7 @@ export interface modbusRtuParams {
   retry_count: number
   stop_bits: number
   timeout_ms: number
+  max_batch_size: number
 }
 // 通道详情信息
 export interface ChannelDetail extends ChannelBasic {
@@ -62,6 +65,10 @@ export interface ChannelDetail extends ChannelBasic {
     control: number
     adjustment: number
   }
+  logging: {
+    enabled: boolean
+    level: 'info' | 'debug'
+  }
 }
 export interface updateChannelDetail extends ChannelBasic {
   parameters: {
@@ -79,7 +86,25 @@ export interface PointInfo {
   data_type: string
   reverse: boolean
   description: string
-  has_mapping: boolean
+  // 实时值（通过WebSocket更新）
+  value?: number
+  rowStatus?: 'normal' | 'modified' | 'added' | 'deleted'
+  modifiedFields?: string[] // 记录哪些字段被修改了
+  isEditing?: boolean // 标记该行是否处于编辑状态
+  isNewUnconfirmed?: boolean // 标记是否为未确认的新增行
+  originalData?: Record<string, any> // 备份原始数据用于取消编辑，可以存储 PointInfo 字段或 mapping 字段
+  protocol_mapping?: {
+    bit_position?: number
+    byte_order?: string
+    data_type?: string
+    function_code?: number
+    register_address?: number
+    slave_id?: number
+  }
+  config?: {
+    realTimeValue?: any
+  }
+  has_mapping?: boolean
 }
 export interface PointInfoResponse {
   telemetry: PointInfo[]
@@ -92,7 +117,8 @@ export interface modbusPointMapping {
   byte_order: string
   data_type: string
   function_code: number
-  point_id?: string
+  bit_position: number
+  point_id?: number
   register_address: number
   slave_id: number
 }
@@ -141,12 +167,19 @@ export interface ChannelFilters {
 
 // 协议选项
 export const PROTOCOL_OPTIONS = [
-  { label: 'Modbus TCP', value: 'modbus_tcp' },
-  { label: 'Modbus RTU', value: 'modbus_rtu' },
-  { label: 'CAN', value: 'can' },
-  { label: 'Virt', value: 'virt' },
+  { label: 'modbus_tcp', value: 'modbus_tcp' },
+  { label: 'modbus_rtu', value: 'modbus_rtu' },
+  { label: 'di_do', value: 'di_do' },
+  // { label: 'can', value: 'can' },
+  // { label: 'virt', value: 'virt' },
 ] as const
-
+// 发布点位值请求
+export interface PublishPointsRequest {
+  type: 'C' | 'A' | 'T' | 'S'
+  id?: string
+  value?: number
+  points?: Array<{ id: number; value: number }>
+}
 // 数据类型选项
 export const DATA_TYPE_OPTIONS = [
   { label: 'float16', value: 'float16' },
@@ -154,8 +187,10 @@ export const DATA_TYPE_OPTIONS = [
   { label: 'float64', value: 'float64' },
   { label: 'int16', value: 'int16' },
   { label: 'int32', value: 'int32' },
+  { label: 'int64', value: 'int64' },
   { label: 'uint16', value: 'uint16' },
   { label: 'uint32', value: 'uint32' },
+  { label: 'uint64', value: 'uint64' },
   { label: 'bool', value: 'bool' },
 ] as const
 
@@ -165,6 +200,14 @@ export const BYTE_ORDER_OPTIONS = [
   { label: 'DCBA', value: 'DCBA' },
   { label: 'BADC', value: 'BADC' },
   { label: 'CDAB', value: 'CDAB' },
+] as const
+
+// 64位字节序选项
+export const BYTE_ORDER_64_OPTIONS = [
+  { label: 'ABCDEFGH', value: 'ABCDEFGH' },
+  { label: 'HGFEDCBA', value: 'HGFEDCBA' },
+  { label: 'BADCFEHG', value: 'BADCFEHG' },
+  { label: 'GHEFCDAB', value: 'GHEFCDAB' },
 ] as const
 
 // 功能码选项
@@ -178,3 +221,34 @@ export const FUNCTION_CODE_OPTIONS = [
   { label: 'Write Multiple Coils (15)', value: 15 },
   { label: 'Write Multiple Registers (16)', value: 16 },
 ] as const
+
+// 批量点位增删改请求类型
+export interface PointDataPayload {
+  data_type?: string
+  description?: string
+  offset?: number
+  reverse?: boolean
+  scale?: number
+  signal_name?: string
+  unit?: string
+}
+export interface CreatePointRequestItem {
+  point_id: number
+  point_type: PointType
+  data: PointDataPayload
+  force?: boolean
+}
+export interface UpdatePointRequestItem {
+  point_id: number
+  point_type: PointType
+  data?: PointDataPayload
+}
+export interface DeletePointRequestItem {
+  point_id: number
+  point_type: PointType
+}
+export interface BatchPointsChangeRequest {
+  create?: CreatePointRequestItem[]
+  delete?: DeletePointRequestItem[]
+  update?: UpdatePointRequestItem[]
+}

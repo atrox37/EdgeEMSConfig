@@ -1,68 +1,68 @@
 <template>
-  <div v-if="updateInfo && !dismissed" class="update-checker">
-    <!-- 更新提示横幅 -->
-    <el-alert
+  <!-- <div v-if="updateInfo && !dismissed" class="update-checker"> -->
+    <!-- Update Alert Banner -->
+    <!-- <el-alert
       v-if="!updateDialogVisible"
-      :title="`发现新版本 v${updateInfo.version}`"
+      :title="`New Version: v${updateInfo?.version}`"
       type="info"
       :closable="true"
       show-icon
       @close="dismissUpdate"
+      class="update-alert"
     >
       <template #default>
         <div class="update-alert-content">
-          <p>{{ updateInfo.notes ? truncateNotes(updateInfo.notes) : '有新版本可用' }}</p>
+          <p>{{ updateInfo?.notes ? truncateNotes(updateInfo?.notes) : 'A new version is available' }}</p>
           <div class="update-actions">
             <el-button type="primary" size="small" @click="showUpdateDialog">
-              查看详情
+              View Details
             </el-button>
-            <el-button size="small" @click="dismissUpdate">稍后提醒</el-button>
+            <el-button size="small" @click="dismissUpdate">Remind Later</el-button>
           </div>
         </div>
       </template>
-    </el-alert>
+    </el-alert> -->
 
-    <!-- 更新对话框 -->
+    <!-- Update Dialog -->
     <el-dialog
+    v-if="updateInfo && !dismissed"
       v-model="updateDialogVisible"
-      title="应用更新"
+      title="Application Update"
       width="600px"
-      :close-on-click-modal="true"
-      :close-on-press-escape="true"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
       :show-close="true"
       @close="dismissUpdate"
     >
       <div v-if="updateInfo" class="update-dialog-content">
         <div class="update-header">
-          <h3>发现新版本 v{{ updateInfo.version }}</h3>
+          <h3>New Version: v{{ updateInfo?.version }}</h3>
           <p v-if="updateInfo.date" class="update-date">
-            发布日期: {{ formatDate(updateInfo.date) }}
+            Release Date: {{ formatDate(updateInfo?.date) }}
           </p>
         </div>
 
         <div class="update-notes">
-          <h4>更新内容：</h4>
-          <div class="notes-content" v-html="formatNotes(updateInfo.notes)"></div>
+          <h4>What's New:</h4>
+          <div class="notes-content" v-html="formatNotes(updateInfo?.notes)"></div>
         </div>
       </div>
 
       <template #footer>
-        <el-button @click="dismissUpdate">稍后提醒</el-button>
+        <el-button type="warning" @click="dismissUpdate">Remind Later</el-button>
         <el-button type="primary" :loading="isInstalling" @click="handleInstall">
-          立即更新
+          Update Now
         </el-button>
       </template>
     </el-dialog>
-  </div>
+  <!-- </div> -->
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useUpdater } from '@/composables/useUpdater'
-import { ElMessage } from 'element-plus'
 
 const {
-  isChecking,
   updateInfo,
   checkUpdate,
   installUpdate: installUpdateFn,
@@ -70,15 +70,15 @@ const {
 
 const updateDialogVisible = ref(false)
 const isInstalling = ref(false)
-const dismissed = ref(false) // 用户是否已关闭更新提示
+const dismissed = ref(false) // Whether user has dismissed the update notification
 
 /**
- * 格式化日期
+ * Format date
  */
 const formatDate = (dateStr?: string): string => {
   if (!dateStr) return ''
   try {
-    return new Date(dateStr).toLocaleDateString('zh-CN', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -89,39 +89,39 @@ const formatDate = (dateStr?: string): string => {
 }
 
 /**
- * 格式化更新日志（支持 Markdown）
+ * Format update notes (supports Markdown)
  */
 const formatNotes = (notes?: string): string => {
-  if (!notes) return '<p style="color: #909399;">暂无更新说明</p>'
+  if (!notes) return '<p class="no-notes">No update notes available</p>'
 
-  // 简单的 Markdown 转 HTML
+  // Simple Markdown to HTML conversion
   return notes
-    .replace(/### (.*?)\n/g, '<h4 style="margin: 15px 0 8px 0; font-weight: 600; color: #303133;">$1</h4>')
-    .replace(/- (.*?)(\n|$)/g, '<li style="margin: 6px 0; padding-left: 8px; color: #606266;">$1</li>')
-    .replace(/\n\n/g, '</p><p style="margin: 8px 0;">')
+    .replace(/### (.*?)\n/g, '<h4>$1</h4>')
+    .replace(/- (.*?)(\n|$)/g, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
-    .replace(/^(.*)$/, '<p style="margin: 8px 0;">$1</p>')
+    .replace(/^(.*)$/, '<p>$1</p>')
 }
 
 /**
- * 截断更新日志（用于横幅显示）
+ * Truncate update notes (for banner display)
  */
 const truncateNotes = (notes?: string): string => {
-  if (!notes) return '有新版本可用'
+  if (!notes) return 'A new version is available'
   const maxLength = 100
   if (notes.length <= maxLength) return notes
   return notes.substring(0, maxLength) + '...'
 }
 
 /**
- * 显示更新对话框
+ * Show update dialog
  */
 const showUpdateDialog = () => {
   updateDialogVisible.value = true
 }
 
 /**
- * 关闭更新提示
+ * Dismiss update notification
  */
 const dismissUpdate = () => {
   updateDialogVisible.value = false
@@ -129,7 +129,7 @@ const dismissUpdate = () => {
 }
 
 /**
- * 处理安装更新
+ * Handle install update
  */
 const handleInstall = async () => {
   try {
@@ -137,108 +137,210 @@ const handleInstall = async () => {
     await installUpdateFn()
     updateDialogVisible.value = false
   } catch (error) {
-    console.error('安装更新失败:', error)
+    console.error('Failed to install update:', error)
   } finally {
     isInstalling.value = false
   }
 }
 
-// 监听更新信息变化，自动显示对话框
-import { watch } from 'vue'
-
 watch(
   () => updateInfo.value,
   (newInfo) => {
     if (newInfo && !dismissed.value) {
-      // 有更新时，自动显示对话框
+      // Automatically show dialog when update is available
       updateDialogVisible.value = true
     }
   },
   { immediate: true }
 )
 
-// 组件挂载时自动检查更新
+// Automatically check for updates when component is mounted
 onMounted(() => {
-  // 延迟检查，避免影响应用启动速度
+  // Delay check to avoid affecting application startup speed
   setTimeout(() => {
-    checkUpdate(true) // 静默检查
+    checkUpdate(true) // Silent check
   }, 3000)
 })
 </script>
 
 <style scoped lang="scss">
-.update-checker {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  max-width: 400px;
-}
+
+// .update-checker {
+//   position: absolute;
+//   top: 50%;
+//   left: 50%;
+//   transform: translate(-50%, -50%);
+//   z-index: 9999;
+//   width: 500px;
+//   height: 400px;
+//   // height: 500px;
+// }
+
+// Alert banner styling
+// :deep(.update-alert) {
+//   background: $bg-color-dark-9 !important;
+//   border: $border-width-base solid $border-color-base;
+//   border-radius: $border-radius-base;
+//   backdrop-filter: $backdrop-blur-base;
+//   box-shadow: $box-shadow-medium;
+
+//   .el-alert__content {
+//     background: transparent !important;
+//   }
+
+//   .el-alert__title {
+//     color: $text-color-primary;
+//     font-size: $font-size-base;
+//     font-weight: $font-weight-semibold;
+//   }
+
+//   .el-alert__icon {
+//     color: $primary-color;
+//   }
+
+//   .el-alert__closebtn {
+//     color: $text-color-white-60;
+
+//     &:hover {
+//       color: $text-color-primary;
+//     }
+//   }
+// }
 
 .update-alert-content {
   p {
-    margin: 8px 0;
-    color: #606266;
-    font-size: 14px;
+    margin: $spacing-sm 0;
+    color: $text-color-white-60;
+    font-size: $font-size-base;
+    line-height: $line-height-normal;
   }
 
   .update-actions {
-    margin-top: 12px;
+    margin-top: $spacing-md;
     display: flex;
-    gap: 8px;
+    gap: $spacing-sm;
+  }
+}
+
+// Dialog styling
+:deep(.update-dialog) {
+  background: $bg-color-dark-9 !important;
+  border: $border-width-base solid $border-color-base !important;
+
+  .el-dialog__header {
+    background: transparent !important;
+    border-bottom: $border-width-base solid $border-color-white-10;
+    // padding-bottom: $spacing-md;
+  }
+
+  .el-dialog__title {
+    color: $text-color-primary;
+    font-size: $font-size-large;
+    font-weight: $font-weight-semibold;
+  }
+
+  .el-dialog__headerbtn {
+    .el-dialog__close {
+      color: $text-color-white-60;
+
+      &:hover {
+        color: $text-color-primary;
+      }
+    }
+  }
+
+  .el-dialog__body {
+    background: transparent !important;
+    color: $text-color-primary;
+  }
+
+  .el-dialog__footer {
+    background: transparent !important;
+    border-top: $border-width-base solid $border-color-white-10;
+    padding-top: $spacing-md;
   }
 }
 
 .update-dialog-content {
   .update-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #ebeef5;
+    margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-md;
+    border-bottom: $border-width-base solid $border-color-white-10;
 
     h3 {
-      margin: 0 0 8px 0;
-      color: #409eff;
-      font-size: 20px;
+      margin: 0 0 $spacing-sm 0;
+      color: $primary-color;
+      font-size: $font-size-extra-large;
+      font-weight: $font-weight-semibold;
     }
 
     .update-date {
       margin: 0;
-      color: #909399;
-      font-size: 12px;
+      color: $text-color-white-60;
+      font-size: $font-size-extra-small;
+      max-width: 300px;
     }
   }
 
   .update-notes {
     h4 {
-      margin: 0 0 12px 0;
-      font-weight: 600;
-      color: #303133;
-      font-size: 16px;
+      margin: 0 0 $spacing-md 0;
+      font-weight: $font-weight-semibold;
+      color: $text-color-primary;
+      font-size: $font-size-medium;
     }
 
     .notes-content {
       max-height: 300px;
       overflow-y: auto;
-      padding: 12px;
-      background: #f5f7fa;
-      border-radius: 4px;
-      line-height: 1.6;
+      padding: $spacing-md;
+      background: $bg-color-dark-5;
+      border: $border-width-base solid $border-color-base;
+      border-radius: $border-radius-small;
+      line-height: $line-height-loose;
+      color: $text-color-white-60;
+
+      // Custom scrollbar
+      &::-webkit-scrollbar {
+        width: $width-scrollbar;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: $scrollbar-track-bg;
+        border-radius: $border-radius-small;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: $scrollbar-thumb-bg;
+        border-radius: $border-radius-small;
+
+        &:hover {
+          background: $scrollbar-thumb-hover-bg;
+        }
+      }
 
       :deep(h4) {
-        margin: 15px 0 8px 0;
-        font-weight: 600;
-        color: #303133;
+        margin: $spacing-md 0 $spacing-sm 0;
+        font-weight: $font-weight-semibold;
+        color: $primary-color;
+        font-size: $font-size-medium;
       }
 
       :deep(li) {
-        margin: 6px 0;
-        padding-left: 8px;
-        color: #606266;
+        margin: $spacing-xs 0;
+        padding-left: $spacing-md;
+        color: $text-color-white-60;
+        list-style-type: disc;
       }
 
       :deep(p) {
-        margin: 8px 0;
-        color: #606266;
+        margin: $spacing-sm 0;
+        color: $text-color-white-60;
+      }
+
+      :deep(.no-notes) {
+        color: $text-color-white-40;
+        font-style: italic;
       }
     }
   }

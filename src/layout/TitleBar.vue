@@ -1,21 +1,19 @@
-Ôªø<template>
+<template>
   <div class="titlebar" data-tauri-drag-region>
-    <!-- Â∑¶‰æß:Â∫îÁî®Ê†áÈ¢ò(ÂèØÊãñÂä®Âå∫Âüü) -->
+    <!-- ◊Û≤‡:”¶”√±ÍÃ‚(ø…Õœ∂Ø«¯”Ú) -->
     <div class="titlebar__left" data-tauri-drag-region>
-      <div class="titlebar__title" data-tauri-drag-region>Norton test</div>
+      <div class="titlebar__title" data-tauri-drag-region>Monarch Edge Configuration</div>
     </div>
 
-    <!-- Âè≥‰æß:Áî®Êà∑‰ø°ÊÅØÂíåÁ™óÂè£ÊéßÂà∂ÊåâÈíÆ -->
-    <div class="titlebar__right">
-      <!-- Â§©Ê∞î‰ø°ÊÅØ -->
-      <div class="titlebar__weather" data-tauri-drag-region>
-        <img :src="sunIcon" alt="sunIcon" class="titlebar__weather-icon" />
-        <div class="titlebar__weather-status">wind</div>
-        <div class="titlebar__weather-value">67‚Ñâ~79‚Ñâ</div>
+      <!-- ”“≤‡:”√ªß–≈œ¢∫Õ¥∞ø⁄øÿ÷∆∞¥≈• -->
+      <div class="titlebar__right">
+      <!-- IPµÿ÷∑ -->
+      <div class="titlebar__ip-section" v-if="shouldShowUserInfo">
+        <span class="titlebar__ip-address">{{ currentIpAddress }}</span>
       </div>
 
-      <!-- Áî®Êà∑Â§¥ÂÉè/ËèúÂçïÔºà‰ªÖÁôªÂΩïÂêéÊòæÁ§∫Ôºâ -->
-      <div class="titlebar__user" v-if="userStore.isLoggedIn">
+      <!-- ”√ªßÕ∑œÒ/≤Àµ•£®Ωˆµ«¬º∫Ûœ‘ æ£© -->
+      <div class="titlebar__user" v-if="shouldShowUserInfo">
           <el-dropdown @command="handleUserCommand" trigger="click">
             <div class="titlebar__user-info">
               <div class="titlebar__user-avatar">
@@ -28,10 +26,6 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="switch" class="titlebar__user-item">
-                  <img :src="logoutIcon" class="titlebar__user-logout-icon" />
-                  Switch account
-                </el-dropdown-item>
                 <el-dropdown-item command="logout" class="titlebar__user-item">
                   <img :src="logoutIcon" class="titlebar__user-logout-icon" />
                   Logout
@@ -41,23 +35,14 @@
           </el-dropdown>
       </div>
 
-      <!-- ÈÄöÁü•ÊåâÈíÆ(‰∏çÂèØÊãñÂä®) -->
-      <div class="titlebar__notice">
-        <el-button link class="titlebar__notice-btn" @click="toggleNotifications">
-          <el-badge :value="globalStore.alarmNum" :hidden="globalStore.alarmNum === 0">
-            <img :src="noticeIcon" class="titlebar__notice-icon" />
-          </el-badge>
-        </el-button>
-      </div>
-
-      <!-- Á™óÂè£ÊéßÂà∂ÊåâÈíÆ(‰∏çÂèØÊãñÂä®) -->
+      <!-- ¥∞ø⁄øÿ÷∆∞¥≈•(≤ªø…Õœ∂Ø) -->
       <div class="titlebar__controls">
-        <button class="titlebar__button titlebar__button--minimize" @click="minimizeWindow" title="ÊúÄÂ∞èÂåñ">
+        <div class="titlebar__button titlebar__button--minimize" @click="minimizeWindow" title="◊Ó–°ªØ">
           <svg width="12" height="2" viewBox="0 0 12 2">
             <rect width="12" height="2" fill="currentColor" />
           </svg>
-        </button>
-        <button class="titlebar__button titlebar__button--maximize" @click="toggleMaximize" :title="isMaximized ? 'Âêë‰∏ãËøòÂéü' : 'ÊúÄÂ§ßÂåñ'">
+        </div>
+        <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize" :title="isMaximized ? 'œÚœ¬ªπ‘≠' : '◊Ó¥ÛªØ'">
           <svg v-if="!isMaximized" width="12" height="12" viewBox="0 0 12 12">
             <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
           </svg>
@@ -65,40 +50,63 @@
             <rect x="2" y="0" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
             <rect x="0" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
           </svg>
-        </button>
-        <button class="titlebar__button titlebar__button--close" @click="closeWindow" title="ÂÖ≥Èó≠">
+        </div>
+        <div class="titlebar__button titlebar__button--close" @click="closeWindow" title="πÿ±’">
           <svg width="12" height="12" viewBox="0 0 12 12">
             <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" />
             <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5" />
           </svg>
-        </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useUserStore } from '@/stores/user'
-import { useGlobalStore } from '@/stores/global'
-// ÁßªÈô§ÁôªÂΩïÂ≠êÁ™óÂè£ÈÄªËæëÔºå‰æùËµñË∑ØÁî±Ë∑≥ËΩ¨Âà∞ /login
+import { getApiConfig } from '@/utils/apiConfig'
 
-// ÂØºÂÖ•ÂõæÊ†á
+// µº»ÎÕº±Í
 import logoutIcon from '@/assets/icons/user-logout.svg'
-import noticeIcon from '@/assets/icons/notice.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
-import sunIcon from '@/assets/icons/sunny.svg'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
-const globalStore = useGlobalStore()
 
 const isMaximized = ref(false)
 const appWindow = getCurrentWindow()
+const currentIpAddress = ref<string>('')
 
-// Á™óÂè£ÊéßÂà∂ÂáΩÊï∞
+// ≈–∂œ «∑ÒŒ™µ«¬º“≥√Ê
+const isLoginPage = computed(() => route.path === '/login')
+
+//  «∑Òœ‘ æ”√ªßœ‡πÿ–≈œ¢£®µ«¬º∫Û«“≤ª‘⁄µ«¬º“≥√Ê£©
+const shouldShowUserInfo = computed(() => userStore.isLoggedIn && !isLoginPage.value)
+
+// ªÒ»°µ±«∞IPµÿ÷∑
+const loadCurrentIp = async () => {
+  const apiConfig = await getApiConfig()
+  if (apiConfig) {
+    currentIpAddress.value = apiConfig.ipAddress
+  }
+}
+
+// º‡Ã˝”√ªßµ«¬º◊¥Ã¨£¨º”‘ÿIPµÿ÷∑
+watch(
+  () => userStore.isLoggedIn,
+  async (isLoggedIn) => {
+    if (isLoggedIn) {
+      await loadCurrentIp()
+    }
+  },
+  { immediate: true }
+)
+
+// ¥∞ø⁄øÿ÷∆∫Ø ˝
 const minimizeWindow = async () => {
   await appWindow.minimize()
 }
@@ -115,14 +123,14 @@ const closeWindow = async () => {
   await appWindow.close()
 }
 
-// ÁõëÂê¨Á™óÂè£ÊúÄÂ§ßÂåñÁä∂ÊÄÅ
+// º‡Ã˝¥∞ø⁄◊Ó¥ÛªØ◊¥Ã¨
 let unlistenResize: (() => void) | null = null
 
 onMounted(async () => {
-  // Ëé∑ÂèñÂàùÂßãÁä∂ÊÄÅ
+  // ªÒ»°≥ı º◊¥Ã¨
   isMaximized.value = await appWindow.isMaximized()
   
-  // ÁõëÂê¨Á™óÂè£Ë∞ÉÊï¥Â§ßÂ∞è‰∫ã‰ª∂
+  // º‡Ã˝¥∞ø⁄µ˜’˚¥Û–° ¬º˛
   unlistenResize = await appWindow.onResized(async () => {
     isMaximized.value = await appWindow.isMaximized()
   })
@@ -134,18 +142,9 @@ onUnmounted(() => {
   }
 })
 
-// ÂàáÊç¢ÈÄöÁü•
-const toggleNotifications = () => {
-  router.push({ name: 'alarmCurrentRecords' })
-}
-
-// Áî®Êà∑Êìç‰Ωú
+// ”√ªß≤Ÿ◊˜
 const handleUserCommand = async (command: string) => {
   switch (command) {
-    case 'switch':
-      // ÂàáÊç¢Ë¥¶Âè∑ÔºåÁõ¥Êé•Ë∑≥ËΩ¨Âà∞ÁôªÂΩïÈ°µ
-      router.push('/login')
-      break
     case 'logout':
       await userStore.logout()
       router.push('/login')
@@ -153,7 +152,7 @@ const handleUserCommand = async (command: string) => {
   }
 }
 
-// Ëé∑ÂèñÂ§¥ÂÉèÈ¶ñÂ≠óÊØç
+// ªÒ»°Õ∑œÒ ◊◊÷ƒ∏
 const getAvatarName = (name: string): string => {
   const nameStr = name.split(' ')
   if (nameStr.length === 1) {
@@ -165,38 +164,38 @@ const getAvatarName = (name: string): string => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/assets/styles/element/theme-vars.scss' as *;
 
 .titlebar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 40px;
-  background: #233c63;
-  border-bottom: 1px solid rgba(148, 166, 197, 0.3);
+  // background: $bg-color-dark-2;
+  // border-bottom: $border-width-base solid $border-color-base;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 100;
   user-select: none;
+  height: 32px;
 
-  &__left {
+  .titlebar__left {
     flex: 1;
     display: flex;
     align-items: center;
     padding-left: $spacing-md;
   }
 
-  &__title {
-    font-family: Montserrat;
+  .titlebar__title {
+    font-family: $font-family-montserrat;
     font-weight: $font-weight-semibold;
     font-size: $font-size-medium;
-    line-height: 150%;
-    color: $color-white;
+    line-height: $line-height-relaxed;
+    // color: $orange-color-light;
+    letter-spacing: 0.3px;
   }
 
-  &__right {
+  .titlebar__right {
     display: flex;
     height: 100%;
     align-items: center;
@@ -204,176 +203,133 @@ const getAvatarName = (name: string): string => {
     padding-right: 0;
   }
 
-  // Â§©Ê∞î‰ø°ÊÅØ
-  &__weather {
+  // IPµÿ÷∑«¯”Ú
+  .titlebar__ip-section {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: $font-size-base;
+    padding: 0 $spacing-sm;
 
-    &-icon {
-      width: 24px;
-      height: 24px;
-      object-fit: contain;
-    }
-
-    &-status {
-      font-weight: 500;
-      color: $color-white;
-    }
-
-    &-value {
-      font-weight: $font-weight-bold;
-      color: $color-white;
+    .titlebar__ip-address {
+      font-family: $font-family-base;
+      font-weight: $font-weight-medium;
+      font-size: $font-size-small;
+      color: $text-color-white-60;
+      padding: $spacing-xs $spacing-sm;
+      background: $bg-color-dark-11;
+      border-radius: $border-radius-small;
     }
   }
 
-  // Áî®Êà∑‰ø°ÊÅØ
-  &__user {
-    &-info {
+  .titlebar__user {
+    .titlebar__user-info {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 2px 6px;
-      border-radius: 4px;
+      gap: $spacing-xs;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-small;
       cursor: pointer;
       transition: all $transition-base;
 
       &:hover {
-        background: $color-white-alpha-10;
+        background: rgba(0, 0, 0, 0.05); // «≥…´÷˜Ã‚hover±≥æ∞
       }
     }
 
-    &-avatar {
-      width: 28px;
-      height: 28px;
+    .titlebar__user-avatar {
+      width: 24px;
+      height: 24px;
       border-radius: $border-radius-circle;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: rgba(29, 134, 255, 0.2);
+      background-color: $primary-color-alpha-20;
 
-      &-initials {
-        color: rgba(29, 134, 255, 1);
+      .titlebar__user-avatar-initials {
+        color: $primary-color;
         font-weight: $font-weight-bold;
-        font-size: 13px;
-        line-height: 100%;
+        font-size: $font-size-small;
+        line-height: 1;
       }
     }
 
-    &-name {
-      font-family: Arimo;
-      font-weight: 500;
+    .titlebar__user-name {
+      font-family: $font-family-base;
+      font-weight: $font-weight-medium;
       font-size: $font-size-small;
-      line-height: 140%;
-      color: $color-white;
+      line-height: $line-height-normal;
+      color: $text-color-primary;
     }
 
-    &-arrow {
-      height: 6px;
-      width: 8px;
-      color: #909399;
+    .titlebar__user-arrow {
+      width: 12px;
+      height: 12px;
+      opacity: 0.6;
     }
 
-    &-item {
-      width: 153px;
+    .titlebar__user-item {
       display: flex;
       align-items: center;
-      color: $color-white;
-      font-weight: 500;
+      color: $text-color-primary;
+      font-weight: $font-weight-medium;
       font-size: $font-size-base;
-      line-height: 100%;
+      line-height: $line-height-normal;
     }
 
-    &-logout-icon {
-      width: $spacing-lg;
-      height: $spacing-lg;
-      object-fit: contain;
-      margin-right: 10px;
-    }
-
-    &-login-btn {
-      // width: 100%;
-      border-radius: 4px !important;
-    }
-  }
-
-  // ÈÄöÁü•
-  &__notice {
-    &-btn {
-      padding: 8px;
-      transition: all $transition-base;
-
-      :deep(.el-badge__content) {
-        width: $spacing-md;
-        height: $spacing-md;
-        border: none;
-        border-radius: $border-radius-circle;
-        background-color: rgba(218, 45, 44, 1);
-        font-family: Arimo;
-        font-weight: $font-weight-normal;
-        font-size: $font-size-extra-small;
-      }
-    }
-
-    &-icon {
+    .titlebar__user-logout-icon {
       width: $spacing-md;
       height: $spacing-md;
       object-fit: contain;
+      margin-right: $spacing-sm;
     }
   }
 
-  // Á™óÂè£ÊéßÂà∂ÊåâÈíÆ
-  &__controls {
+
+  .titlebar__controls {
     display: flex;
     height: 100%;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
+    margin-left: $spacing-sm;
   }
 
-  &__button {
-    width: 48px;
+  .titlebar__button {
     height: 100%;
     display: flex;
+    padding: 0 15px;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
-    color: $color-white;
+    color: $text-color-primary;
     cursor: pointer;
     transition: all $transition-fast;
-    padding: 0;
-
     svg {
       width: 12px;
       height: 12px;
     }
 
     &:hover {
-      background: $color-white-alpha-10;
+      background: rgba(0, 0, 0, 0.05); // «≥…´÷˜Ã‚hover±≥æ∞
     }
 
     &:active {
-      background: $color-white-alpha-20;
+      background: rgba(0, 0, 0, 0.1); // «≥…´÷˜Ã‚active±≥æ∞
     }
 
-    &--close {
+    &.titlebar__button--close {
       &:hover {
-        background: #e81123;
-        color: $color-white;
+        background: #e81123; // Windows±Í◊ºπÿ±’∞¥≈•—’…´£¨±£≥÷≤ª±‰
+        color: $text-color-primary;
       }
 
       &:active {
-        background: #f1707a;
+        background: #f1707a; // Windows±Í◊ºπÿ±’∞¥≈•—’…´£¨±£≥÷≤ª±‰
       }
     }
   }
 }
 
-// Badge ‰ΩçÁΩÆË∞ÉÊï¥
-:deep(.el-badge__content.is-fixed) {
-  right: 6px;
-  top: 2px;
-  padding: 0;
-}
+
 </style>
+
 

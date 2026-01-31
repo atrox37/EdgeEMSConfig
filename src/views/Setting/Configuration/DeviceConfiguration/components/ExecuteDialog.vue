@@ -1,9 +1,9 @@
-﻿<template>
+<template>
   <FormDialog ref="formDialogRef" title="Execute" width="480px" @close="close">
     <template #dialog-body>
       <div class="voltage-class execute-dialog">
         <el-form label-width="90px" ref="formRef" :model="form" :rules="rules">
-          <el-form-item label="Value" required>
+          <el-form-item label="Value:" required>
             <el-input-number v-model="form.value" :controls="false" align="left" />
           </el-form-item>
         </el-form>
@@ -20,24 +20,27 @@
 import { ref, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
-import { executeAction } from '@/api/devicesManagement'
-import { InstanceNameKey } from '@/utils/key'
+import { executeAction, executeMeasurement } from '@/api/devicesManagement'
+import { InstanceIdKey } from '@/utils/key'
 const formDialogRef = ref<{ dialogVisible: boolean } | null>(null)
 const formRef = ref()
 const form = ref<{
-  value: string | number
+  value: number | undefined
   point_id: string
+  category: 'action' | 'measurement'
 }>({
-  value: '',
+  value: undefined,
   point_id: '',
+  category: 'action',
 })
-const instanceName = inject(InstanceNameKey)
+const instanceId = inject(InstanceIdKey)
 const rules = {
   value: [{ required: true, message: 'Please enter value', trigger: 'blur' }],
 }
-function open(point_id: string) {
-  form.value.value = 0
+function open(point_id: string, category: 'action' | 'measurement' = 'action') {
+  form.value.value = undefined
   form.value.point_id = point_id
+  form.value.category = category
   if (formDialogRef.value) formDialogRef.value.dialogVisible = true
 }
 
@@ -48,8 +51,15 @@ function close() {
 function submit() {
   formRef.value.validate(async (valid: boolean) => {
     if (valid) {
-      if (instanceName) {
-        const res = await executeAction(instanceName.value, form.value)
+      if (instanceId?.value) {
+        const payload = {
+          value: form.value.value as number,
+          point_id: form.value.point_id,
+        }
+        const res =
+          form.value.category === 'measurement'
+            ? await executeMeasurement(Number(instanceId?.value) as number, payload)
+            : await executeAction(Number(instanceId?.value) as number, payload)
         if (res.success) {
           ElMessage.success('Execute success!')
           close()

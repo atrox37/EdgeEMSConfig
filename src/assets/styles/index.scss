@@ -1,0 +1,18 @@
+/**
+ * 全局样式入口文件
+ * 统一导入所有样式文件和变量
+ */
+
+// 导入全局变量（必须在最前面�?
+
+// 导入字体
+@use './fonts/index.scss' as fonts;
+
+// 导入 Element Plus 组件样式
+@use './element/index.scss' as element;
+
+// 导入 Vue Flow 样式
+@use './vueflow.scss' as vueflow;
+
+// 导入设备监控滚动条样�?
+// @use './device-monitoring-scroller.scss';

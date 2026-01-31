@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="voltage-class data-update-setting">
     <ModuleCard title="Data Upload">
       <el-form
@@ -291,13 +291,11 @@ onMounted(() => {
   getMqttStatusData()
 })
 
-const handleEnableChange = async (value: string | number | boolean) => {
-  // el-switch 可能传入多种类型，这里统一转成布尔
-  const enabled = value === true || value === 'true' || value === 1
+const handleEnableChange = async (value: boolean) => {
   try {
-    connected.value = !enabled
+    connected.value = !value
     isConnecting.value = true
-    if (enabled) {
+    if (value) {
       const response = await reconnectMqtt()
       if (response.status == 'failed') {
         connected.value = false

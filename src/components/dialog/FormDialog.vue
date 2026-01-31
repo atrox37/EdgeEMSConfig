@@ -8,7 +8,7 @@
     :append-to-body="appendToBody"
     @close="handleClose"
   >
-    <!-- dialog-headæ’æ§½ï¼Œé»˜è®¤æ˜¾ç¤ºæ ‡é¢˜ -->
+    <!-- dialog-head²å²Û£¬Ä¬ÈÏÏÔÊ¾±êÌâ -->
     <template #header>
       <slot name="dialog-head">
         <div class="dialog-head">
@@ -18,12 +18,12 @@
       </slot>
     </template>
 
-    <!-- dialog-bodyæ’æ§½ï¼Œé»˜è®¤æ˜¾ç¤ºè¡¨å•å†…å®¹ -->
+    <!-- dialog-body²å²Û£¬Ä¬ÈÏÏÔÊ¾±íµ¥ÄÚÈÝ -->
     <template #default>
       <slot name="dialog-body"> </slot>
     </template>
 
-    <!-- dialog-footeræ’æ§½ï¼Œé»˜è®¤æ˜¾ç¤ºåº•éƒ¨æŒ‰é’® -->
+    <!-- dialog-footer²å²Û£¬Ä¬ÈÏÏÔÊ¾µ×²¿°´Å¥ -->
     <template #footer>
       <slot name="dialog-footer"> </slot>
     </template>
@@ -43,18 +43,19 @@ const emit = defineEmits<{
 
 const dialogVisible = ref(false)
 
-// å¤„ç†å…³é—­äº‹ä»¶
+// ´¦Àí¹Ø±ÕÊÂ¼þ
 const handleClose = () => {
   emit('close')
 }
 
-// æš´éœ²æ–¹æ³•å’Œå±žæ€§
+// ±©Â¶·½·¨ºÍÊôÐÔ
 defineExpose({
   dialogVisible,
 })
 </script>
 
 <style lang="scss" scoped>
+
 .dialog-head {
   display: flex;
   align-items: center;
@@ -66,11 +67,11 @@ defineExpose({
   }
 
   .dialog-head-title {
-    font-weight: 700;
-    font-size: 18px;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-large;
     line-height: 20px;
     letter-spacing: 0%;
-    color: rgba(245, 247, 255, 1);
+    color: $text-color-primary;
   }
 }
 
@@ -87,3 +88,4 @@ defineExpose({
   left: -20px;
 }
 </style>
+

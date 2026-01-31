@@ -1,6 +1,8 @@
+import type { Component } from 'vue'
+
 export interface RouteMeta {
   activeNav: string
-  icon?: string
+  icon?: string | Component
   roles: string[]
   title?: string
   isSubMenu?: boolean

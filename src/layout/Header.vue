@@ -14,13 +14,13 @@
       <div class="header__right-weather">
         <img :src="sunIcon" alt="sunIcon" class="header__right-weatherIcon" />
         <div class="header__right-weatherStatus">wind</div>
-        <div class="header__right-weatherValue">67â„‰~79â„‰</div>
+        <div class="header__right-weatherValue">67¨H~79¨H</div>
       </div>
 
       <div class="header__right-avatar">
         <el-dropdown @command="handleUserCommand" trigger="click">
           <div class="header__user">
-            <!-- å¤´åƒå›¾ç‰‡æ— æ³•æ˜¾ç¤ºçš„å¸¸è§åŽŸå› æœ‰ï¼šè·¯å¾„å†™æ³•ä¸å¯¹ã€å›¾ç‰‡æœªè¢«æ­£ç¡®å¼•å…¥ã€æ‰“åŒ…åŽè·¯å¾„ä¸¢å¤±ç­‰ã€‚æŽ¨èç”¨importæ–¹å¼å¼•å…¥å›¾ç‰‡èµ„æºã€‚ -->
+            <!-- Í·ÏñÍ¼Æ¬ÎÞ·¨ÏÔÊ¾µÄ³£¼ûÔ­ÒòÓÐ£ºÂ·¾¶Ð´·¨²»¶Ô¡¢Í¼Æ¬Î´±»ÕýÈ·ÒýÈë¡¢´ò°üºóÂ·¾¶¶ªÊ§µÈ¡£ÍÆ¼öÓÃimport·½Ê½ÒýÈëÍ¼Æ¬×ÊÔ´¡£ -->
             <!-- <el-avatar  :src="userStore.userInfo?.avatar" class="header__user-avatar" /> -->
             <!-- <el-avatar :src="headerAvatar" class="header__user-avatar" /> -->
             <div class="header__user-avatar">
@@ -59,7 +59,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 
-// æ­£ç¡®å¼•å…¥å¤´åƒå›¾ç‰‡ï¼Œç¡®ä¿è·¯å¾„æ— è¯¯ï¼ŒæŽ¨èç”¨importæ–¹å¼
+// ÕýÈ·ÒýÈëÍ·ÏñÍ¼Æ¬£¬È·±£Â·¾¶ÎÞÎó£¬ÍÆ¼öÓÃimport·½Ê½
 import headerAvatar from '@/assets/images/header-avatar.png'
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import noticeIcon from '@/assets/icons/notice.svg'
@@ -72,9 +72,9 @@ const userStore = useUserStore()
 
 const globalStore = useGlobalStore()
 
-// é¢åŒ…å±‘å¯¼èˆª
+// Ãæ°üÐ¼µ¼º½
 const breadcrumbItems = computed(() => {
-  const items = [{ title: 'é¦–é¡µ', path: '/dashboard' }]
+  const items = [{ title: 'Ê×Ò³', path: '/dashboard' }]
 
   if (route.meta?.title) {
     items.push({ title: route.meta.title as string, path: route.path })
@@ -83,12 +83,12 @@ const breadcrumbItems = computed(() => {
   return items
 })
 
-// åˆ‡æ¢é€šçŸ¥
+// ÇÐ»»Í¨Öª
 const toggleNotifications = () => {
   router.push({ name: 'alarmCurrentRecords' })
 }
 
-// ç”¨æˆ·æ“ä½œ
+// ÓÃ»§²Ù×÷
 const handleUserCommand = async (command: string) => {
   switch (command) {
     case 'logout':
@@ -109,71 +109,61 @@ const getAvatarName = (name: string): string => {
 </script>
 
 <style lang="scss" scoped>
+
 .voltage-class.header {
   position: relative;
-  height: 85px;
-  background: rgba(84, 98, 140, 0.3);
-  border-bottom: 1px solid rgba(148, 166, 197, 0.3);
+  background: $bg-color-input;
+  border-bottom: $border-width-base solid $border-color-base;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
   z-index: 99;
 
   .header__left {
     display: flex;
     align-items: center;
-    gap: 10px;
 
     .header__left-title {
-      font-family: Montserrat;
-      font-weight: 600;
-      font-style: Semi Bold;
-      font-size: 30px;
-      line-height: 150%;
+      font-family: $font-family-montserrat;
+      font-weight: $font-weight-semibold;
+      font-style: normal;
+      line-height: $line-height-relaxed;
       letter-spacing: 0%;
-      color: #ffffff;
-      margin-right: 10px;
+      color: $text-color-primary;
+      margin: 0 0 10px 0;
     }
 
     .header__left-status {
-      border: 1px solid transparent;
-      width: 100px;
-      height: 30px;
-      padding: 7px 0 7px 10px;
+      border: $border-width-base solid transparent;
+      padding: 0;
       display: flex;
       align-items: center;
       background: rgba(84, 98, 140, 0.5);
-      border-radius: 15px;
       backdrop-filter: blur(10px);
 
       .header__left-statusIcon {
-        width: 16px;
-        height: 16px;
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: 50%;
+        border-radius: $border-radius-circle;
         background-color: rgba(106, 193, 97, 0.2);
-        margin-right: 6px;
+        margin: 0 0 10px 0;
 
         .header__left-statusIconCircle {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
+          border-radius: $border-radius-circle;
           background-color: rgba(106, 193, 97, 1);
         }
       }
 
       .header__left-statusText {
-        font-family: Arimo;
-        font-weight: 700;
-        font-style: Bold;
-        font-size: 16px;
-        line-height: 100%;
+        font-family: $font-family-base;
+        font-weight: $font-weight-bold;
+        font-style: normal;
+        font-size: $font-size-medium;
+        line-height: $line-height-100;
         letter-spacing: 0%;
         vertical-align: middle;
-        color: #ffffff;
+        color: $text-color-primary;
       }
     }
   }
@@ -187,52 +177,46 @@ const getAvatarName = (name: string): string => {
     .header__right-weather {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 20px;
       letter-spacing: 0%;
-      margin-right: 126px;
+      margin: 0 0 10px 0;
 
       .header__right-weatherIcon {
-        width: 40px;
-        height: 36px;
         object-fit: contain;
       }
 
       .header__right-weatherStatus {
-        font-weight: 500;
-        font-style: Medium;
+        font-weight: $font-weight-medium;
+        font-style: normal;
       }
 
       .header__right-weatherValue {
-        font-weight: 700;
-        font-style: Bold;
+        font-weight: $font-weight-bold;
+        font-style: normal;
       }
     }
 
     .header__right-avatar {
       cursor: pointer;
-      margin-right: 30px;
+      margin: 0 0 10px 0;
     }
 
     .header__right-notice {
       .header__right-noticeBtn {
-        padding: 20px 10px 13px 0;
-        transition: all 0.3s ease;
+        padding: 0;
+        transition: all $transition-base;
 
         :deep(.el-badge__content) {
-          width: 16px;
-          height: 16px;
+          width: $font-size-medium;
+          height: $font-size-medium;
           border: none;
-          border-radius: 50%;
+          border-radius: $border-radius-circle;
           background-color: rgba(218, 45, 44, 1);
-          font-family: Arimo;
-          font-weight: 400;
-          font-size: 14px;
+          font-family: $font-family-base;
+          font-weight: $font-weight-normal;
+          font-size: $font-size-base;
         }
 
         .header__right-noticeIcon {
-          width: 20px;
-          height: 20px;
           object-fit: contain;
         }
       }
@@ -243,16 +227,16 @@ const getAvatarName = (name: string): string => {
 .header__user {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  gap: $spacing-sm;
+  padding: $size-xs $spacing-sm;
+  border-radius: $spacing-sm;
+  transition: all $transition-base;
 }
 
 .header__user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: $height-lg;
+  height: $height-lg;
+  border-radius: $border-radius-circle;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,39 +244,30 @@ const getAvatarName = (name: string): string => {
 
   .header__user-avatar-initials {
     color: rgba(29, 134, 255, 1);
-    font-weight: 700;
-    font-size: 19px;
-    line-height: 100%;
+    font-weight: $font-weight-bold;
+    line-height: $line-height-100;
     letter-spacing: 0%;
   }
 }
 
-.header__user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
 .header__user-name {
-  font-family: Arimo;
-  font-weight: 500;
-  font-style: Medium;
-  font-size: 18px;
-  line-height: 140%;
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-style: normal;
+  font-size: $font-size-large;
+  line-height: $line-height-normal;
   letter-spacing: 0%;
-  color: #ffffff;
+  color: $text-color-primary;
 }
 
 .header__user-arrow {
-  height: 8px;
-  width: 10px;
-  font-size: 12px;
-  color: #909399;
+  height: $spacing-sm;
+  font-size: $font-size-extra-small;
+  color: $text-color-secondary;
 }
 
 :deep(.el-badge__content.is-fixed) {
-  right: 10px;
-  top: 4px;
+  top: $size-xs;
   padding: 0;
 }
 
@@ -300,17 +275,15 @@ const getAvatarName = (name: string): string => {
   width: 100%;
   display: flex;
   align-items: center;
-  color: #ffffff;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 100%;
+  color: $text-color-primary;
+  font-weight: $font-weight-medium;
+  font-size: $font-size-base;
+  line-height: $line-height-100;
   letter-spacing: 0%;
 
   .header__user-logoutIcon {
-    width: 20px;
-    height: 20px;
     object-fit: contain;
-    margin-right: 10px;
+    margin: 0 0 10px 0;
   }
 }
 </style>

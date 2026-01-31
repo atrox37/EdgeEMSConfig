@@ -1,8 +1,9 @@
+@use "@/assets/styles/_variables.scss" as *;
+// 导入主题变量
+
 /**
  * Element Plus Table 组件样式定制
- * 统一表格样式,提供现代化的视觉效�? */
-
-@use './theme-vars.scss' as *;
+ * 统一表格样式，提供现代化的视觉效�? */
 
 // 表格主体样式
 .voltage-class {
@@ -10,22 +11,23 @@
     background-color: transparent !important; // 使el-table背景透明，优先级提升
     .el-table__inner-wrapper {
       &::before {
-        height: 1px;
-        background-color: rgba(255, 255, 255, 0.1);
+        height: $border-width-base;
+        background-color: $border-color-white-10;
       }
       // 表头样式
       .el-table__header-wrapper,
       .el-table__body-header {
-        background: $bg-dark-blue-light;
+        background: $table-header-bg;
 
         th {
-          background: $bg-transparent;
+          background: transparent;
 
-          color: $color-white-alpha-60;
+          color: $table-header-color;
           font-weight: $font-weight-normal;
           font-size: $font-size-base;
-          line-height: 22px;
-          // border-bottom: 0.01rem solid #e5e7eb;
+          line-height: $table-cell-line-height;
+
+          // border-bottom: 1px solid #e5e7eb;
           // text-align: center !important;
 
           &:first-child {
@@ -36,13 +38,12 @@
             border-right: none;
           }
           &.el-table-fixed-column--right {
-            background-color: $bg-dark-blue-alt2;
-            // box-shadow: -0.01rem 0 0.01rem 0.01rem $color-white-alpha-10;
-            // border-left: 0.02rem solid $color-white-alpha-10;
+            background-color: $table-fixed-column-bg;
+            box-shadow: $box-shadow-large;
           }
           .cell {
             padding: 0;
-            line-height: 22px;
+            line-height: $table-cell-line-height;
             // text-align: center !important;
             // justify-content: center;
             // display: flex;
@@ -51,29 +52,30 @@
         }
 
         .el-table__cell {
-          padding: 9px $spacing-lg;
+          padding: $table-cell-padding;
           border: none;
+          border-bottom: $border-width-base solid $border-color-white-10;
         }
       }
 
       // 表格主体样式
       .el-table__body-wrapper {
-        // background-color: $bg-transparent !important; // 保证表格内容区背景透明
+        // background-color: transparent !important; // 保证表格内容区背景透明
         .el-scrollbar__bar.is-horizontal {
-          height: $scrollbar-width;
-          left: $spacing-xxs;
+          height: 6px;
+          left: 2px;
         }
         .el-scrollbar__bar.is-vertical {
-          top: $spacing-xxs;
-          width: $scrollbar-width;
+          top: 2px;
+          width: 6px;
         }
         td {
-          border-color: $color-white-alpha-10;
-          color: $color-white;
+          border-color: $border-color-white-10;
+          color: $text-color-primary;
           font-size: $font-size-base;
-          line-height: 40px;
-          // background-color: $bg-transparent !important; // 保证每个单元格背景透明
-          padding: 9px $spacing-lg;
+          line-height: $table-cell-line-height;
+          // background-color: transparent !important; // 保证每个单元格背景透明
+          padding: $table-cell-padding;
           &:first-child {
             border-left: none;
           }
@@ -82,21 +84,31 @@
             border-right: none;
           }
           &.el-table__cell {
-            border-bottom: 1px solid $color-white-alpha-10;
-            background: $bg-transparent;
+            border-bottom: $border-width-base solid $border-color-white-10;
+            background: transparent;
           }
           &.el-table-fixed-column--right {
-            background-color: $bg-dark-blue-alt3;
-            // box-shadow: -0.01rem 0 0.01rem 0.01rem $color-white-alpha-10;
+            background-color: $table-fixed-column-bg;
+            box-shadow: $box-shadow-large;
           }
           .cell {
             padding: 0;
-            min-height: 22px;
+            height: 22px;
             line-height: 22px;
             display: flex;
             align-items: center;
             // justify-content: center;
             text-align: center;
+            &.el-tooltip {
+              // width: 100% !important;
+              padding-right: 40px;
+              span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                // width: 100%;
+              }
+            }
           }
         }
         .el-table__row {
@@ -104,13 +116,12 @@
             background 0.2s,
             box-shadow 0.2s,
             color 0.2s;
-
-          // 鼠标悬停时的行样式增�?
+          // 鼠标悬停时的行样式增�?
           &:hover {
-            background: $bg-table-row-hover !important;
+            background: $table-row-hover-bg !important;
             // cursor: pointer;
             .el-table-fixed-column--right {
-              background: $bg-transparent;
+              background: $table-row-hover-bg;
             }
             // td {
             //   color: #3b82f6;
@@ -118,36 +129,36 @@
             //   transition: color 0.2s;
             // }
           }
-
           .el-table__expand-icon {
-            color: $color-white;
+            color: $text-color-primary;
             font-size: $font-size-base;
-            height: $spacing-lg;
+            height: 20px;
             & > .el-icon {
+              color: #000000 !important; // 黑色图标
               font-size: $font-size-base;
             }
           }
         }
       }
 
-      // 空数据状�?
+      // 空数据状�?
       .el-table__empty-block {
-        background-color: $bg-transparent; // 空数据时背景也透明
+        background-color: transparent; // 空数据时背景也透明
 
         .el-table__empty-text {
-          color: $color-gray-light;
+          color: $table-empty-color;
           font-size: $font-size-base;
         }
       }
 
-      // 固定列样�?
+      // 固定列样�?
       .el-table__fixed {
-        background-color: $bg-transparent; // 固定列背景透明
+        background-color: transparent; // 固定列背景透明
         // background-color: red !important;
-        box-shadow: $spacing-xxs 0 $scrollbar-width rgba(0, 0, 0, 0.06);
+        box-shadow: $box-shadow-large;
 
         &.el-table__fixed--right {
-          // box-shadow: -$spacing-xxs 0 $scrollbar-width rgba(0, 0, 0, 0.06);
+          // box-shadow: -2px 0 6px rgba(0, 0, 0, 0.06);
           // background-color: red !important;
         }
       }
@@ -155,33 +166,33 @@
       // 排序图标样式
       .el-table__column-filter-trigger,
       .el-table__column-resize-proxy {
-        border-color: #d1d5db;
+        border-color: $border-color-gray-light;
       }
 
       .caret-wrapper {
         .sort-caret {
-          border-color: #d1d5db;
+          border-color: $border-color-gray-light;
 
           &.ascending {
-            border-bottom-color: #3b82f6;
+            border-bottom-color: $primary-color;
           }
 
           &.descending {
-            border-top-color: #3b82f6;
+            border-top-color: $primary-color;
           }
         }
       }
       th,
       tr,
       td {
-        background-color: $bg-transparent;
+        background-color: transparent;
       }
     }
   }
   .el-popper {
-    padding: $spacing-tiny 11px;
-    font-size: $font-size-extra-small;
-    line-height: $spacing-lg;
+    padding: 5px 11px;
+    font-size: 12px;
+    line-height: 20px;
     .el-popper__arrow,
     .el-popper__arrow:before {
       height: 10px;
@@ -189,72 +200,82 @@
     }
     &.is-dark,
     &.is-dark > .el-popper__arrow:before {
-      border: 1px solid #303133;
+      border: $border-width-base solid $border-color-gray-dark;
     }
   }
   .el-pagination {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    height: $size-input-height;
-    margin-top: $spacing-lg;
+    height: 32px;
+    margin-top: 20px;
     button {
-      height: $size-input-height;
-      font-size: $font-size-base;
-      padding: 0 $spacing-xs;
-      min-width: $size-input-height;
+      height: 32px;
+      font-size: 14px;
+      padding: 0 4px;
+      min-width: 32px;
       &.btn-prev {
-        margin-left: $spacing-md;
+        margin-left: 16px;
+        &:disabled {
+          background-color: transparent;
+        }
+      }
+      &.btn-next {
+        margin-right: 16px;
+        &:disabled {
+          background-color: transparent;
+        }
       }
       .el-icon {
-        font-size: $font-size-extra-small;
+        font-size: 12px;
+        color: #000000 !important; // 黑色图标
       }
     }
     .el-pagination__total {
-      color: $color-white;
+      color: $text-color-primary;
       font-size: $font-size-base;
       margin-right: $spacing-md;
     }
 
     .el-pagination__sizes {
-      margin-left: $spacing-md;
+      margin-left: 16px;
       display: flex;
       .el-select {
         width: 128px;
         .el-select__input-wrapper {
-          height: $size-input-height;
+          height: 32px;
         }
         .el-input__inner {
-          height: $size-input-height;
+          height: 32px;
         }
         .el-select__input {
-          height: $spacing-lg;
+          height: 24px;
         }
       }
     }
     .el-pager {
       li {
-        background-color: $bg-transparent;
-        border-radius: $border-radius-base;
-        margin: 0 $spacing-xxs;
-        color: $color-white;
-        font-weight: 500;
+        background-color: transparent;
+        border-radius: 0;
+        margin: 0 2px;
+        color: $text-color-primary;
+        font-weight: $font-weight-medium;
         font-size: $font-size-base;
-        padding: 0 $spacing-xs;
-        height: $size-input-height;
-        line-height: $size-input-height;
-        min-width: $size-input-height;
+        padding: 0 $size-xs;
+        height: $pagination-height;
+        line-height: $pagination-height;
+        min-width: $pagination-height;
 
         &:hover {
-          background-color: $bg-transparent;
+          background-color: transparent;
         }
 
         &.is-active {
-          color: $color-white;
-          background-color: $color-white-alpha-10;
+          color: $text-color-primary;
+          background-color: $bg-color-transparent-white-10;
 
           &:hover {
-            background-color: $color-white-alpha-10;
+            background-color: $bg-color-transparent-white-10;
           }
         }
       }
@@ -263,39 +284,39 @@
     .btn-prev,
     .btn-next {
       border-radius: $border-radius-base;
-      background-color: $bg-transparent;
-      color: $color-white;
+      background-color: transparent;
+      color: $text-color-primary;
 
       &:hover {
-        color: #3b82f6;
-        background-color: #f3f4f6;
+        color: $primary-color;
+        background-color: $bg-color-input;
       }
 
       &:disabled {
-        color: #d1d5db;
+        color: $border-color-gray-light;
         cursor: not-allowed;
 
         &:hover {
-          background-color: $bg-transparent;
+          background-color: transparent;
         }
       }
     }
 
     .el-pagination__jump {
-      color: #6b7280;
-      font-size: 14px;
+      color: $pagination-jump-color;
+      font-size: $font-size-base;
 
       .el-input__inner {
-        border-radius: 6px;
-        border-color: #d1d5db;
+        border-radius: $border-radius-medium;
+        border-color: $border-color-gray-light;
         text-align: center;
 
         &:hover {
-          border-color: #9ca3af;
+          border-color: $border-color-gray-light;
         }
 
         &:focus {
-          border-color: #3b82f6;
+          border-color: $primary-color;
         }
       }
     }
@@ -316,10 +337,10 @@
       }
 
       &.is-text {
-        color: #3b82f6;
+        color: $primary-color;
 
         &:hover {
-          background-color: #eff6ff;
+          background-color: $orange-color-hover-bg;
         }
       }
     }
@@ -328,3 +349,5 @@
     }
   }
 }
+
+

@@ -1,61 +1,29 @@
+@use "@/assets/styles/_variables.scss" as *;
 /* Element Plus Input 组件样式 */
 
-@use './theme-vars.scss' as *;
 .voltage-class {
   // Input 基础样式
 
   .el-input {
-    height: $size-input-height !important;
-    width: $size-input-width !important;
-    // 输入框容�?
+    height: 32px !important;
+    width: 180px !important;
+    // 输入框容�?
     &.is-disabled {
       .el-input__wrapper {
         box-shadow: none !important;
       }
     }
-    .el-input__wrapper {
-      padding: 0 !important;
-      height: $size-input-height !important;
-      display: flex !important;
-      align-items: center !important;
-      position: relative !important;
-      background-color: $bg-color-input !important;
-      box-shadow: none !important;
-      border: 1px solid $border-color-base !important;
-      border-radius: $border-radius-base !important;
-      // outline: none !important;
-      // 聚焦状�?
-      &.is-focus {
-        border-color: $border-color-base !important;
-        box-shadow: none !important;
-        //   outline: none !important;
-      }
-
-      // 错误状�?
-      &.is-error {
-        border-color: $danger-color !important;
-      }
-
-      // 禁用状�?
-      &.is-disabled {
-        background-color: $bg-transparent !important;
-      }
-
-      // 只读状�?
-      &.is-readonly {
-      }
-    }
-    // 输入�?
+    // 输入�?
     .el-input__inner {
       border: none !important;
       outline: none !important;
-      background: $bg-transparent !important;
+      background: transparent !important;
       color: $text-color-primary !important;
       font-size: $font-size-base !important;
       line-height: $line-height-normal !important;
       width: 100% !important;
       height: 100% !important;
-      padding: 0 $spacing-sm !important;
+      padding: 0 12px !important;
       border-radius: $border-radius-base !important;
       border-color: $border-color-base !important;
       &::placeholder {
@@ -63,19 +31,19 @@
       }
 
       &:disabled {
-        color: $color-gray !important;
+        color: $text-color-disabled !important;
         cursor: not-allowed !important;
       }
 
       &:read-only {
-        color: $color-white !important ;
+        color: $text-color-primary !important ;
       }
     }
 
     // 前缀图标
     .el-input__prefix,
     .el-input__suffix {
-      color: $text-color-secondary !important;
+      color: #000000 !important; // 黑色图标
       font-size: $font-size-base !important;
       margin: 0 !important;
       display: flex !important;
@@ -83,35 +51,37 @@
       justify-content: center !important;
       .el-input__prefix-inner,
       .el-input__suffix-inner {
-        line-height: $size-icon-base !important;
+        line-height: 16px !important;
         width: 100% !important;
         height: 100% !important;
         .el-input__icon {
           width: 100% !important;
           height: 100% !important;
-          font-size: $size-icon-base !important;
+          font-size: 16px !important;
           margin: 0 !important;
+          color: #000000 !important; // 黑色图标
         }
       }
     }
     .el-input__prefix {
-      padding-left: $spacing-tiny !important;
+      padding-left: 0 !important;
     }
     .el-input__suffix {
-      padding-right: $spacing-tiny !important;
+      padding-right: 0 !important;
     }
 
     // 密码显示切换按钮
     .el-input__password {
-      width: $size-icon-base !important;
-      height: $size-icon-base !important;
-      font-size: $size-icon-base !important;
+      width: 16px !important;
+      height: 16px !important;
+      font-size: 16px !important;
       // color: rgb(168, 171, 178) !important;
       cursor: pointer !important;
       transition: color $transition-fast !important;
+      // margin-right: 10px !important;
 
       // &:hover {
-      //   color: $color-white !important;
+      //   color: #fff !important;
       // }
     }
 
@@ -142,7 +112,7 @@
       }
     }
 
-    // 大尺�?
+    // 大尺�?
     &.el-input--large {
       .el-input__wrapper {
         height: $button-height-large !important;
@@ -164,7 +134,7 @@
   .el-textarea {
     .el-textarea__inner {
       border-radius: $border-radius-base !important;
-      border: 1px solid $border-color-base !important;
+      border: $border-width-base solid $border-color-base !important;
       background-color: $bg-color-input !important;
       color: $text-color-primary !important;
       font-size: $font-size-base !important;
@@ -194,18 +164,18 @@
   }
 
   .el-input-number {
-    line-height: $size-input-height;
-    width: $size-input-width !important;
+    line-height: 32px;
+    width: 240px !important;
     .el-input {
       width: 100% !important;
     }
     .el-input-number__decrease,
     .el-input-number__increase {
-      width: $size-input-height;
-      font-size: $font-size-small;
+      width: 32px;
+      font-size: 13px;
       top: 1px;
       bottom: 1px;
-      border-radius: $border-radius-base;
+      border-radius: 0;
     }
     .el-input-number__decrease {
       border-right: 1px solid $border-color-base;
@@ -214,4 +184,37 @@
       border-left: 1px solid $border-color-base;
     }
   }
+  .el-input__wrapper {
+    padding: 0 !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    background-color: $bg-color-input !important;
+    box-shadow: none !important;
+    border: 1px solid $border-color-base !important;
+    border-radius: $border-radius-base !important;
+    // outline: none !important;
+    // 聚焦状�?
+    &.is-focus {
+      border-color: $border-color-base !important;
+      box-shadow: none !important;
+      //   outline: none !important;
+    }
+
+    // 错误状�?
+    &.is-error {
+      border-color: $danger-color !important;
+    }
+
+    // 禁用状�?
+    &.is-disabled {
+      background-color: transparent !important;
+    }
+
+    // 只读状�?
+    &.is-readonly {
+    }
+  }
 }
+

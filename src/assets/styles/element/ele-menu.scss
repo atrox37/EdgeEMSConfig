@@ -1,14 +1,22 @@
+@use "@/assets/styles/_variables.scss" as *;
+
 .voltage-class {
-  // 主菜单容器
+  // 主菜单容�?
   .el-menu {
     background: transparent;
     border-right: none;
-    color: #fff;
+    color: $secondary-color;
     font-family: Arial, sans-serif;
     transition: all 0.3s ease;
+
+    // 菜单图标颜色调整为黑�?
+    .el-icon {
+      color: $secondary-color !important;
+    }
+
     .el-menu-item-group {
       .el-menu-item.is-active {
-        background: red;
+        background: transparent;
       }
     }
     .el-menu-item,
@@ -31,7 +39,7 @@
         background-size: 100% 100%;
         background-repeat: no-repeat;
         background-position: center;
-        color: #fff;
+        color: $secondary-color;
       }
     }
     .el-menu-item:hover,
@@ -40,13 +48,16 @@
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center;
+      color: $secondary-color;
     }
+
     .el-menu-item.is-active,
     .el-sub-menu.is-active > .el-sub-menu__title {
       background-image: url('@/assets/images/sidebar-tag-selected.png');
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center;
+      color: #ffffff;
     }
     &.el-menu--collapse .el-sub-menu.is-active > .el-sub-menu__title:hover,
     &.el-menu--collapse .el-menu-item.is-active:hover,
@@ -55,6 +66,7 @@
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center;
+      color: #ffffff;
     }
     &.el-menu--collapse .el-menu-item:not(.is-active):hover {
       background-image: url('@/assets/images/sidebar-collapseTag-hover.png') !important;
@@ -70,27 +82,27 @@
         padding-left: 65px !important;
         margin-bottom: 10px;
         font-size: 12px;
-        color: #fff;
-        font-weight: 700;
+        color: $secondary-color;
+        font-weight: $font-weight-semibold;
         font-style: Bold;
-        height: 36px;
-        line-height: 100%;
+        height: $menu-sub-item-height;
+        line-height: $line-height-100;
         letter-spacing: 0%;
         vertical-align: middle;
         display: flex;
         align-items: center;
         justify-content: flex-start;
         &:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: #fff;
+          background: rgba(0, 0, 0, 0.05); // 浅色主题hover背景
+          color: $secondary-color;
         }
         &.is-active {
-          background: rgba(255, 105, 0, 0.2);
-          color: rgba(255, 105, 0, 1);
+          background: $secondary-color;
+          color: #ffffff; // 激活状态保持主题色
         }
       }
     }
-    // 去除菜单分割线
+    // 去除菜单分割�?
     .el-menu-item:not(:last-child) {
       border-bottom: none;
     }
@@ -111,6 +123,7 @@
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center;
+      color: #ffffff;
     }
   }
   .el-menu:not(.el-menu--collapse) .el-sub-menu__title {
@@ -121,17 +134,9 @@
   position: relative;
   margin-left: 22px;
   border: 1px solid;
-  border-image: linear-gradient(
-      117.64deg,
-      rgba(148, 166, 197, 0.3) 2.73%,
-      rgba(148, 166, 197, 0) 25.27%,
-      rgba(148, 166, 197, 0.3) 41.05%,
-      rgba(148, 166, 197, 0.103266) 61.63%,
-      rgba(148, 166, 197, 0.3) 97.67%
-    )
-    1 !important;
+  border-image: $border-gradient-menu !important;
 
-  background: rgba(84, 98, 140, 0.2) !important;
+  background: $bg-color-dark-10 !important;
   backdrop-filter: blur(100px);
   .el-menu--popup {
     padding: 10px 20px;
@@ -144,12 +149,12 @@
       line-height: 36px;
       padding-left: 30px;
       &.is-active {
-        background: rgba(255, 105, 0, 0.2);
-        color: rgba(255, 105, 0, 1);
+        background: $secondary-color;
+        color: #ffffff;
       }
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
+        background: $bg-color-transparent-white-10;
+        color: $text-color-primary;
       }
     }
   }
@@ -160,11 +165,12 @@
     position: absolute;
     top: 10px;
     left: -5.5px;
-    background: linear-gradient(45deg, #374b73 50%, transparent 50%);
+    background: linear-gradient(45deg, $bg-color-dark-9 50%, transparent 50%);
     // background-color: #213961;
     transform: rotate(45deg);
-    border-bottom: 1px solid #415479;
-    border-left: 1px solid #415479;
+    border-bottom: $border-width-base solid $border-color-gray;
+    border-left: $border-width-base solid $border-color-gray;
     z-index: 99;
   }
 }
+

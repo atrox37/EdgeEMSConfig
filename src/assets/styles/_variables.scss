@@ -1,0 +1,418 @@
+/**
+ * 全局样式变量文件
+ * 统一管理项目中使用的颜色、尺寸、字体、间距等公共样式变量
+ * 
+ * 使用方式：
+ * @use './variables' as *;
+ * 
+ * 或者：
+ * @use './variables' as vars;
+ * color: vars.$primary-color;
+ */
+
+// ==================== 基础颜色定义 ====================
+
+// 白色透明度基础变量（统一管理白色透明度）
+$white-alpha-100: rgba(255, 255, 255, 1);
+$white-alpha-60: rgba(255, 255, 255, 0.6);
+$white-alpha-40: rgba(255, 255, 255, 0.4);
+$white-alpha-30: rgba(255, 255, 255, 0.3);
+$white-alpha-20: rgba(255, 255, 255, 0.2);
+$white-alpha-15: rgba(255, 255, 255, 0.15);
+$white-alpha-10: rgba(255, 255, 255, 0.1);
+$white-alpha-05: rgba(255, 255, 255, 0.05);
+
+// 黑色透明度基础变量（统一管理黑色透明度）
+$black-alpha-50: rgba(0, 0, 0, 0.5);
+$black-alpha-28: rgba(0, 0, 0, 0.28);
+$black-alpha-25: rgba(0, 0, 0, 0.25);
+$black-alpha-12: rgba(0, 0, 0, 0.12);
+$black-alpha-06: rgba(0, 0, 0, 0.06);
+$black-alpha-04: rgba(0, 0, 0, 0.04);
+
+// ==================== 颜色系统 ====================
+
+// 主色调
+$primary-color: rgba(255, 105, 0, 1);
+$primary-color-hover: #ff8733;
+$primary-color-active: #ff6f00;
+$primary-color-light: rgba(255, 138, 0, 1);
+$primary-color-alpha-20: rgba(255, 105, 0, 0.2);
+$primary-color-alpha-35: rgba(255, 138, 0, 0.35);
+$primary-color-alpha-40: rgba(255, 105, 0, 0.4);
+
+// 副主题色
+$secondary-color: #033b6c;
+$secondary-color-hover: #02508f;
+$secondary-color-active: #014572;
+
+// 功能色
+$success-color: #52c41a;
+$success-color-hover: #49aa15;
+$success-color-active: #409611;
+
+$warning-color: #faad14;
+$warning-color-hover: #e6a017;
+$warning-color-active: #d29213;
+
+$danger-color: #ff4d4f;
+$danger-color-hover: #e64447;
+$danger-color-active: #cc3b3f;
+$danger-color-error: #f56c6c;
+
+$info-color: #8c8c8c;
+$info-color-hover: #7a7a7a;
+$info-color-active: #686868;
+
+// 橙色系（用于高亮、链接等，替代蓝色）
+$orange-color: rgba(255, 105, 0, 1);
+$orange-color-light: rgba(255, 138, 0, 1);
+$orange-color-alpha-12: rgba(255, 105, 0, 0.12);
+$orange-color-alpha-25: rgba(255, 105, 0, 0.25);
+$orange-color-alpha-30: rgba(255, 105, 0, 0.3);
+$orange-color-alpha-40: rgba(255, 105, 0, 0.4);
+$orange-color-hover-bg: rgba(255, 105, 0, 0.1);
+
+// 文本颜色
+$text-color-primary: #000000; // 黑色文字
+$text-color-regular: #595959;
+$text-color-secondary: #8c8c8c;
+$text-color-placeholder: #bfbfbf;
+$text-color-disabled: #c0c4cc;
+$text-color-white-60: rgba(0, 0, 0, 0.6); // 黑色60%透明度
+$text-color-white-40: rgba(0, 0, 0, 0.4); // 黑色40%透明度
+$text-color-white-20: rgba(0, 0, 0, 0.2); // 黑色20%透明度
+$text-color-white-10: rgba(0, 0, 0, 0.1); // 黑色10%透明度
+$text-color-white-05: rgba(0, 0, 0, 0.05); // 黑色5%透明度
+
+// 背景颜色 - 白色主题
+$bg-color-page: #ffffff; // 页面背景 - 白色
+$bg-color-overlay: #f5f5f5; // 覆盖层背景 - 浅灰色
+$bg-color-input: rgba(245, 245, 245, 0.8); // 输入框背景 - 浅灰色
+$bg-color-dark: #ffffff; // 背景 - 白色
+// 背景渐变：从副主题色到白色，左上到右下，白色居多
+// 扩大渐变范围，从左上一直渐变到右下
+$bg-gradient-page: linear-gradient(135deg, #a7bacb 0%, #ffffff 100%);
+$bg-color-dark-1: #fafafa; // 浅灰色1
+$bg-color-dark-2: #f5f5f5; // 浅灰色2
+$bg-color-dark-3: #f0f0f0; // 浅灰色3
+$bg-color-dark-4: #e8e8e8; // 浅灰色4
+$bg-color-dark-5: #d9d9d9; // 中灰色
+$bg-color-dark-6: rgba(255, 255, 255, 0.9); // 半透明白色
+$bg-color-dark-7: rgba(255, 255, 255, 0.95); // 半透明白色
+$bg-color-dark-8: rgba(255, 255, 255, 0.85); // 半透明白色
+$bg-color-dark-9: rgba(250, 250, 250, 0.95); // 半透明浅灰色
+$bg-color-dark-10: rgba(245, 245, 245, 0.8); // 半透明浅灰色
+$bg-color-dark-11: rgba(240, 240, 240, 0.6); // 半透明浅灰色
+$bg-color-dark-12: rgba(232, 232, 232, 0.8); // 半透明浅灰色
+$bg-color-transparent-white-10: $white-alpha-10;
+$bg-color-transparent-white-15: $white-alpha-15;
+$bg-color-transparent-white-20: $white-alpha-20;
+$bg-color-transparent-black-50: $black-alpha-50;
+$bg-color-transparent-black-28: $black-alpha-28;
+
+// 边框颜色 - 浅色主题
+$border-color-base: rgba(200, 200, 200, 0.5); // 基础边框 - 浅灰色
+$border-color-white-10: rgba(0, 0, 0, 0.1); // 黑色10%透明度
+$border-color-white-20: rgba(0, 0, 0, 0.2); // 黑色20%透明度
+$border-color-white-30: rgba(0, 0, 0, 0.3); // 黑色30%透明度
+$border-color-dark-60: rgba(200, 200, 200, 0.8); // 浅色边框
+$border-color-gray: #d9d9d9; // 浅灰色边框
+$border-color-gray-light: #e8e8e8; // 更浅灰色边框
+$border-color-gray-dark: #bfbfbf; // 中灰色边框
+$border-color-gray-darker: #b3b3b3; // 稍深灰色边框
+$border-color-gray-lightest: #f0f0f0; // 最浅灰色边框
+$border-color-orange: rgba(255, 105, 0, 0.5); // 橙色边框
+$border-color-orange-light: rgba(255, 105, 0, 0.3); // 浅橙色边框
+
+// 滚动条颜色 - 浅色主题
+$scrollbar-track-bg: rgba(240, 240, 240, 0.5);
+$scrollbar-thumb-bg: rgba(200, 200, 200, 0.6);
+$scrollbar-thumb-hover-bg: rgba(180, 180, 180, 0.8);
+$scrollbar-thumb-dark: rgba(220, 220, 220, 0.5);
+$scrollbar-thumb-dark-hover: rgba(200, 200, 200, 0.7);
+
+// 阴影 - 黑色和橙色主题
+$box-shadow-base: 0 2px 4px $black-alpha-12, 0 0 6px $black-alpha-04;
+$box-shadow-small: 0 8px 24px $black-alpha-28;
+$box-shadow-medium: 0 4px 10px 0 $black-alpha-25;
+$box-shadow-large: 3px 0 6px $black-alpha-06;
+$box-shadow-orange: 0 2px 8px rgba(255, 105, 0, 0.3);
+$box-shadow-orange-hover: 0 4px 12px rgba(255, 105, 0, 0.4);
+
+// ==================== 尺寸系统 ====================
+
+// 基础尺寸变量
+$size-xs: 4px;
+$size-sm: 8px;
+$size-md: 16px;
+$size-lg: 24px;
+$size-xl: 32px;
+$size-xxl: 48px;
+
+// 字体大小
+$font-size-extra-small: 12px;
+$font-size-small: 13px;
+$font-size-base: 14px;
+$font-size-medium: $size-md;
+$font-size-large: 18px;
+$font-size-extra-large: 20px;
+$font-size-huge: $size-lg;
+
+// 字体权重
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// 行高
+$line-height-tight: 1.2;
+$line-height-normal: 1.4;
+$line-height-relaxed: 1.5;
+$line-height-loose: 1.6;
+$line-height-100: 100%;
+
+// 间距
+$spacing-xs: $size-xs;
+$spacing-sm: $size-sm;
+$spacing-md: $size-md;
+$spacing-lg: $size-lg;
+$spacing-xl: $size-xl;
+$spacing-xxl: $size-xxl;
+
+// 高度
+$height-xs: $size-lg;
+$height-sm: 28px;
+$height-base: $size-xl;
+$height-md: 36px;
+$height-lg: 40px;
+$height-xl: 42px;
+$height-xxl: $size-xxl;
+
+// 宽度
+$width-scrollbar: 6px;
+$width-scrollbar-small: $size-sm;
+$width-input-base: 240px;
+$width-select-base: $width-input-base;
+$width-select-dropdown: 128px;
+$width-select-min: 150px;
+$width-menu-collapse: 44px;
+
+// 圆角
+$border-radius-base: 0px;
+$border-radius-small: $size-xs;
+$border-radius-medium: 6px;
+$border-radius-round: 20px;
+$border-radius-circle: 50%;
+
+// 边框宽度
+$border-width-base: 1px;
+$border-width-medium: 2px;
+
+// ==================== 过渡动画 ====================
+
+$transition-fast: 0.15s ease;
+$transition-base: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// ==================== 透明度 ====================
+
+$opacity-disabled: 0.6;
+$opacity-loading: 0.8;
+$opacity-hover: 0.9;
+
+// ==================== 按钮尺寸 ====================
+
+$button-height-small: $height-sm;
+$button-height-base: $height-base;
+$button-height-large: $height-lg;
+
+$button-padding-small: 0 12px;
+$button-padding-base: 0 $size-md;
+$button-padding-large: 0 20px;
+
+$button-font-size-small: $font-size-small;
+$button-font-size-base: $font-size-base;
+$button-font-size-large: $font-size-medium;
+
+$button-line-height-small: 1.4;
+$button-line-height-base: 1.5;
+$button-line-height-large: 1.6;
+
+// ==================== 特殊效果 ====================
+
+// 背景模糊
+$backdrop-blur-small: blur($size-xs);
+$backdrop-blur-base: blur(20px);
+$backdrop-blur-medium: blur(30px);
+$backdrop-blur-large: blur(100px);
+
+// 渐变边框 - 浅色主题
+$border-gradient-base: linear-gradient(
+  118.59deg,
+  rgba(200, 200, 200, 0.5) 2.74%,
+  rgba(200, 200, 200, 0) 31.8%,
+  rgba(200, 200, 200, 0.2) 71.77%,
+  rgba(200, 200, 200, 0.5) 97.88%
+);
+
+$border-gradient-menu: linear-gradient(
+  117.64deg,
+  rgba(200, 200, 200, 0.5) 2.73%,
+  rgba(200, 200, 200, 0) 25.27%,
+  rgba(200, 200, 200, 0.5) 41.05%,
+  rgba(200, 200, 200, 0.2) 61.63%,
+  rgba(200, 200, 200, 0.5) 97.67%
+);
+
+// 渐变背景 - 浅色主题
+$gradient-info-button: linear-gradient(135deg, $info-color 0%, #b3b3b3 100%);
+$gradient-info-button-hover: linear-gradient(135deg, $info-color-hover 0%, #999999 100%);
+$gradient-info-button-active: linear-gradient(135deg, $info-color-active 0%, #808080 100%);
+
+// ==================== Z-index 层级 ====================
+
+$z-index-base: 1;
+$z-index-dropdown: 1000;
+$z-index-popper-arrow: 999;
+$z-index-menu-item-start: 100;
+
+// ==================== 字体 ====================
+
+$font-family-base: Arimo, sans-serif;
+$font-family-menu: Arial, sans-serif;
+$font-family-montserrat: Montserrat, sans-serif;
+
+// ==================== Vue Flow 特定变量 ====================
+
+$vueflow-edge-stroke: #ff6900; // 橙色边线
+$vueflow-edge-width: 2.5px;
+$vueflow-minimap-bg: $bg-color-dark-6;
+$vueflow-minimap-mask-stroke: $primary-color; // 使用橙色替代蓝色
+$vueflow-minimap-mask-width: $border-width-medium;
+$vueflow-controls-bg: $bg-color-dark-7;
+$vueflow-controls-border: $bg-color-dark-8;
+$vueflow-controls-button-bg: $orange-color-alpha-12; // 使用橙色替代蓝色
+$vueflow-controls-button-hover-bg: $orange-color-alpha-25; // 使用橙色替代蓝色
+$vueflow-controls-button-size: 25px;
+$vueflow-controls-icon-size: 18px;
+$vueflow-minimap-width: 200px;
+$vueflow-minimap-height: 150px;
+$vueflow-minimap-node-width: 120px;
+$vueflow-minimap-node-height: 30px;
+
+// ==================== 表格特定变量 ====================
+
+$table-header-bg: #d3dde7; // 浅灰色表头背景
+$table-header-color: rgba(0, 0, 0, 0.85); // 黑色文字
+$table-row-hover-bg: #e6edf4; // 浅灰色悬停背景
+$table-row-hover-bg-dialog: #e6edf4;
+$table-fixed-column-bg: rgba(250, 250, 250, 0.95); // 浅灰色固定列背景
+$table-fixed-column-bg-dialog: rgba(250, 250, 250, 0.95);
+$table-cell-padding: 9px 20px;
+$table-cell-line-height: 22px;
+$table-empty-color: #999999; // 灰色空状态文字
+
+// ==================== 对话框特定变量 ====================
+
+$dialog-overlay-bg: rgba(0, 0, 0, 0.3); // 浅色遮罩
+$dialog-bg: #ffffff; // 白色对话框背景
+$dialog-header-padding: 20px $size-lg;
+$dialog-body-padding: 0 20px;
+$dialog-footer-padding: 40px 0 20px 0;
+$dialog-footer-margin: 0 20px;
+$dialog-close-size: $size-xxl;
+$dialog-close-icon-size: $font-size-medium;
+$dialog-title-size: $font-size-large;
+$dialog-title-size-fullscreen: $size-lg;
+
+// ==================== 菜单特定变量 ====================
+
+$menu-item-height: 42px;
+$menu-item-padding-left: 20px;
+$menu-item-margin-bottom: 28px;
+$menu-sub-item-padding-left: 65px;
+$menu-sub-item-margin-bottom: 10px;
+$menu-sub-item-height: 36px;
+$menu-popup-padding: 10px 20px;
+$menu-popup-item-padding-left: 30px;
+
+// ==================== 表单特定变量 ====================
+
+$form-item-margin-bottom: 20px;
+$form-item-label-margin-right: $size-md;
+$form-item-label-line-height: $height-base;
+$form-item-content-min-width: $width-input-base;
+$form-item-error-font-size: 10px;
+$form-item-error-padding-top: $border-width-medium;
+$form-inline-item-margin-right: $height-lg;
+$form-inline-item-margin-bottom: $height-lg;
+$form-label-top-margin-bottom: 9px;
+$form-label-top-line-height: 22px;
+
+// ==================== 输入框特定变量 ====================
+
+$input-wrapper-padding: 0;
+$input-inner-padding: 0 12px;
+$input-password-size: $font-size-medium;
+$input-number-decrease-size: $height-base;
+$textarea-min-height: 64px;
+
+// ==================== 分页特定变量 ====================
+
+$pagination-height: $height-base;
+$pagination-margin-top: 20px;
+$pagination-button-padding: 0 $size-xs;
+$pagination-button-min-width: $height-base;
+$pagination-total-margin-right: $size-md;
+$pagination-sizes-margin-left: $size-md;
+$pagination-pager-margin: 0 $border-width-medium;
+$pagination-pager-padding: 0 $size-xs;
+$pagination-pager-min-width: $height-base;
+$pagination-jump-color: #6b7280;
+
+// ==================== 开关特定变量 ====================
+
+$switch-core-width: $height-lg;
+$switch-core-height: 20px;
+$switch-action-size: $font-size-medium;
+$switch-action-offset: $border-width-medium;
+$switch-disabled-bg: #3a4f71;
+
+// ==================== 标签特定变量 ====================
+
+$tag-padding: 0 9px;
+$tag-height: $size-lg;
+
+// ==================== 滚动条特定变量 ====================
+
+$scrollbar-width-base: $width-scrollbar;
+$scrollbar-width-small: $width-scrollbar-small;
+$scrollbar-border-radius: $border-radius-small;
+$scrollbar-transition: background 0.3s;
+
+// ==================== Popper 特定变量 ====================
+
+$popper-padding: 5px 11px;
+$popper-font-size: $font-size-extra-small;
+$popper-line-height: 20px;
+$popper-arrow-size: 10px;
+$popper-arrow-offset: -5px;
+$popper-bg-light: transparent;
+$popper-bg-dark: #fafafa; // 浅灰色背景
+$popper-bg-dark-alt: #f5f5f5; // 浅灰色替代背景
+$popper-border-color: rgba(200, 200, 200, 0.5); // 浅灰色边框
+$popper-shadow: $box-shadow-medium;
+$popper-backdrop: $backdrop-blur-base;
+
+// ==================== 设备监控表格特定变量 ====================
+
+$vtable-header-bg: #d3dde7; // 浅灰色表头背景
+$vtable-header-height: $height-lg;
+$vtable-cell-padding: 9px 12px;
+$vtable-cell-line-height: 22px;
+$vtable-row-hover-bg: #e6edf4; // 使用橙色悬停背景替代蓝色
+$vtable-cell-name-width: 50%;
+$vtable-cell-value-width: 25%;
+$vtable-cell-unit-width: 25%;
+$vtable-cell-status-width: 50%;

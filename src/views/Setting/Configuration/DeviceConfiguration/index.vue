@@ -1,135 +1,107 @@
-﻿<template>
+<template>
   <div class="voltage-class rule-management">
-    <LoadingBg :loading="loading">
-      <div class="rule-management__header">
-        <div class="rule-management__search-form" ref="levelSelectRef">
-          <el-form :model="filters" :inline="true" class="test-form">
-            <el-form-item label="productName:">
-              <el-select
-                v-model="filters.product_name"
-                placeholder="Please select productName"
-                clearable
-                filterable
-              >
-                <el-option
-                  v-for="opt in productOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-form>
-          <div class="form-oprations">
-            <IconButton
-              type="warning"
-              :icon="tableRefreshIcon"
-              text="Reload"
-              custom-class="rule-management__btn"
-              @click="handleRefresh"
-            />
-            <IconButton
-              type="primary"
-              :icon="tableSearchIcon"
-              text="Search"
-              custom-class="rule-management__btn"
-              @click="handleSearch"
-            />
-            <IconButton
-              type="primary"
-              :icon="userAddIcon"
-              text="New Instance"
-              custom-class="rule-management__btn"
-              @click="handleAddUser"
-            />
-          </div>
+    <div class="rule-management__header">
+      <h2 class="rule-management__title">Model Config</h2>
+    </div>
+    <div class="rule-management__content">
+      <div class="rule-management__search-form" ref="levelSelectRef">
+        <!-- 桌面端：显示筛选框 -->
+        <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
+          <el-form-item label="productName:">
+            <el-select v-model="filters.product_name" placeholder="Please select productName" clearable filterable
+              :append-to="levelSelectRef || undefined"
+              @change="handleDesktopFilterChange('product_name', filters.product_name)">
+              <el-option v-for="opt in productOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <!-- 
+        <div class="rule-management__filters-mobile">
+          <div class="rule-management__filter-trigger-wrapper" ref="filterTriggerRef">
+            <el-popover v-model:visible="showFilterPopover" placement="bottom-start" :width="300" trigger="click"
+              :teleported="false">
+              <template #reference>
+                <IconButton type="primary" :icon="tableSearchIcon" text="Filter"
+                  custom-class="rule-management__btn rule-management__filter-btn" />
+              </template>
+<el-form :model="filters" label-width="120px" class="rule-management__filter-form">
+  <el-form-item label="productName:" class="rule-management__filter-form-item-last">
+    <el-select v-model="filters.product_name" placeholder="Please select productName" clearable filterable
+      style="width: 100%" @change="handleFilterChange()">
+      <el-option v-for="opt in productOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+    </el-select>
+  </el-form-item>
+  <div style="text-align: right; margin-top: 12px;">
+    <el-button size="small" @click="showFilterPopover = false">Close</el-button>
+    <el-button type="primary" size="small" @click="applyFilters">Apply</el-button>
+  </div>
+</el-form>
+</el-popover>
+
+<div class="rule-management__filter-tags">
+  <el-tag v-for="tag in activeFilterTags" :key="tag.key" closable @close="removeFilterTag(tag.key)"
+    class="rule-management__filter-tag">
+    {{ tag.value }}
+  </el-tag>
+</div>
+</div>
+</div> -->
+        <div class="rule-management__reload-icon" @click="handleReload">
+          <img :src="tableRefreshIcon" alt="Reload" />
         </div>
-        <div class="rule-management__table-operations"></div>
+
+
+
       </div>
       <div class="rule-management__table">
-        <el-table
-          :data="tableData"
-          class="rule-management__table-content"
-          align="left"
-          table-layout="fixed"
-          row-key="instance_id"
-        >
-          <el-table-column prop="instance_id" label="ID" />
-          <el-table-column prop="instance_name" label="Instance Name" />
-          <el-table-column prop="product_name" label="Product Name" />
-          <el-table-column label="Operation" fixed="right" :width="isNarrow ? 80 : 380">
+        <el-table v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
+          row-key="instance_id">
+          <el-table-column prop="instance_id" label="ID" width="100" />
+          <el-table-column prop="instance_name" label="Instance Name" min-width="200" />
+          <el-table-column prop="product_name" label="Product Name" min-width="200" />
+          <el-table-column min-width="200" fixed="right">
+            <template #header>
+              <IconButton type="primary" :icon="userAddIcon" text="New"
+                custom-class="rule-management__btn rule-management__table-header-btn" @click="handleAddUser" />
+            </template>
             <template #default="{ row }">
-              <OperationDropdown @command="(cmd) => handleOperationCommand(cmd, row)">
-                <!-- 宽屏：显示所有按钮 -->
-                <template #buttons>
-                  <div class="rule-management__operation">
-                    <div class="rule-management__operation-item" @click="handleDetail(row)">
-                      <img :src="tableEditIcon" />
-                      <span class="rule-management__operation-text">Detail</span>
-                    </div>
-                    <div class="rule-management__operation-item" @click="openPointsDialog(row)">
-                      <img :src="tableEditIcon" />
-                      <span class="rule-management__operation-text">Points</span>
-                    </div>
-                    <div class="rule-management__operation-item" @click="openMappingsDialog(row)">
-                      <img :src="tableEditIcon" />
-                      <span class="rule-management__operation-text">Mappings</span>
-                    </div>
-                    <div class="rule-management__operation-item" @click="handleDelete(row)">
-                      <img :src="tableDeleteIcon" />
-                      <span class="rule-management__operation-text">Delete</span>
-                    </div>
-                  </div>
-                </template>
-
-                <!-- 窄屏：下拉菜单项 -->
-                <template #dropdown>
-                  <el-dropdown-item command="detail">
-                    <img :src="tableEditIcon" />
-                    Detail
-                  </el-dropdown-item>
-                  <el-dropdown-item command="points">
-                    <img :src="tableEditIcon" />
-                    Points
-                  </el-dropdown-item>
-                  <el-dropdown-item command="mappings">
-                    <img :src="tableEditIcon" />
-                    Mappings
-                  </el-dropdown-item>
-                  <el-dropdown-item command="delete">
-                    <img :src="tableDeleteIcon" />
-                    Delete
-                  </el-dropdown-item>
-                </template>
-              </OperationDropdown>
+              <div class="rule-management__operation">
+                <div class="rule-management__operation-item" @click="handleDetail(row)">
+                  <img :src="detailIcon" />
+                  <span class="rule-management__operation-text">Detail</span>
+                </div>
+                <div class="rule-management__operation-item" @click="openPointsDialog(row)">
+                  <img :src="pointIcon" />
+                  <span class="rule-management__operation-text">Points</span>
+                </div>
+                <!-- <div class="rule-management__operation-item" @click="openMappingsDialog(row)">
+                  <img :src="tableEditIcon" />
+                  <span class="rule-management__operation-text">Mappings</span>
+                </div> -->
+                <div class="rule-management__operation-item" @click="handleDelete(row)">
+                  <img :src="tableDeleteIcon" />
+                  <span class="rule-management__operation-text">Delete</span>
+                </div>
+              </div>
             </template>
           </el-table-column>
         </el-table>
 
         <div class="rule-management__pagination">
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
-            :total="pagination.total"
-            layout="total, sizes, prev, pager, next"
-            @size-change="handlePageSizeChange"
-            @current-change="handlePageChange"
-          />
+          <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
+            @size-change="handlePageSizeChange" @current-change="handlePageChange" />
         </div>
       </div>
-    </LoadingBg>
-    <InstanceDetailDialog
-      ref="instanceDetailDialogRef"
-      :product-options="productOptions"
-      @submit="handleDetailSubmit"
-    />
+    </div>
+    <InstanceDetailDialog ref="instanceDetailDialogRef" :product-options="productOptions"
+      @submit="fetchTableData(true)" />
 
-    <!-- Points Tables 对话框（DeviceConfiguration 专用） -->
+    <!-- Points Tables 对话框（DeviceConfiguration 专用�?-->
     <PointsTablesDialog ref="PointsTablesDialogRef" />
 
-    <!-- Mappings 对话框（DeviceConfiguration 专用） -->
-    <MappingsDialog ref="MappingsDialogRef" />
+    <!-- Mappings 对话框（DeviceConfiguration 专用�?-->
+    <!-- <MappingsDialog ref="MappingsDialogRef" /> -->
   </div>
 </template>
 
@@ -138,17 +110,17 @@
 import tableRefreshIcon from '@/assets/icons/table-refresh.svg'
 import tableSearchIcon from '@/assets/icons/table-search.svg'
 import userAddIcon from '@/assets/icons/user-add.svg'
-import tableEditIcon from '@/assets/icons/table-edit.svg'
 import tableDeleteIcon from '@/assets/icons/table-delect.svg'
-import InstanceDetailDialog from './InstanceDetailDialog.vue'
-import PointsTablesDialog from './PointsTablesDialog.vue'
-import OperationDropdown from '@/components/common/OperationDropdown.vue'
+import detailIcon from '@/assets/icons/button-detail.svg'
+import pointIcon from '@/assets/icons/button-point.svg'
+
+import InstanceDetailDialog from './components/InstanceDetailDialog.vue'
+import PointsTablesDialog from './components/PointsTablesDialog.vue'
 import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { getProducts } from '@/api/devicesManagement'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
-import { useResponsive } from '@/composables/useResponsive'
-import MappingsDialog from './components/MappingsDialog.vue'
+
 const tableConfig: TableConfig = {
   listUrl: '/modApi/api/instances',
   deleteUrl: '/modApi/api/instances/{id}',
@@ -163,14 +135,83 @@ const {
   fetchTableData,
   filters,
   handlePageChange,
+  reloadFilters,
 } = useTableData<DeviceInstanceBasic>(tableConfig)
 
 filters.product_name = ''
 
-// 使用响应式监听
-const { isNarrow } = useResponsive()
-
 const levelSelectRef = ref<HTMLElement | null>(null)
+const filterTriggerRef = ref<HTMLElement | null>(null)
+const showFilterPopover = ref(false)
+
+// 筛选标签管�?
+interface FilterTag {
+  key: string
+  label: string
+  value: string | boolean | null
+}
+
+const activeFilterTags = ref<FilterTag[]>([])
+
+// 更新筛选标�?
+const updateFilterTags = () => {
+  activeFilterTags.value = []
+  if (filters.product_name !== null && filters.product_name !== undefined && filters.product_name !== '') {
+    activeFilterTags.value.push({
+      key: 'product_name',
+      label: 'Product Name',
+      value: filters.product_name,
+    })
+  }
+}
+
+// 防抖定时器
+let debounceTimer: any = null
+
+// // 处理筛选变�?（移动端）
+// const handleFilterChange = (_key?: string, _value?: any) => {
+//   updateFilterTags()
+// }
+
+// 处理桌面端筛选变化（带防抖）
+const handleDesktopFilterChange = (_key?: string, _value?: any) => {
+  updateFilterTags()
+  // 清除之前的定时器
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
+  // 设置新的定时器，500ms后执行
+  debounceTimer = setTimeout(() => {
+    fetchTableData(true)
+  }, 500)
+}
+
+// 初始化页面，重新发起所有请求
+const handleReload = () => {
+  reloadFilters()
+  fetchTableData(true)
+}
+
+// 移除筛选标�?
+const removeFilterTag = (key: string) => {
+  if (key === 'product_name') {
+    filters.product_name = ''
+  }
+  updateFilterTags()
+  fetchTableData(true)
+}
+
+// 应用筛�?
+const applyFilters = () => {
+  updateFilterTags()
+  showFilterPopover.value = false
+  fetchTableData(true)
+}
+
+// 监听筛选变�?
+watch(() => filters.product_name, () => {
+  updateFilterTags()
+}, { deep: true })
 
 const productOptions = ref<Array<{ label: string; value: string }>>([])
 const getProductOptions = async () => {
@@ -184,7 +225,7 @@ onMounted(() => getProductOptions())
 
 const instanceDetailDialogRef = ref()
 const PointsTablesDialogRef = ref()
-const MappingsDialogRef = ref()
+// const MappingsDialogRef = ref()
 
 // 配置弹窗相关数据
 const configDialogVisible = ref(false)
@@ -197,22 +238,22 @@ const currentConfigData = ref({
 
 // 添加规则
 const handleAddUser = () => {
-  // 设备实例新增：以实例名形式调用 open 并进入编辑态。这里传空字符串代表新建。
-  instanceDetailDialogRef.value?.open('')
+  // 设备实例新增：以实例名形式调�?open 并进入编辑态。这里传空字符串代表新建�?
+  instanceDetailDialogRef.value?.open(null as any)
 }
 
 // 查看详情
 const handleDetail = (row: DeviceInstanceBasic) => {
-  instanceDetailDialogRef.value?.open(row.instance_name)
+  instanceDetailDialogRef.value?.open(row.instance_id as any)
 }
 
 // 删除规则
 const handleDelete = async (row: DeviceInstanceBasic) => {
   await ElMessageBox.confirm(
-    `Are you sure you want to delete rule "${row.instance_name}"?`,
-    'Delete Rule',
+    `Are you sure you want to delete instance "${row.instance_name}"?`,
+    'Delete Instance',
     {
-      confirmButtonText: 'Delete',
+      confirmButtonText: 'Confirm',
       cancelButtonText: 'Cancel',
       type: 'warning',
     },
@@ -229,44 +270,13 @@ const handleDelete = async (row: DeviceInstanceBasic) => {
   }
 }
 
-// 打开 Device Points/Mappings 对话框
+// 打开 Device Points/Mappings 对话�?
 const openPointsDialog = (row: DeviceInstanceBasic) => {
-  PointsTablesDialogRef.value?.open(row.instance_name)
+  PointsTablesDialogRef.value?.open(row.instance_id, row.instance_name)
 }
-const openMappingsDialog = (row: DeviceInstanceBasic) => {
-  MappingsDialogRef.value?.open(row.instance_name)
-}
-
-const handleRefresh = () => {
-  filters.product_name = ''
-  fetchTableData(true)
-}
-const handleSearch = () => {
-  fetchTableData(true)
-}
-
-// 详情弹窗提交
-const handleDetailSubmit = () => {
-  fetchTableData()
-}
-
-// 处理操作下拉菜单命令
-const handleOperationCommand = (command: string, row: DeviceInstanceBasic) => {
-  switch (command) {
-    case 'detail':
-      handleDetail(row)
-      break
-    case 'points':
-      openPointsDialog(row)
-      break
-    case 'mappings':
-      openMappingsDialog(row)
-      break
-    case 'delete':
-      handleDelete(row)
-      break
-  }
-}
+// const openMappingsDialog = (row: DeviceInstanceBasic) => {
+//   MappingsDialogRef.value?.open(row.instance_id)
+// }
 </script>
 
 <style scoped lang="scss">
@@ -277,22 +287,122 @@ const handleOperationCommand = (command: string, row: DeviceInstanceBasic) => {
   display: flex;
   flex-direction: column;
 
+
   .rule-management__header {
-    margin: 20px 0;
+    margin-bottom: 24px;
+
+    .rule-management__title {
+      font-size: $font-size-large;
+      font-weight: $font-weight-semibold;
+      color: $text-color-primary;
+      margin: 0;
+    }
+  }
+
+  .rule-management__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 
     .rule-management__search-form {
       position: relative;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+
       //   padding-bottom: 20px;
       :deep(.el-form-item) {
         margin: 0;
       }
+
       .form-oprations {
         display: flex;
+        flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+
+        &__row {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+
+          .rule-management__divider {
+            align-self: stretch;
+            margin: 0 8px;
+          }
+        }
+      }
+
+      // 桌面端筛选框
+      .rule-management__filters-desktop {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        align-items: center;
+      }
+
+      .rule-management__reload-icon {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 0.7;
+        }
+
+        img {
+          width: 32px;
+          height: 32px;
+          // 主题色 rgba(255, 105, 0, 1)
+          filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(7498%) hue-rotate(1deg) brightness(102%) contrast(101%);
+        }
+      }
+
+      // // 移动端筛选按钮和标签
+      // .rule-management__filters-mobile {
+      //   display: none;
+      //   flex: 1;
+      //   min-width: 0;
+      // }
+
+      .rule-management__filter-trigger-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .rule-management__filter-tags {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .rule-management__filter-tag {
+        margin: 0;
+        padding: 6px 12px;
+        font-size: 14px;
+        background-color: rgba(3, 59, 108, 0.3);
+        color: #ffffff;
+        border: none;
+
+        :deep(.el-tag__close) {
+          color: #ffffff;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+          }
+        }
       }
     }
 
@@ -313,50 +423,107 @@ const handleOperationCommand = (command: string, row: DeviceInstanceBasic) => {
         margin-right: 8px;
       }
     }
-  }
 
-  .rule-management__table {
-    // height: calc(100% - 72px);
-    flex: 1;
-    // max-width: 1660px;
-    display: flex;
-    flex-direction: column;
+    // 筛选弹出框样式
+    :deep(.el-popover) {
+      background-color: #f5f5f5 !important;
 
-    .rule-management__table-content {
-      height: calc(100% - 92px);
-      overflow-y: auto;
+      .rule-management__filter-form {
+        .rule-management__filter-form-item {
+          margin-bottom: 16px;
+        }
 
-      .rule-management__operation {
-        display: flex;
-        align-items: center;
-        gap: 20px;
+        .rule-management__filter-form-item-last {
+          margin-bottom: 0;
+        }
+      }
+    }
 
-        .rule-management__operation-item {
-          cursor: pointer;
+    .rule-management__table {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+
+      .rule-management__table-content {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+
+        :deep(.el-table-fixed-column--right) {
+          background-color: #d3dde7 !important;
+        }
+
+        .rule-management__operation {
           display: flex;
           align-items: center;
+          gap: 20px;
 
-          img {
-            width: 14px;
-            height: 14px;
-            margin-right: 4px;
-            object-fit: contain;
+          .rule-management__operation-item {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+
+            img {
+              width: 14px;
+              height: 14px;
+              margin-right: 4px;
+              object-fit: contain;
+            }
+
+            .rule-management__operation-text {
+              font-size: 14px;
+              color: #000000;
+            }
           }
+        }
+
+        .rule-management__table-icon {
+          width: 46px;
+          height: 20px;
+          object-fit: contain;
         }
       }
 
-      .rule-management__table-icon {
-        width: 46px;
-        height: 20px;
-        object-fit: contain;
+      .rule-management__pagination {
+        display: flex;
+        justify-content: flex-end;
       }
-    }
-
-    .rule-management__pagination {
-      display: flex;
-      justify-content: flex-end;
-      // margin: 20px 0;
     }
   }
 }
-</style>
+
+
+// // 媒体查询：小�?200px时隐藏桌面端筛选框，显示移动端筛选按�?
+// @media (max-width: 1199px) {
+//   .voltage-class .rule-management {
+//     .rule-management__content {
+//       .rule-management__search-form {
+//         .rule-management__filters-desktop {
+//           display: none;
+//         }
+
+//         .rule-management__filters-mobile {
+//           display: flex;
+//         }
+//       }
+//     }
+//   }
+// }
+
+// // 媒体查询：大于等�?200px时显示桌面端筛选框，隐藏移动端筛选按�?
+// @media (min-width: 1200px) {
+//   .voltage-class .rule-management {
+//     .rule-management__content {
+//       .rule-management__search-form {
+//         .rule-management__filters-desktop {
+//           display: flex;
+//         }
+
+//         .rule-management__filters-mobile {
+//           display: none;
+//         }
+//       }
+//     }
+//   }
+// }</style>

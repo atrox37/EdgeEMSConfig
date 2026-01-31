@@ -1,0 +1,110 @@
+@use "@/assets/styles/_variables.scss" as *;
+/**
+ * Element Plus Table-V2 ����������?
+ * ������ ele-table.scss��͸����������ɫ����ͷ���� hover���߶Աȱ߿�������
+ */
+
+
+.voltage-class {
+  .el-table-v2 {
+    background-color: transparent !important;
+
+    // ������������������/����
+    &::-webkit-scrollbar {
+      height: $width-scrollbar;
+      width: $width-scrollbar;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: $scrollbar-thumb-bg;
+      border-radius: $border-radius-base;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    // ͷ������
+    .el-table-v2__header {
+      background: $table-header-bg;
+
+      .el-table-v2__header-row {
+        background: transparent;
+      }
+
+      .el-table-v2__header-cell {
+        background: transparent;
+        color: $table-header-color;
+        font-weight: $font-weight-normal;
+        font-size: $font-size-base;
+        line-height: $table-cell-line-height;
+        border: none;
+        border-bottom: $border-width-base solid $border-color-white-10;
+        padding: $table-cell-padding;
+
+        &.is-fixed-right {
+          background-color: $table-fixed-column-bg;
+          box-shadow: $box-shadow-large;
+        }
+        &.is-fixed-left {
+          background-color: $table-fixed-column-bg;
+          box-shadow: $box-shadow-large;
+        }
+      }
+    }
+
+    // ��������
+    .el-table-v2__body {
+      background: transparent;
+
+      .el-table-v2__row {
+        transition: background 0.2s,
+          box-shadow 0.2s,
+          color 0.2s;
+
+        &:hover {
+          background: $table-row-hover-bg !important;
+        }
+      }
+
+      .el-table-v2__cell {
+        background: transparent;
+        color: $text-color-primary;
+        font-size: $font-size-base;
+        line-height: $height-lg;
+        padding: $table-cell-padding;
+        border-bottom: $border-width-base solid $border-color-white-10;
+
+        &.is-fixed-right {
+          background-color: $table-fixed-column-bg;
+          box-shadow: $box-shadow-large;
+        }
+        &.is-fixed-left {
+          background-color: $table-fixed-column-bg;
+          box-shadow: $box-shadow-large;
+        }
+      }
+
+      // ������̬
+      .el-table-v2__empty {
+        background: transparent;
+
+        .el-table-v2__empty-text {
+          color: $table-empty-color;
+          font-size: $font-size-base;
+        }
+      }
+    }
+
+    // ������͸���������ף�
+    .el-table-v2__main,
+    .el-table-v2__header,
+    .el-table-v2__body,
+    .el-table-v2__row,
+    .el-table-v2__header-row,
+    .el-table-v2__cell,
+    .el-table-v2__header-cell {
+      background-color: transparent;
+    }
+  }
+}
+
+

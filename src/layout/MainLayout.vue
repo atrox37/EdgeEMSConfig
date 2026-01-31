@@ -1,21 +1,21 @@
 <template>
   <div class="voltage-class main-layout">
-    <!-- è‡ªå®šä¹‰æ ‡é¢˜æ  -->
+    <!-- ×Ô¶¨Òå±êÌâÀ¸ -->
     <TitleBar />
 
-    <!-- ä¸»ä½“å†…å®¹åŒºåŸŸ -->
+    <!-- Ö÷ÌåÄÚÈİÇøÓò -->
     <div class="main-layout__container">
       <div class="main-layout__left">
-        <!-- ä¾§è¾¹å¯¼èˆªæ  -->
+        <!-- ²à±ßµ¼º½À¸ -->
         <Sidebar />
       </div>
       <div
         class="main-layout__right"
         :class="{ collapse: globalStore.isCollapse }"
       >
-        <!-- å¤´éƒ¨ -->
+        <!-- Í·²¿ -->
         <!-- <Header /> -->
-        <!-- ä¸»å†…å®¹åŒºåŸŸ -->
+        <!-- Ö÷ÄÚÈİÇøÓò -->
         <main
           class="main-layout__content"
           :class="{ collapse: globalStore.isCollapse }"
@@ -28,34 +28,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, type Ref } from "vue";
-import { useRoute } from "vue-router";
+import { watch, ref } from "vue";
 import Sidebar from "./Sidebar.vue";
 import TitleBar from "@/layout/TitleBar.vue";
 import { useGlobalStore } from "@/stores/global";
 import { useResponsive } from "@/composables/useResponsive";
-import { useUserStore } from "@/stores/user";
 
 const globalStore = useGlobalStore();
-const userStore = useUserStore();
 const { isMobile } = useResponsive();
 
-// ä¿å­˜ç”¨æˆ·æ‰‹åŠ¨è®¾ç½®çš„æŠ˜å çŠ¶æ€
+// ±£´æÓÃ»§ÊÖ¶¯ÉèÖÃµÄÕÛµş×´Ì¬
 const userPreferredCollapse = ref<boolean | null>(null);
 
-// ç›‘å¬ç§»åŠ¨ç«¯æ–­ç‚¹å˜åŒ–ï¼Œè‡ªåŠ¨æŠ˜å /å±•å¼€ Sidebar
+// ¼àÌıÒÆ¶¯¶Ë¶Ïµã±ä»¯£¬×Ô¶¯ÕÛµş/Õ¹¿ª Sidebar
 watch(
   isMobile,
   (mobile) => {
     if (mobile) {
-      // è¿›å…¥ç§»åŠ¨ç«¯æ¨¡å¼ï¼Œè‡ªåŠ¨æŠ˜å 
+      // ½øÈëÒÆ¶¯¶ËÄ£Ê½£¬×Ô¶¯ÕÛµş
       globalStore.isCollapse = true;
     } else {
-      // é€€å‡ºç§»åŠ¨ç«¯æ¨¡å¼ï¼Œæ¢å¤ç”¨æˆ·åå¥½è®¾ç½®
+      // ÍË³öÒÆ¶¯¶ËÄ£Ê½£¬»Ö¸´ÓÃ»§Æ«ºÃÉèÖÃ
       if (userPreferredCollapse.value !== null) {
         globalStore.isCollapse = userPreferredCollapse.value;
       } else {
-        // å¦‚æœæ²¡æœ‰ç”¨æˆ·åå¥½ï¼Œé»˜è®¤å±•å¼€
+        // Èç¹ûÃ»ÓĞÓÃ»§Æ«ºÃ£¬Ä¬ÈÏÕ¹¿ª
         globalStore.isCollapse = false;
       }
     }
@@ -63,13 +60,13 @@ watch(
   { immediate: true }
 );
 
-// ç›‘å¬ç”¨æˆ·æ‰‹åŠ¨æ“ä½œ Sidebar æŠ˜å æŒ‰é’®
-// è¿™éœ€è¦åœ¨ Sidebar.vue ä¸­è§¦å‘äº‹ä»¶ï¼Œæˆ–è€…æˆ‘ä»¬å¯ä»¥é€šè¿‡ watch globalStore.isCollapse æ¥æ£€æµ‹
-// ä½†è¦åŒºåˆ†æ˜¯è‡ªåŠ¨æŠ˜å è¿˜æ˜¯ç”¨æˆ·æ‰‹åŠ¨æŠ˜å ï¼Œæˆ‘ä»¬éœ€è¦ä¸€ä¸ªæ ‡å¿—
+// ¼àÌıÓÃ»§ÊÖ¶¯²Ù×÷ Sidebar ÕÛµş°´Å¥
+// ÕâĞèÒªÔÚ Sidebar.vue ÖĞ´¥·¢ÊÂ¼ş£¬»òÕßÎÒÃÇ¿ÉÒÔÍ¨¹ı watch globalStore.isCollapse À´¼ì²â
+// µ«ÒªÇø·ÖÊÇ×Ô¶¯ÕÛµş»¹ÊÇÓÃ»§ÊÖ¶¯ÕÛµş£¬ÎÒÃÇĞèÒªÒ»¸ö±êÖ¾
 watch(
   () => globalStore.isCollapse,
   (newVal) => {
-    // åªåœ¨éç§»åŠ¨ç«¯æ¨¡å¼ä¸‹ä¿å­˜ç”¨æˆ·åå¥½
+    // Ö»ÔÚ·ÇÒÆ¶¯¶ËÄ£Ê½ÏÂ±£´æÓÃ»§Æ«ºÃ
     if (!isMobile.value) {
       userPreferredCollapse.value = newVal;
     }
@@ -78,48 +75,51 @@ watch(
 </script>
 
 <style lang="scss" scoped>
+
 .voltage-class.main-layout {
   height: 100vh;
   width: 100vw;
-  min-width: 920px;
-  min-height: 630px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url("../assets/images/simple-bg.png");
+  background: $bg-gradient-page; // Ê¹ÓÃ½¥±ä±³¾°£º´Ó¸±Ö÷ÌâÉ«µ½°×É«£¬×óÉÏµ½ÓÒÏÂ£¬°×É«¾Ó¶à
   overflow: hidden;
 
-  // ä¸»ä½“å†…å®¹å®¹å™¨(æ ‡é¢˜æ ä¸‹æ–¹)
+  // Ö÷ÌåÄÚÈİÈİÆ÷(±êÌâÀ¸ÏÂ·½)
   .main-layout__container {
     flex: 1;
     display: flex;
-    padding-top: 40px; // æ ‡é¢˜æ é«˜åº¦
-    height: calc(100vh - 40px);
+    padding-top: 32px; // ±êÌâÀ¸¸ß¶È
+    height: calc(100vh - 32px);
   }
 
   .main-layout__left {
+    // width: 180px;
     z-index: 99;
   }
 
   .main-layout__right {
     position: relative;
-    transition: width 0.3s ease-in-out;
-    width: calc(100% - 220px);
+    transition: width $transition-base;
+    width: calc(100% - 180px);
     height: 100%;
     &.collapse {
-      width: calc(100% - 85px);
+      width: calc(100% - 44px);
     }
 
     .main-layout__content {
-      padding: 20px;
-      height: 100%;
-      width: 100%;
+      height: calc(100% - 10px);
+      width: calc(100% - 10px);
+      margin:5px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+      border: 1px solid $border-color-base;
       overflow-y: auto;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8); // È·±£±³¾°Í¸Ã÷£¬ÈÃ¸¸¼¶µÄ½¥±ä±³¾°ÏÔÊ¾³öÀ´
     }
   }
 }
 
-/* ç§»é™¤æœªç™»å½•æ¨¡ç³Šé”å®šï¼Œç”±è·¯ç”±å®ˆå«æ§åˆ¶è·³è½¬åˆ° /login */
+/* ÒÆ³ıÎ´µÇÂ¼Ä£ºıËø¶¨£¬ÓÉÂ·ÓÉÊØÎÀ¿ØÖÆÌø×ªµ½ /login */
 </style>

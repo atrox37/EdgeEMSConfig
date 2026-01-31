@@ -1,0 +1,89 @@
+// Warm theme overrides for Vue Flow
+@use './variables' as *;
+
+.vue-flow {
+  // Edges
+  .vue-flow__edge-path {
+    stroke: $primary-color-light !important;
+    stroke-width: $vueflow-edge-width;
+  }
+  //   .vue-flow__edge.selected .vue-flow__edge-path {
+  //     stroke: $primary-color-active !important;
+  //   }
+
+  //   // Handles
+  //   .vue-flow__handle {
+  //     background-color: $primary-color-light !important;
+  //     border-color: $text-color-primary !important;
+  //   }
+
+  //   // Selection/viewport helpers
+  //   .vue-flow__selection {
+  //     border-color: $primary-color-alpha-35 !important;
+  //     background-color: $orange-color-hover-bg !important;
+  //   }
+
+  //   // Nodes default background (fallback)
+  //   .vue-flow__node {
+  //     background-color: $bg-color-overlay;
+  //     border-color: $primary-color-alpha-35;
+  //   }
+  .vue-flow__minimap {
+    width: $vueflow-minimap-width;
+    height: $vueflow-minimap-height;
+    background: $vueflow-minimap-bg;
+    // border: 1px solid $border-color-orange;
+    border: none !important;
+    border-radius: $border-radius-base;
+    box-shadow: $box-shadow-small;
+    backdrop-filter: $backdrop-blur-medium;
+  }
+
+  .vue-flow__minimap-mask {
+    stroke: $vueflow-minimap-mask-stroke;
+    stroke-width: $vueflow-minimap-mask-width;
+  }
+
+  .vue-flow__controls {
+    padding: 3px;
+    background: $vueflow-controls-bg;
+    border: $border-width-base solid $border-color-dark-60;
+    border-radius: $border-radius-base;
+    box-shadow: $box-shadow-small;
+    gap: 6px;
+    backdrop-filter: $backdrop-blur-medium;
+  }
+
+  .vue-flow__controls button {
+    width: $vueflow-controls-button-size;
+    height: $vueflow-controls-button-size;
+    font-size: $vueflow-controls-icon-size;
+    color: $text-color-primary;
+    background: $vueflow-controls-button-bg;
+    border: $border-width-base solid $border-color-dark-60;
+    border-radius: $border-radius-base;
+    transition: all $transition-fast;
+  }
+
+  .vue-flow__controls button:hover {
+    background: $vueflow-controls-button-hover-bg;
+    border-color: $border-color-dark-60;
+  }
+
+  .vue-flow__controls svg {
+    color: $text-color-primary;
+    fill: currentColor;
+    width: $vueflow-controls-icon-size;
+    height: $vueflow-controls-icon-size;
+  }
+
+  .vue-flow__minimap-node {
+    width: $vueflow-minimap-node-width;
+    height: $vueflow-minimap-node-height;
+  }
+
+  .rf-minimap-custom svg {
+    width: $vueflow-minimap-width;
+    height: $vueflow-minimap-height;
+  }
+}

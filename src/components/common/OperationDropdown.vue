@@ -1,11 +1,11 @@
 <template>
   <div class="operation-dropdown">
-    <!-- ÂÆΩÂ±èÊ®°ÂºèÔºöÊòæÁ§∫ÊâÄÊúâÊìç‰ΩúÊåâÈíÆ -->
+    <!-- øÌ∆¡ƒ£ Ω£∫œ‘ æÀ˘”–≤Ÿ◊˜∞¥≈• -->
     <div v-if="!isNarrow" class="operation-buttons">
       <slot name="buttons"></slot>
     </div>
 
-    <!-- Á™ÑÂ±èÊ®°ÂºèÔºöÊòæÁ§∫Êõ¥Â§ö‰∏ãÊãâËèúÂçï -->
+    <!-- ’≠∆¡ƒ£ Ω£∫œ‘ æ∏¸∂‡œ¬¿≠≤Àµ• -->
     <el-dropdown v-else trigger="click" @command="handleCommand">
       <el-button link class="operation-more-btn">
         <el-icon :size="18"><MoreFilled /></el-icon>
@@ -25,18 +25,19 @@ import { useResponsive } from '@/composables/useResponsive'
 
 const { isNarrow } = useResponsive()
 
-// ÂÆö‰πâ emits
+// ∂®“Â emits
 const emit = defineEmits<{
   command: [command: string]
 }>()
 
-// Â§ÑÁêÜ‰∏ãÊãâËèúÂçïÂëΩ‰ª§
+// ¥¶¿Ìœ¬¿≠≤Àµ•√¸¡Ó
 const handleCommand = (command: string) => {
   emit('command', command)
 }
 </script>
 
 <style scoped lang="scss">
+
 .operation-dropdown {
   display: inline-flex;
   align-items: center;
@@ -44,39 +45,37 @@ const handleCommand = (command: string) => {
   .operation-buttons {
     display: flex;
     align-items: center;
-    gap: 20px;
-  }
+    }
 
   .operation-more-btn {
-    color: #fff;
-    padding: 4px;
+    color: $text-color-primary;
+    padding: $size-xs;
     
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: $white-alpha-10;
     }
   }
 }
 
-// ‰∏ãÊãâËèúÂçïÊ†∑Âºè
+// œ¬¿≠≤Àµ•—˘ Ω
 :deep(.operation-dropdown-menu) {
   .el-dropdown-menu__item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    color: #fff;
-    font-size: 14px;
+    gap: $spacing-sm;
+    padding: $spacing-sm $spacing-md;
+    color: $text-color-primary;
+    font-size: $font-size-base;
 
     img {
-      width: 14px;
-      height: 14px;
+      width: $font-size-base;
+      height: $font-size-base;
       object-fit: contain;
     }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: $white-alpha-10;
     }
   }
 }
 </style>
-

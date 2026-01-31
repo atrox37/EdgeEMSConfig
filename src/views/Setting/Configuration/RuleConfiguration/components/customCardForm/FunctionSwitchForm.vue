@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="voltage-class function-switch-form">
     <el-form ref="formRef" label-width="60px" :model="cardData">
       <!-- 第一部分：基础设置 -->
@@ -25,7 +25,7 @@
         <div class="section variable-section">
           <div class="section__header">
             <span class="section__title">Variable Settings</span>
-            <el-button class="section__add-btn" type="primary" link @click="addVariable">
+            <el-button class="section__add-btn" type="primary" @click="addVariable">
               <el-icon><Plus /></el-icon>
             </el-button>
           </div>
@@ -43,41 +43,46 @@
                   </el-radio-group>
                 </div>
 
-                <!-- single 模式：沿用原三选框 -->
+                <!-- single 模式：先 instance -> pointType -> point -->
                 <div v-if="v.type !== 'combined'" class="variable-row__controls">
                   <el-select
-                    v-model="v.protocol"
-                    placeholder="protocol"
-                    class="variable-row__select"
-                    filterable
-                  >
-                    <el-option
-                      v-for="opt in protocolOptions"
-                      :key="opt"
-                      :label="opt"
-                      :value="opt"
-                    />
-                  </el-select>
-                  <el-select
-                    v-model="v.instance"
+                    v-model="v.instance_id"
                     placeholder="instance"
-                    class="variable-row__select"
+                    class="flex-item variable-row__select"
                     filterable
+                    @change="() => onVarInstanceChange(idx)"
                   >
                     <el-option
                       v-for="opt in instanceOptions"
-                      :key="opt"
-                      :label="opt"
-                      :value="opt"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value"
                     />
                   </el-select>
                   <el-select
-                    v-model="v.point"
-                    placeholder="point"
-                    class="variable-row__select"
-                    filterable
+                    v-model="v.pointType"
+                    placeholder="point type"
+                    class="flex-item variable-row__select"
+                    :disabled="!v.instance_id"
+                    @change="() => onVarPointTypeChange(idx)"
                   >
-                    <el-option v-for="opt in pointOptions" :key="opt" :label="opt" :value="opt" />
+                    <el-option label="measurement" value="measurement" />
+                    <el-option label="property" value="property" />
+                  </el-select>
+                  <el-select
+                    v-model="v.point_id"
+                    placeholder="point"
+                    class="flex-item variable-row__select"
+                    filterable
+                    :disabled="!v.instance_id || !v.pointType"
+                    @change="() => onVarPointChange(idx)"
+                  >
+                    <el-option
+                      v-for="opt in getVarPointOptions(idx)"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value"
+                    />
                   </el-select>
                 </div>
 
@@ -92,6 +97,7 @@
                       allow-create
                       default-first-option
                       reserve-keyword
+                      @change="(val: any) => onCombinedOperandChange(v, 0, val)"
                     >
                       <el-option
                         v-for="name in getVariableNameOptionsExcluding(idx)"
@@ -116,6 +122,7 @@
                       allow-create
                       default-first-option
                       reserve-keyword
+                      @change="(val: any) => onCombinedOperandChange(v, 2, val)"
                     >
                       <el-option
                         v-for="name in getVariableNameOptionsExcluding(idx)"
@@ -152,6 +159,10 @@
                       allow-create
                       default-first-option
                       reserve-keyword
+                      @change="
+                        (val: any) =>
+                          onCombinedExtraOperandChange(v, 3 + (pairIdx - 1) * 2 + 1, val)
+                      "
                     >
                       <el-option
                         v-for="name in getVariableNameOptionsExcluding(idx)"
@@ -177,12 +188,7 @@
                   </div>
                 </div>
               </el-form-item>
-              <el-button
-                class="variable-row__delete"
-                style="width: 32px !important"
-                type="warning"
-                @click="removeVariable(idx)"
-              >
+              <el-button class="variable-row__delete" type="warning" @click="removeVariable(idx)">
                 <el-icon><Delete /></el-icon>
               </el-button>
             </div>
@@ -193,7 +199,7 @@
         <div class="section rule-section">
           <div class="section__header">
             <span class="section__title">Rule Settings</span>
-            <el-button class="section__add-btn" type="primary" link @click="addRule">
+            <el-button class="section__add-btn" type="primary" @click="addRule">
               <el-icon><Plus /></el-icon>
             </el-button>
           </div>
@@ -238,6 +244,7 @@
                       allow-create
                       default-first-option
                       reserve-keyword
+                      @change="(val: any) => onRuleValueChange(r, val)"
                     >
                       <el-option v-for="v in variableNameOptions" :key="v" :label="v" :value="v" />
                     </el-select>
@@ -297,6 +304,7 @@
                             allow-create
                             default-first-option
                             reserve-keyword
+                            @change="(val: any) => onRuleSubValueChange(sub, val)"
                           >
                             <el-option
                               v-for="v in variableNameOptions"
@@ -332,16 +340,11 @@
                       v-model="r.rule"
                       type="textarea"
                       :rows="2"
-                      placeholder="自定义规则表达式"
+                      placeholder="custom rule expression"
                     />
                   </div>
                 </el-form-item>
-                <el-button
-                  class="rule-row__delete"
-                  style="width: 32px !important"
-                  type="warning"
-                  @click="removeRule(rIdx)"
-                >
+                <el-button class="rule-row__delete" type="warning" @click="removeRule(rIdx)">
                   <el-icon><Delete /></el-icon>
                 </el-button>
               </div>
@@ -354,8 +357,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Plus, Delete, CircleClose, CirclePlus } from '@element-plus/icons-vue'
+import { getInstancePoints, getAllInstances, getInstancesByIds } from '@/api/devicesManagement'
 
 const formRef = ref()
 
@@ -372,12 +376,299 @@ watch(
   { immediate: true },
 )
 
-// 选项（占位数据，可按需替换为真实字典）
-const protocolOptions = ref<string[]>(['modsrv', 'opcua', 'mqtt'])
-const instanceOptions = ref<string[]>(['pv1', 'ess1', 'dg1'])
-const pointOptions = ref<string[]>(['p1', 'p2', 'p3'])
+// 选项（协议固定，实例/点位从接口获取）
+const instanceOptions = ref<Array<{ label: string; value: number | string; d: any }>>([])
+const varPointOptions = ref<
+  Record<number, Array<{ label: string; value: number; unit?: string; raw?: any }>>
+>({})
+// 缓存每个变量索引对应实例的点位数据，避免切换类型时重复请求
+const instancePointsCache = ref<Record<number, any>>({})
+function getVarPointOptions(idx: number) {
+  return varPointOptions.value[idx] || []
+}
+function buildPointOptionsFromData(
+  data: any,
+  pointType: 'property' | 'measurement',
+): Array<{ label: string; value: number; unit?: string; raw?: any }> {
+  if (pointType === 'property') {
+    const props = Object.values((data as any)?.properties || {}) as any[]
+    return props
+      .filter((p: any) => p && p.property_id && p.name != null)
+      .map((p: any) => ({
+        label: String(p.name || ''),
+        value: Number(p.property_id),
+        unit: p.unit || '',
+        raw: p,
+      }))
+  }
+  const measurements = Object.values(
+    (data as any)?.elements || (data as any)?.measurements || {},
+  ) as any[]
+  return measurements
+    .filter((m: any) => m && m.measurement_id && m.name != null)
+    .map((m: any) => ({
+      label: String(m.name || ''),
+      value: Number(m.measurement_id),
+      unit: m.unit || '',
+      raw: m,
+    }))
+}
+async function fetchInstances() {
+  try {
+    const res = await getAllInstances()
+    const list = Array.isArray(res?.data?.list) ? res.data.list : []
+    instanceOptions.value = list
+      .map((it: any) => ({
+        label: String(it?.name || ''),
+        value: Number(it?.id),
+        d: it,
+      }))
+      .filter((opt: any) => !!opt.label && (Number.isFinite(opt.value) || String(opt.value)))
+  } catch {
+    instanceOptions.value = []
+  }
+}
+function resolveInstanceId(raw: number | string): number {
+  if (Number.isFinite(raw as any)) {
+    const n = Number(raw)
+    return n > 0 ? n : 0
+  }
+  const name = String(raw || '')
+  const found = instanceOptions.value.find((o) => o.label === name || String(o.value) === name)
+  const id = Number((found as any)?.d?.id ?? (found as any)?.value)
+  return Number.isFinite(id) && id > 0 ? id : 0
+}
+function normalizeVariables() {
+  const vars = Array.isArray(cardData.value?.config?.variables)
+    ? cardData.value.config.variables
+    : []
+  for (let idx = 0; idx < vars.length; idx++) {
+    const v = vars[idx]
+    if (!v) continue
+    if (v.type === 'combined') {
+      if (!Array.isArray(v.formula) || v.formula.length < 3) v.formula = ['', '', '']
+      v.instance_id = undefined
+      v.instance_name = ''
+      v.pointType = ''
+      v.point_id = undefined
+      v.point_name = ''
+      v.unit = v.unit || '' // 保留单位字段
+    } else {
+      if (v.pointType == null) v.pointType = ''
+      if (v.unit == null) v.unit = '' // 确保单位字段存在
+      if (!Array.isArray(v.formula)) v.formula = []
+      // 确保 instance_id 和 instance_name 存在
+      if (v.instance_id != null && Number.isFinite(v.instance_id) && v.instance_id > 0) {
+        const instanceOpt = instanceOptions.value.find((opt) => opt.value === v.instance_id)
+        if (instanceOpt) {
+          v.instance_name = instanceOpt.label
+        }
+      }
+      // 确保 point_name 和 unit 存在
+      if (v.point_id != null && (!v.point_name || !v.unit)) {
+        onVarPointChange(idx)
+      }
+    }
+  }
+}
+async function preloadVarOptions() {
+  const vars = Array.isArray(cardData.value?.config?.variables)
+    ? cardData.value.config.variables
+    : []
+  // 收集所有需要批量获取的 instance_id
+  const instanceIdsToFetch = new Set<number>()
+  const varIndexMap = new Map<number, number[]>() // instanceId -> [varIndexes]
+
+  for (let idx = 0; idx < vars.length; idx++) {
+    const v = vars[idx]
+    if (!v || v.type === 'combined' || !v.instance_id || !v.pointType) continue
+    const instanceId = Number(v.instance_id)
+    if (!Number.isFinite(instanceId) || instanceId <= 0) continue
+    instanceIdsToFetch.add(instanceId)
+    if (!varIndexMap.has(instanceId)) {
+      varIndexMap.set(instanceId, [])
+    }
+    varIndexMap.get(instanceId)!.push(idx)
+  }
+
+  // 批量获取实例信息
+  if (instanceIdsToFetch.size > 0) {
+    try {
+      const idsArray = Array.from(instanceIdsToFetch)
+      const res = await getInstancesByIds(idsArray)
+      const instancesList = Array.isArray(res?.data?.list) ? res.data.list : []
+
+      // 将返回的数据缓存到 instancePointsCache 中
+      for (const instance of instancesList) {
+        const instanceId = Number(instance?.instance_id)
+        if (!Number.isFinite(instanceId) || instanceId <= 0) continue
+
+        const pointsData = instance?.points || {}
+        const varIndexes = varIndexMap.get(instanceId) || []
+
+        for (const idx of varIndexes) {
+          const v = vars[idx]
+          if (!v || v.type === 'combined' || !v.instance_id || !v.pointType) continue
+
+          // 缓存点位数据
+          instancePointsCache.value[idx] = pointsData
+
+          // 构建点位选项
+          varPointOptions.value[idx] = buildPointOptionsFromData(
+            pointsData,
+            v.pointType === 'property' ? 'property' : 'measurement',
+          )
+
+          // 回显时同步保存 instance_name
+          if (!v.instance_name) {
+            v.instance_name = instance?.instance_name || ''
+          }
+
+          // 回显时同步保存 point_name 和 unit
+          if (v.point_id && (!v.point_name || !v.unit)) {
+            onVarPointChange(idx)
+          }
+        }
+      }
+    } catch {
+      // 如果批量请求失败，回退到逐个请求
+      for (let idx = 0; idx < vars.length; idx++) {
+        const v = vars[idx]
+        if (!v || v.type === 'combined' || !v.instance_id || !v.pointType) continue
+        const instanceId = v.instance_id
+        try {
+          if (!Number.isFinite(instanceId) || instanceId <= 0) continue
+          const res = await getInstancePoints(instanceId)
+          const data = res?.data || {}
+          instancePointsCache.value[idx] = data
+          varPointOptions.value[idx] = buildPointOptionsFromData(
+            data,
+            v.pointType === 'property' ? 'property' : 'measurement',
+          )
+          if (!v.instance_name) {
+            const instanceOpt = instanceOptions.value.find((opt) => opt.value === instanceId)
+            if (instanceOpt) {
+              v.instance_name = instanceOpt.label
+            }
+          }
+          if (v.point_id && (!v.point_name || !v.unit)) {
+            onVarPointChange(idx)
+          }
+        } catch {
+          delete instancePointsCache.value[idx]
+          varPointOptions.value[idx] = []
+        }
+      }
+    }
+  }
+}
+async function onVarInstanceChange(idx: number) {
+  const v = cardData.value.config.variables[idx]
+  // 用户切换实例：清空已选点位及相关信息
+  v.point_id = undefined
+  v.point_name = ''
+  v.unit = ''
+  // 清空第三下拉
+  varPointOptions.value[idx] = []
+  const instanceId = v.instance_id
+  // 保存实例名称
+  if (Number.isFinite(instanceId) && instanceId > 0) {
+    const instanceOpt = instanceOptions.value.find((opt) => opt.value === instanceId)
+    v.instance_name = instanceOpt?.label || ''
+  } else {
+    v.instance_id = undefined
+    v.instance_name = ''
+  }
+  if (!Number.isFinite(instanceId) || instanceId <= 0) return
+  // 不预选 pointType，等待用户选择 pointType 后再加载具体列表
+  try {
+    const res = await getInstancePoints(instanceId)
+    const data = res?.data || {}
+    instancePointsCache.value[idx] = data
+    if (v.pointType === 'property' || v.pointType === 'measurement') {
+      varPointOptions.value[idx] = buildPointOptionsFromData(
+        data,
+        v.pointType === 'property' ? 'property' : 'measurement',
+      )
+    }
+  } catch {
+    delete instancePointsCache.value[idx]
+    varPointOptions.value[idx] = []
+  }
+}
+async function onVarPointTypeChange(idx: number) {
+  const v = cardData.value.config.variables[idx]
+  // 切换类型：不发请求，优先使用缓存
+  v.point_id = undefined
+  v.point_name = ''
+  v.unit = ''
+  varPointOptions.value[idx] = []
+  const instanceId = v.instance_id
+  if (!v.pointType) return
+  // 优先使用缓存
+  const cached = instancePointsCache.value[idx]
+  if (cached) {
+    varPointOptions.value[idx] = buildPointOptionsFromData(
+      cached,
+      v.pointType === 'property' ? 'property' : 'measurement',
+    )
+    return
+  }
+  // 兜底：若无缓存但已选实例，补一次请求
+  if (!Number.isFinite(instanceId) || instanceId <= 0) return
+  try {
+    const res = await getInstancePoints(instanceId)
+    const data = res?.data || {}
+    instancePointsCache.value[idx] = data
+    varPointOptions.value[idx] = buildPointOptionsFromData(
+      data,
+      v.pointType === 'property' ? 'property' : 'measurement',
+    )
+  } catch {
+    delete instancePointsCache.value[idx]
+    varPointOptions.value[idx] = []
+  }
+}
+// 点位选择变化时，保存 point_name 和 unit
+function onVarPointChange(idx: number) {
+  const v = cardData.value.config.variables[idx]
+  const pointId = v.point_id
+  if (pointId == null || pointId === '') {
+    v.point_id = undefined
+    v.point_name = ''
+    v.unit = ''
+    return
+  }
+  // 从选项中找到对应的点位信息
+  const options = varPointOptions.value[idx] || []
+  const pointOpt = options.find((opt) => opt.value === pointId)
+  if (pointOpt) {
+    v.point_name = pointOpt.label || ''
+    v.unit = pointOpt.unit || ''
+  } else {
+    // 如果找不到，尝试从缓存中查找
+    const cached = instancePointsCache.value[idx]
+    if (cached && v.pointType) {
+      const allPoints = buildPointOptionsFromData(
+        cached,
+        v.pointType === 'property' ? 'property' : 'measurement',
+      )
+      const found = allPoints.find((opt) => opt.value === pointId)
+      if (found) {
+        v.point_name = found.label || ''
+        v.unit = found.unit || ''
+      } else {
+        v.point_name = String(pointId)
+        v.unit = ''
+      }
+    } else {
+      v.point_name = String(pointId)
+      v.unit = ''
+    }
+  }
+}
 const operatorOptions = ref<string[]>(['==', '!=', '>', '>=', '<', '<='])
-const relationOptions = ref<string[]>(['&&', '||'])
+const relationOptions = ref<string[]>(['And'])
 const arithmeticOperatorOptions = ref<string[]>(['+', '-', '*', '/'])
 // const ruleTypeOptions = ref<string[]>(['alone', 'default', 'custom'])
 const ruleTypeOptions = ref<string[]>(['default', 'custom'])
@@ -396,9 +687,12 @@ function addVariable() {
   cardData.value.config.variables.push({
     name: `X${nextIdx}`,
     type: 'single',
-    protocol: '',
-    instance: '',
-    point: '',
+    instance_id: undefined,
+    instance_name: '',
+    pointType: '',
+    point_id: undefined,
+    point_name: '',
+    unit: '', // 单位字段
   })
 }
 function removeVariable(idx: number) {
@@ -449,6 +743,27 @@ function clearInvalidVariableReferences() {
       }
     }
   }
+}
+
+function onCombinedOperandChange(v: any, index: number, val: any) {
+  const s = String(val ?? '').trim()
+  const n = Number(s)
+  // 仅当为数值时才保留数值；否则需要为已有变量名，若既非变量名又非数值则置空
+  const isVar = variableNameOptions.value.includes(s)
+  v.formula[index] = Number.isFinite(n) ? n : isVar ? s : ''
+}
+function onCombinedExtraOperandChange(v: any, index: number, val: any) {
+  onCombinedOperandChange(v, index, val)
+}
+function onRuleValueChange(r: any, val: any) {
+  const s = String(val ?? '').trim()
+  const n = Number(s)
+  r.rule.value = Number.isFinite(n) ? n : s
+}
+function onRuleSubValueChange(sub: any, val: any) {
+  const s = String(val ?? '').trim()
+  const n = Number(s)
+  sub.value = Number.isFinite(n) ? n : s
 }
 
 // 规则配置：新增 / 删除顶层规则项
@@ -506,7 +821,7 @@ function onRuleTypeChange(r: any) {
 // default：添加 / 删除条件
 function adddefaultCondition(r: any) {
   if (!Array.isArray(r.rule)) r.rule = []
-  r.rule.push({ type: 'relation', value: '&&' })
+  r.rule.push({ type: 'relation', value: 'And' })
   r.rule.push({
     type: 'variable',
     variables: variableNameOptions.value[0] || '',
@@ -541,21 +856,61 @@ function afterValidSync() {
   const vars = Array.isArray(cardData.value?.config?.variables)
     ? cardData.value.config.variables
     : []
-  for (const v of vars) {
+  for (let idx = 0; idx < vars.length; idx++) {
+    const v = vars[idx]
     if (!v) continue
     if (v.type === 'combined') {
       // 仅保留 type/name/formula（保留已填值，如缺失则补齐前三项）
       v.formula = Array.isArray(v.formula) && v.formula.length >= 3 ? v.formula : ['', '', '']
-      delete v.protocol
       delete v.instance
+      delete v.instance_id
+      delete v.instance_name
+      delete v.pointType
       delete v.point
+      delete v.point_id
+      delete v.point_name
     } else {
-      // single：仅保留 type/name/protocol/instance/point（保留用户输入）
+      // single：保留 type/name/instance_id/instance_name/pointType/point_id/point_name/unit
       v.type = 'single'
-      if (v.protocol == null) v.protocol = ''
-      if (v.instance == null) v.instance = ''
-      if (v.point == null) v.point = ''
+      if (v.pointType == null) v.pointType = ''
+      if (v.unit == null) v.unit = ''
+      // 确保 instance_name 存在
+      if (v.instance_id && !v.instance_name) {
+        const instanceOpt = instanceOptions.value.find((opt) => opt.value === v.instance_id)
+        if (instanceOpt) {
+          v.instance_name = instanceOpt.label
+        }
+      }
+      // 确保 point_name 和 unit 存在
+      if (v.point_id && (!v.point_name || !v.unit)) {
+        onVarPointChange(idx)
+      }
       delete v.formula
+    }
+    // 导出前数值归一化：formula 中可转为数值的字符串统一转 number
+    if (Array.isArray(v.formula)) {
+      v.formula = v.formula.map((x: any) => {
+        const nx = Number(String(x))
+        return String(x).trim() !== '' && Number.isFinite(nx) ? nx : x
+      })
+    }
+  }
+
+  // 规则值归一化：value 尝试数值化，variables 不动
+  const rules = cardData.value?.config?.rule
+  if (Array.isArray(rules)) {
+    for (const r of rules) {
+      if (r?.type === 'alone' && r.rule) {
+        const n = Number(String(r.rule.value))
+        if (String(r.rule.value).trim() !== '' && Number.isFinite(n)) r.rule.value = n
+      } else if (r?.type === 'default' && Array.isArray(r.rule)) {
+        for (const sub of r.rule) {
+          if (sub && sub.type === 'variable') {
+            const n = Number(String(sub.value))
+            if (String(sub.value).trim() !== '' && Number.isFinite(n)) sub.value = n
+          }
+        }
+      }
     }
   }
 }
@@ -565,11 +920,13 @@ function onVariableTypeChange(v: any, idx: number) {
     // 初始化 formula 结构
     if (!Array.isArray(v.formula)) v.formula = ['', '', '']
     // 清空 single 相关字段，仅保留 type/name/formula
-    v.protocol = ''
-    v.instance = ''
-    v.point = ''
+    v.instance_id = undefined
+    v.instance_name = ''
+    v.pointType = 'measurement'
+    v.point_id = undefined
+    v.point_name = ''
   } else {
-    // single 模式仅保留 type/name/protocol/instance/point
+    // single 模式仅保留 type/name/instance_id/pointType/point_id
     v.formula = []
   }
 }
@@ -624,6 +981,20 @@ function validateForm(): Promise<{ valid: boolean; data: any }> {
 }
 
 defineExpose({ validateForm })
+
+onMounted(() => {
+  fetchInstances().then(() => {
+    normalizeVariables()
+    preloadVarOptions()
+  })
+})
+watch(
+  () => cardData.value?.config?.variables,
+  () => {
+    normalizeVariables()
+  },
+  { deep: true },
+)
 </script>
 
 <style lang="scss" scoped>
@@ -661,7 +1032,7 @@ defineExpose({ validateForm })
       }
 
       .section__add-btn {
-        padding: 0 4px;
+        width: 32px !important;
       }
     }
 
@@ -686,8 +1057,14 @@ defineExpose({ validateForm })
   .variable-row__select {
     width: 164px;
   }
+  :deep(.el-select .el-select__selected-item) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .variable-row__delete {
-    padding: 0 4px;
+    width: 32px !important;
   }
 
   .rule-row {
@@ -715,10 +1092,10 @@ defineExpose({ validateForm })
   }
   .rule-row__type {
     width: 240px;
-    .rule-row__delete {
-      padding: 0 4px;
-    }
     // margin-left: 12px;
+  }
+  .rule-row__delete {
+    width: 32px !important;
   }
   .rule-row__body {
     display: flex;
@@ -730,14 +1107,16 @@ defineExpose({ validateForm })
   .rule-row__select {
     width: 120px;
   }
+  :deep(.el-input),
+  :deep(.el-select) {
+    max-width: 100%;
+  }
   .rule-row__default,
   .variable-row__combined {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    & > div {
-      // margin-left: 136px;
-    }
+    /* keep space for nested rows */
   }
   .default-cond-row {
     display: flex;
@@ -751,9 +1130,7 @@ defineExpose({ validateForm })
     padding: 0 4px;
   }
   .rule-row__default-add {
-    // display: flex;
-    // justify-content: flex-end;
-    // margin-right: 38px;
+    min-height: 20px;
   }
 }
 

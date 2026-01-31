@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="voltage-class time-setting">
     <ModuleCard title="Time Setting:" :isShowFooter="true">
       <el-form
@@ -14,6 +14,7 @@
             <el-select
               v-model="formData.timeZone"
               placeholder="Please select"
+              :append-to="timeSettingFormItemRef"
             >
               <el-option label="GMT+8" value="GMT+8" />
               <el-option label="UTC-0" value="UTC-0" />

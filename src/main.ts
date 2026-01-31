@@ -1,6 +1,6 @@
 import './assets/main.css'
 
-import { createApp, type DirectiveBinding } from 'vue'
+import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import ElementPlus from 'element-plus'
@@ -13,8 +13,8 @@ import router from './router'
 import './router/guard' // 注册路由守卫
 import { useUserStore } from '@/stores/user'
 import { permissionDirective } from './utils/directives'
-import { initResponsive } from './utils/responsive'
 import { installElMessage } from './plugins/elMessage'
+import { getApiConfig, setAxiosBaseURL } from './utils/apiConfig'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -29,11 +29,40 @@ installElMessage(app)
 // 注册自定义指令 v-permission
 app.directive('permission', permissionDirective)
 
-// 初始化响应式配置 (已禁用 rem 自适应)
-initResponsive()
-
-
 app.use(router)
-app.mount('#app')
+
+// 应用启动时初始化
+async function initApp() {
+  try {
+    // 1. 加载API配置
+    const apiConfig = await getApiConfig()
+    if (apiConfig) {
+      await setAxiosBaseURL(apiConfig)
+    }
+
+    // 2. 加载refreshToken
+    const userStore = useUserStore()
+    await userStore.loadRefreshToken()
+
+    // 3. 如果有refreshToken，尝试刷新token和获取用户信息
+    if (userStore.refreshToken && apiConfig) {
+      const refreshResult = await userStore.refreshUserToken()
+      if (refreshResult.success) {
+        // Token刷新成功，获取用户信息
+        await userStore.getUserInfo()
+      } else {
+        // Token刷新失败，清除数据
+        await userStore.clearUserData()
+      }
+    }
+  } catch (error) {
+    console.error('App initialization failed:', error)
+  }
+}
+
+// 初始化应用
+initApp().then(() => {
+  app.mount('#app')
+})
 
 // 应用启动后初始化WebSocket
