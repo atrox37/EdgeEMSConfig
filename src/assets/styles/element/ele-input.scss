@@ -3,17 +3,16 @@
 
 .voltage-class {
   // Input 基础样式
-
   .el-input {
     height: 32px !important;
     width: 180px !important;
-    // 输入框容�?
+
     &.is-disabled {
       .el-input__wrapper {
         box-shadow: none !important;
       }
     }
-    // 输入�?
+
     .el-input__inner {
       border: none !important;
       outline: none !important;
@@ -112,7 +111,7 @@
       }
     }
 
-    // 大尺�?
+    // 大尺寸
     &.el-input--large {
       .el-input__wrapper {
         height: $button-height-large !important;
@@ -195,24 +194,24 @@
     border: 1px solid $border-color-base !important;
     border-radius: $border-radius-base !important;
     // outline: none !important;
-    // 聚焦状�?
+    // 聚焦状态
     &.is-focus {
       border-color: $border-color-base !important;
       box-shadow: none !important;
       //   outline: none !important;
     }
 
-    // 错误状�?
+    // 错误状态
     &.is-error {
       border-color: $danger-color !important;
     }
 
-    // 禁用状�?
+    // 禁用状态
     &.is-disabled {
       background-color: transparent !important;
     }
 
-    // 只读状�?
+    // 只读状态
     &.is-readonly {
     }
   }

@@ -1,16 +1,20 @@
 <template>
-  <div class="voltage-class device-routing-table">
+  <div class="voltage-class point-table device-routing-table">
     <!-- 操作区：编辑时显示导入，否则显示导出 -->
     <div v-if="props.viewMode === 'routing'" class="table-action-controls">
-      <div style="flex: 1; display: flex; align-items: center; gap: 8px">
+      <div
+        class="table-action-controls__filters"
+        style="flex: 1; display: flex; gap: 8px; align-items: center"
+      >
         <span class="filter-label">Point Name:</span>
         <el-select
-          v-model="signalNameFilter"
+          v-model="signalNameFilterRaw"
           filterable
           allow-create
           clearable
-          popper-class="signal-name-popper"
           placeholder="Search Point Name"
+          :teleported="false"
+          popper-class="signal-name-popper"
           style="width: 280px"
           :fit-input-width="true"
         >
@@ -26,217 +30,224 @@
       </template>
     </div>
 
-    <input
-      ref="fileInputRef"
-      type="file"
-      accept=".csv"
-      style="display: none"
-      @change="handleFileChange"
-    />
+    <input ref="fileInputRef" type="file" accept=".csv" style="display: none" @change="handleFileChange" />
 
-    <div class="vtable" style="height: 500px">
-      <div class="vtable__header">
-        <div class="vtable__cell vtable__cell--point-id">Point ID</div>
-        <div class="vtable__cell vtable__cell--name">
-          <span>Point Name</span>
-        </div>
-        <div class="vtable__cell vtable__cell--channel-id">Channel</div>
-        <div class="vtable__cell vtable__cell--channel-type">Channel Point Type</div>
-        <div class="vtable__cell vtable__cell--channel-point">Channel Point</div>
-        <div class="vtable__cell vtable__cell--enabled">Enabled</div>
-        <div v-if="props.isEditing" class="vtable__cell vtable__cell--operation">
-          <span>Operation</span>
-        </div>
-      </div>
-
-      <div v-if="filteredPoints.length === 0" class="vtable__empty">no Data</div>
-      <DynamicScroller
-        v-else
-        ref="scrollerRef"
-        class="vtable__body"
-        :items="filteredPoints"
-        :min-item-size="rowHeight"
-        key-field="rowKey"
-        :buffer="4"
-        :prerender="8"
+    <div class="point-table__wrapper">
+      <el-table
+        :data="paginatedData"
+        :row-key="(row: any) => row.rowKey"
+        :row-class-name="getRowClass"
+        class="point-table__el-table"
+        empty-text="no Data"
+        v-loading="props.loading"
       >
-        <template #default="{ item, index }">
-          <DynamicScrollerItem :item="item" :index="index" :active="true">
-            <div class="vtable__row" :class="getRowClass(item)">
-              <div class="row-status-float"></div>
-              <div class="vtable__cell vtable__cell--point-id">
-                <span>{{ getPointId(item) }}</span>
-              </div>
-              <div class="vtable__cell vtable__cell--name">
-                <span>{{ item.name }}</span>
-              </div>
-              <div class="vtable__cell vtable__cell--channel-id">
-                <template v-if="props.isEditing && item.isEditing">
-                  <div class="inline-edit-container">
-                    <el-select
-                      v-model="item.routing.channel_id"
-                      popper-class="inline-mapping-popper"
-                      :fit-input-width="true"
-                      placeholder="Select channel"
-                      @change="() => onSelectChannel(item)"
-                      clearable
-                      filterable
-                    >
-                      <el-option
-                        v-for="opt in props.channels"
-                        :key="opt.id"
-                        :label="opt.name"
-                        :value="opt.id"
-                      />
-                    </el-select>
-                  </div>
-                </template>
-                <template v-else>
-                  <span :class="getFieldClass(item, 'routing_channel_id')">{{
-                    item.routing?.channel_name ?? ''
-                  }}</span>
-                </template>
-                <div
-                  v-if="props.isEditing && getRoutingFieldError(item, 'channel_id')"
-                  class="field-error"
-                >
-                  {{ getRoutingFieldError(item, 'channel_id') }}
-                </div>
-              </div>
-              <div class="vtable__cell vtable__cell--channel-type">
-                <template v-if="props.isEditing && item.isEditing">
-                  <div class="inline-edit-container">
-                    <el-select
-                      v-model="item.routing.channel_type"
-                      popper-class="inline-mapping-popper"
-                      :fit-input-width="true"
-                      :disabled="!item.routing?.channel_id"
-                      @change="() => onChannelTypeChange(item)"
-                      clearable
-                      filterable
-                    >
-                      <el-option
-                        v-for="opt in getChannelTypeOptions()"
-                        :key="opt.value"
-                        :label="opt.label"
-                        :value="opt.value"
-                      />
-                    </el-select>
-                  </div>
-                </template>
-                <template v-else>
-                  <span :class="getFieldClass(item, 'routing_channel_type')">{{
-                    getChannelTypeLabel(item.routing?.channel_type)
-                  }}</span>
-                </template>
-                <div
-                  v-if="props.isEditing && getRoutingFieldError(item, 'channel_type')"
-                  class="field-error"
-                >
-                  {{ getRoutingFieldError(item, 'channel_type') }}
-                </div>
-              </div>
-              <div class="vtable__cell vtable__cell--channel-point">
-                <template v-if="props.isEditing && item.isEditing">
-                  <div class="inline-edit-container">
-                    <el-select
-                      v-model="item.routing.channel_point_id"
-                      popper-class="inline-mapping-popper"
-                      :fit-input-width="true"
-                      placeholder="Select point"
-                      :disabled="!item.routing?.channel_id || !item.routing?.channel_type"
-                      @change="(val: string | number) => onSelectChannelPoint(item, val)"
-                      clearable
-                      filterable
-                    >
-                      <el-option
-                        v-for="opt in getChannelPointOptions(item)"
-                        :key="opt.value"
-                        :label="opt.label"
-                        :value="opt.value"
-                      />
-                    </el-select>
-                  </div>
-                </template>
-                <template v-else>
-                  <span :class="getFieldClass(item, 'routing_channel_point_id')">{{
-                    item.routing?.channel_point_name ?? ''
-                  }}</span>
-                </template>
-                <div
-                  v-if="props.isEditing && getRoutingFieldError(item, 'channel_point_id')"
-                  class="field-error"
-                >
-                  {{ getRoutingFieldError(item, 'channel_point_id') }}
-                </div>
-              </div>
-              <div class="vtable__cell vtable__cell--enabled">
-                <template v-if="props.isEditing && item.isEditing">
-                  <div class="inline-edit-container">
-                    <el-select
-                      v-model="item.routing.enabled"
-                      :teleported="false"
-                      popper-class="inline-mapping-popper"
-                      :fit-input-width="true"
-                      placeholder="Select"
-                      @change="() => onRoutingFieldChange(item, 'enabled')"
-                      clearable
-                      filterable
-                    >
-                      <el-option label="true" :value="true" />
-                      <el-option label="false" :value="false" />
-                    </el-select>
-                  </div>
-                </template>
-                <template v-else>
-                  <span :class="getFieldClass(item, 'routing_enabled')">{{
-                    item.routing?.enabled === true
-                      ? 'true'
-                      : item.routing?.enabled === false
-                        ? 'false'
-                        : ''
-                  }}</span>
-                </template>
-                <div
-                  v-if="props.isEditing && getRoutingFieldError(item, 'enabled')"
-                  class="field-error"
-                >
-                  {{ getRoutingFieldError(item, 'enabled') }}
-                </div>
-              </div>
+        <!-- Point ID -->
+        <el-table-column label="Point ID" width="120">
+          <template #default="{ row }">
+            <span>{{ getPointId(row) }}</span>
+          </template>
+        </el-table-column>
 
-              <template v-if="props.isEditing">
-                <div class="vtable__cell vtable__cell--operation">
-                  <div class="point-table__operation-cell">
-                    <template v-if="item.isEditing">
-                      <div class="point-table__confirm-btn" @click="handleConfirmEdit(item)">
-                        <el-icon><Check /></el-icon>
-                      </div>
-                      <div class="point-table__cancel-btn" @click="handleCancelEdit(item)">
-                        <el-icon><Close /></el-icon>
-                      </div>
-                    </template>
-                    <template v-else>
-                      <div class="point-table__edit-btn" @click="handleStartEdit(item)">
-                        <el-icon><Edit /></el-icon>
-                      </div>
-                    </template>
-                  </div>
+        <!-- Point Name -->
+        <el-table-column label="Point Name" min-width="220">
+          <template #default="{ row }">
+            <span>{{ row.name }}</span>
+          </template>
+        </el-table-column>
+
+        <!-- Channel -->
+        <el-table-column label="Channel" min-width="180">
+          <template #default="{ row }">
+            <div class="cell-content">
+              <template v-if="props.isEditing && row.isEditing">
+                <div class="inline-edit-container">
+                  <el-select
+                    v-model="row.routing.channel_id"
+                    popper-class="inline-mapping-popper"
+                    :fit-input-width="true"
+                    placeholder="Select channel"
+                    @change="() => onSelectChannel(row)"
+                    clearable
+                    filterable
+                  >
+                    <el-option
+                      v-for="opt in props.channels"
+                      :key="opt.id"
+                      :label="opt.name"
+                      :value="opt.id"
+                    />
+                  </el-select>
+                </div>
+              </template>
+              <template v-else>
+                <span :class="getFieldClass(row, 'routing_channel_id')">{{
+                  row.routing?.channel_name ?? ''
+                }}</span>
+              </template>
+              <div v-if="props.isEditing && getRoutingFieldError(row, 'channel_id')" class="field-error">
+                {{ getRoutingFieldError(row, 'channel_id') }}
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- Channel Point Type -->
+        <el-table-column label="Channel Point Type" min-width="180">
+          <template #default="{ row }">
+            <div class="cell-content">
+              <template v-if="props.isEditing && row.isEditing">
+                <div class="inline-edit-container">
+                  <el-select
+                    v-model="row.routing.channel_type"
+                    popper-class="inline-mapping-popper"
+                    :fit-input-width="true"
+                    :disabled="!row.routing?.channel_id"
+                    @change="() => onChannelTypeChange(row)"
+                    clearable
+                    filterable
+                  >
+                    <el-option
+                      v-for="opt in getChannelTypeOptions()"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value"
+                    />
+                  </el-select>
+                </div>
+              </template>
+              <template v-else>
+                <span :class="getFieldClass(row, 'routing_channel_type')">{{
+                  getDeviceRoutingTypeLabel(row.routing?.channel_type)
+                }}</span>
+              </template>
+              <div v-if="props.isEditing && getRoutingFieldError(row, 'channel_type')" class="field-error">
+                {{ getRoutingFieldError(row, 'channel_type') }}
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- Channel Point -->
+        <el-table-column label="Channel Point" min-width="220">
+          <template #default="{ row }">
+            <div class="cell-content">
+              <template v-if="props.isEditing && row.isEditing">
+                <div class="inline-edit-container">
+                  <el-select
+                    v-model="row.routing.channel_point_id"
+                    popper-class="inline-mapping-popper"
+                    :fit-input-width="true"
+                    placeholder="Select point"
+                    :disabled="!row.routing?.channel_id || !row.routing?.channel_type"
+                    @change="(val: string | number) => onSelectChannelPoint(row, val)"
+                    clearable
+                    filterable
+                  >
+                    <el-option
+                      v-for="opt in getChannelPointOptions(row)"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value"
+                    />
+                  </el-select>
+                </div>
+              </template>
+              <template v-else>
+                <span :class="getFieldClass(row, 'routing_channel_point_id')">{{
+                  row.routing?.channel_point_name ?? ''
+                }}</span>
+              </template>
+              <div v-if="props.isEditing && getRoutingFieldError(row, 'channel_point_id')" class="field-error">
+                {{ getRoutingFieldError(row, 'channel_point_id') }}
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- Enabled -->
+        <el-table-column label="Enabled" min-width="120">
+          <template #default="{ row }">
+            <div class="cell-content">
+              <template v-if="props.isEditing && row.isEditing">
+                <div class="inline-edit-container">
+                  <el-select
+                    v-model="row.routing.enabled"
+                    :teleported="false"
+                    popper-class="inline-mapping-popper"
+                    :fit-input-width="true"
+                    placeholder="Select"
+                    @change="() => onRoutingFieldChange(row, 'enabled')"
+                    clearable
+                    filterable
+                  >
+                    <el-option label="true" :value="true" />
+                    <el-option label="false" :value="false" />
+                  </el-select>
+                </div>
+              </template>
+              <template v-else>
+                <span :class="getFieldClass(row, 'routing_enabled')">{{
+                  row.routing?.enabled === true
+                    ? 'true'
+                    : row.routing?.enabled === false
+                      ? 'false'
+                      : ''
+                }}</span>
+              </template>
+              <div v-if="props.isEditing && getRoutingFieldError(row, 'enabled')" class="field-error">
+                {{ getRoutingFieldError(row, 'enabled') }}
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- Operation -->
+        <el-table-column
+          v-if="props.isEditing"
+          label="Operation"
+          min-width="150"
+          fixed="right"
+          class-name="operation-column"
+        >
+          <template #default="{ row }">
+            <div class="point-table__operation-cell">
+              <template v-if="row.isEditing">
+                <div class="point-table__cancel-btn" @click="handleCancelEdit(row)">
+                  <el-icon><Close /></el-icon>
+                </div>
+                <div class="point-table__confirm-btn" @click="handleConfirmEdit(row)">
+                  <el-icon><Check /></el-icon>
+                </div>
+              </template>
+              <template v-else>
+                <div class="point-table__edit-btn" @click="handleStartEdit(row)">
+                  <el-icon><Edit /></el-icon>
                 </div>
               </template>
             </div>
-          </DynamicScrollerItem>
-        </template>
-      </DynamicScroller>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="point-table__pagination">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[10, 20]"
+        :total="total"
+        layout="total, sizes, prev, pager, next"
+        @size-change="() => (currentPage = 1)"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed, inject } from 'vue'
-import { pxToResponsive } from '@/utils/responsive'
 import { ElMessage } from 'element-plus'
-import { Edit, Close, Check, Filter } from '@element-plus/icons-vue'
+import { Edit, Close, Check } from '@element-plus/icons-vue'
 import type {
   InstanceActionItem,
   InstanceMeasurementItem,
@@ -246,6 +257,21 @@ import type {
 import { InstanceNameKey } from '@/utils/key'
 import { getPointsTables, getChannelsByIds } from '@/api/channelsManagement'
 import type { PointInfoResponse, PointType } from '@/types/channelConfiguration'
+import { useCsvImportExport } from '@/composables/useCsvImportExport'
+import { usePointTableBase } from '@/composables/usePointTableBase'
+import { buildCsv } from '@/utils/csvSchema'
+import { downloadCsv, getTimestampCompact } from '@/utils/csvExport'
+import {
+  getDeviceRoutingTypeLabel,
+  getDeviceRoutingTypeOptions,
+  parseDeviceRoutingTypeStrict,
+  validateDeviceRoutingField,
+  validateDeviceRoutingRow,
+} from '@/validators/deviceRouting'
+import {
+  deviceRoutingExportSchema,
+  parseDeviceRoutingCsv,
+} from '@/schemas/deviceRouting'
 
 interface Props {
   category: 'measurement' | 'action' | 'property'
@@ -255,40 +281,33 @@ interface Props {
   editFilters: string[]
   isEditing: boolean
   channels?: Array<{ id: number; name: string }>
+  loading?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   viewMode: 'routing',
   editFilters: () => [],
   channels: () => [],
+  loading: false,
 })
-// Status 筛选逻辑已移至父组件，不再需要 emit
 
 const editPoints = ref<any[]>([])
-const scrollerRef = ref()
-const rowHeight = ref(pxToResponsive(22))
-const fileInputRef = ref<HTMLInputElement>()
 const importedFileName = ref('')
 const injectedInstanceName = inject(InstanceNameKey, ref(''))
-const signalNameFilter = ref('')
-const showSignalNameFilter = ref(false)
 
-const signalNameOptions = computed(() => {
-  const names = (editPoints.value || []).map((p: any) => p.name).filter((n: any) => n)
-  return Array.from(new Set(names))
-})
+const { signalNameFilterRaw, signalNameFilter, signalNameOptions, currentPage, pageSize, paginatedData } =
+  usePointTableBase<any>({
+    listRef: editPoints,
+    getSignalName: (p) => String(p?.name || ''),
+    getFiltered: () => filteredPoints.value,
+  })
 
-// 提前声明，避免 watch(immediate) 时访问未初始化的变量
-let rowKeySeed = 1
-function createRowKey(): string {
-  rowKeySeed += 1
-  return `${Date.now()}-${rowKeySeed}-${Math.random().toString(36).slice(2, 8)}`
-}
+watch(
+  [signalNameFilter, () => props.editFilters],
+  () => {
+    currentPage.value = 1
+  },
+)
 
-// 通道与点位缓存（通道列表来自父组件）
-const channelPointsCache = ref<Record<number, PointInfoResponse>>({})
-
-// 列表筛选：支持 signal name 关键字与"Status（modified/invalid）"
-// Status 筛选由父组件通过 editFilters prop 传递
 const filteredPoints = computed(() => {
   const list = Array.isArray(editPoints.value) ? editPoints.value : []
   let result = [...list]
@@ -300,7 +319,6 @@ const filteredPoints = computed(() => {
         .includes(kw),
     )
   }
-  // 使用父组件传递的 editFilters 进行筛选
   if (props.editFilters && props.editFilters.length > 0) {
     const filterValue = props.editFilters[0]
     if (filterValue === 'invalid') {
@@ -312,13 +330,18 @@ const filteredPoints = computed(() => {
   return result
 })
 
-// Status 筛选逻辑已移至父组件 PointsTablesDialog.vue
+const total = computed(() => filteredPoints.value.length)
 
-onMounted(() => {
-  const onResize = () => (rowHeight.value = pxToResponsive(22))
-  window.addEventListener('resize', onResize as any)
-  ;(onResize as any)()
-})
+let rowKeySeed = 1
+function createRowKey(): string {
+  rowKeySeed += 1
+  return `${Date.now()}-${rowKeySeed}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+// 通道与点位缓存（通道列表来自父组件）
+const channelPointsCache = ref<Record<number, PointInfoResponse>>({})
+
+onMounted(() => {})
 onUnmounted(() => {})
 
 watch(
@@ -326,7 +349,6 @@ watch(
   async (val) => {
     if (!Array.isArray(val.points)) return
 
-    // 统一处理：从原始数据创建副本，重置所有状态
     editPoints.value = val.points.map((item: any) => {
       const clone: any = {
         ...item,
@@ -350,10 +372,8 @@ watch(
       return clone
     })
 
-    // 仅在编辑模式下执行校验
     if (val.isEditing) {
       importedFileName.value = ''
-      // 进入编辑模式后，对当前路由情况进行一次总的检查
       editPoints.value.forEach((p: any) => {
         validateRoutingValidity(p)
         refreshRoutingFieldErrorsForRow(p)
@@ -366,16 +386,13 @@ watch(
 async function ensureChannelPoints(channelId: number) {
   if (!channelId) return
   try {
-    // 跳过全局loading，因为这是后台数据加载，不应该影响全局loading状态
     const res = await getPointsTables(channelId, undefined, { skipGlobalLoading: true })
     if (res?.success && res.data) {
       channelPointsCache.value[channelId] = res.data as PointInfoResponse
     } else if (res && (res.telemetry || res.signal || res.control || res.adjustment)) {
       channelPointsCache.value[channelId] = res as unknown as PointInfoResponse
     }
-  } catch (e) {
-    // 忽略错误
-  }
+  } catch {}
 }
 
 function getPointId(item: any): number {
@@ -390,70 +407,17 @@ function getPointTypeChar(): 'M' | 'A' | 'P' {
   return 'P'
 }
 
-function getChannelTypeOptions() {
-  if (props.category === 'measurement') {
-    return [
-      { label: 'Telemetry', value: 'T' },
-      { label: 'Signal', value: 'S' },
-    ]
-  }
-  if (props.category === 'action') {
-    return [
-      { label: 'Control', value: 'C' },
-      { label: 'Adjustment', value: 'A' },
-    ]
-  }
-  return [
-    { label: 'Telemetry', value: 'T' },
-    { label: 'Signal', value: 'S' },
-    { label: 'Control', value: 'C' },
-    { label: 'Adjustment', value: 'A' },
-  ]
-}
-
-function getChannelTypeLabel(v?: string) {
-  if (!v) return ''
-  const map: Record<string, string> = {
-    C: 'Control',
-    S: 'Signal',
-    T: 'Telemetry',
-    A: 'Adjustment',
-  }
-  // 严格大小写：只接受大写缩写，其他都按原始值展示
-  return map[String(v)] || String(v)
-}
-
-function parsePointTypeStrict(input: unknown): {
-  isValidLiteral: boolean
-  abbr?: 'T' | 'S' | 'C' | 'A'
-} {
-  const raw = String(input ?? '').trim()
-  if (!raw) return { isValidLiteral: false }
-  if (raw === 'T' || raw === 'S' || raw === 'C' || raw === 'A')
-    return { isValidLiteral: true, abbr: raw }
-  const fullToShort: Record<string, 'T' | 'S' | 'C' | 'A'> = {
-    Telemetry: 'T',
-    Signal: 'S',
-    Control: 'C',
-    Adjustment: 'A',
-  }
-  if (raw in fullToShort) return { isValidLiteral: true, abbr: fullToShort[raw] }
-  return { isValidLiteral: false }
-}
+const getChannelTypeOptions = () => getDeviceRoutingTypeOptions(props.category)
 
 function getRowClass(item: any) {
   const classes = [`row-status-${item.rowStatus || 'normal'}`]
-  // 只在编辑模式下显示错误行样式
   if (props.isEditing && (item as any).isInvalid) classes.push('row-invalid')
-  // 只在编辑模式下显示修改行样式
   if (!props.isEditing) {
-    // 非编辑模式下，移除修改相关的样式
     return 'row-status-normal'
   }
   return classes.join(' ')
 }
 function getFieldClass(item: any, fieldName: string) {
-  // 只在编辑模式下显示修改字段样式
   if (!props.isEditing) return ''
   const status = item.rowStatus
   if (status === 'modified' && item.modifiedFields?.includes(fieldName)) return 'field-modified'
@@ -464,12 +428,10 @@ function onSelectChannel(item: any) {
   const chId = Number(item.routing?.channel_id || 0)
   const ch = props.channels?.find((c) => Number(c.id) === chId)
   item.routing.channel_name = ch ? ch.name : ''
-  // 重置后续选择
   item.routing.channel_type = ''
   item.routing.channel_point_id = undefined
   item.routing.channel_point_name = ''
   onRoutingFieldChange(item, 'channel_id')
-  // 加载该通道点位
   if (chId > 0) ensureChannelPoints(chId)
 }
 function getChannelPointOptions(item: any) {
@@ -505,7 +467,6 @@ function onSelectChannelPoint(item: any, val: string | number) {
   onRoutingFieldChange(item, 'channel_point_id')
 }
 function onChannelTypeChange(item: any) {
-  // 切换类型时清空 point 选择
   item.routing.channel_point_id = undefined
   item.routing.channel_point_name = ''
   onRoutingFieldChange(item, 'channel_type')
@@ -520,12 +481,10 @@ function handleStartEdit(item: any) {
     routing_channel_name: item.routing?.channel_name,
     routing_channel_point_name: item.routing?.channel_point_name,
   }
-  // 进入编辑时预加载：若已有 channel / type / point，准备好下拉数据
   const chId = Number(item.routing?.channel_id || 0)
   if (chId > 0) {
     const ch = props.channels?.find((c) => Number(c.id) === chId)
     if (ch && !item.routing?.channel_name) item.routing.channel_name = ch.name
-    // 预加载点表，供 point 下拉使用
     ensureChannelPoints(chId)
   }
   item.isEditing = true
@@ -543,7 +502,6 @@ function handleCancelEdit(item: any) {
     delete item.originalData
   }
   item.isEditing = false
-  // 取消编辑后，重置状态和错误
   item.rowStatus = 'normal'
   item.modifiedFields = []
   item.isInvalid = false
@@ -551,70 +509,19 @@ function handleCancelEdit(item: any) {
   validateRoutingValidity(item)
 }
 function handleConfirmEdit(item: any) {
-  // 补齐展示名称
   fillRoutingNames(item)
-  // 基于父层原始基线做变更判断
   updateRoutingChangeStatus(item)
   validateRoutingValidity(item)
-  // 刷新字段级别的错误提示
   refreshRoutingFieldErrorsForRow(item)
   delete item.originalData
   item.isEditing = false
 }
 
 function validateRoutingValidity(item: any): boolean {
-  const r = item.routing || ({} as InstancePointRouting)
-  let valid = true
-  let reason = ''
-  const isPositiveInt = (n: unknown) => Number.isInteger(n) && (n as number) > 0
-  const allowedTypes = getChannelTypeOptions().map((o) => o.value)
   const meta = (item as any).__routingMeta as
     | { channelExists?: boolean; pointExists?: boolean }
     | undefined
-  // 允许为空：仅当字段有值时才校验
-  if (r.channel_id !== undefined && r.channel_id !== null && r.channel_id !== '') {
-    if (!isPositiveInt(r.channel_id)) {
-      valid = false
-      reason = 'invalid channel_id'
-    }
-  }
-  if (valid && meta?.channelExists === false) {
-    valid = false
-    reason = 'channel not exists'
-  }
-  if (valid && r.channel_type !== undefined && r.channel_type !== null && r.channel_type !== '') {
-    const parsed = parsePointTypeStrict(r.channel_type)
-    if (!parsed.isValidLiteral || !parsed.abbr) {
-      valid = false
-      reason = 'invalid channel_type'
-    } else if (!allowedTypes.includes(parsed.abbr)) {
-      valid = false
-      reason = 'invalid channel_type'
-    }
-  }
-  if (
-    valid &&
-    r.channel_point_id !== undefined &&
-    r.channel_point_id !== null &&
-    r.channel_point_id !== ''
-  ) {
-    if (!isPositiveInt(r.channel_point_id)) {
-      valid = false
-      reason = 'invalid channel_point_id'
-    }
-  }
-  if (valid && meta?.pointExists === false) {
-    valid = false
-    reason = 'point not exists'
-  }
-  if (valid && r.enabled !== undefined && r.enabled !== null && r.enabled !== '') {
-    if (!(r.enabled === true || r.enabled === false)) {
-      valid = false
-      reason = 'invalid enabled (bool)'
-    }
-  }
-  ;(item as any).isInvalid = !valid
-  return valid
+  return validateDeviceRoutingRow(item, props.category, meta)
 }
 
 function getRoutingFieldError(item: any, field: string): string {
@@ -626,55 +533,10 @@ function setRoutingFieldError(item: any, field: string, message: string) {
   else delete item.fieldErrors[field]
 }
 function validateRoutingFieldOnly(item: any, field: string): string {
-  const r = item.routing || {}
   const meta = (item as any).__routingMeta as
     | { channelExists?: boolean; pointExists?: boolean }
     | undefined
-  switch (field) {
-    case 'channel_id': {
-      if (r.channel_id === undefined || r.channel_id === null || r.channel_id === '') return ''
-      const v = Number(r.channel_id)
-      if (!Number.isInteger(v) || v <= 0) return 'must be positive integer'
-      if (meta?.channelExists === false) return 'Does not exist'
-      return ''
-    }
-    case 'channel_type': {
-      if (r.channel_type === undefined || r.channel_type === null || r.channel_type === '')
-        return ''
-      // 属于 T/S/C/A：必须符合当前 category 允许的类型
-      const allowedOptions = getChannelTypeOptions()
-      const allowed = allowedOptions.map((o) => o.value)
-      const labels = allowedOptions.map((o) => o.label).join(' / ')
-      const parsed = parsePointTypeStrict(r.channel_type)
-      // 非严格写法（t/telemetry/…）都按错误处理
-      if (!parsed.isValidLiteral || !parsed.abbr) return `Must be ${labels}`
-      if (!allowed.includes(parsed.abbr)) return `Must be ${labels}`
-      return ''
-    }
-    case 'channel_point_id': {
-      if (
-        r.channel_point_id === undefined ||
-        r.channel_point_id === null ||
-        r.channel_point_id === ''
-      )
-        return ''
-      const v = Number(r.channel_point_id)
-      if (!Number.isInteger(v) || v <= 0) return 'must be positive integer'
-      // 通道不存在：点位也视为不存在
-      if (meta?.channelExists === false) return 'Does not exist'
-      // 通道存在但点位不存在
-      if (meta?.pointExists === false) return 'Does not exist'
-      return ''
-    }
-    case 'enabled': {
-      const v = r.enabled
-      if (v === undefined || v === null || v === '') return ''
-      if (!(v === true || v === false)) return 'must be boolean'
-      return ''
-    }
-    default:
-      return ''
-  }
+  return validateDeviceRoutingField(item, field, props.category, meta)
 }
 function refreshRoutingFieldErrorsForRow(item: any) {
   setRoutingFieldError(item, 'channel_id', validateRoutingFieldOnly(item, 'channel_id'))
@@ -692,7 +554,6 @@ function onRoutingFieldChange(item: any, field: string) {
   setRoutingFieldError(item, field, msg)
 }
 function updateRoutingChangeStatus(item: any) {
-  // 与原始基线（父组件传入的 originalPoints）进行对比，避免来回改动仍标记为修改
   const baseline = getOriginalBaselineByPointId(getPointId(item))
   const prev = {
     routing_channel_id: baseline?.routing?.channel_id,
@@ -705,10 +566,8 @@ function updateRoutingChangeStatus(item: any) {
   const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
   const normStr = (v: any) => String(v || '')
   const normBool = (v: any) => (v === true ? 'true' : v === false ? 'false' : '')
-  if (normInt(cur.channel_id) !== normInt(prev.routing_channel_id))
-    changes.push('routing_channel_id')
-  if (normStr(cur.channel_type) !== normStr(prev.routing_channel_type))
-    changes.push('routing_channel_type')
+  if (normInt(cur.channel_id) !== normInt(prev.routing_channel_id)) changes.push('routing_channel_id')
+  if (normStr(cur.channel_type) !== normStr(prev.routing_channel_type)) changes.push('routing_channel_type')
   if (normInt(cur.channel_point_id) !== normInt(prev.routing_channel_point_id))
     changes.push('routing_channel_point_id')
   if (normBool(cur.enabled) !== normBool(prev.routing_enabled)) changes.push('routing_enabled')
@@ -755,7 +614,6 @@ function resolvePointName(channelId?: number, type?: string, pointId?: number) {
 function fillRoutingNames(item: any) {
   if (!item || !item.routing) return
   const r = item.routing
-  // 若缺少名称，按当前选择补齐
   r.channel_name = resolveChannelNameById(r.channel_id) || r.channel_name || ''
   r.channel_point_name =
     resolvePointName(r.channel_id, r.channel_type, r.channel_point_id) || r.channel_point_name || ''
@@ -775,7 +633,6 @@ function getEditedData() {
       changed.includes('routing_channel_type') ||
       changed.includes('routing_channel_point_id') ||
       changed.includes('routing_enabled')
-    // 仅 measurement/action 输出
     const pt = getPointTypeChar()
     if (consider && (pt === 'M' || pt === 'A')) {
       const pid = getPointId(item)
@@ -798,488 +655,326 @@ function getEditedData() {
   return updates
 }
 
-const handleImportClick = (event: MouseEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  // 在 Mac 浏览器中，使用 mousedown 事件可以确保文件选择对话框正常打开
-  // 使用 setTimeout 确保在事件处理完成后调用
-  setTimeout(() => {
-    if (fileInputRef.value) {
-      fileInputRef.value.click()
-    }
-  }, 0)
-}
-const handleFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
+const handleRoutingCsvContent = async (content: string, file: File) => {
+  if (!props.channels || props.channels.length === 0) {
+    ElMessage.error('Channels not loaded. Please wait for channels to load before importing.')
+    return
+  }
 
-  const reader = new FileReader()
-  reader.onload = async (e) => {
-    try {
-      // 检查是否已获取到通道数组
-      if (!props.channels || props.channels.length === 0) {
-        ElMessage.error('Channels not loaded. Please wait for channels to load before importing.')
-        target.value = ''
-        return
+  const { byId, invalidRows, error } = parseDeviceRoutingCsv(content)
+  if (error) {
+    ElMessage.error(error)
+    return
+  }
+
+  importedFileName.value = file.name
+
+  editPoints.value = await Promise.all(
+    (editPoints.value as any[]).map(async (item: any) => {
+      const pid = getPointId(item)
+      const inc = byId[pid]
+
+      if (!inc) {
+        item.routing = {
+          channel_id: undefined,
+          channel_type: '',
+          channel_point_id: undefined,
+          enabled: undefined,
+          channel_name: '',
+          channel_point_name: '',
+        }
+        const baseline = getOriginalBaselineByPointId(pid)
+        const prev = {
+          routing_channel_id: baseline?.routing?.channel_id,
+          routing_channel_type: baseline?.routing?.channel_type,
+          routing_channel_point_id: baseline?.routing?.channel_point_id,
+          routing_enabled: baseline?.routing?.enabled,
+        } as any
+        const cur = item.routing || {}
+        const changes: string[] = []
+        const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
+        const normStr = (v: any) => String(v || '')
+        const normBool = (v: any) => (v === true ? 'true' : v === false ? 'false' : '')
+        if (normInt(cur.channel_id) !== normInt(prev.routing_channel_id))
+          changes.push('routing_channel_id')
+        if (normStr(cur.channel_type) !== normStr(prev.routing_channel_type))
+          changes.push('routing_channel_type')
+        if (normInt(cur.channel_point_id) !== normInt(prev.routing_channel_point_id))
+          changes.push('routing_channel_point_id')
+        if (normBool(cur.enabled) !== normBool(prev.routing_enabled))
+          changes.push('routing_enabled')
+
+        if (changes.length > 0) {
+          item.rowStatus = 'modified'
+          item.modifiedFields = Array.from(new Set([...(item.modifiedFields || []), ...changes]))
+        } else {
+          item.rowStatus = 'normal'
+          item.modifiedFields = []
+        }
+        return item
       }
 
-      const content = e.target?.result as string
-      const lines = content.split('\n').filter((line) => line.trim())
-      if (lines.length === 0) {
-        ElMessage.error('CSV file is empty')
-        return
-      }
-      // 解析表头，只要求必须的列存在，其他列忽略
-      const header = lines[0].trim()
-      const headerColumns = header.split(',').map((col) => col.trim().toLowerCase())
+      let finalChannelPointId = inc.channel_point_id
+      let finalChannelPointName = ''
 
-      // 必须的列（标准表头）
-      const requiredColumns = [
-        'point_id',
-        'channel_id',
-        'channel_point_type',
-        'channel_point_id',
-        'enabled',
-      ]
-      const columnIndices: Record<string, number> = {}
-
-      // 检查必须的列是否存在
-      for (const colName of requiredColumns) {
-        const index = headerColumns.findIndex((h) => h === colName)
-        if (index === -1) {
-          ElMessage.error(`Required column "${colName}" not found in CSV header`)
-          return
-        }
-        columnIndices[colName] = index
+      const chId = Number(inc.channel_id || 0)
+      let channelExists = false
+      if (chId > 0) {
+        channelExists = props.channels?.some((ch) => Number(ch.id) === chId) ?? false
       }
 
-      const byId: Record<
-        number,
-        {
-          channel_id?: number
-          channel_type: string
-          channel_point_id?: number
-          enabled: boolean
-          isInvalid?: boolean
-          reason?: string
-        }
-      > = {}
-      const invalidRecords: number[] = []
+      const channelTypeStr = String(inc.channel_type || '').trim()
+      const allowedTypes = getChannelTypeOptions().map((o) => o.value)
+      let finalChannelType = inc.channel_type as any
+      let channelTypeError = ''
 
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (!line) continue
+      if (channelTypeStr) {
+        const allowedTypesLabels = getChannelTypeOptions()
+          .map((o) => o.label)
+          .join(' / ')
 
-        const values = line.split(',').map((v) => v.trim())
-        const getValue = (columnKey: string, defaultValue: string = ''): string => {
-          const index = columnIndices[columnKey]
-          return index !== undefined && index >= 0 && index < values.length
-            ? values[index]
-            : defaultValue
-        }
-
-        const pid = Number(getValue('point_id')) || 0
-        let channel_id = getValue('channel_id') ? Number(getValue('channel_id')) : undefined
-        const channel_type = String(getValue('channel_point_type') || '')
-        const channel_point_id = getValue('channel_point_id')
-          ? Number(getValue('channel_point_id'))
-          : undefined
-        const enabled = String(getValue('enabled')).toLowerCase() === 'true'
-
-        let isInvalid = false
-        let reason = ''
-
-        if (!Number.isInteger(pid) || pid <= 0) {
-          isInvalid = true
-          reason = 'invalid point_id'
-        }
-
-        // 验证 channel_id（如果提供了 channel_id，必须是有效的正整数）
-        if (
-          !isInvalid &&
-          channel_id !== undefined &&
-          (!Number.isInteger(channel_id) || channel_id <= 0)
-        ) {
-          isInvalid = true
-          reason = 'invalid channel_id'
-        }
-
-        byId[pid] = {
-          channel_id,
-          channel_type,
-          channel_point_id,
-          enabled,
-          isInvalid,
-          reason,
-        }
-        if (isInvalid) invalidRecords.push(i + 1)
-      }
-
-      importedFileName.value = file.name
-
-      // 应用导入：整体覆盖，如果导入文件中没有某个点，清除该点的routing信息
-      editPoints.value = await Promise.all(
-        (editPoints.value as any[]).map(async (item: any) => {
-          const pid = getPointId(item)
-          const inc = byId[pid]
-
-          if (!inc) {
-            // 导入文件中没有该点，清除routing信息
-            item.routing = {
-              channel_id: undefined,
-              channel_type: '',
-              channel_point_id: undefined,
-              enabled: undefined,
-              channel_name: '',
-              channel_point_name: '',
-            }
-            // 与原始基线对比，判断是否真的修改
-            const baseline = getOriginalBaselineByPointId(pid)
-            const prev = {
-              routing_channel_id: baseline?.routing?.channel_id,
-              routing_channel_type: baseline?.routing?.channel_type,
-              routing_channel_point_id: baseline?.routing?.channel_point_id,
-              routing_enabled: baseline?.routing?.enabled,
-            } as any
-            const cur = item.routing || {}
-            const changes: string[] = []
-            const normInt = (v: any) =>
-              v === '' || v === null || v === undefined ? null : Number(v)
-            const normStr = (v: any) => String(v || '')
-            const normBool = (v: any) => (v === true ? 'true' : v === false ? 'false' : '')
-            if (normInt(cur.channel_id) !== normInt(prev.routing_channel_id))
-              changes.push('routing_channel_id')
-            if (normStr(cur.channel_type) !== normStr(prev.routing_channel_type))
-              changes.push('routing_channel_type')
-            if (normInt(cur.channel_point_id) !== normInt(prev.routing_channel_point_id))
-              changes.push('routing_channel_point_id')
-            if (normBool(cur.enabled) !== normBool(prev.routing_enabled))
-              changes.push('routing_enabled')
-
-            if (changes.length > 0) {
-              item.rowStatus = 'modified'
-              item.modifiedFields = Array.from(
-                new Set([...(item.modifiedFields || []), ...changes]),
-              )
-            } else {
-              item.rowStatus = 'normal'
-              item.modifiedFields = []
-            }
-            return item
-          }
-
-          // 导入文件中有该点，覆盖routing信息
-          let finalChannelPointId = inc.channel_point_id
-          let finalChannelPointName = ''
-
-          // 验证通道是否存在（只检查 props.channels，不调用 API）
-          const chId = Number(inc.channel_id || 0)
-          let channelExists = false
-          if (chId > 0) {
-            channelExists = props.channels?.some((ch) => Number(ch.id) === chId) ?? false
-          }
-
-          // 验证 channel_type
-          const channelTypeStr = String(inc.channel_type || '').trim()
-          const allowedTypes = getChannelTypeOptions().map((o) => o.value)
-          let finalChannelType = inc.channel_type as any
-          let channelTypeError = ''
-
-          if (channelTypeStr) {
-            const allowedTypesLabels = getChannelTypeOptions()
-              .map((o) => o.label)
-              .join(' / ')
-
-            const parsed = parsePointTypeStrict(channelTypeStr)
-            if (!parsed.isValidLiteral || !parsed.abbr) {
-              // 不合法输入（如 t、s、telemetry、signal）
-              finalChannelType = channelTypeStr // 保留原值用于展示
-              channelTypeError = `Must be ${allowedTypesLabels}`
-              item.isInvalid = true
-            } else {
-              // 输入合法：写入缩写（T/S/C/A）
-              finalChannelType = parsed.abbr
-              // 但仍需符合当前 category 规则
-              if (!allowedTypes.includes(parsed.abbr)) {
-                channelTypeError = `Must be ${allowedTypesLabels}`
-                item.isInvalid = true
-              }
-            }
-          }
-
-          // 设置 routing 数据
-          // 如果通道不存在，channel_id 和 channel_name 都设置为导入文件中的 id
-          if (!channelExists && chId > 0) {
-            // 通道不存在：点位名称不应该来自任何“名称列”，这里只展示导入的点位ID（方便定位）
-            finalChannelPointName =
-              finalChannelPointId !== undefined && finalChannelPointId !== null
-                ? String(finalChannelPointId)
-                : ''
+        const parsed = parseDeviceRoutingTypeStrict(channelTypeStr)
+        if (!parsed.isValidLiteral || !parsed.abbr) {
+          finalChannelType = channelTypeStr
+          channelTypeError = `Must be ${allowedTypesLabels}`
+          item.isInvalid = true
+        } else {
+          finalChannelType = parsed.abbr
+          if (!allowedTypes.includes(parsed.abbr)) {
+            channelTypeError = `Must be ${allowedTypesLabels}`
             item.isInvalid = true
-            // channel_id 和 channel_name 都设置为导入文件中的 id
-            item.routing = {
-              channel_id: inc.channel_id,
-              channel_type: finalChannelType,
-              channel_point_id: finalChannelPointId,
-              enabled: inc.enabled,
-              channel_name: inc.channel_id ? String(inc.channel_id) : '',
-              channel_point_name: finalChannelPointName,
-            }
-          } else {
-            // 通道存在，正常设置
-            item.routing = {
-              channel_id: inc.channel_id,
-              channel_type: finalChannelType,
-              channel_point_id: finalChannelPointId,
-              enabled: inc.enabled,
-              channel_name: '',
-              channel_point_name: finalChannelPointName,
-            }
           }
+        }
+      }
 
-          // 记录导入元信息：用于后续 getChannelsByIds 回填点位名称 & 校验“是否存在”
-          ;(item as any).__routingMeta = {
-            channelExists: channelExists ? true : chId > 0 ? false : undefined,
-            // 先不判点位存在性，等 getChannelsByIds 回来再判断；如果通道不存在则点位也不存在
-            pointExists: !channelExists && chId > 0 ? false : undefined,
-            importedChannelId: inc.channel_id,
-            importedChannelPointId: finalChannelPointId,
-          }
+      if (!channelExists && chId > 0) {
+        finalChannelPointName =
+          finalChannelPointId !== undefined && finalChannelPointId !== null
+            ? String(finalChannelPointId)
+            : ''
+        item.isInvalid = true
+        item.routing = {
+          channel_id: inc.channel_id,
+          channel_type: finalChannelType,
+          channel_point_id: finalChannelPointId,
+          enabled: inc.enabled,
+          channel_name: inc.channel_id ? String(inc.channel_id) : '',
+          channel_point_name: finalChannelPointName,
+        }
+      } else {
+        item.routing = {
+          channel_id: inc.channel_id,
+          channel_type: finalChannelType,
+          channel_point_id: finalChannelPointId,
+          enabled: inc.enabled,
+          channel_name: '',
+          channel_point_name: finalChannelPointName,
+        }
+      }
 
-          if (channelTypeError) {
-            setRoutingFieldError(item, 'channel_type', channelTypeError)
-            // 通道存在但通道类型不符合规范：点位也应视为不存在（上级条件不成立）
-            const pointIdNum = Number(finalChannelPointId || 0)
-            if (channelExists && pointIdNum > 0) {
-              ;(item as any).__routingMeta.pointExists = false
-              item.isInvalid = true
-            }
-          }
+      ;(item as any).__routingMeta = {
+        channelExists: channelExists ? true : chId > 0 ? false : undefined,
+        pointExists: !channelExists && chId > 0 ? false : undefined,
+        importedChannelId: inc.channel_id,
+        importedChannelPointId: finalChannelPointId,
+      }
 
-          // 与原始基线对比，判断是否真的修改
-          const baseline = getOriginalBaselineByPointId(pid)
-          const prev = {
-            routing_channel_id: baseline?.routing?.channel_id,
-            routing_channel_type: baseline?.routing?.channel_type,
-            routing_channel_point_id: baseline?.routing?.channel_point_id,
-            routing_enabled: baseline?.routing?.enabled,
-          } as any
-          const cur = item.routing || {}
-          const changes: string[] = []
-          const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
-          const normStr = (v: any) => String(v || '')
-          const normBool = (v: any) => (v === true ? 'true' : v === false ? 'false' : '')
-          if (normInt(cur.channel_id) !== normInt(prev.routing_channel_id))
-            changes.push('routing_channel_id')
-          if (normStr(cur.channel_type) !== normStr(prev.routing_channel_type))
-            changes.push('routing_channel_type')
-          if (normInt(cur.channel_point_id) !== normInt(prev.routing_channel_point_id))
-            changes.push('routing_channel_point_id')
-          if (normBool(cur.enabled) !== normBool(prev.routing_enabled))
-            changes.push('routing_enabled')
+      if (channelTypeError) {
+        setRoutingFieldError(item, 'channel_type', channelTypeError)
+        const pointIdNum = Number(finalChannelPointId || 0)
+        if (channelExists && pointIdNum > 0) {
+          ;(item as any).__routingMeta.pointExists = false
+          item.isInvalid = true
+        }
+      }
 
-          if (changes.length > 0) {
-            item.rowStatus = 'modified'
-            item.modifiedFields = Array.from(new Set([...(item.modifiedFields || []), ...changes]))
-          } else {
-            item.rowStatus = 'normal'
-            item.modifiedFields = []
-          }
-          return item
-        }),
-      )
+      const baseline = getOriginalBaselineByPointId(pid)
+      const prev = {
+        routing_channel_id: baseline?.routing?.channel_id,
+        routing_channel_type: baseline?.routing?.channel_type,
+        routing_channel_point_id: baseline?.routing?.channel_point_id,
+        routing_enabled: baseline?.routing?.enabled,
+      } as any
+      const cur = item.routing || {}
+      const changes: string[] = []
+      const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
+      const normStr = (v: any) => String(v || '')
+      const normBool = (v: any) => (v === true ? 'true' : v === false ? 'false' : '')
+      if (normInt(cur.channel_id) !== normInt(prev.routing_channel_id))
+        changes.push('routing_channel_id')
+      if (normStr(cur.channel_type) !== normStr(prev.routing_channel_type))
+        changes.push('routing_channel_type')
+      if (normInt(cur.channel_point_id) !== normInt(prev.routing_channel_point_id))
+        changes.push('routing_channel_point_id')
+      if (normBool(cur.enabled) !== normBool(prev.routing_enabled)) changes.push('routing_enabled')
 
-      // 执行校验，自动设置字段级错误和行级 invalid 状态
-      editPoints.value.forEach((p: any) => validateRoutingValidity(p))
+      if (changes.length > 0) {
+        item.rowStatus = 'modified'
+        item.modifiedFields = Array.from(new Set([...(item.modifiedFields || []), ...changes]))
+      } else {
+        item.rowStatus = 'normal'
+        item.modifiedFields = []
+      }
+      return item
+    }),
+  )
 
-      // 统计需要获取通道信息的通道ID（只要在 props.channels 列表中存在，就去请求，避免被 isInvalid 误过滤）
-      const channelIdsToFetch = new Set<number>()
-      editPoints.value.forEach((item: any) => {
-        const chId = Number(item.routing?.channel_id || 0)
-        if (chId > 0) {
-          const channelExists = props.channels?.some((ch) => Number(ch.id) === chId) ?? false
-          if (channelExists) {
-            channelIdsToFetch.add(chId)
-          }
+  editPoints.value.forEach((p: any) => validateRoutingValidity(p))
+
+  const channelIdsToFetch = new Set<number>()
+  editPoints.value.forEach((item: any) => {
+    const chId = Number(item.routing?.channel_id || 0)
+    if (chId > 0) {
+      const channelExists = props.channels?.some((ch) => Number(ch.id) === chId) ?? false
+      if (channelExists) {
+        channelIdsToFetch.add(chId)
+      }
+    }
+  })
+
+  if (channelIdsToFetch.size > 0) {
+    try {
+      const idsArray = Array.from(channelIdsToFetch)
+      const res = await getChannelsByIds(idsArray, { skipGlobalLoading: true })
+      const channelsList = Array.isArray(res?.data?.list) ? res.data.list : []
+
+      const channelMap = new Map<number, any>()
+      channelsList.forEach((ch: any) => {
+        const chId = Number(ch?.id)
+        if (Number.isFinite(chId) && chId > 0) {
+          channelMap.set(chId, ch)
         }
       })
 
-      // 批量获取通道信息并填充通道名称
-      if (channelIdsToFetch.size > 0) {
-        try {
-          const idsArray = Array.from(channelIdsToFetch)
-          const res = await getChannelsByIds(idsArray, { skipGlobalLoading: true })
-          const channelsList = Array.isArray(res?.data?.list) ? res.data.list : []
+      editPoints.value.forEach((item: any) => {
+        const chId = Number(item.routing?.channel_id || 0)
+        const meta = (item as any).__routingMeta as
+          | { channelExists?: boolean; pointExists?: boolean }
+          | undefined
 
-          // 创建通道信息映射
-          const channelMap = new Map<number, any>()
-          channelsList.forEach((ch: any) => {
-            const chId = Number(ch?.id)
-            if (Number.isFinite(chId) && chId > 0) {
-              channelMap.set(chId, ch)
-            }
-          })
+        if (chId <= 0) return
 
-          // 填充通道名称 + 分配点位名称（点位名称只允许来自 getChannelsByIds 返回的 channel.points）
-          editPoints.value.forEach((item: any) => {
-            const chId = Number(item.routing?.channel_id || 0)
-            const meta = (item as any).__routingMeta as
-              | { channelExists?: boolean; pointExists?: boolean }
-              | undefined
+        const channelExistsInList =
+          props.channels?.some((ch) => Number(ch.id) === chId) ?? false
+        if (meta) meta.channelExists = channelExistsInList ? true : false
 
-            if (chId <= 0) return
-
-            // 通道是否存在：以 props.channels 为准（用户要求：不在列表里就不存在）
-            const channelExistsInList =
-              props.channels?.some((ch) => Number(ch.id) === chId) ?? false
-            if (meta) meta.channelExists = channelExistsInList ? true : false
-
-            // 通道名称：优先接口返回，其次 props.channels 名称，最后回退到 id 字符串
-            const channelFromApi = channelMap.get(chId)
-            if (channelFromApi) {
-              item.routing.channel_name = channelFromApi.name || item.routing.channel_name || ''
-            } else {
-              const channelFromList = props.channels?.find((ch) => Number(ch.id) === chId)
-              item.routing.channel_name =
-                channelFromList?.name || item.routing.channel_name || String(chId)
-            }
-
-            // 点位名称分配：仅当 channel_type 为 T/S/C/A 且存在 points 才可分配
-            const rawType = String(item.routing?.channel_type || '').trim()
-            const pointId = Number(item.routing?.channel_point_id || 0)
-            const points = channelFromApi?.points
-            const hasPoints = points && typeof points === 'object'
-
-            // 默认：如果没有从接口解析到名称，则展示点位ID（方便排查）
-            if (pointId > 0 && !item.routing.channel_point_name) {
-              item.routing.channel_point_name = String(pointId)
-            }
-
-            // 通道存在但通道类型不符合当前规则：点位视为不存在（上级条件不成立）
-            const allowedOptions = getChannelTypeOptions()
-            const allowed = allowedOptions.map((o) => o.value)
-            const parsedType = parsePointTypeStrict(rawType)
-            const channelTypeValid = !!parsedType.abbr && allowed.includes(parsedType.abbr)
-            if (pointId > 0 && !channelTypeValid) {
-              if (meta) {
-                meta.pointExists = false
-              } else {
-                ;(item as any).__routingMeta = {
-                  ...(item as any).__routingMeta,
-                  pointExists: false,
-                }
-              }
-              // 点位不存在时只展示ID
-              item.routing.channel_point_name = String(pointId)
-              item.isInvalid = true
-              return
-            }
-
-            // 没有接口 points 数据时，不对“点位是否存在”做结论，避免误报
-            if (!hasPoints || pointId <= 0) {
-              if (meta && meta.channelExists === true) meta.pointExists = undefined
-              return
-            }
-
-            // 只有 TSCA 才能从 points 里取
-            if (!parsedType.abbr) return
-
-            let list: any[] = []
-            if (parsedType.abbr === 'T') list = points.telemetry || []
-            else if (parsedType.abbr === 'S') list = points.signal || []
-            else if (parsedType.abbr === 'C') list = points.control || []
-            else if (parsedType.abbr === 'A') list = points.adjustment || []
-
-            const found = (list || []).find((p: any) => Number(p.point_id) === pointId)
-            if (found) {
-              item.routing.channel_point_name = found.signal_name || String(pointId)
-              if (meta) meta.pointExists = true
-            } else {
-              // 通道存在但点位不存在
-              item.routing.channel_point_name = String(pointId)
-              if (meta) meta.pointExists = false
-              item.isInvalid = true
-            }
-          })
-        } catch (error) {
-          console.error('Failed to fetch channel information:', error)
+        const channelFromApi = channelMap.get(chId)
+        if (channelFromApi) {
+          item.routing.channel_name = channelFromApi.name || item.routing.channel_name || ''
+        } else {
+          const channelFromList = props.channels?.find((ch) => Number(ch.id) === chId)
+          item.routing.channel_name = channelFromList?.name || item.routing.channel_name || String(chId)
         }
-      }
 
-      // 刷新字段级错误
-      refreshRoutingFieldErrorsForList()
+        const rawType = String(item.routing?.channel_type || '').trim()
+        const pointId = Number(item.routing?.channel_point_id || 0)
+        const points = channelFromApi?.points
+        const hasPoints = points && typeof points === 'object'
 
-      // 只显示简单的成功/信息提示，不显示详细错误（错误已在每行下方显示）
-      if (invalidRecords.length > 0) {
-        ElMessage.warning(
-          `CSV file has ${invalidRecords.length} invalid row(s). Please check the format.`,
-        )
-      }
+        if (pointId > 0 && !item.routing.channel_point_name) {
+          item.routing.channel_point_name = String(pointId)
+        }
 
-      const invalidCount = editPoints.value.filter((p: any) => (p as any).isInvalid).length
-      if (invalidCount === 0) {
-        ElMessage.success('Imported routing successfully')
-      } else {
-        ElMessage.warning(
-          `Imported routing, but ${invalidCount} point(s) have errors. Please check the rows marked in red.`,
-        )
-      }
+        const allowedOptions = getChannelTypeOptions()
+        const allowed = allowedOptions.map((o) => o.value)
+        const parsedType = parseDeviceRoutingTypeStrict(rawType)
+        const channelTypeValid = !!parsedType.abbr && allowed.includes(parsedType.abbr)
+        if (pointId > 0 && !channelTypeValid) {
+          if (meta) {
+            meta.pointExists = false
+          } else {
+            ;(item as any).__routingMeta = {
+              ...(item as any).__routingMeta,
+              pointExists: false,
+            }
+          }
+          item.routing.channel_point_name = String(pointId)
+          item.isInvalid = true
+          return
+        }
+
+        if (!hasPoints || pointId <= 0) {
+          if (meta && meta.channelExists === true) meta.pointExists = undefined
+          return
+        }
+
+        if (!parsedType.abbr) return
+
+        let list: any[] = []
+        if (parsedType.abbr === 'T') list = points.telemetry || []
+        else if (parsedType.abbr === 'S') list = points.signal || []
+        else if (parsedType.abbr === 'C') list = points.control || []
+        else if (parsedType.abbr === 'A') list = points.adjustment || []
+
+        const found = (list || []).find((p: any) => Number(p.point_id) === pointId)
+        if (found) {
+          item.routing.channel_point_name = found.signal_name || String(pointId)
+          if (meta) meta.pointExists = true
+        } else {
+          item.routing.channel_point_name = String(pointId)
+          if (meta) meta.pointExists = false
+          item.isInvalid = true
+        }
+      })
     } catch (error) {
-      console.error('Error parsing CSV:', error)
-      ElMessage.error('Failed to parse CSV file')
-    } finally {
-      target.value = ''
+      console.error('Failed to fetch channel information:', error)
     }
   }
-  reader.onerror = () => {
-    ElMessage.error('Failed to read CSV file')
-    target.value = ''
+
+  refreshRoutingFieldErrorsForList()
+
+  if (invalidRows > 0) {
+    ElMessage.warning(`CSV file has ${invalidRows} invalid row(s). Please check the format.`)
   }
-  reader.readAsText(file)
+
+  const invalidCount = editPoints.value.filter((p: any) => (p as any).isInvalid).length
+  if (invalidCount === 0) {
+    ElMessage.success('Imported routing successfully')
+  } else {
+    ElMessage.warning(
+      `Imported routing, but ${invalidCount} point(s) have errors. Please check the rows marked in red.`,
+    )
+  }
 }
+
+const { fileInputRef, handleImportClick, handleFileChange } = useCsvImportExport({
+  onParse: handleRoutingCsvContent,
+  onError: (message, error) => {
+    if (error) console.error(error)
+    ElMessage.error(message)
+  },
+})
+void fileInputRef
+
 const clearImportedFileName = () => {
   importedFileName.value = ''
 }
 const handleExport = () => {
-  // 导出所有数据，不受筛选影响
   const allPoints = Array.isArray(props.points) ? props.points : editPoints.value || []
   if (!allPoints || allPoints.length === 0) {
     ElMessage.warning('No data to export')
     return
   }
-  const header =
-    'point_id,point_name,channel_id,channel_name,channel_point_type,channel_point_id,channel_point_name,enabled'
   const rows = allPoints.map((item: any) => {
     const r = item.routing || {}
-    // 导出格式：包含ID和名称
-    return [
-      getPointId(item),
-      String(item.name || ''),
-      r.channel_id ?? '',
-      String(r.channel_name || ''),
-      String(r.channel_type || ''),
-      r.channel_point_id ?? '',
-      String(r.channel_point_name || ''),
-      r.enabled === true ? 'true' : r.enabled === false ? 'false' : '',
-    ].join(',')
+    return {
+      point_id: getPointId(item),
+      point_name: String(item.name || ''),
+      channel_id: r.channel_id ?? '',
+      channel_name: String(r.channel_name || ''),
+      channel_point_type: String(r.channel_type || ''),
+      channel_point_id: r.channel_point_id ?? '',
+      channel_point_name: String(r.channel_point_name || ''),
+      enabled: r.enabled === true ? 'true' : r.enabled === false ? 'false' : '',
+    }
   })
-  const csvContent = [header, ...rows].join('\n')
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
+  const csvContent = buildCsv(deviceRoutingExportSchema, rows)
   const safeName =
     String(injectedInstanceName?.value || '')
       .trim()
       .replace(/[^\w-]+/g, '_') || 'device'
-  const filename = `${safeName}_${props.category}_routing_${Date.now()}.csv`
-  link.href = url
-  link.download = filename
-  link.style.display = 'none'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  const filename = `${safeName}_${props.category}_routing_${getTimestampCompact()}.csv`
+  downloadCsv(csvContent, filename)
   ElMessage.success(`Exported to ${filename}`)
 }
 
@@ -1294,7 +989,6 @@ defineExpose({
   clearImportedFileName,
   clearSignalNameFilter: () => {
     signalNameFilter.value = ''
-    showSignalNameFilter.value = false
   },
   hasInvalid: () => {
     return Array.isArray(editPoints.value)
@@ -1306,6 +1000,7 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+@use '@/assets/styles/variables' as *;
 .table-action-controls {
   display: flex;
   justify-content: flex-end;
@@ -1319,45 +1014,119 @@ defineExpose({
   }
 }
 
-.voltage-class .device-routing-table {
-  color: #fff;
+.voltage-class .point-table {
+  color: #000;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
-  .vtable__cell {
-    color: #fff;
-    padding: 14px 12px;
-    position: relative;
-    &:has(.field-error) {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+  .point-table__wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .point-table__el-table {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+
+    // 表头和固定列统一设置
+    :deep(.el-table__header th),
+    :deep(.el-table__body td),
+    :deep(.el-table__fixed-right th),
+    :deep(.el-table__fixed-right td) {
+      padding: 9px 12px;
+    }
+
+    :deep(.el-table__row) {
+      position: relative;
+    }
+
+    // 根据行状态着色（移除左侧状态条，改为行背景色）
+    :deep(.row-status-added) {
+      background-color: rgba(103, 194, 58, 0.1);
+    }
+    :deep(.row-status-modified) {
+      background-color: rgba(64, 158, 255, 0.1);
+    }
+    :deep(.row-status-deleted) {
+      background-color: rgba(245, 108, 108, 0.1);
+      opacity: 0.6;
+    }
+    :deep(.row-invalid) {
+      background-color: rgba(245, 108, 108, 0.1);
+    }
+
+    :deep(td .cell) {
+      position: relative;
+      height: 32px;
+    }
+
+    .cell-content {
+      position: relative;
     }
   }
-  .vtable__header {
-    position: relative;
-    padding-left: 3px;
-    padding-right: 8px;
+
+  // 顶部工具栏中的筛选下拉与输入框左侧对齐
+  :deep(.signal-name-popper) {
+    left: 0 !important;
+    transform: none !important;
+    min-width: 100% !important;
   }
-  .row-status-float {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: transparent;
-    pointer-events: none;
+
+  .point-table__operation-cell {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+
+    .point-table__edit-btn,
+    .point-table__setting-btn,
+    .point-table__publish-btn,
+    .point-table__restore-btn {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 16px;
+      transition: color 0.3s;
+      span {
+        font-size: 12px;
+      }
+    }
+    .point-table__edit-btn {
+      color: #409eff;
+      &:hover {
+        color: #66b1ff;
+      }
+    }
+    .point-table__cancel-btn {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      color: #f56c6c;
+      transition: color 0.3s;
+      &:hover {
+        color: #f78989;
+      }
+    }
+    .point-table__confirm-btn {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      color: #67c23a;
+      transition: color 0.3s;
+      &:hover {
+        color: #85ce61;
+      }
+    }
   }
-  .vtable__row.row-status-added .row-status-float {
-    background: #67c23a;
-  }
-  .vtable__row.row-status-modified .row-status-float {
-    background: #409eff;
-  }
-  .vtable__row.row-status-deleted .row-status-float {
-    background: #f56c6c;
-  }
-  .vtable__row.row-invalid .row-status-float {
-    background: #f56c6c;
-  }
+
   .inline-edit-container {
     width: 100%;
     position: relative;
@@ -1372,128 +1141,34 @@ defineExpose({
     z-index: 9999 !important;
   }
 
-  .vtable__cell--point-id {
-    width: 130px;
-  }
-  .vtable__cell--name {
-    width: 261px; // 20%
-    position: relative;
-    .filter-icon {
-      margin-left: 5px;
-      font-size: 14px;
-    }
-    .signal-name-filter {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background: #1e2f52;
-      padding: 10px;
-      border-radius: 4px;
-      min-width: 250px;
-    }
-  }
-  // 让筛选下拉与输入框左侧对齐
-  :deep(.signal-name-popper) {
-    left: 0 !important;
-    transform: none !important;
-    min-width: 100% !important;
-  }
-  .vtable__cell--channel-id {
-    width: 196px;
-  } // 15%
-  .vtable__cell--channel-type {
-    width: 196px;
-  } // 15%
-  .vtable__cell--channel-point {
-    width: 261px;
-  } // 20%
-  .vtable__cell--enabled {
-    width: 130px;
-  } // 10%
-  .vtable__cell--operation {
-    width: 130px;
-    .point-table__operation-cell {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      justify-content: center;
-
-      .point-table__edit-btn,
-      .point-table__delete-btn,
-      .point-table__setting-btn,
-      .point-table__publish-btn,
-      .point-table__restore-btn {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        font-size: 16px;
-        transition: color 0.3s;
-        span {
-          font-size: 12px;
-        }
-      }
-      .point-table__edit-btn {
-        color: #409eff;
-        &:hover {
-          color: #66b1ff;
-        }
-      }
-      .point-table__cancel-btn {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        font-size: 18px;
-        color: #f56c6c;
-        transition: color 0.3s;
-        &:hover {
-          color: #f78989;
-        }
-      }
-      .point-table__confirm-btn {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        font-size: 18px;
-        color: #67c23a;
-        transition: color 0.3s;
-        &:hover {
-          color: #85ce61;
-        }
-      }
-    }
-  }
-
-  .row-status-normal {
-    background-color: transparent;
-  }
-  .row-status-modified {
-    border-left: 3px solid #409eff;
-  }
-  .row-invalid {
-    background-color: rgba(245, 108, 108, 0.1);
-    border-left: 3px solid #f56c6c;
-  }
+  // 字段状态颜色（保持原色用于区分）
   .field-modified {
     color: #409eff !important;
   }
 
-  .vtable__empty {
-    width: 100%;
-    height: 100%;
+  // 分页样式（固定高度，独立出去）
+  .point-table__pagination {
+    flex-shrink: 0;
+    height: 56px;
+    padding: 16px 0;
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    justify-content: center;
-    color: #fff;
-    opacity: 0.7;
-    padding: 40px 0;
+    border-top: 1px solid #ebeef5;
+    :deep(.el-pagination .el-pager .number.is-active) {
+      background-color: $primary-color;
+      border-color: $primary-color;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 6px;
+    }
   }
+
   .field-error {
     position: absolute;
-    bottom: 2px;
+    top: 100%;
     left: 12px;
+    margin-top: 2px;
     width: 100%;
     color: #ff4d4f;
     font-size: 12px;

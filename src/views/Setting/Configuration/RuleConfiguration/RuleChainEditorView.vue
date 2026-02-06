@@ -1,26 +1,49 @@
 ﻿<template>
   <div class="voltage-class rule-chain-editor" :class="{ 'is-fullscreen': isFullscreen }">
-    <div class="rule-chain-editor__header">
-      <div class="rule-chain-editor__header-left">
-        <div class="rule-chain-editor__header-left-back" @click="goBackToList">
-          <img :src="backIconSrc" />
-          Back
-        </div>
-        <div class="rule-chain-editor__header-left-fenge"></div>
-        <div class="rule-chain-editor__header-right-name">
-          {{ ruleChainStore.currentRuleChain?.name }}
-        </div>
-      </div>
-      <div class="rule-chain-editor__header-right">
-        <el-button type="primary" @click="toggleFullscreen" class="custom-button">
+    <el-page-header
+      class="rule-chain-editor__page-header"
+      :content="ruleChainStore.currentRuleChain?.name || 'Rule Chain'"
+      @back="goBackToList"
+    >
+      <template #extra>
+        <el-button
+          size="small"
+          type="primary"
+          @click="toggleFullscreen"
+          class="custom-button"
+        >
           <el-icon>
             <FullScreen />
           </el-icon>
           {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
         </el-button>
-
+        <el-button
+          v-if="isMonitorMode"
+          size="small"
+          type="primary"
+          @click="handleExport"
+          class="custom-button"
+        >
+          <el-icon>
+            <Upload />
+          </el-icon>
+          Export
+        </el-button>
+        <el-button
+          v-if="isMonitorMode"
+          size="small"
+          type="primary"
+          @click="enterEditMode"
+          class="custom-button"
+        >
+          <el-icon>
+            <Edit />
+          </el-icon>
+          Edit
+        </el-button>
         <el-button
           v-if="!isMonitorMode"
+          size="small"
           type="primary"
           @click="handleImportClick"
           class="custom-button"
@@ -30,30 +53,21 @@
           </el-icon>
           Import
         </el-button>
-        <el-button v-if="isMonitorMode" type="primary" @click="handleExport" class="custom-button">
-          <el-icon>
-            <Upload />
-          </el-icon>
-          Export
-        </el-button>
-        <el-button v-if="isMonitorMode" type="primary" @click="enterEditMode" class="custom-button">
-          <el-icon>
-            <Edit />
-          </el-icon>
-          Edit
-        </el-button>
         <el-button
           v-if="!isMonitorMode"
+          size="small"
           type="warning"
           @click="handleExitEdit"
           class="custom-button"
-          >Cancel Edit</el-button
         >
-      </div>
-    </div>
+          Cancel
+        </el-button>
+      </template>
+    </el-page-header>
 
     <div class="rule-chain-editor__content">
       <div v-if="!isMonitorMode" class="rule-chain-editor__left-panel">
+        <div class="rule-chain-editor__left-title">Function Nodes</div>
         <div class="rule-chain-editor__card-categories">
           <el-collapse v-model="activeCategories">
             <el-collapse-item
@@ -80,7 +94,14 @@
                 >
                   <div class="rule-chain-editor__card-icon" :class="`icon--${card.type}`">
                     <img :src="card.icon" v-if="card.type === 'function-switch'" />
-                    <img :src="card.icon" v-else-if="card.type === 'action-changeValue'" />
+                    <img
+                      :src="card.icon"
+                      v-else-if="card.type === 'action-changeValue'"
+                    />
+                    <img
+                      :src="card.icon"
+                      v-else-if="card.type === 'action-periodDelta'"
+                    />
                   </div>
                   <div class="rule-chain-editor__card-content">
                     <div class="rule-chain-editor__card-name">{{ card.name }}</div>
@@ -95,7 +116,7 @@
         </div>
       </div>
 
-      <div ref="centerPanelRef" class="rule-chain-editor__center-panel" @drop="handleDropGuard">
+      <div ref="centerPanelRef" class="rule-chain-editor__center-panel">
         <VueFlow
           fit-view-on-init
           :connection-mode="ConnectionMode.Strict"
@@ -113,10 +134,11 @@
           :nodes-draggable="true"
           :nodes-connectable="!isMonitorMode"
           :elements-selectable="!isMonitorMode"
+          @drop.prevent="handleDropGuard"
+          @dragover.prevent="handleDragOverGuard"
+          @dragleave="handleDragLeaveGuard"
           @connect="handleConnectGuard"
           @node-double-click="handleNodeClick"
-          @dragover="handleDragOverGuard"
-          @dragleave="handleDragLeaveGuard"
         >
           <template #node-custom="nodeProps">
             <div class="rf-node-with-vars">
@@ -129,7 +151,7 @@
           <template #node-end="nodeProps">
             <EndNode v-bind="nodeProps" />
           </template>
-          <Background variant="lines" :gap="20" color="rgba(255, 255, 255, 0.1)" />
+          <Background variant="lines" :gap="20" color="rgba(255, 138, 0, 0.2)" />
           <MiniMap
             class="rf-minimap-custom"
             :node-stroke-color="'#74b9ff'"
@@ -175,7 +197,7 @@
         class="floating-btn floating-btn--cancel"
         @click="handleCancel"
         :disabled="!hasUnsavedChanges"
-        title="Cancel"
+        title="Discard"
       >
         ×
       </el-button>
@@ -185,7 +207,7 @@
         class="floating-btn floating-btn--submit"
         @click="handleSave"
         :disabled="!hasUnsavedChanges"
-        title="Submit"
+        title="Save"
       >
         √
       </el-button>
@@ -213,8 +235,6 @@ import { getCurrentFontSize } from '@/utils/responsive'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRuleDetail } from '@/api/rulesManagement'
-import backIcon from '@/assets/icons/button-back.svg'
-const backIconSrc = backIcon as string
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { FullScreen, Download, Upload, Edit } from '@element-plus/icons-vue'
@@ -241,7 +261,6 @@ import type {
   RuleChain,
   Node as AppNode,
   Edge as AppEdge,
-  Rule,
 } from '@/types/ruleConfiguration'
 import type { RuleChainPayload } from '@/types/ruleConfiguration'
 import useDragAndDrop from '@/utils/useDnd'
@@ -264,7 +283,6 @@ const {
   fitView,
   viewport,
   findNode,
-  flowToScreenCoordinate,
 } = useVueFlow()
 const { onDragStart, onDragOver, onDragLeave, onDrop } = useDragAndDrop()
 // 路由
@@ -332,9 +350,32 @@ const cardCategories = ref([
         id: 'action-1',
         name: 'Change Value',
         type: 'action-changeValue',
-        description: 'change value of a point',
+        description: 'Change value',
         icon: changeIcon,
         config: { rule: [], wires: {} },
+      },
+      {
+        id: 'action-2',
+        name: 'Period Delta',
+        type: 'action-periodDelta',
+        description: 'Period delta',
+        icon: changeIcon,
+        config: {
+          input: {
+            name: 'X1',
+            instance: 1,
+            pointType: 'measurement',
+            point: 9,
+          },
+          output: {
+            name: 'X2',
+            instance: 1,
+            pointType: 'measurement',
+            point: 101,
+          },
+          period: 'daily',
+          wires: { default: [] },
+        },
       },
     ],
   },
@@ -443,7 +484,6 @@ onEdgesChange((changes: any[]) => {
     return
   }
 
-  const currentEdges = (toObject().edges as any[]) || []
   for (const change of meaningfulChanges) {
     if (change.type === 'remove') {
       const sourceId = change.source
@@ -503,16 +543,20 @@ const handleExitEdit = async () => {
     return
   }
   try {
-    await ElMessageBox.confirm('Save your changes before exiting?', 'Unsaved Changes', {
-      confirmButtonText: 'Save & Exit',
-      cancelButtonText: 'Discard',
-      type: 'warning',
-    })
-    await handleSave()
-    isMonitorMode.value = true
-  } catch {
+    await ElMessageBox.confirm(
+      'You have unsaced changes,Do you want to discard them?',
+      'Unsaved Changes',
+      {
+        confirmButtonText: 'Discard',
+        cancelButtonText: 'Cancel',
+        type: 'warning',
+      },
+    )
     handleCancel()
     isMonitorMode.value = true
+  } catch {
+    // Cancel: keep editing
+    return
   }
   nextTick(() => fitFlowToViewport())
 }
@@ -531,6 +575,8 @@ const handleDragLeaveGuard = () => {
 }
 const handleDropGuard = (e: DragEvent) => {
   if (isMonitorMode.value) return
+  e.preventDefault()
+  e.stopPropagation()
   onDrop(e)
 }
 
@@ -748,6 +794,7 @@ function stopMonitorSubscription() {
 
 function enterEditMode() {
   isMonitorMode.value = false
+  activeCategories.value = cardCategories.value.map((category) => category.type)
   stopMonitorSubscription()
   clearSimulation()
   resetRuntimeVisuals()
@@ -1156,72 +1203,64 @@ watch(
 
     &.is-fullscreen {
       position: fixed;
-      top: 0;
+      top: 32px;
       left: 0;
       z-index: 9999;
-      height: 100vh;
+      height: calc(100vh - 32px);
       width: 100vw;
-      background-image: url('@/assets/images/simple-bg.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
+      background-color: #ffffff;
+      background-image: none;
     }
 
-    .rule-chain-editor__header {
-      height: 60px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px;
-      background-color: #132c54;
-      border-bottom: 1px solid #435678;
-      .rule-chain-editor__header-left,
-      .rule-chain-editor__header-right {
+    .rule-chain-editor__page-header {
+      padding: 6px 10px;
+      background-color: transparent;
+      border-bottom: 1px solid rgba(15, 31, 61, 0.08);
+      :deep(.el-page-header__left) {
+        font-weight: 600;
+      }
+      :deep(.el-page-header__content) {
+        color: #0f1f3d;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      :deep(.el-page-header__extra) {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 6px;
       }
-      .rule-chain-editor__header-left {
-        .rule-chain-editor__header-left-back {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 600;
-          img {
-            width: 20px;
-            height: 20px;
-          }
-        }
-        .rule-chain-editor__header-left-fenge {
-          height: 29px;
-          width: 2px;
-          background-color: #435678;
-          margin: 0 4px;
-        }
-        .rule-chain-editor__header-right-name {
-          font-size: 20px;
-          font-weight: 700;
-          color: #ffffff;
-        }
+      :deep(.el-button) {
+        height: 24px;
+        padding: 0 8px;
+        font-size: 11px;
+      }
+      :deep(.el-icon) {
+        font-size: 12px;
       }
     }
 
     .rule-chain-editor__content {
       display: flex;
-      height: calc(100% - 60px);
+      flex: 1;
+      min-height: 0;
+      background-color: transparent;
 
       .rule-chain-editor__left-panel {
-        width: 300px;
-        background-color: rgba(19, 44, 84, 0.2);
-        border-right: 1px solid #435678;
+        width: 240px;
+        background-color: rgba(19, 44, 84, 0.08);
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
         display: flex;
         flex-direction: column;
         transition: width 0.3s ease;
-        box-shadow: var(--shadow-light);
+        box-shadow: 6px 0 12px rgba(15, 31, 61, 0.12);
+
+        .rule-chain-editor__left-title {
+          padding: 12px 12px 6px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f1f3d;
+        }
 
         .rule-chain-editor__chain-selector {
           padding: 16px;
@@ -1234,7 +1273,49 @@ watch(
           padding: 16px;
 
           :deep(.el-collapse-item__content) {
-            padding-top: 10px;
+            padding: 8px 8px 10px;
+            border-radius: 0 0 8px 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 138, 0, 0.12);
+          }
+          :deep(.el-collapse) {
+            border: none;
+          }
+          :deep(.el-collapse-item__wrap) {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+          }
+          :deep(.el-collapse-item__header) {
+            height: 28px;
+            line-height: 28px;
+            padding: 0 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: $secondary-color;
+            background: rgba($secondary-color, 0.12);
+            border: 1px solid rgba($secondary-color, 0.35);
+            border-radius: 6px;
+          }
+          :deep(.el-collapse-item__header.is-active) {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            color: $primary-color;
+            background: $primary-color-alpha-20;
+            border-color: $primary-color-alpha-35;
+          }
+          :deep(.el-collapse-item__header.is-active .el-collapse-item__arrow) {
+            color: $primary-color;
+          }
+          :deep(.el-collapse-item__content) {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+          }
+          :deep(.el-collapse-item__arrow) {
+            font-size: 12px;
+            color: $secondary-color;
+          }
+          :deep(.el-collapse-item__title) {
+            padding-left: 4px;
           }
 
           .rule-chain-editor__category-title {
@@ -1253,9 +1334,11 @@ watch(
         .rule-chain-editor__cards {
           display: flex;
           flex-direction: column;
+          align-items: center;
           gap: 8px;
 
           .rule-chain-editor__card {
+            width: 88%;
             display: flex;
             align-items: center;
             padding: 12px;
@@ -1281,10 +1364,16 @@ watch(
               background-color: #4fc3f7; // soft sky blue
               box-shadow: 0 4px 12px rgba(79, 195, 247, 0.35);
             }
+            &[data-type='action-periodDelta'] {
+              background-color: #ffb74d; // bright amber
+              box-shadow: 0 4px 12px rgba(255, 183, 77, 0.35);
+            }
             &[data-type='function-switch'] .rule-chain-editor__card-name,
             &[data-type='function-switch'] .rule-chain-editor__card-description,
             &[data-type='action-changeValue'] .rule-chain-editor__card-name,
-            &[data-type='action-changeValue'] .rule-chain-editor__card-description {
+            &[data-type='action-changeValue'] .rule-chain-editor__card-description,
+            &[data-type='action-periodDelta'] .rule-chain-editor__card-name,
+            &[data-type='action-periodDelta'] .rule-chain-editor__card-description {
               color: #ffffff;
             }
 
@@ -1318,6 +1407,12 @@ watch(
                   color: #ffffff;
                 }
               }
+              &.icon--action-periodDelta {
+                background: #ffa726;
+                .el-icon {
+                  color: #ffffff;
+                }
+              }
             }
 
             .rule-chain-editor__card-content {
@@ -1345,6 +1440,9 @@ watch(
         height: 100%;
         position: relative;
         z-index: 1;
+        background-color: transparent;
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
 
         .rule-chain-editor__flow {
           width: 100%;
@@ -1409,6 +1507,7 @@ watch(
           position: relative;
           display: flex;
           flex-direction: column;
+          border-radius: 8px;
         }
         .node-vars-bubble__row {
           display: flex;
@@ -1451,9 +1550,9 @@ watch(
       gap: 16px;
       z-index: 10;
       .floating-btn {
-        width: 80px !important;
-        height: 80px !important;
-        font-size: 28px !important;
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 18px !important;
         border-radius: 50% !important;
         display: flex;
         align-items: center;

@@ -3,7 +3,7 @@
 
 /**
  * Element Plus Table 组件样式定制
- * 统一表格样式，提供现代化的视觉效�? */
+ * 统一表格样式，提供现代化的视觉效�? */
 
 // 表格主体样式
 .voltage-class {
@@ -38,11 +38,14 @@
             border-right: none;
           }
           &.el-table-fixed-column--right {
-            background-color: $table-fixed-column-bg;
+            background-color: $table-header-bg;
             box-shadow: $box-shadow-large;
           }
           .cell {
             padding: 0;
+            display: flex;
+            align-items: center;
+            // justify-content: center;
             line-height: $table-cell-line-height;
             // text-align: center !important;
             // justify-content: center;
@@ -88,7 +91,7 @@
             background: transparent;
           }
           &.el-table-fixed-column--right {
-            background-color: $table-fixed-column-bg;
+            background-color: $table-header-bg;
             box-shadow: $box-shadow-large;
           }
           .cell {
@@ -116,7 +119,7 @@
             background 0.2s,
             box-shadow 0.2s,
             color 0.2s;
-          // 鼠标悬停时的行样式增�?
+          // 鼠标悬停时的行样式增�?
           &:hover {
             background: $table-row-hover-bg !important;
             // cursor: pointer;
@@ -141,7 +144,7 @@
         }
       }
 
-      // 空数据状�?
+      // 空数据状�?
       .el-table__empty-block {
         background-color: transparent; // 空数据时背景也透明
 
@@ -151,7 +154,7 @@
         }
       }
 
-      // 固定列样�?
+      // 固定列样�?
       .el-table__fixed {
         background-color: transparent; // 固定列背景透明
         // background-color: red !important;
@@ -307,7 +310,7 @@
       font-size: $font-size-base;
 
       .el-input__inner {
-        border-radius: $border-radius-medium;
+        border-radius: $border-radius-base;
         border-color: $border-color-gray-light;
         text-align: center;
 

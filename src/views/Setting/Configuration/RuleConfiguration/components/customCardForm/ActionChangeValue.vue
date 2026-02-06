@@ -1,44 +1,46 @@
 <template>
   <div class="voltage-class action-change-value-form">
-    <el-form ref="formRef" label-width="60px" :model="cardData">
+    <el-form ref="formRef" label-width="90px" :model="cardData">
       <!-- 基础设置 -->
       <div class="section basic-section">
         <div class="section__header">
           <span class="section__title">Basic Settings</span>
         </div>
-        <div class="section__body" style="flex-direction: row">
-          <el-form-item label="label:" prop="label" style="margin-bottom: 0">
+        <div class="section__body section__body--basic">
+          <el-form-item label="label:" prop="label" class="basic-item basic-item--label">
             <el-input v-model="cardData.label" />
           </el-form-item>
-          <el-form-item
-            label="description:"
-            prop="description"
-            style="margin-bottom: 0; width: 100% !important"
-            label-width="120px"
-          >
+          <el-form-item label="description:" prop="description" class="basic-item basic-item--description">
             <el-input v-model="cardData.description" style="width: 100% !important" />
           </el-form-item>
         </div>
       </div>
 
-      <div class="main-section">
+      <div class="main-section" :class="{
+        'collapse-variable': collapsedSection === 'variable',
+        'collapse-rule': collapsedSection === 'rule',
+      }">
         <!-- 变量设置（完全对齐 FunctionSwitchForm） -->
-        <div class="section variable-section">
+        <div class="section variable-section" :class="{ 'is-collapsed': collapsedSection === 'variable' }">
           <div class="section__header">
-            <span class="section__title">Variable Settings</span>
+            <span class="section__title">
+              <span class="section__title-text">Variable Settings</span>
+              <span class="section__title-lines" aria-hidden="true">
+                <span class="section__title-line">Variable</span>
+                <span class="section__title-line">Settings</span>
+              </span>
+            </span>
             <el-button class="section__add-btn" type="primary" @click="addVariable">
-              <el-icon><Plus /></el-icon>
+              <el-icon>
+                <Plus />
+              </el-icon>
             </el-button>
           </div>
           <div class="section__body variable">
-            <div
-              v-for="(v, idx) in cardData.config.variables"
-              :key="`var-${idx}-${v.name}`"
-              class="variable-row"
-            >
+            <div v-for="(v, idx) in cardData.config.variables" :key="`var-${idx}-${v.name}`" class="variable-row">
               <el-form-item :label="v.name + ':'" class="variable-row__item">
                 <div class="variable-row__mode">
-                  <el-radio-group v-model="v.type" @change="onVariableTypeChange(v, idx)">
+                  <el-radio-group v-model="v.type" @change="onVariableTypeChange(v)">
                     <el-radio label="single">single</el-radio>
                     <el-radio label="combined">combined</el-radio>
                   </el-radio-group>
@@ -46,221 +48,207 @@
 
                 <!-- single 模式：先 instance -> pointType -> point -->
                 <div v-if="v.type !== 'combined'" class="variable-row__controls">
-                  <el-select
-                    v-model="v.instance_id"
-                    placeholder="instance"
-                    class="flex-item variable-row__select"
-                    filterable
-                    @change="() => onVarInstanceChange(idx)"
-                  >
-                    <el-option
-                      v-for="opt in instanceOptions"
-                      :key="opt.value"
-                      :label="opt.label"
-                      :value="opt.value"
-                    />
+                  <el-select v-model="v.instance_id" placeholder="instance" class="flex-item variable-row__select"
+                    filterable @change="() => onVarInstanceChange(idx)">
+                    <el-option v-for="opt in instanceOptions" :key="opt.value" :label="opt.label"
+                      :value="opt.value as any" />
                   </el-select>
-                  <el-select
-                    v-model="v.pointType"
-                    placeholder="point type"
-                    class="flex-item variable-row__select"
-                    :disabled="!v.instance_id"
-                    @change="() => onVarPointTypeChange(idx)"
-                  >
+                  <el-select v-model="v.pointType" placeholder="point type" class="flex-item variable-row__select"
+                    :disabled="!v.instance_id" @change="() => onVarPointTypeChange(idx)">
                     <el-option label="measurement" value="measurement" />
                     <el-option label="property" value="property" />
                     <el-option label="action" value="action" />
                   </el-select>
-                  <el-select
-                    v-model="v.point_id"
-                    placeholder="point"
-                    class="flex-item variable-row__select"
-                    filterable
-                    :disabled="!v.instance_id || !v.pointType"
-                    @change="() => onVarPointChange(idx)"
-                  >
-                    <el-option
-                      v-for="opt in getVarPointOptions(idx)"
-                      :key="opt.value"
-                      :label="opt.label"
-                      :value="opt.value"
-                    />
+                  <el-select v-model="v.point_id" placeholder="point" class="flex-item variable-row__select" filterable
+                    :disabled="!v.instance_id || !v.pointType" @change="() => onVarPointChange(idx)">
+                    <el-option v-for="opt in getVarPointOptions(idx)" :key="opt.value" :label="opt.label"
+                      :value="opt.value" />
                   </el-select>
                 </div>
 
                 <!-- combined：公式编辑器 -->
                 <div v-else class="variable-row__combined">
                   <div class="combined-row">
-                    <el-select
-                      v-model="v.formula[0]"
-                      class="variable-row__select"
-                      placeholder="variable or number"
-                      filterable
-                      allow-create
-                      default-first-option
-                      reserve-keyword
-                      @change="(val: any) => onCombinedOperandChange(v, 0, val)"
-                    >
-                      <el-option
-                        v-for="name in getVariableNameOptionsExcluding(idx)"
-                        :key="name"
-                        :label="name"
-                        :value="name"
-                      />
+                    <el-select v-model="v.formula[0]" class="variable-row__select" placeholder="variable or number"
+                      filterable allow-create default-first-option reserve-keyword
+                      @change="(val: any) => onCombinedOperandChange(v, 0, val)">
+                      <el-option v-for="opt in getVariableOptionsExcluding(idx)" :key="opt.value" :label="opt.label"
+                        :value="opt.value as any">
+                        <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200"
+                          :teleported="true" popper-class="option-tooltip-popper">
+                          <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
+                            {{ opt.label }}
+                          </div>
+                        </el-tooltip>
+                      </el-option>
                     </el-select>
                     <el-select v-model="v.formula[1]" class="variable-row__select" placeholder="op">
-                      <el-option
-                        v-for="op in arithmeticOperatorOptions"
-                        :key="op"
-                        :label="op"
-                        :value="op"
-                      />
+                      <el-option v-for="op in arithmeticOperatorOptions" :key="op" :label="op" :value="op" />
                     </el-select>
-                    <el-select
-                      v-model="v.formula[2]"
-                      class="variable-row__select"
-                      placeholder="variable or number"
-                      filterable
-                      allow-create
-                      default-first-option
-                      reserve-keyword
-                      @change="(val: any) => onCombinedOperandChange(v, 2, val)"
-                    >
-                      <el-option
-                        v-for="name in getVariableNameOptionsExcluding(idx)"
-                        :key="name"
-                        :label="name"
-                        :value="name"
-                      />
+                    <el-select v-model="v.formula[2]" class="variable-row__select" placeholder="variable or number"
+                      filterable allow-create default-first-option reserve-keyword
+                      @change="(val: any) => onCombinedOperandChange(v, 2, val)">
+                      <el-option v-for="opt in getVariableOptionsExcluding(idx)" :key="opt.value" :label="opt.label"
+                        :value="opt.value as any">
+                        <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200"
+                          :teleported="true" popper-class="option-tooltip-popper">
+                          <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
+                            {{ opt.label }}
+                          </div>
+                        </el-tooltip>
+                      </el-option>
                     </el-select>
                   </div>
 
-                  <div
-                    v-for="pairIdx in getCombinedExtraPairCount(v)"
-                    :key="`pair-${idx}-${pairIdx}`"
-                    class="combined-row"
-                  >
-                    <el-select
-                      v-model="v.formula[3 + (pairIdx - 1) * 2]"
-                      class="variable-row__select"
-                      placeholder="op"
-                    >
-                      <el-option
-                        v-for="op in arithmeticOperatorOptions"
-                        :key="op"
-                        :label="op"
-                        :value="op"
-                      />
+                  <div v-for="pairIdx in getCombinedExtraPairCount(v)" :key="`pair-${idx}-${pairIdx}`"
+                    class="combined-row">
+                    <el-select v-model="v.formula[3 + (pairIdx - 1) * 2]" class="variable-row__select" placeholder="op">
+                      <el-option v-for="op in arithmeticOperatorOptions" :key="op" :label="op" :value="op" />
                     </el-select>
-                    <el-select
-                      v-model="v.formula[3 + (pairIdx - 1) * 2 + 1]"
-                      class="variable-row__select"
-                      placeholder="variable or number"
-                      filterable
-                      allow-create
-                      default-first-option
-                      reserve-keyword
+                    <el-select v-model="v.formula[3 + (pairIdx - 1) * 2 + 1]" class="variable-row__select"
+                      placeholder="variable or number" filterable allow-create default-first-option reserve-keyword
                       @change="
                         (val: any) =>
                           onCombinedExtraOperandChange(v, 3 + (pairIdx - 1) * 2 + 1, val)
-                      "
-                    >
-                      <el-option
-                        v-for="name in getVariableNameOptionsExcluding(idx)"
-                        :key="name"
-                        :label="name"
-                        :value="name"
-                      />
+                      ">
+                      <el-option v-for="opt in getVariableOptionsExcluding(idx)" :key="opt.value" :label="opt.label"
+                        :value="opt.value as any">
+                        <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200"
+                          :teleported="true" popper-class="option-tooltip-popper">
+                          <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
+                            {{ opt.label }}
+                          </div>
+                        </el-tooltip>
+                      </el-option>
                     </el-select>
-                    <el-button
-                      class="combined-row__delete"
-                      type="warning"
-                      link
-                      @click="removeCombinedRow(v, pairIdx - 1)"
-                    >
-                      <el-icon style="color: red"><CircleClose /></el-icon>
+                    <el-button class="combined-row__delete" type="warning" link
+                      @click="removeCombinedRow(v, pairIdx - 1)">
+                      <el-icon class="combined-row__delete-icon">
+                        <CircleClose />
+                      </el-icon>
                     </el-button>
                   </div>
 
                   <div class="variable-row__combined-add">
                     <el-button type="primary" link @click="addCombinedRow(v)">
-                      <el-icon style="color: green"><CirclePlus /></el-icon>
+                      <el-icon class="combined-row__add-icon">
+                        <CirclePlus />
+                      </el-icon>
                     </el-button>
                   </div>
                 </div>
               </el-form-item>
-              <el-button
-                class="variable-row__delete"
-                style="width: 32px !important"
-                type="warning"
-                @click="removeVariable(idx)"
-              >
-                <el-icon><Delete /></el-icon>
+              <el-button class="variable-row__delete" style="width: 32px !important" type="warning"
+                @click="removeVariable(idx)">
+                <el-icon>
+                  <Delete />
+                </el-icon>
               </el-button>
             </div>
           </div>
         </div>
 
+        <div class="collapse-center" :class="{
+          'collapse-center--left': collapsedSection === 'rule',
+          'collapse-center--right': collapsedSection === 'variable',
+        }">
+          <el-button class="collapse-center__btn" type="primary" link @click="toggleCenterCollapse">
+            <el-icon v-if="collapsedSection === 'variable'">
+              <ArrowRightBold />
+            </el-icon>
+            <el-icon v-else>
+              <ArrowLeftBold />
+            </el-icon>
+          </el-button>
+        </div>
+
         <!-- 规则设置（简化：Variables = value） -->
-        <div class="section rule-section">
+        <div class="section rule-section" :class="{ 'is-collapsed': collapsedSection === 'rule' }">
           <div class="section__header">
-            <span class="section__title">Rule Settings</span>
+            <span class="section__title">
+              <span class="section__title-text">Rule Settings</span>
+              <span class="section__title-lines" aria-hidden="true">
+                <span class="section__title-line">Rule</span>
+                <span class="section__title-line">Settings</span>
+              </span>
+            </span>
             <el-button class="section__add-btn" type="primary" @click="addRuleRow">
-              <el-icon><Plus /></el-icon>
+              <el-icon>
+                <Plus />
+              </el-icon>
             </el-button>
           </div>
           <div class="section__body rule simple">
-            <div
-              v-for="(r, rIdx) in cardData.config.rule"
-              :key="`rule-${rIdx}`"
-              class="rule-row-simple"
-            >
-              <el-select
-                v-model="r.Variables"
-                class="rule-row__select"
-                placeholder="Variables"
-                style="margin-left: 20px"
-                filterable
-              >
-                <el-option v-for="vn in variableNameOptions" :key="vn" :label="vn" :value="vn" />
+            <div v-for="(r, rIdx) in cardData.config.rule" :key="`rule-${rIdx}`" class="rule-row-simple">
+              <el-select v-model="r.Variables" class="rule-row__select" placeholder="Variables" filterable>
+                <el-option v-for="opt in singleVariableOptions" :key="opt.value" :label="opt.label" :value="opt.value">
+                  <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200" :teleported="true"
+                    popper-class="option-tooltip-popper">
+                    <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
+                      {{ opt.label }}
+                    </div>
+                  </el-tooltip>
+                </el-option>
               </el-select>
               <span class="rule-row__eq">=</span>
-              <el-select
-                v-model="r.value"
-                class="rule-row__select"
-                placeholder="value"
-                filterable
-                allow-create
-                default-first-option
-                reserve-keyword
-                @change="(val: any) => onRuleSimpleValueChange(r, val)"
-              >
-                <el-option v-for="vn in variableNameOptions" :key="vn" :label="vn" :value="vn" />
+              <el-select v-model="r.value" class="rule-row__select" placeholder="value" filterable allow-create
+                default-first-option reserve-keyword @change="(val: any) => onRuleSimpleValueChange(r, val)">
+                <el-option v-for="opt in variableOptions" :key="opt.value" :label="opt.label" :value="opt.value">
+                  <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200" :teleported="true"
+                    popper-class="option-tooltip-popper">
+                    <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
+                      {{ opt.label }}
+                    </div>
+                  </el-tooltip>
+                </el-option>
               </el-select>
-              <el-button
-                class="rule-row__delete"
-                type="warning"
-                style="width: 32px !important"
-                @click="removeRuleRow(rIdx)"
-              >
-                <el-icon><Delete /></el-icon>
+              <el-button class="rule-row__delete" type="warning" style="width: 32px !important"
+                @click="removeRuleRow(rIdx)">
+                <el-icon>
+                  <Delete />
+                </el-icon>
               </el-button>
             </div>
           </div>
         </div>
+      </div>
+      <div class="collapse-hint">
+        <el-icon class="collapse-hint__icon">
+          <InfoFilled />
+        </el-icon>
+        <span class="collapse-hint__text">
+          Tip: Click
+          <el-icon class="collapse-hint__arrow">
+            <ArrowRightBold />
+          </el-icon>
+          /
+          <el-icon class="collapse-hint__arrow">
+            <ArrowLeftBold />
+          </el-icon>
+          to toggle Variable/Rule.
+        </span>
       </div>
     </el-form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { Plus, Delete, CircleClose, CirclePlus } from '@element-plus/icons-vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import {
+  Plus,
+  Delete,
+  CircleClose,
+  CirclePlus,
+  ArrowLeftBold,
+  ArrowRightBold,
+  InfoFilled,
+} from '@element-plus/icons-vue'
 import { getInstancePoints, getAllInstances, getInstancesByIds } from '@/api/devicesManagement'
 
 const formRef = ref()
 const props = defineProps<{ cardData: any }>()
 const cardData = ref<any>({})
+const collapsedSection = ref<'variable' | 'rule' | null>(null)
 watch(
   () => props.cardData,
   (v) => {
@@ -272,35 +260,23 @@ watch(
   },
   { immediate: true },
 )
+
+const isCompact = ref(false)
+const toggleCenterCollapse = () => {
+  if (!isCompact.value) return
+  collapsedSection.value = collapsedSection.value === 'rule' ? 'variable' : 'rule'
+}
 // 实例/点位（与 FunctionSwitchForm 一致）
 const instanceOptions = ref<Array<{ label: string; value: number | string; d: any }>>([])
 const varPointOptions = ref<
   Record<number, Array<{ label: string; value: number | string; unit?: string; raw?: any }>>
 >({})
-function getVarPointOptions(idx: number) {
-  return varPointOptions.value[idx] || []
+function getVarPointOptions(idx: number | string) {
+  const index = Number(idx)
+  return varPointOptions.value[index] || []
 }
 // 缓存每个变量索引对应实例的点位数据，便于切换类型时直接复用
 const instancePointsCache = ref<Record<number, any>>({})
-function getActionOptionsFromCard(): Array<{ label: string; value: number | string }> {
-  const cfg = cardData.value?.config || {}
-  const raw =
-    (Array.isArray(cfg.actions) && cfg.actions) ||
-    (Array.isArray(cfg.action) && cfg.action) ||
-    (Array.isArray(cardData.value?.actions) && cardData.value.actions) ||
-    []
-  return (raw as any[])
-    .map((it: any) => {
-      if (it == null) return { label: '', value: '' }
-      if (typeof it === 'string' || typeof it === 'number') {
-        return { label: String(it), value: it }
-      }
-      const label = String(it.label ?? it.name ?? it.title ?? it.value ?? it.id ?? '')
-      const value = it.value ?? it.id ?? it.key ?? label
-      return { label, value }
-    })
-    .filter((x) => x.label !== '')
-}
 function buildPointOptionsFromData(
   data: any,
   pointType: 'property' | 'measurement' | 'action',
@@ -365,25 +341,17 @@ async function fetchInstances() {
     instanceOptions.value = []
   }
 }
-function resolveInstanceId(raw: number | string): number {
-  if (Number.isFinite(raw as any)) {
-    const n = Number(raw)
-    return n > 0 ? n : 0
-  }
-  const name = String(raw || '')
-  const found = instanceOptions.value.find((o) => o.label === name || String(o.value) === name)
-  const id = Number(found?.d?.id ?? found?.value)
-  return Number.isFinite(id) && id > 0 ? id : 0
-}
-async function onVarInstanceChange(idx: number) {
-  const v = cardData.value.config.variables[idx]
+async function onVarInstanceChange(idx: number | string) {
+  const index = Number(idx)
+  if (!Number.isFinite(index)) return
+  const v = cardData.value.config.variables[index]
   // 重选实例时清空 point 及相关信息
   v.point_id = undefined
   v.point_name = ''
   v.unit = ''
   // 清空当前第三个下拉并获取该实例的点位
-  varPointOptions.value[idx] = []
-  const instanceId = v.instance_id
+  varPointOptions.value[index] = []
+  const instanceId = Number(v.instance_id)
   // 保存实例名称
   if (Number.isFinite(instanceId) && instanceId > 0) {
     const instanceOpt = instanceOptions.value.find((opt) => opt.value === instanceId)
@@ -393,34 +361,36 @@ async function onVarInstanceChange(idx: number) {
     v.instance_name = ''
   }
   if (!Number.isFinite(instanceId) || instanceId <= 0) {
-    delete instancePointsCache.value[idx]
+    delete instancePointsCache.value[index]
     return
   }
   try {
     const res = await getInstancePoints(instanceId)
     const data = res?.data || {}
-    instancePointsCache.value[idx] = data
+    instancePointsCache.value[index] = data
     // 若已存在 pointType（property/measurement/action），立即据此填充第三个下拉
     if (v.pointType) {
-      varPointOptions.value[idx] = buildPointOptionsFromData(data, v.pointType as any)
+      varPointOptions.value[index] = buildPointOptionsFromData(data, v.pointType as any)
     }
   } catch {
-    delete instancePointsCache.value[idx]
-    varPointOptions.value[idx] = []
+    delete instancePointsCache.value[index]
+    varPointOptions.value[index] = []
   }
 }
-async function onVarPointTypeChange(idx: number) {
-  const v = cardData.value.config.variables[idx]
+async function onVarPointTypeChange(idx: number | string) {
+  const index = Number(idx)
+  if (!Number.isFinite(index)) return
+  const v = cardData.value.config.variables[index]
   v.point_id = undefined
   v.point_name = ''
   v.unit = ''
-  varPointOptions.value[idx] = []
-  const instanceId = v.instance_id
+  varPointOptions.value[index] = []
+  const instanceId = Number(v.instance_id)
   if (!v.pointType) return
   // 优先使用缓存
-  const cached = instancePointsCache.value[idx]
+  const cached = instancePointsCache.value[index]
   if (cached) {
-    varPointOptions.value[idx] = buildPointOptionsFromData(cached, v.pointType as any)
+    varPointOptions.value[index] = buildPointOptionsFromData(cached, v.pointType as any)
     return
   }
   // 兜底：若无缓存但有实例，则请求一次
@@ -428,16 +398,18 @@ async function onVarPointTypeChange(idx: number) {
   try {
     const res = await getInstancePoints(instanceId)
     const data = res?.data || {}
-    instancePointsCache.value[idx] = data
-    varPointOptions.value[idx] = buildPointOptionsFromData(data, v.pointType as any)
+    instancePointsCache.value[index] = data
+    varPointOptions.value[index] = buildPointOptionsFromData(data, v.pointType as any)
   } catch {
-    delete instancePointsCache.value[idx]
-    varPointOptions.value[idx] = []
+    delete instancePointsCache.value[index]
+    varPointOptions.value[index] = []
   }
 }
 // 点位选择变化时，保存 point_name 和 unit
-function onVarPointChange(idx: number) {
-  const v = cardData.value.config.variables[idx]
+function onVarPointChange(idx: number | string) {
+  const index = Number(idx)
+  if (!Number.isFinite(index)) return
+  const v = cardData.value.config.variables[index]
   const pointId = v.point_id
   if (pointId == null || pointId === '') {
     v.point_id = undefined
@@ -446,14 +418,14 @@ function onVarPointChange(idx: number) {
     return
   }
   // 从选项中找到对应的点位信息
-  const options = varPointOptions.value[idx] || []
+  const options = varPointOptions.value[index] || []
   const pointOpt = options.find((opt) => opt.value === pointId)
   if (pointOpt) {
     v.point_name = pointOpt.label || ''
     v.unit = pointOpt.unit || ''
   } else {
     // 如果找不到，尝试从缓存中查找
-    const cached = instancePointsCache.value[idx]
+    const cached = instancePointsCache.value[index]
     if (cached && v.pointType) {
       const allPoints = buildPointOptionsFromData(cached, v.pointType as any)
       const found = allPoints.find((opt) => opt.value === pointId)
@@ -495,7 +467,7 @@ function onCombinedExtraOperandChange(v: any, index: number, val: any) {
   onCombinedOperandChange(v, index, val)
 }
 
-function onVariableTypeChange(v: any, idx: number) {
+function onVariableTypeChange(v: any) {
   if (v.type === 'combined') {
     if (!Array.isArray(v.formula) || v.formula.length < 3) v.formula = ['', '', '']
     v.instance_id = undefined
@@ -520,10 +492,12 @@ function addVariable() {
     unit: '', // 单位字段
   })
 }
-function removeVariable(idx: number) {
+function removeVariable(idx: number | string) {
+  const index = Number(idx)
+  if (!Number.isFinite(index)) return
   const vars = cardData.value.config.variables
   if (!Array.isArray(vars)) return
-  vars.splice(idx, 1)
+  vars.splice(index, 1)
 }
 function getNextVariableIndex(): number {
   const list = cardData.value?.config?.variables
@@ -537,17 +511,34 @@ function getNextVariableIndex(): number {
 }
 // 规则：简化为 Variables = value
 const arithmeticOperatorOptions = ref<string[]>(['+', '-', '*', '/'])
-const variableNameOptions = computed(() => {
-  const list = cardData.value?.config?.variables
-  const arr = Array.isArray(list) ? list : []
-  return arr.map((v: any) => v?.name).filter(Boolean)
+const variablesByName = computed<Record<string, any>>(() => {
+  const list = Array.isArray(cardData.value?.config?.variables)
+    ? cardData.value.config.variables
+    : []
+  return list.reduce((acc: Record<string, any>, v: any) => {
+    const name = v?.name
+    if (name) acc[name] = v
+    return acc
+  }, {})
 })
+interface VariableOption {
+  label: string
+  value: string
+  tooltip: string
+}
+const variableOptions = computed<VariableOption[]>(() => buildVariableOptions(false))
+const singleVariableOptions = computed<VariableOption[]>(() => buildVariableOptions(true))
+const variableNameOptions = computed(() =>
+  variableOptions.value.map((opt: VariableOption) => opt.value),
+)
 function addRuleRow() {
   if (!Array.isArray(cardData.value.config.rule)) cardData.value.config.rule = []
   cardData.value.config.rule.push({ Variables: '', value: '' })
 }
-function removeRuleRow(idx: number) {
-  cardData.value.config.rule.splice(idx, 1)
+function removeRuleRow(idx: number | string) {
+  const index = Number(idx)
+  if (!Number.isFinite(index)) return
+  cardData.value.config.rule.splice(index, 1)
 }
 function onRuleSimpleValueChange(r: any, val: any) {
   const s = String(val ?? '').trim()
@@ -597,13 +588,61 @@ function normalizeVariables() {
   }
 }
 
-function getVariableNameOptionsExcluding(selfIdx: number) {
+function getVariableOptionsExcluding(selfIdx: number | string) {
+  const index = Number(selfIdx)
+  const list = Array.isArray(cardData.value?.config?.variables)
+    ? cardData.value.config.variables
+    : []
+  const selfName = list[index]?.name
+  return variableOptions.value.filter((opt) => opt.value !== selfName)
+}
+
+function buildVariableOptions(onlySingle: boolean): VariableOption[] {
   const list = Array.isArray(cardData.value?.config?.variables)
     ? cardData.value.config.variables
     : []
   return list
-    .map((it: any, i: number) => (i === selfIdx ? '' : it?.name))
-    .filter((x: string) => !!x)
+    .filter((v: any) => v?.name && (!onlySingle || v.type !== 'combined'))
+    .map((v: any) => ({
+      label: v.name,
+      value: v.name,
+      tooltip: buildVariableTooltip(v),
+    }))
+}
+
+function buildVariableTooltip(v: any, visited: Set<string> = new Set()): string {
+  if (!v?.name) return ''
+  if (visited.has(v.name)) return v.name
+  visited.add(v.name)
+  if (v.type === 'combined') {
+    const formula = Array.isArray(v.formula) ? v.formula : []
+    if (!formula.length) return v.name
+    return formula
+      .map((item: any, idx: number) => {
+        if (idx % 2 === 1) return String(item ?? '')
+        return formatOperand(item, visited)
+      })
+      .filter((x: string) => x !== '')
+      .join(' ')
+  }
+  return formatSingleVariable(v)
+}
+
+function formatSingleVariable(v: any): string {
+  const instance = v.instance_name || v.instance_id || '-'
+  const pointType = v.pointType || '-'
+  const point = v.point_name || v.point_id || '-'
+  return `${instance}/${pointType}/${point}`
+}
+
+function formatOperand(raw: any, visited: Set<string>): string {
+  if (raw == null || raw === '') return ''
+  const text = String(raw)
+  const n = Number(text)
+  if (text.trim() !== '' && Number.isFinite(n)) return text
+  const def = variablesByName.value[text]
+  if (def) return buildVariableTooltip(def, visited)
+  return text
 }
 
 function validateForm(): Promise<{ valid: boolean; data: any }> {
@@ -621,7 +660,19 @@ function validateForm(): Promise<{ valid: boolean; data: any }> {
 
 defineExpose({ validateForm })
 
+let collapseMediaQuery: MediaQueryList | null = null
+const handleCollapseMediaChange = (e: MediaQueryList | MediaQueryListEvent) => {
+  isCompact.value = e.matches
+  collapsedSection.value = e.matches ? 'rule' : null
+}
 onMounted(() => {
+  collapseMediaQuery = window.matchMedia('(max-width: 1400px)')
+  handleCollapseMediaChange(collapseMediaQuery)
+  if (collapseMediaQuery.addEventListener) {
+    collapseMediaQuery.addEventListener('change', handleCollapseMediaChange)
+  } else {
+    collapseMediaQuery.addListener(handleCollapseMediaChange as any)
+  }
   fetchInstances().then(async () => {
     normalizeVariables()
     // 回显：批量获取实例信息以减少请求次数
@@ -702,6 +753,14 @@ onMounted(() => {
     }
   })
 })
+onUnmounted(() => {
+  if (!collapseMediaQuery) return
+  if (collapseMediaQuery.removeEventListener) {
+    collapseMediaQuery.removeEventListener('change', handleCollapseMediaChange)
+  } else {
+    collapseMediaQuery.removeListener(handleCollapseMediaChange as any)
+  }
+})
 watch(
   () => cardData.value?.config?.variables,
   () => {
@@ -713,11 +772,23 @@ watch(
 
 <style lang="scss" scoped>
 .voltage-class {
-  .action-change-value-form {
+  &.action-change-value-form {
+    width: 100%;
+    height: 100%;
+
     .main-section {
       display: flex;
       gap: 10px;
+      align-items: flex-start;
+      height: calc(100% - 120px);
+      width: 100%;
     }
+
+    .el-form {
+      display: flex;
+      flex-direction: column;
+    }
+
     .section {
       margin-bottom: 24px;
 
@@ -728,9 +799,21 @@ watch(
         margin-bottom: 12px;
 
         .section__title {
-          font-weight: 700;
-          color: #fff;
-          font-size: 18px;
+          font-weight: $font-weight-semibold;
+          font-size: $font-size-base;
+          color: $text-color-primary;
+        }
+        .section__title-text {
+          display: inline;
+        }
+        .section__title-lines {
+          display: none;
+          flex-direction: column;
+          align-items: flex-start;
+          line-height: 1.2;
+        }
+        .section__title-line {
+          display: block;
         }
 
         .section__add-btn {
@@ -741,101 +824,314 @@ watch(
       .section__body {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+
         &.variable,
         &.rule {
-          height: 400px;
+          height: calc(100% - 44px);
           overflow-y: auto;
+          scrollbar-gutter: stable;
         }
       }
     }
+    .section__body--basic {
+      display: flex;
+      gap: 12px;
+      flex-direction: row !important;
+    }
+    .basic-item {
+      margin-bottom: 0;
+      flex: 1 1 0;
+    }
+    .basic-item--label {
+      flex: 1 1 0;
+    }
+    .basic-item--description {
+      flex: 2 1 0;
+    }
+
+    .variable-section .section__header,
+    .rule-section .section__header {
+      padding-right: $width-scrollbar;
+    }
+
     .variable-section {
       padding-right: 10px;
-      width: 50%;
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
       border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     .rule-section {
-      width: calc(50% - 10px);
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
     }
+
+    .collapse-center {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+    }
+
+    .collapse-center--left {
+      left: 0;
+    }
+
+    .collapse-center--right {
+      right: 0;
+    }
+
+    .collapse-center__btn {
+      width: 26px !important;
+      color: $primary-color !important;
+
+      .el-icon {
+        color: $primary-color !important;
+      }
+    }
+
     .variable-row__controls,
     .combined-row {
       display: flex;
       align-items: center;
       gap: 8px;
+      width: 100%;
     }
+
+    .variable-row__combined {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .variable-row__combined-add {
+      display: flex;
+      justify-content: flex-start;
+      // padding-left: 6px;
+    }
+
+    .variable-row__item :deep(.el-form-item__content) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .variable-row__controls :deep(.el-select),
+    .combined-row :deep(.el-select),
+    .combined-row :deep(.el-input) {
+      flex: 1 1 0;
+    }
+
     .variable-row__select {
-      width: 164px;
+      width: auto;
     }
+
     :deep(.el-select .el-select__selected-item) {
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .variable-row__delete {
       padding: 0 4px;
+      flex: 0 0 auto;
     }
+
+    .combined-row__add-icon {
+      color: $success-color !important;
+    }
+
+    .combined-row__delete-icon {
+      color: $danger-color !important;
+    }
+
     .rule-row {
       display: flex;
       flex-direction: column;
       gap: 12px;
       padding-bottom: 20px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
       &:last-child {
         padding-bottom: 0;
         border-bottom: none;
       }
     }
+
+    @media (max-width: 1400px) {
+      .main-section {
+        gap: 0;
+      }
+
+      .collapse-center {
+        display: inline-flex;
+        flex: 0 0 60px;
+      }
+
+      .main-section.collapse-rule .rule-section,
+      .main-section.collapse-variable .variable-section {
+        display: block;
+        flex: 0 0 60px;
+        padding: 0;
+        opacity: 0.7;
+      }
+
+      .main-section.collapse-rule .rule-section {
+        border-right: none;
+      }
+
+      .main-section.collapse-variable .variable-section {
+        border-right: none;
+      }
+
+      .main-section.collapse-rule .variable-section,
+      .main-section.collapse-variable .rule-section {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding-right: 0;
+        opacity: 1;
+      }
+
+      .main-section.collapse-rule .rule-section .section__header,
+      .main-section.collapse-variable .variable-section .section__header {
+        justify-content: flex-start;
+      }
+
+      .main-section.collapse-rule .rule-section .section__title,
+      .main-section.collapse-variable .variable-section .section__title {
+        font-size: 12px;
+        letter-spacing: 2px;
+      }
+      .main-section.collapse-rule .rule-section .section__title-text,
+      .main-section.collapse-variable .variable-section .section__title-text {
+        display: none;
+      }
+      .main-section.collapse-rule .rule-section .section__title-lines,
+      .main-section.collapse-variable .variable-section .section__title-lines {
+        display: flex;
+      }
+
+      .main-section.collapse-rule .rule-section .section__body,
+      .main-section.collapse-variable .variable-section .section__body,
+      .main-section.collapse-rule .rule-section .section__add-btn,
+      .main-section.collapse-variable .variable-section .section__add-btn {
+        display: none;
+      }
+    }
+
     .rule-row__head,
     .variable-row {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
     }
+
     .rule-row__name,
     .variable-row__item {
       margin-bottom: 0;
       align-items: flex-start;
+      flex: 1 1 0;
     }
+
     .rule-row__type {
       width: 240px;
+
       .rule-row__delete {
         padding: 0 4px;
       }
     }
+
     .rule-row__body {
       display: flex;
       align-items: center;
       gap: 8px;
       justify-content: center;
     }
+
     .rule-row__select {
       min-width: 0;
     }
+
     .rule-row__default,
     .variable-row__combined {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
     }
+
     .default-cond-row {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .default-cond-row__relation {
       width: 100px !important;
     }
-    .default-cond-row__delete {
-      padding: 0 4px;
-    }
+
     .rule-row-simple {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      .rule-row__eq {
-        color: #fff;
-        opacity: 0.9;
+
+      .rule-row__select {
+        flex: 1 1 0;
+      }
+
+      // .rule-row__eq {
+      //   color: #fff;
+      //   opacity: 0.9;
+      // }
+    }
+
+    .collapse-hint {
+      margin-top: 8px;
+      height: 24px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      // justify-content: center;
+      gap: 6px;
+      padding-left: 10px;
+      color: $text-color-white-60;
+
+    }
+
+    .collapse-hint__icon,
+    .collapse-hint__arrow {
+      color: $primary-color;
+    }
+
+    .collapse-hint__icon {
+      color: $warning-color;
+    }
+
+    .collapse-hint__text {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .option-tooltip-row {
+      display: block;
+      width: 100%;
+    }
+
+    :deep(.option-tooltip-popper) {
+      max-width: 360px;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    @media (max-width: 1400px) {
+      .collapse-hint {
+        display: flex;
       }
     }
   }

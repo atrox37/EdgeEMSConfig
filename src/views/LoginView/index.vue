@@ -4,7 +4,7 @@
     <div ref="loginFormContainer" class="loginPage__form">
       <ModuleCard title="Monarch">
         <div class="loginPage__form-content">
-          <el-form :model="form" label-position="top" ref="formRef" :rules="formRules">
+          <el-form @keyup.enter="handleLogin(formRef)" :model="form" label-position="top" ref="formRef" :rules="formRules">
             <el-form-item label="Username" prop="username">
               <el-input v-model="form.username" />
             </el-form-item>
@@ -162,4 +162,5 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   height: 22px !important;
 }
 </style>
+
 

@@ -12,35 +12,38 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 .voltage-class {
   // Select ������ʽ
   .el-select {
-    width: 200px;
+    width: 180px;
 
     .el-select__wrapper {
       padding: 0 12px;
       height: 32px;
       background-color: $bg-color-input;
       border: 1px solid $border-color-base;
-      border-radius: 0;
+      border-radius: $border-radius-base;
       box-shadow: none;
       outline: none;
+      font-family: Arimo;
       transition: none;
       line-height: 32px;
-      font-size: 14px;
+      font-size: $font-size-base;
       min-height: unset;
+      color: $text-color-primary !important;
       .el-select__input {
         height: 32px;
+        line-height: 32px;
+        // padding: 0 12px;
       }
     }
-
-    &__placeholder {
-      color: $text-color-primary;
+    .el-select__placeholder{
+      color: $text-color-primary !important;
     }
     .el-select__suffix {
       gap: 6px;
       .el-icon {
         height: 14px;
         width: 14px;
-        font-size: 14px;
-        color: #000000 !important; // ��ɫͼ��
+        font-size: $font-size-base;
+        color: $text-color-primary !important; 
       }
     }
     .is-hovering:not(.is-focused) {
@@ -208,17 +211,18 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
       z-index: 1000;
       min-width: 150px;
       max-height: 320px;
-      padding: 20px 10px;
+      padding: 10px 10px;
       overflow-y: auto;
       border-radius: 0 !important;
-      background-color: transparent;
+      background-color: $bg-color-dark-2;
       box-shadow: none;
       z-index: 1000;
+      // filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.1));
 
       .el-dropdown-menu__item {
         display: flex;
         align-items: center;
-        padding: 0 10px;
+        padding: 5 10px;
         font-family: Arimo;
         font-weight: 500;
         font-style: Medium;
@@ -297,7 +301,6 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
   }
 }
 
-// ͨ�� Popper ��ʽ
 .el-popper.is-light {
   border-radius: 0 !important;
   background-color: transparent !important;

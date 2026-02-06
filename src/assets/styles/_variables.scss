@@ -125,18 +125,18 @@ $border-color-gray-lightest: #f0f0f0; // 最浅灰色边框
 $border-color-orange: rgba(255, 105, 0, 0.5); // 橙色边框
 $border-color-orange-light: rgba(255, 105, 0, 0.3); // 浅橙色边框
 
-// 滚动条颜色 - 浅色主题
-$scrollbar-track-bg: rgba(240, 240, 240, 0.5);
-$scrollbar-thumb-bg: rgba(200, 200, 200, 0.6);
-$scrollbar-thumb-hover-bg: rgba(180, 180, 180, 0.8);
-$scrollbar-thumb-dark: rgba(220, 220, 220, 0.5);
-$scrollbar-thumb-dark-hover: rgba(200, 200, 200, 0.7);
+// 滚动条颜色 - 浅色主题（更高透明度）
+$scrollbar-track-bg: rgba(240, 240, 240, 0.25);
+$scrollbar-thumb-bg: rgba(200, 200, 200, 0.35);
+$scrollbar-thumb-hover-bg: rgba(180, 180, 180, 0.55);
+$scrollbar-thumb-dark: rgba(220, 220, 220, 0.35);
+$scrollbar-thumb-dark-hover: rgba(200, 200, 200, 0.5);
 
 // 阴影 - 黑色和橙色主题
 $box-shadow-base: 0 2px 4px $black-alpha-12, 0 0 6px $black-alpha-04;
 $box-shadow-small: 0 8px 24px $black-alpha-28;
 $box-shadow-medium: 0 4px 10px 0 $black-alpha-25;
-$box-shadow-large: 3px 0 6px $black-alpha-06;
+$box-shadow-large: -6px 0 12px $black-alpha-12;
 $box-shadow-orange: 0 2px 8px rgba(255, 105, 0, 0.3);
 $box-shadow-orange-hover: 0 4px 12px rgba(255, 105, 0, 0.4);
 
@@ -190,8 +190,8 @@ $height-xl: 42px;
 $height-xxl: $size-xxl;
 
 // 宽度
-$width-scrollbar: 6px;
-$width-scrollbar-small: $size-sm;
+$width-scrollbar: 8px;
+$width-scrollbar-small: 8px;
 $width-input-base: 240px;
 $width-select-base: $width-input-base;
 $width-select-dropdown: 128px;
@@ -199,9 +199,9 @@ $width-select-min: 150px;
 $width-menu-collapse: 44px;
 
 // 圆角
-$border-radius-base: 0px;
 $border-radius-small: $size-xs;
-$border-radius-medium: 6px;
+$border-radius-base: 5px;
+$border-radius-medium: 8px;
 $border-radius-round: 20px;
 $border-radius-circle: 50%;
 
@@ -319,7 +319,7 @@ $dialog-overlay-bg: rgba(0, 0, 0, 0.3); // 浅色遮罩
 $dialog-bg: #ffffff; // 白色对话框背景
 $dialog-header-padding: 20px $size-lg;
 $dialog-body-padding: 0 20px;
-$dialog-footer-padding: 40px 0 20px 0;
+$dialog-footer-padding: 20px 0 10px 0;
 $dialog-footer-margin: 0 20px;
 $dialog-close-size: $size-xxl;
 $dialog-close-icon-size: $font-size-medium;
@@ -388,7 +388,7 @@ $tag-height: $size-lg;
 
 $scrollbar-width-base: $width-scrollbar;
 $scrollbar-width-small: $width-scrollbar-small;
-$scrollbar-border-radius: $border-radius-small;
+$scrollbar-border-radius: $width-scrollbar * 0.5;
 $scrollbar-transition: background 0.3s;
 
 // ==================== Popper 特定变量 ====================

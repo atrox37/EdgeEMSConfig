@@ -50,7 +50,7 @@ const router = useRouter()
 
 const filterRoutesList = computed(() => {
   const mainRoute = router.getRoutes().find((r) => r.name === 'main')
-  return mainRoute?.children || []
+  return (mainRoute?.children || []).filter((route) => !route.meta?.hidden)
 })
 
 const activeMenuPath = ref<string>('/channelConfiguration')
@@ -86,7 +86,7 @@ watch(
   width: 180px;
   transition: width $transition-base;
   &.collapse {
-    width: 44px;
+    width: 48px;
 
     .sidebar__nav {
       padding: 2px 2px 0 2px;

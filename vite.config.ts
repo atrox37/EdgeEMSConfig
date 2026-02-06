@@ -17,7 +17,10 @@ const host = process.env.TAURI_DEV_HOST
 export default defineConfig(() => ({
   plugins: [
     vue(),
-    vueDevTools(),
+    // 只在开发模式下启用 Vue DevTools（生产构建时禁用）
+    ...(process.env.NODE_ENV === 'development' || process.env.TAURI_DEBUG === 'true' 
+      ? [vueDevTools()] 
+      : []),
     AutoImport({
       imports: ['vue', 'vue-router', 'pinia'],
       resolvers: [ElementPlusResolver()],
@@ -68,7 +71,7 @@ export default defineConfig(() => ({
     },
     proxy: {
       '/api': {
-        target: 'http://192.168.30.21:6005',
+          target: 'http://192.168.30.21:6005',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -88,12 +91,12 @@ export default defineConfig(() => ({
         rewrite: (path) => path.replace(/^\/comApi/, ''),
       },
       '/ruleApi': {
-        target: 'http://192.168.30.21:6003',
+        target: 'http://192.168.30.21:6002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ruleApi/, ''),
       },
       '/modApi': {
-        target: 'http://192.168.30.21:6002',
+          target: 'http://192.168.30.21:6002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/modApi/, ''),
       },

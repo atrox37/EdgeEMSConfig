@@ -27,7 +27,6 @@
               </div>
             </div>
             <div class="config-section__tabs-wrapper">
-              <LoadingBg :loading="globalStore.loading">
                 <el-tabs
                   v-model="activeTab"
                   type="card"
@@ -49,6 +48,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :publish-mode="isPublish && activeTab === 'telemetry'"
                         :channelProtocol="channelProtocol"
                         @toggle-publish="togglePublishMode"
@@ -69,6 +69,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :channelProtocol="channelProtocol"
                       />
                     </template>
@@ -83,6 +84,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :publish-mode="isPublish && activeTab === 'signal'"
                         :channelProtocol="channelProtocol"
                         @toggle-publish="togglePublishMode"
@@ -103,6 +105,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :channelProtocol="channelProtocol"
                       />
                     </template>
@@ -117,6 +120,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :publish-mode="isPublish && activeTab === 'control'"
                         :channelProtocol="channelProtocol"
                         @toggle-publish="togglePublishMode"
@@ -137,6 +141,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :channelProtocol="channelProtocol"
                       />
                     </template>
@@ -155,6 +160,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :publish-mode="isPublish && activeTab === 'adjustment'"
                         :channelProtocol="channelProtocol"
                         @toggle-publish="togglePublishMode"
@@ -175,6 +181,7 @@
                         :view-mode="viewMode"
                         :edit-filters="editFilters"
                         :is-editing="isEditing"
+                        :loading="globalStore.loading"
                         :channelProtocol="channelProtocol"
                       />
                     </template>
@@ -197,7 +204,6 @@
                     </el-checkbox>
                   </el-checkbox-group>
                 </div>
-              </LoadingBg>
             </div>
           </div>
         </div>
@@ -244,7 +250,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import PointTablePoints from './PointTablePoints.vue'
 import PointTableMappings from './PointTableMappings.vue'
-import LoadingBg from '@/components/common/LoadingBg.vue'
 import tableSubmitIcon from '@/assets/icons/btn-submit.svg'
 // @ts-ignore - SVG导入类型问题
 const submitIcon: string = tableSubmitIcon
@@ -279,7 +284,6 @@ const channelProtocol = ref<'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_d
 const viewModeSwitch = ref(false) // false = points, true = mappings
 const viewMode = computed(() => (viewModeSwitch.value ? 'mappings' : 'points'))
 const editFilters = ref<string[]>([])
-const loading = computed(() => globalStore.loading)
 // Status 筛选器：使用 checkbox-group 但限制为单选
 const statusFilterValue = ref<string[]>([])
 // Status 筛选选项：根据 viewMode 显示不同选项

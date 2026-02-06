@@ -76,6 +76,7 @@ export interface RuleCard {
     | 'flow'
     | 'function-switch'
     | 'action-changeValue'
+    | 'action-periodDelta'
     | 'start'
     | 'end'
   description: string

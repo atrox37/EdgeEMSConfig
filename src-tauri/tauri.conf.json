@@ -20,11 +20,13 @@
         "minWidth": 1050,
         "minHeight": 630,
         "decorations": false,
-        "center": true
+        "center": true,
+        "dragDropEnabled": false,
+        "devtools": false
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://192.168.30.21:* http://localhost:* http://127.0.0.1:*; font-src 'self' asset: data:;",
+      "csp": "default-src 'self'; img-src 'self' asset: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://*:* http://localhost:* http://127.0.0.1:*; font-src 'self' asset: data:;",
       "pattern": {
         "use": "isolation",
         "options": {

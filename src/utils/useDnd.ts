@@ -1,4 +1,4 @@
-import { useVueFlow } from '@vue-flow/core'
+﻿import { useVueFlow } from '@vue-flow/core'
 import { ref, watch } from 'vue'
 import type { RuleCard } from '@/types/ruleConfiguration'
 

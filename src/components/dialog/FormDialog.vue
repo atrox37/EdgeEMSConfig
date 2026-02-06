@@ -8,7 +8,7 @@
     :append-to-body="appendToBody"
     @close="handleClose"
   >
-    <!-- dialog-head²å²Û£¬Ä¬ÈÏÏÔÊ¾±êÌâ -->
+    <!-- dialog-headï¿½ï¿½Û£ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ -->
     <template #header>
       <slot name="dialog-head">
         <div class="dialog-head">
@@ -18,12 +18,12 @@
       </slot>
     </template>
 
-    <!-- dialog-body²å²Û£¬Ä¬ÈÏÏÔÊ¾±íµ¥ÄÚÈÝ -->
+    <!-- dialog-bodyï¿½ï¿½Û£ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -->
     <template #default>
       <slot name="dialog-body"> </slot>
     </template>
 
-    <!-- dialog-footer²å²Û£¬Ä¬ÈÏÏÔÊ¾µ×²¿°´Å¥ -->
+    <!-- dialog-footerï¿½ï¿½Û£ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½×²ï¿½ï¿½ï¿½Å¥ -->
     <template #footer>
       <slot name="dialog-footer"> </slot>
     </template>
@@ -43,12 +43,12 @@ const emit = defineEmits<{
 
 const dialogVisible = ref(false)
 
-// ´¦Àí¹Ø±ÕÊÂ¼þ
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½ï¿½Â¼ï¿½
 const handleClose = () => {
   emit('close')
 }
 
-// ±©Â¶·½·¨ºÍÊôÐÔ
+// ï¿½ï¿½Â¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 defineExpose({
   dialogVisible,
 })

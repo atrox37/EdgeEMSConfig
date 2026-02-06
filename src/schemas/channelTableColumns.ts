@@ -1,0 +1,291 @@
+import type { PointInfo } from '@/types/channelConfiguration'
+import { FC_BY_POINT } from '@/validators/channelMappings'
+
+export interface PointColumn {
+  key: string
+  prop: string
+  label: string
+  minWidth: number
+  className: string
+  editor: 'input' | 'number' | 'select'
+  isEditable: boolean
+  fieldClassKey: string
+  errorKey: string
+  placeholder?: string
+  precision?: number
+  min?: number
+  max?: number
+  showOverflow?: boolean
+  canEdit?: (row: PointInfo) => boolean
+  getOptions?: (row: PointInfo) => Array<{ label: string; value: any }>
+  onChange?: (row: PointInfo) => void
+  onInput?: (row: PointInfo) => void
+  display: (row: PointInfo) => string
+}
+
+export interface MappingColumn {
+  key: string
+  prop: string
+  label: string
+  minWidth: number
+  className: string
+  editor: 'number' | 'select' | 'input'
+  fieldClassKey: string
+  errorKey: string
+  placeholder?: string
+  min?: number
+  max?: number
+  step?: number
+  popperClass?: string
+  disabled?: (row: PointInfo) => boolean
+  getOptions?: (row: PointInfo) => Array<{ label: string; value: any }>
+  getValue?: (row: PointInfo) => string
+  onChange?: (row: PointInfo) => void
+  onInput?: (row: PointInfo, val: string) => void
+  display: (row: PointInfo) => string
+}
+
+export function getPointColumns(options: {
+  isEditing: boolean
+  isTA: boolean
+  onFieldInput: (row: PointInfo, field: string) => void
+  canEditPointId: (row: PointInfo) => boolean
+}): PointColumn[] {
+  const base: PointColumn[] = [
+    {
+      key: 'point_id',
+      prop: 'point_id',
+      label: 'Point ID',
+      minWidth: 130,
+      className: 'point-id-column',
+      editor: 'number',
+      isEditable: true,
+      fieldClassKey: 'point_id',
+      errorKey: 'point_id',
+      min: 1,
+      precision: 0,
+      canEdit: options.canEditPointId,
+      onChange: (row) => options.onFieldInput(row, 'point_id'),
+      display: (row) => String(row.point_id),
+    },
+    {
+      key: 'signal_name',
+      prop: 'signal_name',
+      label: 'Point Name',
+      minWidth: 200,
+      className: 'signal-name-column',
+      editor: 'input',
+      isEditable: true,
+      fieldClassKey: 'signal_name',
+      errorKey: 'signal_name',
+      placeholder: 'Enter signal name',
+      showOverflow: true,
+      onInput: (row) => options.onFieldInput(row, 'signal_name'),
+      display: (row) => String(row.signal_name || ''),
+    },
+  ]
+
+  if (!options.isEditing) {
+    base.push({
+      key: 'value',
+      prop: 'value',
+      label: 'Value',
+      minWidth: 120,
+      className: 'value-column',
+      editor: 'input',
+      isEditable: false,
+      fieldClassKey: 'value',
+      errorKey: 'value',
+      display: (row) => String((row as any).value ?? '-'),
+    })
+  }
+
+  if (options.isTA) {
+    base.push(
+      {
+        key: 'scale',
+        prop: 'scale',
+        label: 'Scale',
+        minWidth: 80,
+        className: 'scale-column',
+        editor: 'number',
+        isEditable: true,
+        fieldClassKey: 'scale',
+        errorKey: 'scale',
+        min: 0,
+        onChange: (row) => options.onFieldInput(row, 'scale'),
+        display: (row) => String(row.scale ?? ''),
+      },
+      {
+        key: 'offset',
+        prop: 'offset',
+        label: 'Offset',
+        minWidth: 80,
+        className: 'offset-column',
+        editor: 'number',
+        isEditable: true,
+        fieldClassKey: 'offset',
+        errorKey: 'offset',
+        onChange: (row) => options.onFieldInput(row, 'offset'),
+        display: (row) => String(row.offset ?? ''),
+      },
+      {
+        key: 'unit',
+        prop: 'unit',
+        label: 'Unit',
+        minWidth: 80,
+        className: 'unit-column',
+        editor: 'input',
+        isEditable: true,
+        fieldClassKey: 'unit',
+        errorKey: 'unit',
+        placeholder: 'Enter unit',
+        onInput: (row) => options.onFieldInput(row, 'unit'),
+        display: (row) => String(row.unit ?? ''),
+      },
+    )
+  }
+
+  base.push({
+    key: 'reverse',
+    prop: 'reverse',
+    label: 'Reverse',
+    minWidth: 80,
+    className: 'reverse-column',
+    editor: 'select',
+    isEditable: true,
+    fieldClassKey: 'reverse',
+    errorKey: 'reverse',
+    getOptions: () => [
+      { label: 'true', value: true },
+      { label: 'false', value: false },
+    ],
+    onChange: (row) => options.onFieldInput(row, 'reverse'),
+    display: (row) => String(row.reverse ?? ''),
+  })
+
+  return base
+}
+
+export function getMappingColumns(options: {
+  channelProtocol: string
+  pointType: 'T' | 'S' | 'C' | 'A'
+  onMappingFieldChange: (row: PointInfo, field: string) => void
+  onFunctionCodeChange: (row: PointInfo) => void
+  getMappingDataTypeOptions: () => Array<{ label: string; value: any }>
+  getMappingRegisterAddressStr: (row: PointInfo) => string
+  onMappingRegisterAddressInput: (row: PointInfo, value: string) => void
+  onMappingDataTypeChange: (row: PointInfo) => void
+  getMappingByteOrderOptions: (row: PointInfo) => Array<{ label: string; value: any }>
+  canEditMappingBitPosition: (row: PointInfo) => boolean
+  getMappingFunctionCodeLabel: (fc: number | undefined) => string
+}): MappingColumn[] {
+  if (options.channelProtocol === 'di_do') {
+    return [
+      {
+        key: 'gpio_number',
+        prop: 'protocol_mapping.gpio_number',
+        label: 'GPIO Number',
+        minWidth: 120,
+        className: 'gpio-number-column',
+        editor: 'number',
+        fieldClassKey: 'mapping_gpio_number',
+        errorKey: 'gpio_number',
+        min: 1,
+        step: 1,
+        onChange: (row) => options.onMappingFieldChange(row, 'gpio_number'),
+        display: (row) => String((row.protocol_mapping as any)?.gpio_number ?? ''),
+      },
+    ]
+  }
+
+  return [
+    {
+      key: 'slave_id',
+      prop: 'protocol_mapping.slave_id',
+      label: 'Slave ID',
+      minWidth: 80,
+      className: 'slave-id-column',
+      editor: 'number',
+      fieldClassKey: 'mapping_slave_id',
+      errorKey: 'slave_id',
+      min: 0,
+      max: 999,
+      onChange: (row) => options.onMappingFieldChange(row, 'slave_id'),
+      display: (row) => String(row.protocol_mapping?.slave_id ?? ''),
+    },
+    {
+      key: 'function_code',
+      prop: 'protocol_mapping.function_code',
+      label: 'Function Code',
+      minWidth: 140,
+      className: 'function-code-column',
+      editor: 'select',
+      fieldClassKey: 'mapping_function_code',
+      errorKey: 'function_code',
+      getOptions: () =>
+        (FC_BY_POINT[options.pointType] || []).map((c) => ({ label: String(c), value: c })),
+      onChange: (row) => options.onFunctionCodeChange(row),
+      display: (row) => options.getMappingFunctionCodeLabel(row.protocol_mapping?.function_code),
+    },
+    {
+      key: 'register_address',
+      prop: 'protocol_mapping.register_address',
+      label: 'Register Address',
+      minWidth: 160,
+      className: 'register-address-column',
+      editor: 'input',
+      fieldClassKey: 'mapping_register_address',
+      errorKey: 'register_address',
+      placeholder: '0-65535',
+      getValue: (row) => options.getMappingRegisterAddressStr(row),
+      onInput: (row, val) => options.onMappingRegisterAddressInput(row, val),
+      display: (row) => String(row.protocol_mapping?.register_address ?? ''),
+    },
+    {
+      key: 'data_type',
+      prop: 'protocol_mapping.data_type',
+      label: 'Data Type',
+      minWidth: 140,
+      className: 'data-type-column',
+      editor: 'select',
+      fieldClassKey: 'mapping_data_type',
+      errorKey: 'data_type',
+      getOptions: () => options.getMappingDataTypeOptions(),
+      onChange: (row) => options.onMappingDataTypeChange(row),
+      display: (row) => String(row.protocol_mapping?.data_type ?? ''),
+    },
+    {
+      key: 'byte_order',
+      prop: 'protocol_mapping.byte_order',
+      label: 'Byte Order',
+      minWidth: 130,
+      className: 'byte-order-column',
+      editor: 'select',
+      fieldClassKey: 'mapping_byte_order',
+      errorKey: 'byte_order',
+      getOptions: (row) =>
+        options.getMappingByteOrderOptions(row).map((o: any) => ({
+          label: String(o.label ?? o.value),
+          value: o.value,
+        })),
+      onChange: (row) => options.onMappingFieldChange(row, 'byte_order'),
+      display: (row) => String(row.protocol_mapping?.byte_order ?? ''),
+    },
+    {
+      key: 'bit_position',
+      prop: 'protocol_mapping.bit_position',
+      label: 'Bit Position',
+      minWidth: 130,
+      className: 'bit-position-column',
+      editor: 'number',
+      fieldClassKey: 'mapping_bit_position',
+      errorKey: 'bit_position',
+      min: 0,
+      max: 15,
+      disabled: (row) => !options.canEditMappingBitPosition(row),
+      onChange: (row) => options.onMappingFieldChange(row, 'bit_position'),
+      display: (row) => String(row.protocol_mapping?.bit_position ?? ''),
+    },
+  ]
+}

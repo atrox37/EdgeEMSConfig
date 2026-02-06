@@ -5,7 +5,7 @@
     </div>
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
-        <!-- 移动端：筛选按钮和筛选标�?-->
+        <!-- 移动端：筛选按钮和筛选标?-->
         <div class="rule-management__filters-mobile">
           <div class="rule-management__filter-trigger-wrapper" ref="filterTriggerRef">
             <el-popover v-model:visible="showFilterPopover" placement="bottom-start" :width="300" trigger="click"
@@ -176,12 +176,11 @@
         </div>
       </div>
     </div>
-    <ChannelDetailDialog ref="ChannelDetailDialogRef" @submit="fetchTableData(true)"
-      @cancel="handleChannelDetailCancel" />
-
-    <!-- Points Tables 对话�?-->
-    <PointsTablesDialog ref="PointsTablesDialogRef" />
-
+    <ChannelDetailDialog
+      ref="channelDetailDialogRef"
+      @submit="handleChannelDialogSubmit"
+      @cancel="handleChannelDialogCancel"
+    />
   </div>
 </template>
 
@@ -193,13 +192,16 @@ import userAddIcon from '@/assets/icons/user-add.svg'
 import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import buttonDetailIcon from '@/assets/icons/button-detail.svg'
 import buttonPointsIcon from '@/assets/icons/button-point.svg'
-import ChannelDetailDialog from './components/ChannelDetailDialog.vue'
-import PointsTablesDialog from './components/PointsTablesDialog.vue'
 import { ChangeChannelEnabled } from '@/api/channelsManagement'
 import type { ChannelListItem } from '@/types/channelConfiguration'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import { ElMessage } from 'element-plus'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
+import { useRouter } from 'vue-router'
+import ChannelDetailDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/ChannelDetailDialog.vue'
+
+const router = useRouter()
+const channelDetailDialogRef = ref<InstanceType<typeof ChannelDetailDialog> | null>(null)
 
 const tableConfig: TableConfig = {
   listUrl: '/comApi/api/channels', // 使用 /comApi 前缀
@@ -222,8 +224,6 @@ filters.productName = ''
 filters.protocol = null
 filters.enabled = null
 filters.connected = null
-const ChannelDetailDialogRef = ref()
-const PointsTablesDialogRef = ref()
 const ruleManagementRef = ref<HTMLElement | null>(null)
 const showFilterPopover = ref(false)
 
@@ -335,18 +335,24 @@ watch(
 
 // 查看详情
 const handleDetail = (row: ChannelListItem) => {
-  ChannelDetailDialogRef.value?.open(row.id)
+  channelDetailDialogRef.value?.open(row.id)
 }
 
 // 添加通道
 const addChannel = () => {
-  ChannelDetailDialogRef.value?.open()
+  channelDetailDialogRef.value?.open(undefined)
 }
 
 // 处理 Points Tables
 const handlePointsTables = (row: ChannelListItem) => {
-  currentChannelId.value = row.id as number
-  PointsTablesDialogRef.value?.open(row.id as number, row.name, row.protocol)
+  router.push({
+    path: '/channelConfiguration/pointsTables',
+    query: {
+      id: row.id,
+      name: row.name,
+      protocol: row.protocol,
+    },
+  })
 }
 
 // 处理启用状态变�?
@@ -372,10 +378,14 @@ const handleEnabledChange = async (newState: boolean, row: ChannelListItem, inde
   }
 }
 
-// 通道详情弹窗取消
-const handleChannelDetailCancel = () => {
-  console.log('Channel detail cancelled')
+const handleChannelDialogSubmit = () => {
+  fetchTableData(true)
 }
+
+const handleChannelDialogCancel = () => {
+  // 取消时不做额外处理，保持列表状态
+}
+
 </script>
 
 <style scoped lang="scss">

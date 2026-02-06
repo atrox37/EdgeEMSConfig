@@ -15,7 +15,7 @@
         font-weight: $font-weight-bold;
         font-size: $font-size-large;
         max-width: 420px;
-        padding: $spacing-md;
+        // padding: $spacing-md;
         color: $text-color-primary;
         .el-message-box__title {
           font-size: $font-size-large;
@@ -27,7 +27,7 @@
           height: 14px;
           font-size: $font-size-medium;
           .el-icon.el-message-box__close {
-            color: #000000 !important; // ºÚÉ«Í¼±ê
+            color: #000000 !important; // ï¿½ï¿½É«Í¼ï¿½ï¿½
             top: $spacing-md;
             right: $spacing-md;
           }
@@ -37,9 +37,22 @@
         .el-message-box__container {
           gap: $spacing-md;
           .el-icon.el-message-box__status {
-            color: #000000 !important; // ºÚÉ«Í¼±ê
-            .el-message-box-icon--warning {
+            color: $text-color-primary !important;
+            &.el-message-box-icon--success {
               font-size: $size-lg;
+              color: $success-color !important;
+            }
+            &.el-message-box-icon--warning {
+              font-size: $size-lg;
+              color: $warning-color !important;
+            }
+            &.el-message-box-icon--error {
+              font-size: $size-lg;
+              color: $danger-color !important;
+            }
+            &.el-message-box-icon--info {
+              font-size: $size-lg;
+              color: $info-color !important;
             }
           }
           .el-message-box__message {
@@ -61,27 +74,57 @@
   padding: 11px 15px !important;
   border-width: 1px !important;
   border-radius: 4px !important;
-  &.el-message--error {
-    .el-message__content {
-      color: $danger-color-error !important;
-    }
-  }
+  background-color: $bg-color-dark-3 !important;
+  border-color: $border-color-gray-light !important;
   .el-icon.el-message__icon {
     font-size: 24px !important;
-    color: #000000 !important; // ºÚÉ«Í¼±ê
   }
   .el-message__content {
     font-size: $font-size-base !important;
     font-weight: $font-weight-normal !important;
-    color: #000000 !important; // ºÚÉ«ÎÄ×Ö
   }
   .el-icon.el-message__closeBtn {
     font-size: 16px !important;
-    color: #000000 !important; // ºÚÉ«Í¼±ê
   }
-  // µ÷ÕûµÚÒ»ÌõÏûÏ¢¾àÀë¶¥²¿µÄ¸ß¶È
+  &.el-message--success {
+    background-color: $success-color !important;
+    border-color: $success-color !important;
+    .el-icon.el-message__icon,
+    .el-message__content,
+    .el-icon.el-message__closeBtn {
+      color: $white-alpha-100 !important;
+    }
+  }
+  &.el-message--warning {
+    background-color: $warning-color !important;
+    border-color: $warning-color !important;
+    .el-icon.el-message__icon,
+    .el-message__content,
+    .el-icon.el-message__closeBtn {
+      color: $white-alpha-100 !important;
+    }
+  }
+  &.el-message--error {
+    background-color: $danger-color !important;
+    border-color: $danger-color !important;
+    .el-icon.el-message__icon,
+    .el-message__content,
+    .el-icon.el-message__closeBtn {
+      color: $white-alpha-100 !important;
+    }
+  }
+  &.el-message--info {
+    background-color: $info-color !important;
+    border-color: $info-color !important;
+    .el-icon.el-message__icon,
+    .el-message__content,
+    .el-icon.el-message__closeBtn {
+      color: $white-alpha-100 !important;
+    }
+  }
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ë¶¥ï¿½ï¿½ï¿½Ä¸ß¶ï¿½
   &:first-child {
-    top: 100px !important; // ¿ÉÒÔ¸ù¾ÝÐèÒªµ÷ÕûÕâ¸öÖµ£¬±ÈÈç 30px??0px ??  }
+    top: 100px !important; // ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 30px??0px ??  }
   }
 }
 

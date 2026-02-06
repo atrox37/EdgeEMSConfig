@@ -1,39 +1,37 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import type { RuleChain, Node, Edge } from '../types'
+import { ref, watch } from 'vue'
+import type { RuleChain } from '@/types/ruleConfiguration'
+import type { Node, Edge } from '@vue-flow/core'
 
 export const useRuleChainStore = defineStore('ruleChain', () => {
-  // 状态
   const ruleChains = ref<RuleChain[]>([])
   const nodes = ref<Node[]>([
-    {
-      id: 'start',
-      type: 'start',
-      position: { x: 100, y: 100 },
-      data: {
-        id: 'start',
-        name: 'START',
-        type: 'start',
-        label: 'START',
-        description: 'START',
-        config: { wires: { default: [] } },
-      },
-      deletable: false,
-    },
-    {
-      id: 'end',
-      type: 'end',
-      position: { x: 500, y: 100 },
-      data: {
-        id: 'end',
-        name: 'END',
-        type: 'end',
-        label: 'END',
-        description: 'END',
-        config: { wires: { default: [] } },
-      },
-      deletable: false,
-    },
+    // {
+    //   id: 'start',
+    //   type: 'start',
+    //   position: { x: 100, y: 100 },
+    //   data: {
+    //     id: 'start',
+    //     type: 'start',
+    //     label: 'START',
+    //     description: 'START',
+    //     config: { wires: { default: [] } },
+    //   },
+    //   deletable: false,
+    // },
+    // {
+    //   id: 'end',
+    //   type: 'end',
+    //   position: { x: 500, y: 100 },
+    //   data: {
+    //     id: 'end',
+    //     type: 'end',
+    //     label: 'END',
+    //     description: 'END',
+    //     config: { wires: { default: [] } },
+    //   },
+    //   deletable: false,
+    // },
   ])
   const edges = ref<Edge[]>([])
   const currentRuleChain = ref<RuleChain | null>(null)
@@ -41,15 +39,13 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
   const isLeftPanelCollapsed = ref(false)
   const hasUnsavedChanges = ref(false)
 
-  // 计算属性
-  const rootRuleChain = computed(() => ruleChains.value.find((chain) => chain.isRoot))
+  // 监控模式下的节点和边副本（用于记录拖拽等操作，不影响编辑模式）
+  const monitorNodes = ref<Node[]>([])
+  const monitorEdges = ref<Edge[]>([])
 
-  // 规则链管理方法
   const addRuleChain = (ruleChainData: Omit<RuleChain, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newRuleChain: RuleChain = {
       id: `chain-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       ...ruleChainData,
     }
     ruleChains.value.push(newRuleChain)
@@ -62,44 +58,39 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
       ruleChains.value[index] = {
         ...ruleChains.value[index],
         ...updates,
-        updatedAt: new Date().toISOString(),
       }
       hasUnsavedChanges.value = true
     }
   }
+
   watch(hasUnsavedChanges, (newVal) => {
     console.log('hasUnsavedChanges', newVal)
   })
+
   const deleteRuleChain = (id: string) => {
     const index = ruleChains.value.findIndex((chain) => chain.id === id)
     if (index !== -1) {
       ruleChains.value.splice(index, 1)
-      // 如果删除的是当前规则链，清空当前规则链
       if (currentRuleChain.value?.id === id) {
         currentRuleChain.value = null
       }
     }
   }
 
-  const getRuleChain = (id: string) => {
-    return ruleChains.value.find((chain) => chain.id === id)
-  }
+  const getRuleChain = (id: string) => ruleChains.value.find((chain) => chain.id === id)
 
   const setCurrentRuleChain = (ruleChain: RuleChain) => {
     currentRuleChain.value = ruleChain
   }
 
-  // 节点管理方法
   const addNodes = (node: Node[]) => {
     nodes.value.push(...node)
   }
 
-  // 边管理方法
   const addEdges = (edge: Edge[]) => {
     edges.value.push(...edge)
   }
 
-  // UI状态管理方法
   const toggleFullscreen = () => {
     isFullscreen.value = !isFullscreen.value
   }
@@ -110,48 +101,108 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
 
   const saveChanges = (newNodes: Node[], newEdges: Edge[]) => {
     hasUnsavedChanges.value = false
-    // 这里可以添加保存到后端的逻辑
-    console.log('Saving changes...')
     nodes.value = newNodes
     edges.value = newEdges
+    // 提交后同步更新监控模式副本
+    monitorNodes.value = JSON.parse(JSON.stringify(newNodes))
+    monitorEdges.value = JSON.parse(JSON.stringify(newEdges))
+  }
+
+  // 创建监控模式副本（从当前节点和边深拷贝）
+  const createMonitorSnapshot = () => {
+    monitorNodes.value = JSON.parse(JSON.stringify(nodes.value))
+    monitorEdges.value = JSON.parse(JSON.stringify(edges.value))
+  }
+
+  // 恢复监控模式副本到当前节点和边
+  const restoreMonitorSnapshot = () => {
+    if (monitorNodes.value.length > 0 || monitorEdges.value.length > 0) {
+      nodes.value = JSON.parse(JSON.stringify(monitorNodes.value))
+      edges.value = JSON.parse(JSON.stringify(monitorEdges.value))
+    }
+  }
+
+  // 更新监控模式下的节点和边
+  const updateMonitorNodes = (newNodes: Node[]) => {
+    monitorNodes.value = JSON.parse(JSON.stringify(newNodes))
+  }
+
+  const updateMonitorEdges = (newEdges: Edge[]) => {
+    monitorEdges.value = JSON.parse(JSON.stringify(newEdges))
   }
 
   const discardChanges = () => {
     hasUnsavedChanges.value = false
-    // 这里可以添加恢复原始状态的逻辑
-    console.log('Discarding changes...')
   }
 
-  // 导出规则链为JSON
-  const exportRuleChain = () => {
-    const ruleChainData = {
-      id: currentRuleChain.value?.id || `chain-${Date.now()}`,
-      name: currentRuleChain.value?.name || 'Untitled Rule Chain',
-      description: currentRuleChain.value?.description || '',
-      nodes: nodes.value.map((node) => ({
-        id: node.id,
-        type: node.type,
-        position: node.position,
-        data: node.data,
-      })),
-      edges: edges.value.map((edge) => ({
+  // 当规则详情为空时的初始化：仅包含 START 与 END 节点，edges 为空
+  const initDefaultGraph = () => {
+    nodes.value = [
+      {
+        id: 'start',
+        type: 'start',
+        position: { x: 100, y: 100 },
+        data: {
+          id: 'start',
+          type: 'start',
+          label: 'START',
+          description: 'START',
+          config: { wires: { default: [] } },
+        },
+        deletable: false,
+      },
+      {
+        id: 'end',
+        type: 'end',
+        position: { x: 500, y: 100 },
+        data: {
+          id: 'end',
+          type: 'end',
+          label: 'END',
+          description: 'END',
+          config: { wires: { default: [] } },
+        },
+        deletable: false,
+      },
+    ]
+    edges.value = []
+    hasUnsavedChanges.value = false
+  }
+
+  const exportRuleChain = (customNodes?: Node[], customEdges?: Edge[]) => {
+    // 如果传入了自定义的 nodes 和 edges，使用它们；否则使用 store 中的数据
+    const nodesToExport = customNodes || nodes.value
+    const edgesToExport = customEdges || edges.value
+
+    const flow_json = {
+      edges: edgesToExport.map((edge) => ({
         id: edge.id,
         source: edge.source,
         target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        label: edge.label,
-        type: edge.type,
+        ...(edge.sourceHandle ? { sourceHandle: edge.sourceHandle } : {}),
+        ...(edge.targetHandle ? { targetHandle: edge.targetHandle } : {}),
       })),
-      metadata: {
-        exportedAt: new Date().toISOString(),
-        version: '1.0.0',
-      },
+      nodes: nodesToExport.map((node) => {
+        return {
+          id: node.id,
+          type: node.type,
+          position: node.position,
+          ...(node.data ? { data: node.data } : {}),
+        }
+      }),
     }
-    return ruleChainData
+    return {
+      cooldown_ms: currentRuleChain.value?.cooldown_ms || 5000,
+      description: currentRuleChain.value?.description || '',
+      enabled: currentRuleChain.value?.enabled || true,
+      flow_json,
+      format: 'vue-flow',
+      id: currentRuleChain.value?.id || `chain-${Date.now()}`,
+      name: currentRuleChain.value?.name || 'Untitled Rule Chain',
+      priority: currentRuleChain.value?.priority || 100,
+    }
   }
 
-  // 清空所有数据
   const clearAll = () => {
     ruleChains.value = []
     nodes.value = []
@@ -160,8 +211,21 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
     hasUnsavedChanges.value = false
   }
 
+  /**
+   * 根据“亮起的节点”推断需要动画的边（一个统一样式）
+   * 规则：源节点和目标节点都在激活集合中的边视为“本次分支”的动画边
+   * 说明：外部只需传入激活节点列表（整条分支的节点集合），本函数返回应高亮的边ID列表
+   */
+  const inferAnimatedEdges = (activeNodeIds: string[] | Set<string>) => {
+    const active = new Set<string>(
+      Array.isArray(activeNodeIds) ? activeNodeIds : Array.from(activeNodeIds),
+    )
+    return edges.value
+      .filter((e) => active.has(String(e.source)) && active.has(String(e.target)))
+      .map((e) => String(e.id))
+  }
+
   return {
-    // 状态
     ruleChains,
     nodes,
     edges,
@@ -169,29 +233,26 @@ export const useRuleChainStore = defineStore('ruleChain', () => {
     isFullscreen,
     isLeftPanelCollapsed,
     hasUnsavedChanges,
-
-    // 计算属性
-    rootRuleChain,
-
-    // 规则链方法
+    monitorNodes,
+    monitorEdges,
     addRuleChain,
     updateRuleChain,
     deleteRuleChain,
     getRuleChain,
     setCurrentRuleChain,
-
-    // 节点方法
     addNodes,
-
-    // 边方法
     addEdges,
-
-    // UI方法
     toggleFullscreen,
     toggleLeftPanel,
     saveChanges,
     discardChanges,
+    initDefaultGraph,
     exportRuleChain,
     clearAll,
+    inferAnimatedEdges,
+    createMonitorSnapshot,
+    restoreMonitorSnapshot,
+    updateMonitorNodes,
+    updateMonitorEdges,
   }
 })

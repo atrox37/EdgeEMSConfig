@@ -1,79 +1,76 @@
 <template>
-  <FormDialog title="Device Instance Detail" width="800px" ref="dialogRef" @close="handleClose">
+  <FormDialog title="Device Instance Detail" width="800px" ref="dialogRef" @close="handleClose" style="height: 80%;">
     <template #dialog-body>
-      <div class="voltage-class instance-detail">
-        <!-- 基础信息 -->
-        <div class="instance-detail__basic-info">
-          <h3 class="instance-detail__section-title">Basic Information</h3>
-          <el-form
-            ref="formRef"
-            :model="form"
-            :rules="rules"
-            label-width="120px"
-            class="instance-detail__form"
+      <div class="voltage-class instance-detail-dialog">
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="instance-detail__form">
+          <LightCollapseCard
+            v-model="isBasicOpen"
+            title="Basic Information"
+            :collapsible="false"
+            class="instance-detail__card"
           >
-            <el-form-item v-if="!isCreateMode" label="Instance ID:" prop="instance_id">
-              <span class="instance-detail__readonly-text">{{ form.instance_id }}</span>
-            </el-form-item>
-            <el-form-item label="Instance Name:" prop="instance_name">
-              <el-input
+            <div class="instance-detail__section">
+              <el-form-item v-if="!isCreateMode" label="Instance ID:" prop="instance_id">
+                <span class="instance-detail__readonly-text">{{ form.instance_id }}</span>
+              </el-form-item>
+              <el-form-item label="Instance Name:" prop="instance_name">
+                <el-input v-if="isEditing" v-model="form.instance_name" placeholder="Please enter instance name" />
+                <span v-else class="instance-detail__readonly-text">{{ form.instance_name }}</span>
+              </el-form-item>
+
+              <el-form-item label="Product Name:" prop="product_name">
+                <!-- 新增时可选，修改时只读 -->
+                <el-select v-if="isCreateMode" v-model="form.product_name" placeholder="Please select product"
+                  filterable>
+                  <el-option v-for="product in props.productOptions" :key="product.value" :label="product.label"
+                    :value="product.value" />
+                </el-select>
+                <span v-else class="instance-detail__readonly-text">{{ form.product_name }}</span>
+              </el-form-item>
+            </div>
+          </LightCollapseCard>
+
+          <LightCollapseCard
+            v-model="isPropertiesOpen"
+            title="Properties"
+            auto-height
+            :collapsible="false"
+            class="instance-detail__card instance-detail__card--grow"
+          >
+            <template #actions>
+              <el-button
                 v-if="isEditing"
-                v-model="form.instance_name"
-                placeholder="Please enter instance name"
-              />
-              <span v-else class="instance-detail__readonly-text">{{ form.instance_name }}</span>
-            </el-form-item>
-
-            <el-form-item label="Product Name:" prop="product_name">
-              <!-- 新增时可选，修改时只读 -->
-              <el-select
-                v-if="isCreateMode"
-                v-model="form.product_name"
-                placeholder="Please select product"
-                filterable
+                type="primary"
+                size="small"
+                @click.stop="addPropertyAtTop"
+                circle
               >
-                <el-option
-                  v-for="product in props.productOptions"
-                  :key="product.value"
-                  :label="product.label"
-                  :value="product.value"
-                />
-              </el-select>
-              <span v-else class="instance-detail__readonly-text">{{ form.product_name }}</span>
-            </el-form-item>
-
-            <el-form-item label="Properties:">
+                <el-icon>
+                  <Plus />
+                </el-icon>
+              </el-button>
+            </template>
+            <div class="instance-detail__section instance-detail__section--full">
               <div class="instance-detail__properties">
                 <div class="instance-detail__properties-grid">
                   <!-- 编辑态：基于数组 editProperties 渲染，可编辑 key 与 value -->
                   <template v-if="isEditing">
-                    <div
-                      v-for="(prop, index) in editProperties"
-                      :key="`property-edit-${index}`"
-                      class="instance-detail__property-item"
-                    >
+                    <div v-if="!hasEditProperties" class="instance-detail__properties-empty">
+                      No properties yet. Click the plus button to add one.
+                    </div>
+                    <div v-for="(prop, index) in editProperties" :key="`property-edit-${index}`"
+                      class="instance-detail__property-item">
                       <div class="instance-detail__property-content">
                         <div class="instance-detail__property-key-container">
-                          <el-input
-                            v-model="prop.key"
-                            placeholder="Key"
-                            class="instance-detail__property-key-input"
-                          >
+                          <el-input v-model="prop.key" placeholder="Key" class="instance-detail__property-key-input">
                           </el-input>
                         </div>
                         <span class="instance-detail__property-separator">:</span>
-                        <div class="instance-detail__property-value-container">
-                          <el-input
-                            v-model="prop.value"
-                            placeholder="Value"
-                            class="instance-detail__property-value-input"
-                          >
+                        <div class="instance-detail__property-value-container instance-detail__property-value-box">
+                          <el-input v-model="prop.value" placeholder="Value"
+                            class="instance-detail__property-value-input">
                             <template #suffix>
-                              <el-button
-                                type="warning"
-                                @click="removePropertyByIndex(index)"
-                                circle
-                              >
+                              <el-button type="warning" @click="removePropertyByIndex(index)" circle>
                                 <el-icon>
                                   <Delete />
                                 </el-icon>
@@ -86,46 +83,36 @@
                   </template>
                   <!-- 只读态：基于对象 entries 渲染显示 key 与 value -->
                   <template v-else>
-                    <div
-                      v-for="(value, key) in form.properties"
-                      :key="`property-${key}`"
-                      class="instance-detail__property-item"
-                    >
+                    <div v-if="!hasProperties" class="instance-detail__properties-empty">
+                      No properties available.
+                    </div>
+                    <div v-for="(value, key) in form.properties" :key="`property-${key}`"
+                      class="instance-detail__property-item">
                       <div class="instance-detail__property-content">
                         <div class="instance-detail__property-key-container">
                           <span class="instance-detail__property-key">{{ key }}</span>
                         </div>
                         <span class="instance-detail__property-separator">:</span>
                         <div class="instance-detail__property-value-container">
-                          <span class="instance-detail__property-value">{{ value }}</span>
+                          <span class="instance-detail__property-value instance-detail__property-value-box">{{
+                            value
+                          }}</span>
                         </div>
                       </div>
                     </div>
                   </template>
                 </div>
               </div>
-              <el-button
-                v-if="isEditing"
-                type="primary"
-                size="small"
-                @click="addProperty('', '')"
-                style="margin-left: 10px"
-                circle
-              >
-                <el-icon>
-                  <Plus />
-                </el-icon>
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </div>
+            </div>
+          </LightCollapseCard>
+        </el-form>
       </div>
     </template>
 
     <template #dialog-footer>
       <el-button type="warning" @click="handleCancel">{{
         isCreateMode ? 'Cancel' : isEditing ? 'Cancel Edit' : 'Cancel'
-      }}</el-button>
+        }}</el-button>
       <el-button v-if="!isEditing" type="primary" @click="handleEdit"> Edit </el-button>
       <el-button v-else type="primary" @click="handleSubmit"> Submit </el-button>
     </template>
@@ -139,6 +126,7 @@ import { Delete, Plus } from '@element-plus/icons-vue'
 import { getInstanceDetail } from '@/api/devicesManagement'
 import type { DeviceInstanceDetail, AddDeviceInstanceDetail } from '@/types/deviceConfiguration'
 import { createInstance, updateInstance } from '@/api/devicesManagement'
+import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
 const props = defineProps<{
   productOptions: { label: string; value: string }[]
 }>()
@@ -147,8 +135,10 @@ const dialogRef = ref<any>()
 
 // 响应式数据
 const isEditing = ref(false)
-const currentInstanceId = ref<number | null>(null)
+const isBasicOpen = ref(true)
+const isPropertiesOpen = ref(true)
 const isCreateMode = computed(() => isEditing.value && form.value.instance_id === null)
+const didUpdate = ref(false)
 
 // 表单数据
 const form = ref<DeviceInstanceDetail>({
@@ -163,6 +153,18 @@ const editProperties = ref<Array<{ key: string; value: string | number }>>([])
 
 // 原始表单快照，用于取消编辑时恢复
 const originalFormSnapshot = ref<DeviceInstanceDetail | null>(null)
+const applyDetail = (detailData: DeviceInstanceDetail) => {
+  form.value = {
+    instance_id: detailData.instance_id,
+    instance_name: detailData.instance_name,
+    product_name: detailData.product_name,
+    properties: detailData.properties,
+  } as any
+  originalFormSnapshot.value = JSON.parse(JSON.stringify(form.value))
+}
+
+const hasProperties = computed(() => Object.keys(form.value.properties || {}).length > 0)
+const hasEditProperties = computed(() => editProperties.value.length > 0)
 
 // 表单验证规则
 const rules = {
@@ -174,25 +176,12 @@ const rules = {
   product_name: [{ required: true, message: 'Please select product', trigger: 'change' }],
 }
 
-// 添加属性
-const addProperty = (key: string, value: string | number) => {
-  if (isEditing.value) {
-    editProperties.value.push({ key, value })
-  } else {
-    form.value.properties[key] = value as string | number
-  }
+const addPropertyAtTop = () => {
+  if (!isEditing.value) return
+  editProperties.value.unshift({ key: '', value: '' })
 }
 
 // 删除属性
-const removeProperty = (key: string) => {
-  if (isEditing.value) {
-    const idx = editProperties.value.findIndex((p) => p.key === key)
-    if (idx > -1) editProperties.value.splice(idx, 1)
-  } else {
-    delete form.value.properties[key]
-  }
-}
-
 const removePropertyByIndex = (index: number) => {
   if (!isEditing.value) return
   editProperties.value.splice(index, 1)
@@ -204,6 +193,9 @@ const open = async (instanceIdOrNull: number | null) => {
   try {
     if (!instanceIdOrNull) {
       isEditing.value = true
+      isBasicOpen.value = true
+      isPropertiesOpen.value = true
+      didUpdate.value = false
       form.value = {
         instance_id: null,
         instance_name: '',
@@ -214,18 +206,11 @@ const open = async (instanceIdOrNull: number | null) => {
       originalFormSnapshot.value = JSON.parse(JSON.stringify(form.value))
     } else {
       isEditing.value = false
+      isBasicOpen.value = true
+      isPropertiesOpen.value = true
+      didUpdate.value = false
       const detailData = await getInstanceDetail(instanceIdOrNull)
-
-      // 填充表单数据
-      form.value = {
-        instance_id: detailData.data.instance.instance_id,
-        instance_name: detailData.data.instance.instance_name,
-        product_name: detailData.data.instance.product_name,
-        properties: detailData.data.instance.properties,
-      } as any
-
-      // 同步原始快照
-      originalFormSnapshot.value = JSON.parse(JSON.stringify(form.value))
+      applyDetail(detailData.data.instance)
     }
 
     nextTick(() => {
@@ -257,6 +242,10 @@ const handleCancel = () => {
     }
     editProperties.value = []
   } else {
+    if (didUpdate.value) {
+      emit('submit')
+      didUpdate.value = false
+    }
     close()
   }
 }
@@ -303,8 +292,10 @@ const handleSubmit = () => {
         if (res.success) {
           ElMessage.success('Device instance updated successfully')
           isEditing.value = false
-          emit('submit')
-          close()
+          didUpdate.value = true
+          const detailData = await getInstanceDetail(form.value.instance_id as number)
+          applyDetail(detailData.data.instance)
+          editProperties.value = []
         }
       }
 
@@ -323,6 +314,10 @@ const handleClose = () => {
     isEditing.value = false
     editProperties.value = []
   }
+  if (didUpdate.value) {
+    emit('submit')
+    didUpdate.value = false
+  }
   close()
 }
 
@@ -336,78 +331,107 @@ defineExpose({ open, close })
 </script>
 
 <style scoped lang="scss">
-.voltage-class .instance-detail {
-  //   max-height: 800px;
+@use '@/assets/styles/_variables.scss' as *;
+
+.voltage-class .instance-detail-dialog {
+  height: 100%;
   overflow-y: auto;
 
-  .instance-detail__section-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 10px;
-    // border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  .instance-detail__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
   }
 
-  .instance-detail__form {
-    .el-form-item {
-      // margin-bottom: 15px;
-      // margin-right: 20px;
-      align-items: flex-start !important;
-    }
+  .instance-detail__section {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 10px;
+  }
+
+  .instance-detail__section--full {
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .instance-detail__form-item {
+    width: calc(50% - 6px);
+    margin-right: 0;
+  }
+
+  :deep(.el-form-item) {
+    width: calc(50% - 6px);
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+
+  :deep(.el-input),
+  :deep(.el-input-number),
+  :deep(.el-select) {
+    width: 100% !important;
   }
 
   .instance-detail__readonly-text {
-    color: #fff;
+    color: $text-color-primary;
     font-size: 14px;
   }
+
   :deep(.el-form-item__content) {
     align-items: flex-start !important;
   }
+
   .instance-detail__properties {
-    max-height: 300px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: visible;
-    // border: 1px solid #dcdfe6;
-    // border-radius: 4px;
-    // padding: 10px;
-    background-color: transparent;
+    background-color: $white-alpha-05;
     position: relative;
-    border-top: 1px solid #e4e7ed;
-    border-bottom: 1px solid #e4e7ed;
-    // padding: 5px 0;
+    border: 1px solid $white-alpha-10;
+    border-radius: $border-radius-medium;
+    padding: 8px;
+
+    .instance-detail__properties-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
 
     .instance-detail__property-item {
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 5px;
-      // padding: 4px;
+      gap: 6px;
       background-color: transparent;
-      // border-radius: 3px;
-
       min-height: 32px;
       position: relative;
-      padding: 5px;
+      // padding: 6px 8px;
+      border-bottom: 1px dashed $white-alpha-10;
 
-      // &:last-child {
-      //   // padding-bottom: 5px;
-      //   border-bottom: 1px solid #e4e7ed;
-      // }
+      &:last-child {
+        border-bottom: none;
+      }
     }
 
     .instance-detail__property-content {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       flex: 1;
     }
 
     .instance-detail__property-key-container {
-      // flex: 0 0 120px; // 固定宽度，较小
+      width: 180px;
+      flex: 0 0 180px;
     }
 
     .instance-detail__property-value-container {
-      // flex: 1; // 占据剩余空间
+      flex: 1;
+      min-width: 0;
     }
 
     .instance-detail__property-key-input {
@@ -421,13 +445,12 @@ defineExpose({ open, close })
     .instance-detail__property-key,
     .instance-detail__property-value {
       font-size: 14px;
-      color: #fff;
+      color: $text-color-primary;
       word-break: break-all;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       display: block;
-      min-width: 240px;
     }
 
     .instance-detail__property-key {
@@ -435,12 +458,59 @@ defineExpose({ open, close })
     }
 
     .instance-detail__property-separator {
-      color: #fff;
-      font-weight: bold;
+      color: $text-color-secondary;
+      font-weight: 600;
       margin: 0 2px;
       flex-shrink: 0;
-      font-size: 16px;
+      font-size: 14px;
+    }
+
+    .instance-detail__property-value-box {
+      display: block;
+      padding: 4px 8px;
+      background: $white-alpha-05;
+      border: 1px solid $white-alpha-15;
+      border-radius: $border-radius-small;
+      color: $text-color-primary;
+    }
+
+    .instance-detail__properties-empty {
+      padding: 10px 8px;
+      font-size: 13px;
+      color: $text-color-secondary;
     }
   }
+
+  .instance-detail__card {
+    display: block;
+  }
+
+  .instance-detail__card--grow {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    :deep(.light-collapse-card) {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :deep(.light-collapse-card__body) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    :deep(.light-collapse-card__body-inner) {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
 }
 </style>

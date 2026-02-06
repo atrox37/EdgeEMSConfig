@@ -34,6 +34,28 @@ export const staticRoutes: RouteRecordRaw[] = [
         },
       },
       {
+        path: '/channelConfiguration/detail',
+        name: 'channelDetail',
+        component: () =>
+          import('@/views/Setting/Configuration/ChannelConfiguration/Detail.vue'),
+        meta: {
+          title: 'Channel Detail',
+          activeNav: '/channelConfiguration',
+          hidden: true, // 不在侧边栏显示
+        },
+      },
+      {
+        path: '/channelConfiguration/pointsTables',
+        name: 'channelPointsTables',
+        component: () =>
+          import('@/views/Setting/Configuration/ChannelConfiguration/PointsTables.vue'),
+        meta: {
+          title: 'Points Tables',
+          activeNav: '/channelConfiguration',
+          hidden: true, // 不在侧边栏显示
+        },
+      },
+      {
         path: '/modelConfiguration',
         name: 'modelConfiguration',
         component: () =>
@@ -42,6 +64,17 @@ export const staticRoutes: RouteRecordRaw[] = [
           title: 'Model Config',
           activeNav: '/modelConfiguration',
           icon: InstanceIcon,
+        },
+      },
+      {
+        path: '/modelConfiguration/pointsTables',
+        name: 'devicePointsTables',
+        component: () =>
+          import('@/views/Setting/Configuration/DeviceConfiguration/PointsTables.vue'),
+        meta: {
+          title: 'Points Tables',
+          activeNav: '/modelConfiguration',
+          hidden: true,
         },
       },
       {
@@ -56,7 +89,7 @@ export const staticRoutes: RouteRecordRaw[] = [
         },
         children: [
           {
-            path: 'ruleChainEditor',
+            path: 'ruleChainEditor/:id',
             name: 'ruleChainEditor',
             component: () =>
               import(

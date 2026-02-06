@@ -12,13 +12,10 @@
       backdrop-filter: $backdrop-blur-base;
       gap: $spacing-md;
       font-size: $font-size-medium;
-      height: 60px;
-      line-height: 60px;
-      min-height: 60px;
       color: $text-color-primary;
       font-weight: $font-weight-semibold;
       .el-collapse-item__title {
-        padding-left: 30px;
+        padding-left: 10px;
       }
       .el-collapse-item__header-text {
         color: $text-color-primary;
@@ -70,7 +67,7 @@
                 height: $height-lg;
                 line-height: $height-lg;
                 padding: 0 $spacing-md;
-                min-width: 100px;
+                // min-width: 100px;
                 border-left: $border-width-base solid $border-color-gray-light;
                 border-bottom: $border-width-base solid transparent;
                 // background-color: $bg-color-transparent-white-10;

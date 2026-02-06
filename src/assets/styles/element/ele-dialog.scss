@@ -1,8 +1,8 @@
 @use "@/assets/styles/_variables.scss" as *;
-// 弹窗主体样式（包含表单弹窗样式和全屏弹窗样式�?
+// 弹窗主体样式（包含表单弹窗样式和全屏弹窗样式�?
 
 // .voltage-class {
-  // 弹窗遮罩�?
+  // 弹窗遮罩�?
   .el-overlay {
     // height: calc(100% + 40px);
     // width: calc(100% + 40px);
@@ -22,7 +22,7 @@
       justify-content: center;
     }
 
-    // 普通弹窗样�?
+    // 普通弹窗样式
     .el-dialog {
       padding: $spacing-md;
       margin: 0 !important;
@@ -33,11 +33,13 @@
       border: $border-width-base solid;
       border-image: $border-gradient-base 1;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
 
       // 弹窗头部
       .el-dialog__header {
         background: transparent;
-        padding: 20px 24px;
+        padding: 10px 24px 20px 24px;
         border-bottom: none;
         position: relative;
 
@@ -59,6 +61,8 @@
           align-items: center;
           justify-content: center;
           transition: all $transition-fast;
+          width: unset;
+          height: unset;
 
           .el-dialog__close {
             color: $text-color-primary;
@@ -69,6 +73,7 @@
       }
       .el-dialog__body {
         padding: 0 20px;
+        flex: 1 1 auto;
         background: transparent;
         min-height: 0;
 
@@ -99,7 +104,7 @@
             }
           }
         }
-        // 滚动条样�?
+        // 滚动条样�?
         &::-webkit-scrollbar {
           width: 6px;
         }
@@ -164,7 +169,7 @@
     }
 
     .el-dialog__headerbtn {
-      top: 5px;
+      top: -5px;
       right: 15px;
       height: 48px;
       width: 48px;
@@ -193,7 +198,7 @@
       padding: 24px 24px 12px;
     }
 
-    // 滚动条样�?
+    // 滚动条样�?
     &::-webkit-scrollbar {
       width: $width-scrollbar;
     }
@@ -223,7 +228,7 @@
   // }
 }
 
-// 更新弹框主题色适配（不依赖 .voltage-class�?
+// 更新弹框主题色适配（不依赖 .voltage-class�?
 .el-dialog.update-dialog {
   background: $dialog-bg;
   border: $border-width-base solid;

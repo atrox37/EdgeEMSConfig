@@ -14,13 +14,13 @@
       <div class="header__right-weather">
         <img :src="sunIcon" alt="sunIcon" class="header__right-weatherIcon" />
         <div class="header__right-weatherStatus">wind</div>
-        <div class="header__right-weatherValue">67¨H~79¨H</div>
+        <div class="header__right-weatherValue">67ï¿½H~79ï¿½H</div>
       </div>
 
       <div class="header__right-avatar">
         <el-dropdown @command="handleUserCommand" trigger="click">
           <div class="header__user">
-            <!-- Í·ÏñÍ¼Æ¬ÎÞ·¨ÏÔÊ¾µÄ³£¼ûÔ­ÒòÓÐ£ºÂ·¾¶Ð´·¨²»¶Ô¡¢Í¼Æ¬Î´±»ÕýÈ·ÒýÈë¡¢´ò°üºóÂ·¾¶¶ªÊ§µÈ¡£ÍÆ¼öÓÃimport·½Ê½ÒýÈëÍ¼Æ¬×ÊÔ´¡£ -->
+            <!-- Í·ï¿½ï¿½Í¼Æ¬ï¿½Þ·ï¿½ï¿½ï¿½Ê¾ï¿½Ä³ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½Ð£ï¿½Â·ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½Ô¡ï¿½Í¼Æ¬Î´ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ë¡¢ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½Ê§ï¿½È¡ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½importï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½Ô´ï¿½ï¿½ -->
             <!-- <el-avatar  :src="userStore.userInfo?.avatar" class="header__user-avatar" /> -->
             <!-- <el-avatar :src="headerAvatar" class="header__user-avatar" /> -->
             <div class="header__user-avatar">
@@ -54,41 +54,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 
-// ÕýÈ·ÒýÈëÍ·ÏñÍ¼Æ¬£¬È·±£Â·¾¶ÎÞÎó£¬ÍÆ¼öÓÃimport·½Ê½
-import headerAvatar from '@/assets/images/header-avatar.png'
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import noticeIcon from '@/assets/icons/notice.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
 import sunIcon from '@/assets/icons/sunny.svg'
 
-const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
 const globalStore = useGlobalStore()
 
-// Ãæ°üÐ¼µ¼º½
-const breadcrumbItems = computed(() => {
-  const items = [{ title: 'Ê×Ò³', path: '/dashboard' }]
 
-  if (route.meta?.title) {
-    items.push({ title: route.meta.title as string, path: route.path })
-  }
-
-  return items
-})
-
-// ÇÐ»»Í¨Öª
+// ï¿½Ð»ï¿½Í¨Öª
 const toggleNotifications = () => {
   router.push({ name: 'alarmCurrentRecords' })
 }
 
-// ÓÃ»§²Ù×÷
+// ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½
 const handleUserCommand = async (command: string) => {
   switch (command) {
     case 'logout':

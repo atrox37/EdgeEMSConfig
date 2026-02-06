@@ -25,6 +25,7 @@
       <div class="custom-node__icon" :class="`icon--${data.type}`">
         <img :src="fenzhiIcon" v-if="data.type === 'function-switch'" />
         <img :src="chongzhiIcon" v-else-if="data.type === 'action-changeValue'" />
+        <img :src="chongzhiIcon" v-else-if="data.type === 'action-periodDelta'" />
       </div>
       <div class="custom-node__info">
         <div class="custom-node__name">{{ data.label }}</div>
@@ -131,11 +132,16 @@ watch(
     &--action-changeValue {
       background-color: #4fc3f7; // soft sky blue
     }
+    &--action-periodDelta {
+      background-color: #ffb74d; // bright amber
+    }
 
     &--function-switch .custom-node__name,
     &--function-switch .custom-node__description,
     &--action-changeValue .custom-node__name,
-    &--action-changeValue .custom-node__description {
+    &--action-changeValue .custom-node__description,
+    &--action-periodDelta .custom-node__name,
+    &--action-periodDelta .custom-node__description {
       color: #ffffff;
     }
 
@@ -144,6 +150,9 @@ watch(
     }
     .icon--action-changeValue {
       background-color: #29b6f6; // sky blue tile
+    }
+    .icon--action-periodDelta {
+      background-color: #ffa726; // amber tile
     }
 
     &__handle {

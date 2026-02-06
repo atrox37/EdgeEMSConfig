@@ -1,103 +1,90 @@
-<template>
-  <div class="system-config">
-    <div class="system-config__header">
-      <h2 class="system-config__title">System Config</h2>
+﻿<template>
+  <div class="system-configuration">
+    <div class="system-configuration__header">
+      <h2 class="system-configuration__title">System Config</h2>
     </div>
 
-    <div class="system-config__content">
-      <!-- 配置文件管理区域 -->
-      <el-card class="system-config__card">
+    <div class="system-configuration__content">
+      <el-card class="system-configuration__card system-configuration__card--fixed">
         <template #header>
-          <div class="system-config__card-header">
+          <div class="system-configuration__card-header">
             <span>Configuration File Management</span>
           </div>
         </template>
-        <div class="system-config__card-body">
-          <div class="system-config__actions">
+        <div class="system-configuration__card-body">
+          <div class="system-configuration__actions">
             <el-button type="primary" @click="handleConfigImport" :loading="configImportLoading">
-              Import Configuration
+              Import Configuration (.zip)
             </el-button>
             <el-button type="primary" @click="handleConfigExport" :loading="configExportLoading">
-              Export Configuration
+              Export Configuration (.zip)
             </el-button>
           </div>
-          <p class="system-config__hint">Only .zip files are supported</p>
         </div>
       </el-card>
 
-      <!-- 升级包上传区�?-->
-      <el-card class="system-config__card">
+      <el-card
+        class="system-configuration__card"
+        :class="{ 'system-configuration__card--expand': upgradeStatusVisible }"
+      >
         <template #header>
-          <div class="system-config__card-header">
+          <div class="system-configuration__card-header">
             <span>Firmware Upgrade</span>
           </div>
         </template>
-        <div class="system-config__card-body">
-          <div class="system-config__upload-section">
-            <el-upload
-              ref="upgradeUploadRef"
-              class="system-config__upload"
-              :auto-upload="false"
-              :on-change="handleUpgradeFileChange"
-              :on-remove="handleUpgradeFileRemove"
-              accept=".zip"
-              :limit="1"
-              :file-list="upgradeFileList"
-            >
-              <template #trigger>
-                <el-button type="primary">Select Upgrade Package</el-button>
-              </template>
-              <template #tip>
-                <div class="el-upload__tip">Only .zip files are supported</div>
-              </template>
-            </el-upload>
-
-            <el-button
-              v-if="upgradeFileList.length > 0"
-              type="primary"
-              @click="handleUpgradeUpload"
-              :loading="upgradeUploadLoading"
-              :disabled="upgradeUploadLoading"
-              class="system-config__upload-btn"
-            >
-              Upload Upgrade Package
-            </el-button>
-          </div>
-
-          <!-- 上传日志区域 -->
-          <div v-if="upgradeLogs.length > 0 || upgradeUploadLoading" class="system-config__logs">
-            <div class="system-config__logs-header">
-              <span>Upload Logs</span>
-              <el-button
-                v-if="!upgradeUploadLoading"
-                type="text"
-                size="small"
-                @click="clearUpgradeLogs"
+        <div class="system-configuration__card-body">
+          <div class="system-configuration__upload-section">
+            <div class="system-configuration__upload-actions">
+              <el-upload
+                ref="upgradeUploadRef"
+                class="system-configuration__upload"
+                :auto-upload="false"
+                :on-change="handleUpgradeFileChange"
+                :on-remove="handleUpgradeFileRemove"
+                accept=".run"
+                :limit="1"
+                :file-list="upgradeFileList"
+                :show-file-list="false"
               >
-                Clear
+                <template #trigger>
+                  <el-button type="primary" :loading="upgradeUploadLoading">
+                    Upload Upgrade Package (.run)
+                  </el-button>
+                </template>
+              </el-upload>
+
+              <el-button
+                v-if="upgradeUploadLoading"
+                type="danger"
+                plain
+                @click="handleUpgradeAbort"
+                :disabled="upgradeAbortLoading"
+              >
+                Abort Upgrade
               </el-button>
             </div>
-            <div class="system-config__logs-content">
-              <div
-                v-for="(log, index) in upgradeLogs"
-                :key="index"
-                class="system-config__log-item"
-                :class="`log-${log.type}`"
-              >
-                <span class="system-config__log-time">{{ log.time }}</span>
-                <span class="system-config__log-message">{{ log.message }}</span>
+
+            <div v-if="upgradeProgressVisible" class="system-configuration__upload-progress">
+              <el-progress :percentage="upgradeUploadProgress" :stroke-width="6" />
+              <div class="system-configuration__upload-progress-text">
+                {{ upgradeUploadProgressText }}
               </div>
-              <div v-if="upgradeUploadLoading" class="system-config__log-item log-info">
-                <span class="system-config__log-time">{{ currentTime }}</span>
-                <span class="system-config__log-message">Uploading... {{ upgradeProgress }}%</span>
-              </div>
+            </div>
+          </div>
+
+          <div v-if="upgradeStatusVisible" class="system-configuration__upgrade-status">
+            <div class="system-configuration__upgrade-status-header">
+              <span>Upgrade Logs</span>
+            </div>
+            <div ref="upgradeStatusBodyRef" class="system-configuration__upgrade-status-body">
+              <!-- <div class="system-configuration__upgrade-status-message">{{ upgradeStatusMessage }}</div> -->
+              <pre v-if="upgradeStatusLog" class="system-configuration__upgrade-status-log">{{ upgradeStatusLog }}</pre>
             </div>
           </div>
         </div>
       </el-card>
     </div>
 
-    <!-- 隐藏的文件输�?-->
     <input
       ref="configFileInputRef"
       type="file"
@@ -109,62 +96,110 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox, type UploadFile, type UploadFiles } from 'element-plus'
-import { Request } from '@/utils/request'
+import {
+  abortUpgrade,
+  cancelUpgradeUpload,
+  downloadConfigExport,
+  getUpgradeStatus,
+  importConfigFile,
+  uploadUpgradePackage,
+} from '@/api/systemConfig'
 
-// 配置文件相关
 const configFileInputRef = ref<HTMLInputElement>()
 const configImportLoading = ref(false)
 const configExportLoading = ref(false)
 
-// 升级包相�?
 const upgradeUploadRef = ref()
 const upgradeFileList = ref<UploadFile[]>([])
 const upgradeUploadLoading = ref(false)
-const upgradeProgress = ref(0)
-const upgradeLogs = ref<Array<{ time: string; message: string; type: 'info' | 'success' | 'error' }>>([])
+const upgradeAbortLoading = ref(false)
+const upgradeStatusVisible = ref(false)
+// const upgradeStatusMessage = ref('')
+const upgradeStatusLog = ref('')
+const upgradeStatusBodyRef = ref<HTMLElement | null>(null)
+const upgradeStatusTimer = ref<number | null>(null)
+const upgradeStatusPolling = ref(false)
+const upgradeUploadProgress = ref(0)
+const upgradeUploadProgressText = ref('')
+const upgradeProgressVisible = ref(false)
+const upgradeAbortTriggered = ref(false)
 
-// 当前时间格式�?
-const currentTime = ref('')
-
-// 更新当前时间
-const updateCurrentTime = () => {
-  const now = new Date()
-  currentTime.value = now.toLocaleTimeString('en-US', { hour12: false })
+const resetUpgradeSelection = () => {
+  upgradeUploadRef.value?.clearFiles?.()
+  upgradeFileList.value = []
 }
 
-// 定时更新当前时间
-let timeInterval: NodeJS.Timeout | null = null
+const resetUpgradeProgress = () => {
+  upgradeUploadProgress.value = 0
+  upgradeUploadProgressText.value = ''
+  upgradeProgressVisible.value = false
+}
 
-// 添加日志
-const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
-  updateCurrentTime()
-  upgradeLogs.value.push({
-    time: currentTime.value,
-    message,
-    type,
-  })
-  // 自动滚动到底�?
-  setTimeout(() => {
-    const logsContent = document.querySelector('.system-config__logs-content')
-    if (logsContent) {
-      logsContent.scrollTop = logsContent.scrollHeight
+const clearUpgradeStatus = () => {
+  // upgradeStatusMessage.value = ''
+  upgradeStatusLog.value = ''
+}
+
+const clearUpgradeStatusTimer = () => {
+  if (upgradeStatusTimer.value !== null) {
+    clearTimeout(upgradeStatusTimer.value)
+    upgradeStatusTimer.value = null
+  }
+}
+
+const stopUpgradeStatusPolling = () => {
+  upgradeStatusPolling.value = false
+  clearUpgradeStatusTimer()
+}
+
+const startUpgradeStatusPolling = () => {
+  clearUpgradeStatusTimer()
+  upgradeStatusVisible.value = true
+  upgradeStatusPolling.value = true
+  const fetchStatus = async () => {
+    if (!upgradeStatusPolling.value) return
+    try {
+      const res = await getUpgradeStatus()
+      if (res?.success) {
+        const data = res.data || {}
+        const status = String(data.status || '').toLowerCase()
+        // upgradeStatusMessage.value = status === 'finished' ? 'Upgrade finished' : ''
+        upgradeStatusLog.value = String(data.log_preview || '')
+        if (status === 'finished') {
+          stopUpgradeStatusPolling()
+          upgradeUploadLoading.value = false
+          resetUpgradeProgress()
+          ElMessage.success('Upgrade finished')
+          return
+        }
+      }
+    } catch (error: any) {
+      // upgradeStatusMessage.value = ''
     }
-  }, 100)
+    if (upgradeStatusPolling.value) {
+      upgradeStatusTimer.value = window.setTimeout(fetchStatus, 2000)
+    }
+  }
+  void fetchStatus()
 }
 
-// 清除日志
-const clearUpgradeLogs = () => {
-  upgradeLogs.value = []
-}
+watch(upgradeStatusLog, async () => {
+  await nextTick()
+  const container = upgradeStatusBodyRef.value
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+})
 
-// 配置文件导入
 const handleConfigImport = () => {
+  if (configFileInputRef.value) {
+    configFileInputRef.value.value = ''
+  }
   configFileInputRef.value?.click()
 }
 
-// 配置文件文件选择处理
 const handleConfigFileSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
@@ -180,12 +215,7 @@ const handleConfigFileSelect = async (event: Event) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    // TODO: 替换为实际的导入API接口
-    const response = await Request.post('/api/v1/system/config/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await importConfigFile(formData)
 
     if (response.success) {
       ElMessage.success('Configuration imported successfully')
@@ -197,19 +227,16 @@ const handleConfigFileSelect = async (event: Event) => {
     ElMessage.error(error.message || 'Import failed')
   } finally {
     configImportLoading.value = false
-    // 重置文件输入
     if (configFileInputRef.value) {
       configFileInputRef.value.value = ''
     }
   }
 }
 
-// 配置文件导出
 const handleConfigExport = async () => {
   try {
     configExportLoading.value = true
-    // TODO: 替换为实际的导出API接口
-    await Request.download('/api/v1/system/config/export', {}, `system_config_${Date.now()}.zip`)
+    await downloadConfigExport(`system_config_${Date.now()}.zip`)
   } catch (error: any) {
     console.error('Export failed:', error)
     ElMessage.error(error.message || 'Export failed')
@@ -218,23 +245,22 @@ const handleConfigExport = async () => {
   }
 }
 
-// 升级包文件变化处�?
 const handleUpgradeFileChange = (file: UploadFile, fileList: UploadFiles) => {
-  if (file.raw && !file.raw.name.toLowerCase().endsWith('.zip')) {
-    ElMessage.error('Only .zip files are supported')
-    upgradeFileList.value = []
+  if (file.raw && !file.raw.name.toLowerCase().endsWith('.run')) {
+    ElMessage.error('Only .run files are supported')
+    resetUpgradeSelection()
     return
   }
-  upgradeFileList.value = fileList
+  upgradeFileList.value = fileList.slice(-1)
+  if (upgradeFileList.value.length > 0 && !upgradeUploadLoading.value) {
+    void handleUpgradeUpload()
+  }
 }
 
-// 升级包文件移除处�?
 const handleUpgradeFileRemove = () => {
-  upgradeFileList.value = []
-  clearUpgradeLogs()
+  resetUpgradeSelection()
 }
 
-// 升级包上�?
 const handleUpgradeUpload = async () => {
   if (upgradeFileList.value.length === 0) {
     ElMessage.warning('Please select an upgrade package file')
@@ -247,13 +273,12 @@ const handleUpgradeUpload = async () => {
     return
   }
 
-  if (!file.name.toLowerCase().endsWith('.zip')) {
-    ElMessage.error('Only .zip files are supported')
+  if (!file.name.toLowerCase().endsWith('.run')) {
+    ElMessage.error('Only .run files are supported')
     return
   }
 
   try {
-    // 确认上传
     await ElMessageBox.confirm(
       `Are you sure you want to upload the upgrade package: ${file.name}?`,
       'Confirm Upload',
@@ -265,192 +290,202 @@ const handleUpgradeUpload = async () => {
     )
 
     upgradeUploadLoading.value = true
-    upgradeProgress.value = 0
-    clearUpgradeLogs()
-    
-    // 开始定时更新时间和进度显示
-    timeInterval = setInterval(() => {
-      updateCurrentTime()
-    }, 1000)
+    upgradeAbortTriggered.value = false
+    upgradeStatusVisible.value = true
+    clearUpgradeStatus()
+    resetUpgradeProgress()
+    upgradeProgressVisible.value = true
+    upgradeUploadProgressText.value = 'Uploading... 0%'
 
-    addLog(`Starting upload: ${file.name}`, 'info')
-    addLog(`File size: ${(file.size / 1024 / 1024).toFixed(2)} MB`, 'info')
-
-    // TODO: 替换为实际上传API接口
-    const response = await Request.upload<any>(
-      '/api/v1/system/upgrade/upload',
-      file,
-      {},
-      {
-        onUploadProgress: (evt: any) => {
-          const total = evt.total || 0
-          const loaded = evt.loaded || 0
-          const percent = total > 0 ? Math.round((loaded / total) * 100) : 0
-          upgradeProgress.value = percent
-          addLog(`Upload progress: ${percent}%`, 'info')
-        },
-      }
-    )
+    const response = await uploadUpgradePackage(file, {
+      onUploadProgress: (event: any) => {
+        if (!event?.total) return
+        const percent = Math.min(100, Math.round((event.loaded / event.total) * 100))
+        upgradeUploadProgress.value = percent
+        upgradeUploadProgressText.value = `Uploading... ${percent}%`
+      },
+    })
 
     if (response.success) {
-      addLog('Upload completed successfully', 'success')
-      addLog(`Response: ${JSON.stringify(response.data || response)}`, 'info')
-      ElMessage.success('Upgrade package uploaded successfully')
-      upgradeFileList.value = []
+      ElMessage.success(response.message || 'Upgrade task started')
+      upgradeProgressVisible.value = false
+      startUpgradeStatusPolling()
+      resetUpgradeSelection()
     } else {
-      addLog(`Upload failed: ${response.message || 'Unknown error'}`, 'error')
       ElMessage.error(response.message || 'Upload failed')
+      stopUpgradeStatusPolling()
+      upgradeUploadLoading.value = false
+      resetUpgradeProgress()
     }
   } catch (error: any) {
-    if (error !== 'cancel') {
+    const isCanceled =
+      upgradeAbortTriggered.value ||
+      error?.code === 'ERR_CANCELED' ||
+      error?.message === '请求被取消'
+    if (!isCanceled && error !== 'cancel') {
       console.error('Upload failed:', error)
-      addLog(`Upload error: ${error.message || 'Unknown error'}`, 'error')
       ElMessage.error(error.message || 'Upload failed')
     }
-  } finally {
+    stopUpgradeStatusPolling()
     upgradeUploadLoading.value = false
-    upgradeProgress.value = 0
-    if (timeInterval) {
-      clearInterval(timeInterval)
-      timeInterval = null
-    }
+    resetUpgradeProgress()
+  } finally {
+    resetUpgradeSelection()
   }
 }
 
-// 组件卸载时清理定时器
-onUnmounted(() => {
-  if (timeInterval) {
-    clearInterval(timeInterval)
+const handleUpgradeAbort = async () => {
+  if (upgradeAbortLoading.value) return
+  try {
+    upgradeAbortLoading.value = true
+    upgradeAbortTriggered.value = true
+    cancelUpgradeUpload()
+    await abortUpgrade()
+    ElMessage.success('Upgrade aborted')
+    upgradeUploadLoading.value = false
+    resetUpgradeProgress()
+  } catch (error: any) {
+    console.error('Abort failed:', error)
+    ElMessage.error(error.message || 'Abort failed')
+  } finally {
+    upgradeAbortLoading.value = false
+    upgradeAbortTriggered.value = false
   }
+}
+
+onUnmounted(() => {
+  stopUpgradeStatusPolling()
 })
 </script>
 
 <style lang="scss" scoped>
-
-.system-config {
+.system-configuration {
   height: 100%;
   display: flex;
   flex-direction: column;
-  // padding: 20px;
+}
 
-  &__header {
-    margin-bottom: 24px;
-  }
+.system-configuration__header {
+  margin-bottom: 24px;
+}
 
-  &__title {
-    font-size: $font-size-large;
-    font-weight: $font-weight-semibold;
-    color: $text-color-primary;
-    margin: 0;
-  }
+.system-configuration__title {
+  font-size: $font-size-large;
+  font-weight: $font-weight-semibold;
+  color: $text-color-primary;
+  margin: 0;
+}
 
-  &__content {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
-  }
+.system-configuration__content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
 
-  &__card {
-    border-radius: $border-radius-medium;
-    box-shadow: $box-shadow-base;
+.system-configuration__card {
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-base;
+}
 
-    &-header {
-      font-weight: $font-weight-semibold;
-      font-size: $font-size-base;
-      color: $text-color-primary;
-    }
+.system-configuration__card-header {
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-base;
+  color: $text-color-primary;
+}
 
-    &-body {
-      padding: 20px;
-    }
-  }
+.system-configuration__card--expand {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-  &__actions {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 12px;
-  }
+.system-configuration__card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 
-  &__hint {
-    font-size: $font-size-small;
-    color: $text-color-secondary;
-    margin: 0;
-  }
+.system-configuration__actions {
+  display: flex;
+  gap: 16px;
+}
 
-  &__upload-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+.system-configuration__upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
 
-  &__upload {
-    width: 100%;
-  }
+.system-configuration__upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-  &__upload-btn {
-    align-self: flex-start;
-  }
+.system-configuration__upload {
+  width: auto;
+  align-self: flex-start;
+}
 
-  &__logs {
-    margin-top: 24px;
-    border: 1px solid $border-color-base;
-    border-radius: $border-radius-small;
-    background: $bg-color-overlay;
-    max-height: 400px;
-    display: flex;
-    flex-direction: column;
+.system-configuration__upload-progress {
+  width: 100%;
+  max-width: 420px;
+}
 
-    &-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid $border-color-base;
-      font-weight: $font-weight-semibold;
-      font-size: $font-size-base;
-      color: $text-color-primary;
-    }
+:deep(.system-configuration__upload-progress .el-progress-bar__inner)  {
+  background-color: $primary-color;
+}
 
-    &-content {
-      flex: 1;
-      padding: 12px 16px;
-      overflow-y: auto;
-      font-family: 'Courier New', monospace;
-      font-size: $font-size-small;
-    }
-  }
+.system-configuration__upload-progress-text {
+  margin-top: 6px;
+  font-size: $font-size-small;
+  color: $text-color-secondary;
+}
 
-  &__log-item {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 8px;
-    line-height: 1.6;
+.system-configuration__upgrade-status {
+  margin-top: 16px;
+  border: 1px solid $border-color-base;
+  border-radius: $border-radius-small;
+  background: $bg-color-overlay;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 48px);
+}
 
-    &.log-info {
-      color: $text-color-primary;
-    }
+.system-configuration__upgrade-status-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid $border-color-base;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-base;
+  color: $text-color-primary;
+}
 
-    &.log-success {
-      color: $success-color;
-    }
+.system-configuration__upgrade-status-body {
+  padding: 12px 14px;
+  // height: calc(100% - 41px);
+  flex:1;
+  overflow: auto;
+}
 
-    &.log-error {
-      color: $danger-color;
-    }
-  }
+// .system-configuration__upgrade-status-message {
+//   color: $text-color-primary;
+//   margin-bottom: 8px;
+//   word-break: break-word;
+// }
 
-  &__log-time {
-    color: $text-color-secondary;
-    min-width: 80px;
-  }
-
-  &__log-message {
-    flex: 1;
-    word-break: break-word;
-  }
+.system-configuration__upgrade-status-log {
+  margin: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: $font-size-small;
+  color: $text-color-secondary;
 }
 
 :deep(.el-upload) {
@@ -462,5 +497,7 @@ onUnmounted(() => {
   font-size: $font-size-small;
   color: $text-color-secondary;
 }
+:deep(.el-card__body){
+  height: calc(100% - 57px);
+}
 </style>
-

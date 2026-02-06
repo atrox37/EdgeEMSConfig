@@ -1,21 +1,21 @@
 <template>
   <div class="voltage-class main-layout">
-    <!-- ×Ô¶¨Òå±êÌâÀ¸ -->
+    <!-- ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -->
     <TitleBar />
 
-    <!-- Ö÷ÌåÄÚÈÝÇøÓò -->
+    <!-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -->
     <div class="main-layout__container">
       <div class="main-layout__left">
-        <!-- ²à±ßµ¼º½À¸ -->
+        <!-- ï¿½ï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½ -->
         <Sidebar />
       </div>
       <div
         class="main-layout__right"
         :class="{ collapse: globalStore.isCollapse }"
       >
-        <!-- Í·²¿ -->
+        <!-- Í·ï¿½ï¿½ -->
         <!-- <Header /> -->
-        <!-- Ö÷ÄÚÈÝÇøÓò -->
+        <!-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -->
         <main
           class="main-layout__content"
           :class="{ collapse: globalStore.isCollapse }"
@@ -33,26 +33,29 @@ import Sidebar from "./Sidebar.vue";
 import TitleBar from "@/layout/TitleBar.vue";
 import { useGlobalStore } from "@/stores/global";
 import { useResponsive } from "@/composables/useResponsive";
+import { useUserStore } from "@/stores/user";
+import wsManager from "@/utils/websocket";
 
 const globalStore = useGlobalStore();
+const userStore = useUserStore();
 const { isMobile } = useResponsive();
 
-// ±£´æÓÃ»§ÊÖ¶¯ÉèÖÃµÄÕÛµþ×´Ì¬
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½Ûµï¿½×´Ì¬
 const userPreferredCollapse = ref<boolean | null>(null);
 
-// ¼àÌýÒÆ¶¯¶Ë¶Ïµã±ä»¯£¬×Ô¶¯ÕÛµþ/Õ¹¿ª Sidebar
+// ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Ë¶Ïµï¿½ä»¯ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½Ûµï¿½/Õ¹ï¿½ï¿½ Sidebar
 watch(
   isMobile,
   (mobile) => {
     if (mobile) {
-      // ½øÈëÒÆ¶¯¶ËÄ£Ê½£¬×Ô¶¯ÕÛµþ
+      // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½Ûµï¿½
       globalStore.isCollapse = true;
     } else {
-      // ÍË³öÒÆ¶¯¶ËÄ£Ê½£¬»Ö¸´ÓÃ»§Æ«ºÃÉèÖÃ
+      // ï¿½Ë³ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ã»ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
       if (userPreferredCollapse.value !== null) {
         globalStore.isCollapse = userPreferredCollapse.value;
       } else {
-        // Èç¹ûÃ»ÓÐÓÃ»§Æ«ºÃ£¬Ä¬ÈÏÕ¹¿ª
+        // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ã»ï¿½Æ«ï¿½Ã£ï¿½Ä¬ï¿½ï¿½Õ¹ï¿½ï¿½
         globalStore.isCollapse = false;
       }
     }
@@ -60,13 +63,31 @@ watch(
   { immediate: true }
 );
 
-// ¼àÌýÓÃ»§ÊÖ¶¯²Ù×÷ Sidebar ÕÛµþ°´Å¥
-// ÕâÐèÒªÔÚ Sidebar.vue ÖÐ´¥·¢ÊÂ¼þ£¬»òÕßÎÒÃÇ¿ÉÒÔÍ¨¹ý watch globalStore.isCollapse À´¼ì²â
-// µ«ÒªÇø·ÖÊÇ×Ô¶¯ÕÛµþ»¹ÊÇÓÃ»§ÊÖ¶¯ÕÛµþ£¬ÎÒÃÇÐèÒªÒ»¸ö±êÖ¾
+// ç™»å½•åŽåˆå§‹åŒ– WebSocketï¼ˆåŸºäºŽç”¨æˆ·è®¾ç½®çš„åœ°å€ï¼‰
+watch(
+  () => userStore.isLoggedIn,
+  async (loggedIn) => {
+    if (loggedIn) {
+      try {
+        await wsManager.initFromApiConfig();
+        if (!wsManager.isConnected.value && !wsManager.isConnecting.value) {
+          await wsManager.connect();
+        }
+      } catch (error) {
+        console.warn("[WebSocket] åˆå§‹åŒ–å¤±è´¥:", error);
+      }
+    }
+  },
+  { immediate: true }
+);
+
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ Sidebar ï¿½Ûµï¿½ï¿½ï¿½Å¥
+// ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ Sidebar.vue ï¿½Ð´ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ watch globalStore.isCollapse ï¿½ï¿½ï¿½ï¿½ï¿½
+// ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½Ûµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ö¶ï¿½ï¿½Ûµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÒ»ï¿½ï¿½ï¿½ï¿½Ö¾
 watch(
   () => globalStore.isCollapse,
   (newVal) => {
-    // Ö»ÔÚ·ÇÒÆ¶¯¶ËÄ£Ê½ÏÂ±£´æÓÃ»§Æ«ºÃ
+    // Ö»ï¿½Ú·ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ä£Ê½ï¿½Â±ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Æ«ï¿½ï¿½
     if (!isMobile.value) {
       userPreferredCollapse.value = newVal;
     }
@@ -82,14 +103,14 @@ watch(
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: $bg-gradient-page; // Ê¹ÓÃ½¥±ä±³¾°£º´Ó¸±Ö÷ÌâÉ«µ½°×É«£¬×óÉÏµ½ÓÒÏÂ£¬°×É«¾Ó¶à
+  background: $bg-gradient-page; // Ê¹ï¿½Ã½ï¿½ï¿½ä±³ï¿½ï¿½ï¿½ï¿½ï¿½Ó¸ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½É«ï¿½Ó¶ï¿½
   overflow: hidden;
 
-  // Ö÷ÌåÄÚÈÝÈÝÆ÷(±êÌâÀ¸ÏÂ·½)
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½)
   .main-layout__container {
     flex: 1;
     display: flex;
-    padding-top: 32px; // ±êÌâÀ¸¸ß¶È
+    padding-top: 32px; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
     height: calc(100vh - 32px);
   }
 
@@ -104,7 +125,7 @@ watch(
     width: calc(100% - 180px);
     height: 100%;
     &.collapse {
-      width: calc(100% - 44px);
+      width: calc(100% - 48px);
     }
 
     .main-layout__content {
@@ -116,10 +137,10 @@ watch(
       border: 1px solid $border-color-base;
       overflow-y: auto;
       padding: 10px;
-      background: rgba(255, 255, 255, 0.8); // È·±£±³¾°Í¸Ã÷£¬ÈÃ¸¸¼¶µÄ½¥±ä±³¾°ÏÔÊ¾³öÀ´
+      background: rgba(255, 255, 255, 0.8); // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ä±³ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
     }
   }
 }
 
-/* ÒÆ³ýÎ´µÇÂ¼Ä£ºýËø¶¨£¬ÓÉÂ·ÓÉÊØÎÀ¿ØÖÆÌø×ªµ½ /login */
+/* ï¿½Æ³ï¿½Î´ï¿½ï¿½Â¼Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ /login */
 </style>

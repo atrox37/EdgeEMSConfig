@@ -1,5 +1,5 @@
 <template>
-  <div class="voltage-class rule-management">
+  <div class="voltage-class rule-management" ref="ruleManagementRef" v-if="!isDetailRoute">
     <div class="rule-management__header">
       <h2 class="rule-management__title">Rule Config</h2>
     </div>
@@ -40,7 +40,7 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column min-width="160">
+            <el-table-column min-width="240" fixed="right">
               <template #header>
                 <IconButton
                   type="primary"
@@ -60,7 +60,7 @@
                     <img :src="tableEditIcon" />
                     <span class="rule-management__operation-text">Edit</span>
                   </div>
-                  <div class="rule-management__operation-item" @click="deleteRow(row.id)">
+                  <div class="rule-management__operation-item" @click="deleteRow(row.id, `Are you sure you want to delete rule '${row.name}'?`, ruleManagementRef)">
                     <img :src="tableDeleteIcon" />
                     <span class="rule-management__operation-text">Delete</span>
                   </div>
@@ -81,9 +81,10 @@
             />
           </div>
         </div>
-      </div>
+      </div>                        
 <RuleEditDialog ref="ruleEditDialogRef" @submitted="fetchTableData(true)" />
   </div>
+  <router-view v-else />
 </template>
 
 <script setup lang="ts">
@@ -94,7 +95,7 @@ import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import { ElMessage } from 'element-plus'
 import RuleEditDialog from './components/RuleEditDialog.vue'
 import { enableRule, disableRule } from '@/api/rulesManagement'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import type { Rule } from '@/types/ruleConfiguration'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 // 使用 useTableData 管理表格数据
@@ -115,8 +116,10 @@ const {
   deleteRow,
   reloadFilters,
 } = useTableData<Rule>(tableConfig)
+const route = useRoute()
 const router = useRouter()
-
+const isDetailRoute = computed(() => route.name === 'ruleChainEditor')
+const ruleManagementRef = ref<HTMLElement | null>(null)
 // 分页事件�?useTableData 提供�?handlePageSizeChange / handlePageChange 处理
 
 const switchLoadings = ref<boolean[]>([])
@@ -179,7 +182,7 @@ watch(
 
 <style scoped lang="scss">
 .voltage-class .rule-management {
-  position: relative;
+  // position: relative;
   height: 100%;
   width: 100%;
   display: flex;

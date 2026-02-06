@@ -3,7 +3,8 @@
  * 统一导入所有样式文件和变量
  */
 
-// 导入全局变量（必须在最前面�?
+// 导入全局变量（必须在最前面）
+@use './_variables.scss' as *;
 
 // 导入字体
 @use './fonts/index.scss' as fonts;
@@ -14,5 +15,51 @@
 // 导入 Vue Flow 样式
 @use './vueflow.scss' as vueflow;
 
-// 导入设备监控滚动条样�?
+// 导入设备监控滚动条样式
 // @use './device-monitoring-scroller.scss';
+
+// 全局滚动条样式
+
+*::-webkit-scrollbar {
+  width: $width-scrollbar;
+  height: $width-scrollbar;
+}
+
+// *::-webkit-scrollbar-track {
+//   background: $scrollbar-track-bg;
+//   border-radius: $scrollbar-border-radius;
+// }
+
+*::-webkit-scrollbar-thumb {
+  background: $scrollbar-thumb-bg;
+  border-radius: $scrollbar-border-radius;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: $scrollbar-thumb-hover-bg;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(200, 200, 200, 0.6); /* 浅灰色滚动条 */
+    min-height: 8px;
+    min-width: 8px;
+  }
+  

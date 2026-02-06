@@ -77,7 +77,7 @@ const handleTabClick = (
   height: 100%;
   display: flex;
   flex-direction: column;
-  position: relative;
+  // position: relative;
 
   .configuration__header {
     padding-bottom: 20px;

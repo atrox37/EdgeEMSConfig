@@ -1,5 +1,5 @@
 <template>
-  <div class="voltage-class rule-management">
+  <div class="voltage-class rule-management" ref="ruleManagementRef">
     <div class="rule-management__header">
       <h2 class="rule-management__title">Model Config</h2>
     </div>
@@ -7,8 +7,8 @@
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 桌面端：显示筛选框 -->
         <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
-          <el-form-item label="productName:">
-            <el-select v-model="filters.product_name" placeholder="Please select productName" clearable filterable
+          <el-form-item label="Product Name:">
+            <el-select v-model="filters.product_name" placeholder="Please select product name" clearable filterable
               :append-to="levelSelectRef || undefined"
               @change="handleDesktopFilterChange('product_name', filters.product_name)">
               <el-option v-for="opt in productOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
@@ -78,7 +78,8 @@
                   <img :src="tableEditIcon" />
                   <span class="rule-management__operation-text">Mappings</span>
                 </div> -->
-                <div class="rule-management__operation-item" @click="handleDelete(row)">
+                <div class="rule-management__operation-item"
+                  @click="deleteRow(row.instance_id as any, `Are you sure you want to delete instance '${row.instance_name}'?`, ruleManagementRef)">
                   <img :src="tableDeleteIcon" />
                   <span class="rule-management__operation-text">Delete</span>
                 </div>
@@ -97,9 +98,6 @@
     <InstanceDetailDialog ref="instanceDetailDialogRef" :product-options="productOptions"
       @submit="fetchTableData(true)" />
 
-    <!-- Points Tables 对话框（DeviceConfiguration 专用�?-->
-    <PointsTablesDialog ref="PointsTablesDialogRef" />
-
     <!-- Mappings 对话框（DeviceConfiguration 专用�?-->
     <!-- <MappingsDialog ref="MappingsDialogRef" /> -->
   </div>
@@ -115,11 +113,11 @@ import detailIcon from '@/assets/icons/button-detail.svg'
 import pointIcon from '@/assets/icons/button-point.svg'
 
 import InstanceDetailDialog from './components/InstanceDetailDialog.vue'
-import PointsTablesDialog from './components/PointsTablesDialog.vue'
 import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { getProducts } from '@/api/devicesManagement'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
+import { useRouter } from 'vue-router'
 
 const tableConfig: TableConfig = {
   listUrl: '/modApi/api/instances',
@@ -136,6 +134,7 @@ const {
   filters,
   handlePageChange,
   reloadFilters,
+  deleteRow
 } = useTableData<DeviceInstanceBasic>(tableConfig)
 
 filters.product_name = ''
@@ -143,7 +142,8 @@ filters.product_name = ''
 const levelSelectRef = ref<HTMLElement | null>(null)
 const filterTriggerRef = ref<HTMLElement | null>(null)
 const showFilterPopover = ref(false)
-
+const router = useRouter()
+const ruleManagementRef = ref<HTMLElement | null>(null)
 // 筛选标签管�?
 interface FilterTag {
   key: string
@@ -224,7 +224,6 @@ const getProductOptions = async () => {
 onMounted(() => getProductOptions())
 
 const instanceDetailDialogRef = ref()
-const PointsTablesDialogRef = ref()
 // const MappingsDialogRef = ref()
 
 // 配置弹窗相关数据
@@ -247,32 +246,15 @@ const handleDetail = (row: DeviceInstanceBasic) => {
   instanceDetailDialogRef.value?.open(row.instance_id as any)
 }
 
-// 删除规则
-const handleDelete = async (row: DeviceInstanceBasic) => {
-  await ElMessageBox.confirm(
-    `Are you sure you want to delete instance "${row.instance_name}"?`,
-    'Delete Instance',
-    {
-      confirmButtonText: 'Confirm',
-      cancelButtonText: 'Cancel',
-      type: 'warning',
-    },
-  )
-
-  // 从模拟数据中删除
-  const index = tableData.value.findIndex(
-    (item: DeviceInstanceBasic) => item.instance_id === row.instance_id,
-  )
-  if (index > -1) {
-    tableData.value.splice(index, 1)
-    pagination.total = tableData.value.length
-    ElMessage.success('Device instance deleted successfully')
-  }
-}
-
 // 打开 Device Points/Mappings 对话�?
 const openPointsDialog = (row: DeviceInstanceBasic) => {
-  PointsTablesDialogRef.value?.open(row.instance_id, row.instance_name)
+  router.push({
+    path: '/modelConfiguration/pointsTables',
+    query: {
+      id: String(row.instance_id),
+      name: String(row.instance_name || ''),
+    },
+  })
 }
 // const openMappingsDialog = (row: DeviceInstanceBasic) => {
 //   MappingsDialogRef.value?.open(row.instance_id)
@@ -281,7 +263,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
 
 <style scoped lang="scss">
 .voltage-class .rule-management {
-  //   position: relative;
+  // position: relative;
   height: 100%;
   width: 100%;
   display: flex;

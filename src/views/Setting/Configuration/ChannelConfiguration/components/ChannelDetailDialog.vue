@@ -1,609 +1,311 @@
 <template>
-  <FormDialog ref="formDialogRef" :title="dialogTitle" width="944px" @close="handleClose">
+  <FormDialog ref="formDialogRef" :title="dialogTitle" width="944px" @close="handleClose" :style="{ height: '80%' }">
     <template #dialog-body>
       <div class="voltage-class channel-detail-dialog">
         <el-form
           :model="form"
           :inline="true"
-          label-width="150px"
+          label-width="160px"
           :disabled="!isEditing"
           :rules="formRules"
           :validate-on-rule-change="false"
           ref="formRef"
+          class="channel-detail-form"
         >
-          <!-- 基础信息 -->
-          <div class="channel-detail__section">
-            <h4 class="channel-detail__section-title">Basic Information</h4>
-            <el-form-item label="ID:" v-if="!isAdd">
-              <span class="channel-detail__text">{{ form.id }}</span>
-            </el-form-item>
-            <el-form-item label="Name:" :style="!isAdd ? 'margin-right: 0' : ''" prop="name">
-              <span v-if="!isEditing" class="channel-detail__text">{{ form.name }}</span>
-              <el-input v-else v-model="form.name" placeholder="Please enter channel name" />
-            </el-form-item>
-            <el-form-item label="Protocol:" :style="isAdd ? 'margin-right: 0' : ''" prop="protocol">
-              <span v-if="!isEditing" class="channel-detail__text">{{
-                getProtocolLabel(form.protocol)
-              }}</span>
-              <div class="channel-detail__protocol-select" v-else>
-                <el-select
-                  v-model="form.protocol"
-                  placeholder="Please select protocol"
-                 
-                >
-                  <el-option
-                    v-for="option in PROTOCOL_OPTIONS"
-                    :key="option.value"
-                    :label="option.label"
-                    :value="option.value"
-                  />
+          <LightCollapseCard v-model="isBasicOpen" title="Basic Information">
+            <div class="channel-detail__section">
+              <el-form-item label="ID:" v-if="!isAdd">
+                <span class="channel-detail__text">{{ form.id }}</span>
+              </el-form-item>
+              <el-form-item v-if="isAdd" label="ID Mode:" prop="channel_id_mode">
+                <el-select v-model="channelIdMode" placeholder="Please select mode">
+                  <el-option label="Auto" value="auto" />
+                  <el-option label="Manual" value="manual" />
                 </el-select>
+              </el-form-item>
+              <el-form-item
+                v-if="isAdd && channelIdMode === 'manual'"
+                label="Channel ID:"
+                prop="channel_id"
+                style="margin-right: 0"
+              >
+                <el-input-number
+                  v-model="channelIdInput"
+                  :controls="false"
+                  :min="1"
+                  :precision="0"
+                  align="left"
+                  placeholder="Please enter channel id"
+                />
+              </el-form-item>
+              <el-form-item label="Name:" :style="!isAdd ? 'margin-right: 0' : ''" prop="name">
+                <span v-if="!isEditing" class="channel-detail__text">{{ form.name }}</span>
+                <el-input v-else v-model="form.name" placeholder="Please enter channel name" />
+              </el-form-item>
+              <el-form-item label="Protocol:" :style="isAdd ? 'margin-right: 0' : ''" prop="protocol">
+                <span v-if="!isEditing" class="channel-detail__text">{{
+                  getProtocolLabel(form.protocol)
+                }}</span>
+                  <el-select
+                  v-else
+                    v-model="form.protocol"
+                    placeholder="Please select protocol"
+                  >
+                    <el-option
+                      v-for="option in PROTOCOL_OPTIONS"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
+                    />
+                  </el-select>
+                
+              </el-form-item>
+              <el-form-item label="Enabled:" style="margin-right: 0" prop="enabled">
+                <template v-if="isAdd && isEditing">
+                  <el-switch v-model="form.enabled" />
+                </template>
+                <template v-else>
+                  <span
+                    class="channel-detail__text"
+                    :style="{ color: form.enabled ? '#67C23A' : '#F56C6C', fontWeight: 600 }"
+                  >
+                    {{ form.enabled ? 'Enabled' : 'Disabled' }}
+                  </span>
+                </template>
+              </el-form-item>
+              <el-form-item
+                label="Description:"
+                class="channel-detail__form-item--full"
+              >
+                <span v-if="!isEditing" class="channel-detail__text">{{
+                  form.description || '-'
+                }}</span>
+                <el-input
+                  v-else
+                  v-model="form.description"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="Please enter description"
+                />
+              </el-form-item>
+            </div>
+          </LightCollapseCard>
+
+          <LightCollapseCard v-model="isParamsOpen" title="Parameters">
+            <div class="channel-detail__section">
+              <div class="channel-detail__parameters">
+                <ModbusTcpParams
+                  v-if="form.protocol === 'modbus_tcp'"
+                  :form="form"
+                  :is-editing="isEditing"
+                />
+
+                <template v-else-if="form.protocol === 'can'">
+                  <el-form-item label="Bitrate:" class="channel-detail__parameter-item">
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).bitrate
+                    }}</span>
+                    <el-input-number
+                      v-else
+                      v-model="(form.parameters as any).bitrate"
+                      :controls="false"
+                      align="left"
+                      placeholder="please enter bitrate"
+                    />
+                  </el-form-item>
+                  <el-form-item
+                    label="Data Bitrate:"
+                    class="channel-detail__parameter-item"
+                    style="margin-right: 0"
+                  >
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).data_bitrate
+                    }}</span>
+                    <el-input-number
+                      v-else
+                      v-model="(form.parameters as any).data_bitrate"
+                      :controls="false"
+                      align="left"
+                      placeholder="please enter data bitrate"
+                    />
+                  </el-form-item>
+                  <el-form-item label="FD Mode:" class="channel-detail__parameter-item">
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).fd_mode ? 'Yes' : 'No'
+                    }}</span>
+                    <el-switch v-else v-model="(form.parameters as any).fd_mode" />
+                  </el-form-item>
+                  <el-form-item
+                    label="Interface:"
+                    class="channel-detail__parameter-item"
+                    style="margin-right: 0"
+                  >
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).interface || '-'
+                    }}</span>
+                    <el-input
+                      v-else
+                      v-model="(form.parameters as any).interface"
+                      placeholder="please enter interface"
+                    />
+                  </el-form-item>
+                  <el-form-item label="Listen Only:" class="channel-detail__parameter-item">
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).listen_only ? 'Yes' : 'No'
+                    }}</span>
+                    <el-switch v-else v-model="(form.parameters as any).listen_only" />
+                  </el-form-item>
+                  <el-form-item
+                    label="Loopback:"
+                    class="channel-detail__parameter-item"
+                    style="margin-right: 0"
+                  >
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).loopback ? 'Yes' : 'No'
+                    }}</span>
+                    <el-switch v-else v-model="(form.parameters as any).loopback" />
+                  </el-form-item>
+                  <el-form-item
+                    label="Timeout (ms):"
+                    class="channel-detail__parameter-item"
+                    style="margin-right: 0"
+                  >
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).timeout_ms
+                    }}</span>
+                    <el-input-number
+                      v-else
+                      v-model="(form.parameters as any).timeout_ms"
+                      :controls="false"
+                      align="left"
+                      placeholder="please enter timeout (ms)"
+                    />
+                  </el-form-item>
+                </template>
+
+                <template v-else-if="form.protocol === 'virt'">
+                  <el-form-item label="Update Interval (ms):" class="channel-detail__parameter-item">
+                    <span v-if="!isEditing" class="channel-detail__text">{{
+                      (form.parameters as any).update_interval_ms
+                    }}</span>
+                    <el-input-number
+                      v-else
+                      v-model="(form.parameters as any).update_interval_ms"
+                      :controls="false"
+                      align="left"
+                      placeholder="please enter update interval (ms)"
+                    />
+                  </el-form-item>
+                </template>
+
+                <ModbusRtuParams
+                  v-else-if="form.protocol === 'modbus_rtu'"
+                  :form="form"
+                  :is-editing="isEditing"
+                />
+
+                <DiDoParams
+                  v-else-if="form.protocol === 'di_do'"
+                  :form="form"
+                  :is-editing="isEditing"
+                />
               </div>
-            </el-form-item>
-            <el-form-item v-if="!isEditing || isAdd" label="Enabled:" style="margin-right: 0">
-              <template v-if="!isEditing">
+            </div>
+          </LightCollapseCard>
+
+          <LightCollapseCard
+            v-if="!isEditing && form.runtime_status"
+            v-model="isRuntimeOpen"
+            title="Runtime Status"
+          >
+            <div class="channel-detail__section">
+              <el-form-item label="Connected:">
                 <span
                   class="channel-detail__text"
-                  :style="{ color: form.enabled ? '#67C23A' : '#F56C6C', fontWeight: 600 }"
+                  :style="{
+                    color: form.runtime_status.connected ? '#67C23A' : '#F56C6C',
+                    fontWeight: 600,
+                  }"
                 >
-                  {{ form.enabled ? 'Enabled' : 'Disabled' }}
+                  {{ form.runtime_status.connected ? 'Connected' : 'Disconnected' }}
                 </span>
-              </template>
-              <el-switch v-else v-model="form.enabled" />
-            </el-form-item>
-            <el-form-item label="Description:" style="width: calc(100% - 10px); margin-right: 0">
-              <span v-if="!isEditing" class="channel-detail__text">{{
-                form.description || '-'
-              }}</span>
-              <el-input
-                v-else
-                v-model="form.description"
-                type="textarea"
-                :rows="2"
-                placeholder="Please enter description"
-              />
-            </el-form-item>
-          </div>
-          <!-- 参数配置 -->
-          <div class="channel-detail__section">
-            <h4 class="channel-detail__section-title">Parameters</h4>
-            <div class="channel-detail__parameters">
-              <!-- Modbus TCP -->
-              <template v-if="form.protocol === 'modbus_tcp'">
-                <el-form-item
-                  label="Host:"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.host"
+              </el-form-item>
+              <el-form-item label="Running:" v-if="form.runtime_status" style="margin-right: 0">
+                <span
+                  class="channel-detail__text"
+                  :style="{
+                    color: form.runtime_status.running ? '#67C23A' : '#F56C6C',
+                    fontWeight: 600,
+                  }"
                 >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).host || '-'
-                  }}</span>
-                  <el-input
-                    v-else
-                    v-model="(form.parameters as any).host"
-                    placeholder="please enter host"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Port:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.port"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).port
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).port"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter port"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Connect Timeout (ms):"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.connect_timeout_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).connect_timeout_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).connect_timeout_ms"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter connect timeout (ms)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Read Timeout (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.read_timeout_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).read_timeout_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).read_timeout_ms"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter read timeout (ms)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Max Batch Size:"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.max_batch_size"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).max_batch_size
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).max_batch_size"
-                    :controls="false"
-                    :min="1"
-                    :max="125"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter max batch size (1-125)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Poll Interval (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.poll_interval_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).poll_interval_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).poll_interval_ms"
-                    :controls="false"
-                    :min="1"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter poll interval (ms)"
-                  />
-                </el-form-item>
-              </template>
-
-              <template v-else-if="form.protocol === 'can'">
-                <el-form-item label="Bitrate:" class="channel-detail__parameter-item">
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).bitrate
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).bitrate"
-                    :controls="false"
-                    align="left"
-                    placeholder="please enter bitrate"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Data Bitrate:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).data_bitrate
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).data_bitrate"
-                    :controls="false"
-                    align="left"
-                    placeholder="please enter data bitrate"
-                  />
-                </el-form-item>
-                <el-form-item label="FD Mode:" class="channel-detail__parameter-item">
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).fd_mode ? 'Yes' : 'No'
-                  }}</span>
-                  <el-switch v-else v-model="(form.parameters as any).fd_mode" />
-                </el-form-item>
-                <el-form-item
-                  label="Interface:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).interface || '-'
-                  }}</span>
-                  <el-input
-                    v-else
-                    v-model="(form.parameters as any).interface"
-                    placeholder="please enter interface"
-                  />
-                </el-form-item>
-                <el-form-item label="Listen Only:" class="channel-detail__parameter-item">
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).listen_only ? 'Yes' : 'No'
-                  }}</span>
-                  <el-switch v-else v-model="(form.parameters as any).listen_only" />
-                </el-form-item>
-                <el-form-item
-                  label="Loopback:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).loopback ? 'Yes' : 'No'
-                  }}</span>
-                  <el-switch v-else v-model="(form.parameters as any).loopback" />
-                </el-form-item>
-                <el-form-item
-                  label="Timeout (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).timeout_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).timeout_ms"
-                    :controls="false"
-                    align="left"
-                    placeholder="please enter timeout (ms)"
-                  />
-                </el-form-item>
-              </template>
-
-              <template v-else-if="form.protocol === 'virt'">
-                <el-form-item label="Update Interval (ms):" class="channel-detail__parameter-item">
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).update_interval_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).update_interval_ms"
-                    :controls="false"
-                    align="left"
-                    placeholder="please enter update interval (ms)"
-                  />
-                </el-form-item>
-              </template>
-
-              <template v-else-if="form.protocol === 'modbus_rtu'">
-                <el-form-item
-                  label="Device:"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.device"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).device || '-'
-                  }}</span>
-                  <el-input
-                    v-else
-                    v-model="(form.parameters as any).device"
-                    placeholder="please enter device"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Baud Rate:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.baud_rate"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).baud_rate
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).baud_rate"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter baud rate"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Data Bits:"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.data_bits"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).data_bits
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).data_bits"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter data bits"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Stop Bits:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.stop_bits"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).stop_bits
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).stop_bits"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter stop bits"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Parity:"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.parity"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).parity || '-'
-                  }}</span>
-                  <el-select
-                    v-else
-                    v-model="(form.parameters as any).parity"
-                    placeholder="please enter parity"
-                    append-to=".channel-detail__parameter-item"
-                  >
-                    <el-option label="N" value="N" />
-                    <el-option label="E" value="E" />
-                    <el-option label="O" value="O" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item
-                  label="Connect Timeout (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.connect_timeout_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).connect_timeout_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).connect_timeout_ms"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter connect timeout (ms)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Read Timeout (ms):"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.read_timeout_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).read_timeout_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).read_timeout_ms"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter read timeout (ms)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Retry Interval (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.retry_interval_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).retry_interval_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).retry_interval_ms"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter retry interval (ms)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Max Batch Size:"
-                  class="channel-detail__parameter-item"
-                  prop="parameters.max_batch_size"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).max_batch_size
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).max_batch_size"
-                    :controls="false"
-                    :min="1"
-                    :max="125"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter max batch size (1-125)"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="Poll Interval (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.poll_interval_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).poll_interval_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).poll_interval_ms"
-                    :controls="false"
-                    :min="1"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter poll interval (ms)"
-                  />
-                </el-form-item>
-              </template>
-
-              <template v-else-if="form.protocol === 'di_do'">
-                <el-form-item label="Driver:" class="channel-detail__parameter-item" prop="parameters.driver">
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).driver || '-'
-                  }}</span>
-                  <el-input
-                    v-else
-                    v-model="(form.parameters as any).driver"
-                    placeholder="please enter driver"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="GPIO Base Path:"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.gpio_base_path"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).gpio_base_path || '-'
-                  }}</span>
-                  <el-input
-                    v-else
-                    v-model="(form.parameters as any).gpio_base_path"
-                    placeholder="please enter gpio base path"
-                  />
-                </el-form-item>
-                <el-form-item
-                  label="DI Poll Interval (ms):"
-                  class="channel-detail__parameter-item"
-                  style="margin-right: 0"
-                  prop="parameters.di_poll_interval_ms"
-                >
-                  <span v-if="!isEditing" class="channel-detail__text">{{
-                    (form.parameters as any).di_poll_interval_ms
-                  }}</span>
-                  <el-input-number
-                    v-else
-                    v-model="(form.parameters as any).di_poll_interval_ms"
-                    :controls="false"
-                    :min="0"
-                    :precision="0"
-                    align="left"
-                    placeholder="please enter di poll interval (ms)"
-                  />
-                </el-form-item>
-              </template>
+                  {{ form.runtime_status.running ? 'Running' : 'Stopped' }}
+                </span>
+              </el-form-item>
+              <el-form-item label="Last Update:">
+                <span class="channel-detail__text">{{
+                  formatIsoToDateTime(form.runtime_status?.last_update || '-')
+                }}</span>
+              </el-form-item>
+              <el-form-item label="Error Count:" style="margin-right: 0">
+                <span class="channel-detail__text">{{ form.runtime_status?.error_count }}</span>
+              </el-form-item>
+              <el-form-item label="Last Error:">
+                <span class="channel-detail__text">{{
+                  form.runtime_status?.last_error || 'No errors'
+                }}</span>
+              </el-form-item>
             </div>
-          </div>
-          <!-- 运行时状态 -->
-          <div class="channel-detail__section" v-if="!isEditing && form.runtime_status">
-            <h4 class="channel-detail__section-title">Runtime Status</h4>
-            <el-form-item label="Connected:">
-              <span
-                class="channel-detail__text"
-                :style="{
-                  color: form.runtime_status.connected ? '#67C23A' : '#F56C6C',
-                  fontWeight: 600,
-                }"
-              >
-                {{ form.runtime_status.connected ? 'Connected' : 'Disconnected' }}
-              </span>
-            </el-form-item>
-            <el-form-item label="Running:" v-if="form.runtime_status" style="margin-right: 0">
-              <span
-                class="channel-detail__text"
-                :style="{
-                  color: form.runtime_status.running ? '#67C23A' : '#F56C6C',
-                  fontWeight: 600,
-                }"
-              >
-                {{ form.runtime_status.running ? 'Running' : 'Stopped' }}
-              </span>
-            </el-form-item>
-            <el-form-item label="Last Update:">
-              <span class="channel-detail__text">{{
-                formatIsoToDateTime(form.runtime_status?.last_update || '-')
-              }}</span>
-            </el-form-item>
-            <el-form-item label="Error Count:" style="margin-right: 0">
-              <span class="channel-detail__text">{{ form.runtime_status?.error_count }}</span>
-            </el-form-item>
-            <el-form-item label="Last Error:">
-              <span class="channel-detail__text">{{
-                form.runtime_status?.last_error || 'No errors'
-              }}</span>
-            </el-form-item>
-          </div>
+          </LightCollapseCard>
 
-          <!-- Logging 配置（查看模式） -->
-          <div v-if="!isEditing" class="channel-detail__section">
-            <h4 class="channel-detail__section-title">Logging</h4>
-            <el-form-item label="Enabled:">
-              <span
-                class="channel-detail__text"
-                :style="{
-                  color: form.logging?.enabled ? '#67C23A' : '#F56C6C',
-                  fontWeight: 600,
-                }"
-              >
-                {{ form.logging?.enabled ? 'Enabled' : 'Disabled' }}
-              </span>
-            </el-form-item>
-            <el-form-item label="Level:" style="margin-right: 0">
-              <span class="channel-detail__text">{{ form.logging?.level || '-' }}</span>
-            </el-form-item>
-          </div>
+          <LightCollapseCard v-model="isLoggingOpen" title="Logging">
+            <div class="channel-detail__section" v-if="!isEditing">
+              <el-form-item label="Enabled:">
+                <span
+                  class="channel-detail__text"
+                  :style="{
+                    color: form.logging?.enabled ? '#67C23A' : '#F56C6C',
+                    fontWeight: 600,
+                  }"
+                >
+                  {{ form.logging?.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </el-form-item>
+              <el-form-item label="Level:" style="margin-right: 0">
+                <span class="channel-detail__text">{{ form.logging?.level || '-' }}</span>
+              </el-form-item>
+            </div>
+            <div class="channel-detail__section" v-else>
+              <el-form-item label="Enabled:" prop="logging.enabled">
+                <el-switch v-model="form.logging.enabled" />
+              </el-form-item>
+              <el-form-item label="Level:" style="margin-right: 0" prop="logging.level" class="channel-detail__parameter-item">
+                <el-select
+                  v-model="form.logging.level"
+                  placeholder="Please select level"
+                >
+                  <el-option label="Info" value="info" />
+                  <el-option label="Debug" value="debug" />
+                </el-select>
+              </el-form-item>
+            </div>
+          </LightCollapseCard>
 
-          <!-- Logging 配置（编辑模式） -->
-          <div v-if="isEditing" class="channel-detail__section">
-            <h4 class="channel-detail__section-title">Logging</h4>
-            <el-form-item label="Enabled:" prop="logging.enabled">
-              <el-switch v-model="form.logging.enabled" />
-            </el-form-item>
-            <el-form-item label="Level:" style="margin-right: 0" prop="logging.level" class="channel-detail__parameter-item">
-              <el-select
-                v-model="form.logging.level"
-                placeholder="Please select level"
-              >
-                <el-option label="Info" value="info" />
-                <el-option label="Debug" value="debug" />
-              </el-select>
-            </el-form-item>
-          </div>
-
-          <!-- 点位统计 -->
-          <div v-if="!isEditing" class="channel-detail__section">
-            <h4 class="channel-detail__section-title">Point Counts</h4>
-            <el-form-item label="Telemetry:">
-              <span class="channel-detail__text">{{ form.point_counts?.telemetry }}</span>
-            </el-form-item>
-            <el-form-item label="Signal:" style="margin-right: 0">
-              <span class="channel-detail__text">{{ form.point_counts?.signal }}</span>
-            </el-form-item>
-            <el-form-item label="Control:">
-              <span class="channel-detail__text">{{ form.point_counts?.control }}</span>
-            </el-form-item>
-            <el-form-item label="Adjustment:" style="margin-right: 0">
-              <span class="channel-detail__text">{{ form.point_counts?.adjustment }}</span>
-            </el-form-item>
-          </div>
+          <LightCollapseCard v-if="!isEditing" v-model="isPointsOpen" title="Point Counts">
+            <div class="channel-detail__section">
+              <el-form-item label="Telemetry:">
+                <span class="channel-detail__text">{{ form.point_counts?.telemetry }}</span>
+              </el-form-item>
+              <el-form-item label="Signal:" style="margin-right: 0">
+                <span class="channel-detail__text">{{ form.point_counts?.signal }}</span>
+              </el-form-item>
+              <el-form-item label="Control:">
+                <span class="channel-detail__text">{{ form.point_counts?.control }}</span>
+              </el-form-item>
+              <el-form-item label="Adjustment:" style="margin-right: 0">
+                <span class="channel-detail__text">{{ form.point_counts?.adjustment }}</span>
+              </el-form-item>
+            </div>
+          </LightCollapseCard>
         </el-form>
       </div>
     </template>
@@ -648,24 +350,22 @@ export const PROTOCOL_DEFAULTS = {
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 import FormDialog from '@/components/dialog/FormDialog.vue'
-import type {
-  ChannelDetail,
-  modbusTcpParams,
-  canParams,
-  virtualParams,
-  modbusRtuParams,
-} from '@/types/channelConfiguration'
+import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
+import ModbusTcpParams, {
+  validationRules as modbusTcpRules,
+} from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/ModbusTcpParams.vue'
+import ModbusRtuParams, {
+  validationRules as modbusRtuRules,
+} from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/ModbusRtuParams.vue'
+import DiDoParams, {
+  validationRules as diDoRules,
+} from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/DiDoParams.vue'
+import type { ChannelDetail } from '@/types/channelConfiguration'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import dayjs from 'dayjs'
 import { getChannelDetail, createChannel, updateChannel } from '@/api/channelsManagement'
 
-type diDoParams = {
-  di_poll_interval_ms: number
-  driver: string
-  gpio_base_path: string
-}
 
 // Props
 interface Props {
@@ -716,16 +416,24 @@ const emit = defineEmits<{
   cancel: []
 }>()
 const copyForm = ref<{
-  description: string
+  description: string | null
   protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu' | 'di_do'
   name: string
-  parameters: modbusTcpParams | canParams | virtualParams | modbusRtuParams | diDoParams
+  parameters: ChannelDetail['parameters']
 }>()
 // 响应式数据
 const formDialogRef = ref()
 const isEditing = ref(false)
 const isAdd = ref(false)
 const formRef = ref<FormInstance>()
+const isBasicOpen = ref(true)
+const isParamsOpen = ref(true)
+const isRuntimeOpen = ref(false)
+const isLoggingOpen = ref(false)
+const isPointsOpen = ref(false)
+const channelIdMode = ref<'auto' | 'manual'>('auto')
+const channelIdInput = ref<number | null>(null)
+const didUpdate = ref(false)
 // 表单数据
 const form = ref<ChannelDetail>({
   id: 0,
@@ -771,124 +479,98 @@ const dialogTitle = computed(() =>
 
 // 校验规则：拆分为 TCP 与 RTU，查看模式传空对象；数字限制改由 input-number 控制
 const requiredMsg = (name: string) => `${name} is required`
-const tcpRules: Record<string, any[]> = {
+const baseRules: Record<string, any[]> = {
   name: [{ required: true, message: requiredMsg('Name'), trigger: 'blur' }],
   protocol: [{ required: true, message: requiredMsg('Protocol'), trigger: 'change' }],
-  'parameters.host': [{ required: true, message: requiredMsg('Host'), trigger: 'blur' }],
-  'parameters.port': [{ required: true, message: requiredMsg('Port'), trigger: 'blur' }],
-  'parameters.connect_timeout_ms': [
-    { required: true, message: requiredMsg('Connect Timeout (ms)'), trigger: 'blur' },
-  ],
-  'parameters.read_timeout_ms': [
-    { required: true, message: requiredMsg('Read Timeout (ms)'), trigger: 'blur' },
-  ],
-  'parameters.max_batch_size': [
-    { required: true, message: requiredMsg('Max Batch Size'), trigger: 'blur' },
-    {
-      validator: (_: any, value: any, callback: any) => {
-        const num = Number(value)
-        if (!Number.isInteger(num) || num < 1 || num > 125) {
-          callback(new Error('Must be an integer between 1 and 125'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change',
-    },
-  ],
-  'parameters.poll_interval_ms': [
-    { required: true, message: requiredMsg('Poll Interval (ms)'), trigger: 'blur' },
-    {
-      validator: (_: any, value: any, callback: any) => {
-        const num = Number(value)
-        if (!Number.isInteger(num) || num < 1) {
-          callback(new Error('Must be a positive integer'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change',
-    },
-  ],
-  'logging.enabled': [{ required: true, message: requiredMsg('Logging Enabled'), trigger: 'change' }],
-  'logging.level': [{ required: true, message: requiredMsg('Logging Level'), trigger: 'change' }],
-}
-const rtuRules: Record<string, any[]> = {
-  name: [{ required: true, message: requiredMsg('Name'), trigger: 'blur' }],
-  protocol: [{ required: true, message: requiredMsg('Protocol'), trigger: 'change' }],
-  'parameters.device': [{ required: true, message: requiredMsg('Device'), trigger: 'blur' }],
-  'parameters.parity': [{ required: true, message: requiredMsg('Parity'), trigger: 'change' }],
-  'parameters.baud_rate': [{ required: true, message: requiredMsg('Baud Rate'), trigger: 'blur' }],
-  'parameters.data_bits': [{ required: true, message: requiredMsg('Data Bits'), trigger: 'blur' }],
-  'parameters.stop_bits': [{ required: true, message: requiredMsg('Stop Bits'), trigger: 'blur' }],
-  'parameters.connect_timeout_ms': [
-    { required: true, message: requiredMsg('Connect Timeout (ms)'), trigger: 'blur' },
-  ],
-  'parameters.read_timeout_ms': [
-    { required: true, message: requiredMsg('Read Timeout (ms)'), trigger: 'blur' },
-  ],
-  'parameters.retry_interval_ms': [
-    { required: true, message: requiredMsg('Retry Interval (ms)'), trigger: 'blur' },
-  ],
-  'parameters.max_batch_size': [
-    { required: true, message: requiredMsg('Max Batch Size'), trigger: 'blur' },
-    {
-      validator: (_: any, value: any, callback: any) => {
-        const num = Number(value)
-        if (!Number.isInteger(num) || num < 1 || num > 125) {
-          callback(new Error('Must be an integer between 1 and 125'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change',
-    },
-  ],
-  'parameters.poll_interval_ms': [
-    { required: true, message: requiredMsg('Poll Interval (ms)'), trigger: 'blur' },
-    {
-      validator: (_: any, value: any, callback: any) => {
-        const num = Number(value)
-        if (!Number.isInteger(num) || num < 1) {
-          callback(new Error('Must be a positive integer'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change',
-    },
-  ],
-  'logging.enabled': [{ required: true, message: requiredMsg('Logging Enabled'), trigger: 'change' }],
-  'logging.level': [{ required: true, message: requiredMsg('Logging Level'), trigger: 'change' }],
-}
-const diDoRules: Record<string, any[]> = {
-  name: [{ required: true, message: requiredMsg('Name'), trigger: 'blur' }],
-  protocol: [{ required: true, message: requiredMsg('Protocol'), trigger: 'change' }],
-  'parameters.driver': [{ required: true, message: requiredMsg('Driver'), trigger: 'blur' }],
-  'parameters.gpio_base_path': [
-    { required: true, message: requiredMsg('GPIO Base Path'), trigger: 'blur' },
-  ],
-  'parameters.di_poll_interval_ms': [
-    { required: true, message: requiredMsg('DI Poll Interval (ms)'), trigger: 'blur' },
-    {
-      validator: (_: any, value: any, callback: any) => {
-        const num = Number(value)
-        if (!Number.isInteger(num) || num < 0) callback(new Error('Must be an integer >= 0'))
-        else callback()
-      },
-      trigger: 'change',
-    },
-  ],
+  enabled: [{ required: true, message: requiredMsg('Enabled'), trigger: 'change' }],
   'logging.enabled': [{ required: true, message: requiredMsg('Logging Enabled'), trigger: 'change' }],
   'logging.level': [{ required: true, message: requiredMsg('Logging Level'), trigger: 'change' }],
 }
 const formRules = computed<Record<string, any[]>>(() => {
   if (!isEditing.value) return {}
-  if (form.value.protocol === 'modbus_tcp') return tcpRules
-  if (form.value.protocol === 'modbus_rtu') return rtuRules
-  if (form.value.protocol === 'di_do') return diDoRules
-  return {}
+  let protocolRules: Record<string, any[]> = {}
+  if (form.value.protocol === 'modbus_tcp') {
+    protocolRules = modbusTcpRules
+  } else if (form.value.protocol === 'modbus_rtu') {
+    protocolRules = modbusRtuRules
+  } else if (form.value.protocol === 'di_do') {
+    protocolRules = diDoRules
+  }
+  const idRules: Record<string, any[]> =
+    isAdd.value && channelIdMode.value === 'manual'
+      ? {
+          channel_id: [
+            { required: true, message: requiredMsg('Channel ID'), trigger: 'blur' },
+            {
+              validator: (_: any, value: any, callback: any) => {
+                const num = Number(value)
+                if (!Number.isInteger(num) || num < 1) {
+                  callback(new Error('Must be a positive integer'))
+                } else {
+                  callback()
+                }
+              },
+              trigger: 'change',
+            },
+          ],
+        }
+      : {}
+  return {
+    ...baseRules,
+    ...idRules,
+    ...protocolRules,
+  }
 })
+
+const openPanelsForErrors = (fields?: Record<string, any>) => {
+  if (!fields) return
+  const keys = Object.keys(fields)
+  let openBasic = false
+  let openParams = false
+  let openLogging = false
+  for (const key of keys) {
+    if (key.startsWith('logging.')) {
+      openLogging = true
+    } else if (
+      key === 'name' ||
+      key === 'protocol' ||
+      key === 'enabled' ||
+      key === 'channel_id' ||
+      key === 'channel_id_mode' ||
+      key === 'description'
+    ) {
+      openBasic = true
+    } else {
+      openParams = true
+    }
+  }
+  if (openBasic) isBasicOpen.value = true
+  if (openParams) isParamsOpen.value = true
+  if (openLogging) isLoggingOpen.value = true
+}
+
+const applyDetail = (detail: ChannelDetail) => {
+  form.value = detail
+  if (!form.value.logging) {
+    form.value.logging = {
+      enabled: true,
+      level: 'debug',
+    }
+  }
+  copyForm.value = {
+    description: detail.description,
+    protocol: detail.protocol,
+    name: detail.name,
+    parameters: detail.parameters,
+  }
+}
+
+const fetchDetail = async (id: number) => {
+  const res = await getChannelDetail(id)
+  if (res.success) {
+    applyDetail(res.data)
+  }
+}
 
 // 当协议变化时，初始化对应的参数模板
 watch(
@@ -911,6 +593,27 @@ watch(
     nextTick(() => {
       formRef.value?.clearValidate()
     })
+  },
+  { immediate: false },
+)
+
+watch(
+  channelIdMode,
+  (mode) => {
+    if (mode === 'auto') {
+      channelIdInput.value = null
+    }
+    ;(form.value as any).channel_id = channelIdInput.value
+    ;(form.value as any).channel_id_mode = mode
+    formRef.value?.clearValidate(['channel_id'])
+  },
+  { immediate: false },
+)
+
+watch(
+  channelIdInput,
+  (value) => {
+    ;(form.value as any).channel_id = value
   },
   { immediate: false },
 )
@@ -951,16 +654,28 @@ const handleCancel = () => {
     if (formDialogRef.value) {
       formDialogRef.value.dialogVisible = false
     }
-    emit('cancel')
+    if (didUpdate.value) {
+      emit('submit')
+    } else {
+      emit('cancel')
+    }
+    didUpdate.value = false
   }
 }
 
 // 提交
 const handleSubmit = () => {
-  formRef.value?.validate(async (valid) => {
+  formRef.value?.validate(async (valid, fields) => {
     if (valid) {
       if (isAdd.value) {
-        const res = await createChannel(form.value)
+        const payload: any = JSON.parse(JSON.stringify(form.value))
+        delete payload.channel_id_mode
+        if (channelIdMode.value === 'manual' && channelIdInput.value) {
+          payload.channel_id = channelIdInput.value
+        } else {
+          delete payload.channel_id
+        }
+        const res = await createChannel(payload)
         if (res.success) {
           ElMessage.success('Channel created successfully')
           formDialogRef.value.dialogVisible = false
@@ -970,51 +685,43 @@ const handleSubmit = () => {
         }
       } else {
         if (!form.value.id) return
-        // 更新时不携带 enabled 字段
         const payload: any = JSON.parse(JSON.stringify(form.value))
-        delete payload.enabled
         const res = await updateChannel(form.value.id, payload)
         if (res.success) {
           ElMessage.success('Channel updated successfully')
-          formDialogRef.value.dialogVisible = false
           isEditing.value = false
-          emit('submit')
+          didUpdate.value = true
+          await fetchDetail(form.value.id)
         }
       }
+    } else {
+      openPanelsForErrors(fields)
     }
   })
 }
 const open = async (id: number | undefined) => {
+  didUpdate.value = false
+  isBasicOpen.value = true
+  isParamsOpen.value = true
+  isRuntimeOpen.value = false
+  isLoggingOpen.value = false
+  isPointsOpen.value = false
+  channelIdMode.value = 'auto'
+  channelIdInput.value = null
   form.value.id = id
   if (id) {
     // 打开详情：查看模式，明确重置新增标记
     isAdd.value = false
     isEditing.value = false
-    const res = await getChannelDetail(id)
-    if (res.success) {
-      form.value = res.data
-      // 如果没有 logging，设置默认值
-      if (!form.value.logging) {
-        form.value.logging = {
-          enabled: true,
-          level: 'debug',
-        }
-      }
-      formDialogRef.value.dialogVisible = true
-      isEditing.value = false
-      copyForm.value = {
-        description: res.data.description,
-        protocol: res.data.protocol,
-        name: res.data.name,
-        parameters: res.data.parameters,
-      }
-    }
+    await fetchDetail(id)
+    formDialogRef.value.dialogVisible = true
+    isEditing.value = false
   } else {
     form.value = {
       name: '',
       description: '',
       protocol: 'modbus_tcp',
-      enabled: false,
+      enabled: true,
       parameters: {
         ...PROTOCOL_DEFAULTS.modbus_tcp,
       },
@@ -1023,6 +730,8 @@ const open = async (id: number | undefined) => {
         level: 'debug',
       },
     } as any
+    ;(form.value as any).channel_id = null
+    ;(form.value as any).channel_id_mode = 'auto'
     isAdd.value = true
     isEditing.value = true
     formDialogRef.value.dialogVisible = true
@@ -1038,7 +747,12 @@ const open = async (id: number | undefined) => {
 // 关闭
 const handleClose = () => {
   isEditing.value = false
-  emit('cancel')
+  if (didUpdate.value) {
+    emit('submit')
+  } else {
+    emit('cancel')
+  }
+  didUpdate.value = false
 }
 defineExpose({
   open,
@@ -1046,12 +760,24 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+@use '@/assets/styles/variables' as *;
 .voltage-class .channel-detail-dialog {
-  max-height: 600px;
+  height: 100%;
+  // max-height: 80%;
   overflow-y: auto;
+  padding: 0 10px 10px 10px;
+  .channel-detail-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
   .channel-detail__section {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
+    // margin-bottom: 30px;
+    // padding-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
     &:last-child {
@@ -1061,23 +787,45 @@ defineExpose({
     .channel-detail__section-title {
       font-size: 16px;
       font-weight: 600;
-      color: #fff;
+      color: $text-color-primary;
       margin: 0 0 15px 0;
     }
 
     .channel-detail__parameters {
-      display: block;
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 12px;
+      row-gap: 6px;
+    }
+
+    :deep(.el-form-item) {
+      width: calc(50% - 6px);
+      margin-right:0;
+      margin-bottom: 0px;
+    }
+
+    .channel-detail__form-item--full {
+      flex: 1 1 100%;
+      min-width: 100%;
+      max-width: 100%;
+    }
+
+    :deep(.el-input),
+    :deep(.el-select),
+    :deep(.el-input-number) {
+      width: 100% !important;
     }
   }
 
-  .el-form-item {
-    margin-bottom: 20px;
-  }
+  // .el-form-item {
+  //   margin-bottom: 0px;
+  // }
 
   .channel-detail__text {
-    color: #fff;
+    color: $text-color-primary;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 32px;
   }
+
 }
 </style>

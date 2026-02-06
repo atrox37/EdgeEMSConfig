@@ -2,13 +2,15 @@
 /* Element Plus Form �����ʽ */
 
 .voltage-class {
+
   // Form ������ʽ
   .el-form {
     .el-form-item {
       margin-bottom: $spacing-lg;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 20px;
+
       // &:last-child {
       //   margin-bottom: 0;
       // }
@@ -37,21 +39,21 @@
       .el-form-item__content {
         flex: 1;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         line-height: 32px;
 
         // ��֤������Ϣ
         .el-form-item__error {
           color: $danger-color;
           font-size: 10px;
-          line-height: $line-height-normal;
+          line-height: 1;
         }
 
         // �����ı�
         .el-form-item__help {
           color: $text-color-secondary;
           font-size: $font-size-small;
-          line-height: $line-height-normal;
+          line-height: 1;
           margin-top: $spacing-xs;
           display: block;
         }
@@ -64,12 +66,8 @@
       .el-form-item__label {
         color: $text-color-primary !important;
       }
-
-      .el-input__wrapper,
-      .el-textarea__inner {
-        // border-color: initial !important;
-      }
     }
+
     &.is-error {
       .el-form-item__label {
         color: $text-color-primary !important;
@@ -82,6 +80,7 @@
         border-color: #f56c6c !important;
       }
     }
+
     &.is-warning {
       .el-form-item__label {
         color: $text-color-primary !important;
@@ -104,6 +103,7 @@
         cursor: not-allowed;
       }
     }
+
     &.el-form--label-right {
       .el-form-item {
         .el-form-item__label {
@@ -112,12 +112,14 @@
         }
       }
     }
+
     // ���ڱ���
     &.el-form--inline {
       .el-form-item {
         display: inline-flex;
         margin-bottom: 20px;
         margin-right: 20px;
+
         .el-form-item__label {
           margin-bottom: 0;
           margin-right: 16px;
@@ -129,6 +131,7 @@
         // }
       }
     }
+
     // ��ǩ��������
     &.el-form--label-top {
       .el-form-item {
@@ -151,6 +154,7 @@
 
   // Form �ߴ����
   .el-form {
+
     // С��??
     &.el-form--small {
       .el-form-item {
@@ -162,6 +166,7 @@
         }
 
         .el-form-item__content {
+
           .el-form-item__error,
           .el-form-item__help {
             font-size: $font-size-extra-small;
@@ -172,6 +177,7 @@
 
     // Form ��֤������ʽ
     .el-form {
+
       // ��֤��״??
       .el-form-item.is-validating {
         .el-form-item__content {
@@ -223,4 +229,3 @@
     }
   }
 }
-

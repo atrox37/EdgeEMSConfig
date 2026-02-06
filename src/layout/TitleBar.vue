@@ -1,20 +1,19 @@
 <template>
   <div class="titlebar" data-tauri-drag-region>
-    <!-- 左侧:应用标题(可拖动区域) -->
     <div class="titlebar__left" data-tauri-drag-region>
       <div class="titlebar__title" data-tauri-drag-region>Monarch Edge Configuration</div>
     </div>
-
-      <!-- 右侧:用户信息和窗口控制按钮 -->
       <div class="titlebar__right">
-      <!-- IP地址 -->
       <div class="titlebar__ip-section" v-if="shouldShowUserInfo">
         <span class="titlebar__ip-address">{{ currentIpAddress }}</span>
       </div>
-
-      <!-- 用户头像/菜单（仅登录后显示） -->
       <div class="titlebar__user" v-if="shouldShowUserInfo">
-          <el-dropdown @command="handleUserCommand" trigger="click">
+          <el-dropdown
+            @command="handleUserCommand"
+            @visible-change="handleUserDropdownVisible"
+            trigger="click"
+            :teleported="false"
+          >
             <div class="titlebar__user-info">
               <div class="titlebar__user-avatar">
                 <div class="titlebar__user-avatar-initials">
@@ -22,7 +21,11 @@
                 </div>
               </div>
               <span class="titlebar__user-name">{{ userStore.userInfo?.username || '' }}</span>
-              <img :src="arrowDownIcon" class="titlebar__user-arrow" />
+              <img
+                :src="arrowDownIcon"
+                class="titlebar__user-arrow"
+                :class="{ 'is-open': isUserDropdownOpen }"
+              />
             </div>
             <template #dropdown>
               <el-dropdown-menu>
@@ -34,15 +37,13 @@
             </template>
           </el-dropdown>
       </div>
-
-      <!-- 窗口控制按钮(不可拖动) -->
       <div class="titlebar__controls">
-        <div class="titlebar__button titlebar__button--minimize" @click="minimizeWindow" title="最小化">
+        <div class="titlebar__button titlebar__button--minimize" @click="minimizeWindow" title="Minimize">
           <svg width="12" height="2" viewBox="0 0 12 2">
             <rect width="12" height="2" fill="currentColor" />
           </svg>
         </div>
-        <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize" :title="isMaximized ? '向下还原' : '最大化'">
+        <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize" :title="isMaximized ? 'Maximize' : 'Maximize'">
           <svg v-if="!isMaximized" width="12" height="12" viewBox="0 0 12 12">
             <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
           </svg>
@@ -51,7 +52,7 @@
             <rect x="0" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
           </svg>
         </div>
-        <div class="titlebar__button titlebar__button--close" @click="closeWindow" title="关闭">
+        <div class="titlebar__button titlebar__button--close" @click="closeWindow" title="Close">
           <svg width="12" height="12" viewBox="0 0 12 12">
             <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" />
             <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5" />
@@ -69,7 +70,6 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useUserStore } from '@/stores/user'
 import { getApiConfig } from '@/utils/apiConfig'
 
-// 导入图标
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
 
@@ -80,14 +80,12 @@ const userStore = useUserStore()
 const isMaximized = ref(false)
 const appWindow = getCurrentWindow()
 const currentIpAddress = ref<string>('')
+const isUserDropdownOpen = ref(false)
 
-// 判断是否为登录页面
 const isLoginPage = computed(() => route.path === '/login')
 
-// 是否显示用户相关信息（登录后且不在登录页面）
 const shouldShowUserInfo = computed(() => userStore.isLoggedIn && !isLoginPage.value)
 
-// 获取当前IP地址
 const loadCurrentIp = async () => {
   const apiConfig = await getApiConfig()
   if (apiConfig) {
@@ -95,7 +93,6 @@ const loadCurrentIp = async () => {
   }
 }
 
-// 监听用户登录状态，加载IP地址
 watch(
   () => userStore.isLoggedIn,
   async (isLoggedIn) => {
@@ -106,7 +103,6 @@ watch(
   { immediate: true }
 )
 
-// 窗口控制函数
 const minimizeWindow = async () => {
   await appWindow.minimize()
 }
@@ -123,14 +119,11 @@ const closeWindow = async () => {
   await appWindow.close()
 }
 
-// 监听窗口最大化状态
 let unlistenResize: (() => void) | null = null
 
 onMounted(async () => {
-  // 获取初始状态
   isMaximized.value = await appWindow.isMaximized()
   
-  // 监听窗口调整大小事件
   unlistenResize = await appWindow.onResized(async () => {
     isMaximized.value = await appWindow.isMaximized()
   })
@@ -142,7 +135,6 @@ onUnmounted(() => {
   }
 })
 
-// 用户操作
 const handleUserCommand = async (command: string) => {
   switch (command) {
     case 'logout':
@@ -152,7 +144,10 @@ const handleUserCommand = async (command: string) => {
   }
 }
 
-// 获取头像首字母
+const handleUserDropdownVisible = (visible: boolean) => {
+  isUserDropdownOpen.value = visible
+}
+
 const getAvatarName = (name: string): string => {
   const nameStr = name.split(' ')
   if (nameStr.length === 1) {
@@ -203,7 +198,6 @@ const getAvatarName = (name: string): string => {
     padding-right: 0;
   }
 
-  // IP地址区域
   .titlebar__ip-section {
     display: flex;
     align-items: center;
@@ -231,7 +225,7 @@ const getAvatarName = (name: string): string => {
       transition: all $transition-base;
 
       &:hover {
-        background: rgba(0, 0, 0, 0.05); // 浅色主题hover背景
+        background: rgba(0, 0, 0, 0.05);
       }
     }
 
@@ -264,6 +258,10 @@ const getAvatarName = (name: string): string => {
       width: 12px;
       height: 12px;
       opacity: 0.6;
+      transition: transform 0.2s ease;
+      &.is-open {
+        transform: rotate(180deg);
+      }
     }
 
     .titlebar__user-item {
@@ -309,21 +307,21 @@ const getAvatarName = (name: string): string => {
     }
 
     &:hover {
-      background: rgba(0, 0, 0, 0.05); // 浅色主题hover背景
+      background: rgba(0, 0, 0, 0.05); // 浅色锟斤拷锟斤拷hover锟斤拷锟斤拷
     }
 
     &:active {
-      background: rgba(0, 0, 0, 0.1); // 浅色主题active背景
+      background: rgba(0, 0, 0, 0.1); // 浅色锟斤拷锟斤拷active锟斤拷锟斤拷
     }
 
     &.titlebar__button--close {
       &:hover {
-        background: #e81123; // Windows标准关闭按钮颜色，保持不变
+        background: #e81123; // Windows锟斤拷准锟截闭帮拷钮锟斤拷色锟斤拷锟斤拷锟街诧拷锟斤拷
         color: $text-color-primary;
       }
 
       &:active {
-        background: #f1707a; // Windows标准关闭按钮颜色，保持不变
+        background: #f1707a; // Windows锟斤拷准锟截闭帮拷钮锟斤拷色锟斤拷锟斤拷锟街诧拷锟斤拷
       }
     }
   }

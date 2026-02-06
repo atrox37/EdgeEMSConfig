@@ -2,8 +2,9 @@
   <FormDialog
     ref="formDialogRef"
     :title="`Edit ${card?.label}`"
-    :width="widthList[card?.type as keyof typeof widthList] || '1000px'"
+    width="90%"
     @close="handleClose"
+    style="height: 80%;"
   >
     <template #dialog-body>
       <div v-if="card" class="voltage-class card-edit-dialog">
@@ -22,15 +23,12 @@
 import { ref, watch, computed } from 'vue'
 import FunctionSwitchForm from './customCardForm/FunctionSwitchForm.vue'
 import ActionChangeValue from './customCardForm/ActionChangeValue.vue'
+import ActionPeriodDelta from './customCardForm/ActionPeriodDelta.vue'
 import type { RuleCard } from '@/types/ruleConfiguration'
 
 interface Props {
   visible: boolean
   card: RuleCard | null
-}
-const widthList = {
-  'function-switch': '1400px',
-  'action-changeValue': '1400px',
 }
 interface Emits {
   (e: 'update:visible', value: boolean): void
@@ -47,6 +45,7 @@ const childFormRef = ref<any>(null)
 const componentMap: Record<string, any> = {
   'function-switch': FunctionSwitchForm,
   'action-changeValue': ActionChangeValue,
+  'action-periodDelta': ActionPeriodDelta,
 }
 
 const currentFormComponent = computed(() => {
@@ -100,9 +99,16 @@ function deepClone<T>(obj: T): T {
 <style lang="scss" scoped>
 .voltage-class {
   .card-edit-dialog {
-    .el-form {
+    color: $text-color-primary;
+    width: 100%;
+    height: 100%;
+    :deep(.el-form) {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
       .el-form-item {
-        margin-bottom: 20px;
+        margin-bottom: 0px;
 
         .el-form-item__label {
           font-weight: 600;

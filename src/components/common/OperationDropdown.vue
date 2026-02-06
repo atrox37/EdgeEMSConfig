@@ -1,11 +1,9 @@
 <template>
   <div class="operation-dropdown">
-    <!-- 宽屏模式：显示所有操作按钮 -->
     <div v-if="!isNarrow" class="operation-buttons">
       <slot name="buttons"></slot>
     </div>
 
-    <!-- 窄屏模式：显示更多下拉菜单 -->
     <el-dropdown v-else trigger="click" @command="handleCommand">
       <el-button link class="operation-more-btn">
         <el-icon :size="18"><MoreFilled /></el-icon>
@@ -25,12 +23,10 @@ import { useResponsive } from '@/composables/useResponsive'
 
 const { isNarrow } = useResponsive()
 
-// 定义 emits
 const emit = defineEmits<{
   command: [command: string]
 }>()
 
-// 处理下拉菜单命令
 const handleCommand = (command: string) => {
   emit('command', command)
 }
@@ -57,7 +53,6 @@ const handleCommand = (command: string) => {
   }
 }
 
-// 下拉菜单样式
 :deep(.operation-dropdown-menu) {
   .el-dropdown-menu__item {
     display: flex;

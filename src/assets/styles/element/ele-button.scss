@@ -21,11 +21,11 @@
     vertical-align: middle;
     color: #ffffff !important; // Ĭ�ϰ�ɫ����
     border-radius: $border-radius-base !important;
-    background-color: $secondary-color;
+    background-color: $secondary-color !important;
 
 
     .el-icon {
-      color: #ffffff !important;
+      color: #ffffff;
     }
 
     img {
@@ -48,13 +48,13 @@
     // ��Ҫ��ť�����ְ�ɫ���֣�
     &.el-button--primary,
     &.el-picker-panel__link-btn {
-      background: $primary-color;
+      background: $primary-color !important;
       color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
       box-shadow: none;
 
       // ͼ����ɫ��������ɫ��ͬ����ɫ��
       .el-icon {
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       img {
@@ -83,7 +83,7 @@
         cursor: not-allowed;
 
         .el-icon {
-          color: $text-color-disabled !important;
+          color: $text-color-disabled;
         }
 
         img {
@@ -100,11 +100,11 @@
 
     // Warning��ť - ��ɫ����
     &.el-button--warning {
-      background: $warning-color !important; // ʹ��warning��ɫ
+      background: $warning-color !important; // 使用warning颜色
       color: #ffffff !important; // ��ɫ����
 
       .el-icon {
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       img {
@@ -113,12 +113,12 @@
 
       &:hover {
         background: $warning-color-hover !important;
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       &:active {
         background: $warning-color-active !important;
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       &:focus {
@@ -126,13 +126,13 @@
       }
 
       &.is-disabled {
-        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        // 状态为当前颜色与灰色50%混合的颜色
         background: color.mix($warning-color, #c0c4cc, 50%) !important;
         color: $text-color-disabled !important;
         cursor: not-allowed;
 
         .el-icon {
-          color: $text-color-disabled !important;
+          color: $text-color-disabled;
         }
 
         img {
@@ -147,13 +147,13 @@
       }
     }
 
-    // �ı���ť - ����͸��������������Ϊ��ɫ�������������ɫ��
+    // 文本按钮 - 当前颜色与灰色50%混合的颜色
     &.is-text {
       background: transparent !important;
-      color: #ffffff !important; // ��ɫ����
+      color: #ffffff; // 白色
 
       .el-icon {
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       img {
@@ -173,11 +173,11 @@
       }
 
       &.is-disabled {
-        color: $text-color-disabled !important;
+        color: $text-color-disabled;
         cursor: not-allowed;
 
         .el-icon {
-          color: $text-color-disabled !important;
+          color: $text-color-disabled;
         }
 
         img {
@@ -189,11 +189,11 @@
     // ��Ϣ��ť - ��ɫ����
     &.el-button--info {
       background: $gradient-info-button;
-      color: #ffffff !important; // ��ɫ����
+      color: #ffffff !important; // 白色
       box-shadow: $box-shadow-base;
 
       .el-icon {
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       img {
@@ -204,14 +204,14 @@
         background: $gradient-info-button-hover;
         box-shadow: $box-shadow-medium;
         transform: translateY(-1px);
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       &:active {
         background: $gradient-info-button-active;
         box-shadow: $box-shadow-base;
         transform: translateY(0);
-        color: #ffffff !important;
+        color: #ffffff;
       }
 
       &:focus {
@@ -219,13 +219,13 @@
       }
 
       &.is-disabled {
-        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        // 状态为当前颜色与灰色50%混合的颜色
         background: color.mix($info-color, #c0c4cc, 50%) !important;
         color: $text-color-disabled !important;
         cursor: not-allowed;
 
         .el-icon {
-          color: $text-color-disabled !important;
+          color: $text-color-disabled;
         }
 
         img {
@@ -240,10 +240,10 @@
       }
     }
 
-    // Ĭ�ϰ�ť - ʹ�ø�����ɫ����ɫ����
+    // 默认按钮 - 使用当前颜色与灰色50%混合的颜色
     &.el-button--default {
       background: $secondary-color !important;
-      color: #ffffff !important; // ��ɫ����
+      color: #ffffff; // 白色
       border: $border-width-base solid $secondary-color;
 
       .el-icon {
@@ -273,7 +273,7 @@
       }
 
       &.is-disabled {
-        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        // 状态为当前颜色与灰色50%混合的颜色
         background: color.mix($secondary-color, #c0c4cc, 50%) !important;
         border-color: color.mix($secondary-color, #c0c4cc, 50%);
         color: $text-color-disabled !important;
@@ -296,12 +296,13 @@
       }
     }
 
-    // ���Ӱ�ť - ��ɫ����
+    // 链接按钮 - 使用当前颜色与灰色50%混合的颜色
     &.is-link {
       background: transparent !important;
       padding: 5px 8px !important;
       text-decoration: underline;
       color: $primary-color !important;
+      font-size: 24px !important;
 
       &:hover {
         background: transparent !important;
@@ -314,7 +315,7 @@
       }
     }
 
-    // Բ�ΰ�ť
+    // 圆形按钮
     &.is-circle {
       border-radius: $border-radius-circle;
       padding: 0;
@@ -335,12 +336,12 @@
       }
     }
 
-    // Բ�ǰ�ť
+    // 圆形按钮
     &.is-round {
       border-radius: 4px;
     }
 
-    // ����״̬
+      // 加载状态
     &.is-loading {
       pointer-events: none;
       opacity: $opacity-loading;

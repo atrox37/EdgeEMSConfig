@@ -24,10 +24,11 @@
   //   }
 
   //   // Nodes default background (fallback)
-  //   .vue-flow__node {
-  //     background-color: $bg-color-overlay;
-  //     border-color: $primary-color-alpha-35;
-  //   }
+    .vue-flow__node {
+      // background-color: $bg-color-overlay;
+      // border-color: $primary-color-alpha-35;
+      border-radius: 8px;
+    }
   .vue-flow__minimap {
     width: $vueflow-minimap-width;
     height: $vueflow-minimap-height;

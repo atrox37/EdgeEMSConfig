@@ -13,7 +13,7 @@
 
         <!-- 表单区域 -->
         <div class="initial-config-page__form">
-          <el-form :model="form" label-position="right" ref="formRef" :rules="formRules" label-width="100px">
+          <el-form @keyup.enter="handleLogin(formRef)" :model="form" label-position="right" ref="formRef" :rules="formRules" label-width="100px">
             <!-- Username -->
             <el-form-item label="Username:" prop="username">
               <el-input
@@ -170,7 +170,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 .voltage-class.initial-config-page {
   width: 100%;
   height: 100%;
-  background: $bg-color-page;
+  background: $bg-gradient-page;
   position: relative;
   overflow: hidden;
   border: $border-width-base solid;
@@ -326,4 +326,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     width: 100% !important;
 }
 </style>
+
+
 

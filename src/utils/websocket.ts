@@ -7,6 +7,7 @@
 import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { getApiConfig } from '@/utils/apiConfig'
 import type {
   ConnectionStatus,
   ClientMessage,
@@ -49,10 +50,9 @@ class WebSocketManager {
   private ws: WebSocket | null = null
   private config: WebSocketConfig
   private reconnectAttempts = 0
-  private heartbeatTimer: number | null = null
-  private heartbeatTimeoutTimer: number | null = null
-  private reconnectTimer: number | null = null
-  private messageIdCounter = 0
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null
+  private heartbeatTimeoutTimer: ReturnType<typeof setTimeout> | null = null
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private isManualDisconnect = false
   private connectingPromise: Promise<void> | null = null // 连接 Promise 缓存，避免并发调用
 
@@ -80,6 +80,31 @@ class WebSocketManager {
       heartbeatInterval: 5000,
       heartbeatTimeout: 3000,
       ...config,
+    }
+  }
+
+  /** 根据 API 配置生成 WebSocket 地址 */
+  private buildWsUrl(baseURL: string): string {
+    try {
+      const url = new URL(baseURL)
+      const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+      return `${protocol}//${url.host}/ws`
+    } catch (error) {
+      console.error('[WebSocket] 无效的 baseURL:', baseURL, error)
+      return ''
+    }
+  }
+
+  /** 初始化 WebSocket 地址（基于用户配置的 API 地址） */
+  public async initFromApiConfig(): Promise<void> {
+    const apiConfig = await getApiConfig()
+    const baseURL = apiConfig?.baseURL || ''
+    const wsUrl = baseURL ? this.buildWsUrl(baseURL) : ''
+    if (!wsUrl) {
+      throw new Error('WebSocket URL is not available')
+    }
+    if (this.config.url !== wsUrl) {
+      this.config.url = wsUrl
     }
   }
 
@@ -215,7 +240,7 @@ class WebSocketManager {
       subscriptionId = this.generateMessageId()
     }
     // 检查是否已存在相同的订阅
-    for (const [subId, record] of this.subscriptions) {
+    for (const [, record] of this.subscriptions) {
       if (
         record.config.source === normalizedConfig.source &&
         record.config.interval === normalizedConfig.interval &&
@@ -232,7 +257,7 @@ class WebSocketManager {
     }
 
     // 检查待订阅队列中是否已存在
-    for (const [messageId, subInfo] of this.pendingSubscriptionsMap) {
+    for (const [, subInfo] of this.pendingSubscriptionsMap) {
       if (
         subInfo.config.source === normalizedConfig.source &&
         subInfo.config.interval === normalizedConfig.interval &&
@@ -377,6 +402,9 @@ class WebSocketManager {
 
   /** 建立连接（含登录校验） */
   public connect(): Promise<void> {
+    if (!this.config.url) {
+      return Promise.reject(new Error('WebSocket URL is empty'))
+    }
     // 如果已连接，直接返回 resolved Promise
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       return Promise.resolve()
@@ -713,7 +741,7 @@ class WebSocketManager {
 }
 
 const wsManager = new WebSocketManager({
-  url: '/ws',
+  url: '',
 })
 
 export default wsManager

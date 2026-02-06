@@ -43,7 +43,8 @@ import { ChannelIdKey, ChannelNameKey } from '@/utils/key'
 interface OpenPayload {
   pointId: number
   dataType: string
-  category: 'C' | 'A'
+  category: 'C' | 'A' | 'T' | 'S'
+  signalName?: string
 }
 const channelName = inject(ChannelNameKey)
 const channelId = inject(ChannelIdKey)

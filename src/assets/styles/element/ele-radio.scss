@@ -1,5 +1,5 @@
 @use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Radio �?RadioGroup 组件样式 */
+/* Element Plus Radio �?RadioGroup 组件样式 */
 
 
 .voltage-class {
@@ -51,7 +51,7 @@
 
   // Radio 基础样式
   .el-radio {
-    color: $text-color-white-60;
+    color: $text-color-regular;
     height: $height-base;
     font-size: $font-size-base;
     font-weight: $font-weight-normal;
@@ -94,7 +94,7 @@
       }
 
       .el-radio__label {
-        color: $text-color-white-60;
+        color: $primary-color;
       }
 
       // 禁用且选中状�?
@@ -126,13 +126,13 @@
 
       &:not(.is-checked) {
         .el-radio__label {
-          color: rgba(255, 255, 255, 0.6);
+          color: $text-color-white-60;
         }
       }
     }
   }
 
-  // Radio 输入框样�?
+  // Radio 输入框样�?
   .el-radio__input {
     white-space: nowrap;
     cursor: pointer;
@@ -175,7 +175,7 @@
       width: 6px;
       height: 6px;
       border-radius: $border-radius-circle;
-      background-color: $text-color-primary;
+      background-color: $primary-color;
       content: '';
       position: absolute;
       left: 50%;
@@ -194,7 +194,7 @@
   .el-radio__label {
     font-size: $font-size-base;
     padding-left: $spacing-xs;
-    color: $text-color-white-60;
+    color: $text-color-regular;
     transition: color $transition-fast;
     user-select: none;
   }
@@ -222,7 +222,7 @@
       }
     }
 
-    // 按钮样式�?RadioGroup
+    // 按钮样式�?RadioGroup
     &--button {
       display: inline-flex;
       gap: 0;

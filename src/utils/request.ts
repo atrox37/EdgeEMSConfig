@@ -349,7 +349,9 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         default:
           break
       }
-      ElMessage.error(response.data.message || errorMessage)
+      if (customConfig.showErrorMessage !== false) {
+        ElMessage.error(response.data.message || errorMessage)
+      }
       return Promise.reject(new Error(errorMessage))
     }
   }
@@ -405,7 +407,9 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         isRefreshing = false
       }
 
-      ElMessage.error('Login expired, please log in again')
+      if (requestConfig?.showErrorMessage !== false) {
+        ElMessage.error('Login expired, please log in again')
+      }
       // 跳转到登录页（使用router，避免页面刷新）
       import('@/router').then(({ router }) => {
         router.push('/login')
@@ -456,7 +460,9 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
 
         // 处理队列中的请求
         processQueue(refreshError, null)
-        ElMessage.error('Login expired, please log in again')
+        if (requestConfig?.showErrorMessage !== false) {
+          ElMessage.error('Login expired, please log in again')
+        }
         // 跳转到登录页（使用router，避免页面刷新）
         import('@/router').then(({ router }) => {
           router.push('/login')
@@ -513,7 +519,9 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
       // 请求配置出错
       errorMessage = error.message || 'Request configuration error'
     }
-    ElMessage.error(error.response?.data?.message || errorMessage)
+    if (requestConfig?.showErrorMessage !== false) {
+      ElMessage.error(error.response?.data?.message || errorMessage)
+    }
     return Promise.reject(error)
   }
 
@@ -673,6 +681,18 @@ export const cancelAllPendingRequests = () => {
     cancelToken.cancel('路由切换，请求被取消')
   })
   pendingRequests.value.clear()
+  updateGlobalLoading()
+}
+
+// 取消指定 URL 的 pending 请求（按 method 前缀匹配）
+export const cancelPendingRequestsByUrl = (url: string, method: string = 'post') => {
+  const prefix = `${method.toLowerCase()}-${url}-`
+  pendingRequests.value.forEach((cancelToken: any, key: string) => {
+    if (key.startsWith(prefix)) {
+      cancelToken.cancel('请求被取消')
+      pendingRequests.value.delete(key)
+    }
+  })
   updateGlobalLoading()
 }
 
