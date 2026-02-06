@@ -20,11 +20,6 @@ pub fn run() {
             // 获取主窗口并设置无装饰
             let window = app.get_webview_window("main").unwrap();
             let _ = window.set_decorations(false);
-            // 生产模式下禁用开发者工具
-            #[cfg(not(debug_assertions))]
-            {
-                let _ = window.close_devtools();
-            }
             // 强制窗口尺寸与居中（避免平台默认行为覆盖）
             let _ = window.set_size(Size::Logical(LogicalSize {
                 width: 1050.0,
