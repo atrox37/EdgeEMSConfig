@@ -289,6 +289,7 @@ const handleUpgradeUpload = async () => {
       }
     )
 
+    ElMessage.warning('Please do not close the window while the upgrade is running.')
     upgradeUploadLoading.value = true
     upgradeAbortTriggered.value = false
     upgradeStatusVisible.value = true

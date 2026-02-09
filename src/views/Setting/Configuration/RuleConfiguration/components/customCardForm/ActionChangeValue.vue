@@ -121,7 +121,7 @@
                         </el-tooltip>
                       </el-option>
                     </el-select>
-                    <el-button class="combined-row__delete" type="warning" link
+                    <el-button class="combined-row__delete" link
                       @click="removeCombinedRow(v, pairIdx - 1)">
                       <el-icon class="combined-row__delete-icon">
                         <CircleClose />
@@ -138,7 +138,7 @@
                   </div>
                 </div>
               </el-form-item>
-              <el-button class="variable-row__delete" style="width: 32px !important" type="warning"
+              <el-button class="variable-row__delete" style="width: 32px !important"
                 @click="removeVariable(idx)">
                 <el-icon>
                   <Delete />
@@ -202,7 +202,7 @@
                   </el-tooltip>
                 </el-option>
               </el-select>
-              <el-button class="rule-row__delete" type="warning" style="width: 32px !important"
+              <el-button class="rule-row__delete" style="width: 32px !important"
                 @click="removeRuleRow(rIdx)">
                 <el-icon>
                   <Delete />

@@ -126,7 +126,7 @@
 
     <template #dialog-footer>
       <div class="dc-points-dialog__toolbar">
-        <el-button v-if="!isPublish" type="warning" @click="handleCancel">{{
+        <el-button v-if="!isPublish" @click="handleCancel">{{
           isEditing ? 'Cancel Edit' : 'Cancel'
         }}</el-button>
         <el-button

@@ -133,7 +133,7 @@ watch(
       background-color: #4fc3f7; // soft sky blue
     }
     &--action-periodDelta {
-      background-color: #ffb74d; // bright amber
+      background-color: #9c27b0; // purple
     }
 
     &--function-switch .custom-node__name,
@@ -152,7 +152,7 @@ watch(
       background-color: #29b6f6; // sky blue tile
     }
     .icon--action-periodDelta {
-      background-color: #ffa726; // amber tile
+      background-color: #7b1fa2; // purple tile
     }
 
     &__handle {

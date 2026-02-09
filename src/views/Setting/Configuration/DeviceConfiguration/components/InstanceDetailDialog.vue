@@ -70,7 +70,7 @@
                           <el-input v-model="prop.value" placeholder="Value"
                             class="instance-detail__property-value-input">
                             <template #suffix>
-                              <el-button type="warning" @click="removePropertyByIndex(index)" circle>
+                              <el-button @click="removePropertyByIndex(index)" circle>
                                 <el-icon>
                                   <Delete />
                                 </el-icon>
@@ -110,7 +110,7 @@
     </template>
 
     <template #dialog-footer>
-      <el-button type="warning" @click="handleCancel">{{
+      <el-button @click="handleCancel">{{
         isCreateMode ? 'Cancel' : isEditing ? 'Cancel Edit' : 'Cancel'
         }}</el-button>
       <el-button v-if="!isEditing" type="primary" @click="handleEdit"> Edit </el-button>

@@ -72,7 +72,7 @@
           top: 2px;
           width: 6px;
         }
-        td {
+          td {
           border-color: $border-color-white-10;
           color: $text-color-primary;
           font-size: $font-size-base;
@@ -113,6 +113,16 @@
               }
             }
           }
+          // 表格中的 el-switch 禁用 hover :after 样式
+          .el-switch {
+            &:hover:not(.is-disabled) {
+              .el-switch__core {
+                &::after {
+                  display: none !important;
+                }
+              }
+            }
+          }
         }
         .el-table__row {
           transition:
@@ -125,6 +135,16 @@
             // cursor: pointer;
             .el-table-fixed-column--right {
               background: $table-row-hover-bg;
+            }
+            // 禁用表格中 el-switch 的 hover :after 样式
+            .el-switch {
+              &:hover:not(.is-disabled) {
+                .el-switch__core {
+                  &::after {
+                    display: none !important;
+                  }
+                }
+              }
             }
             // td {
             //   color: #3b82f6;

@@ -5,6 +5,9 @@
     :width="width"
     :modal="true"
     :close-on-click-modal="false"
+    :close-on-press-escape="closeOnPressEscape"
+    :show-close="showClose"
+    :before-close="beforeClose"
     :append-to-body="appendToBody"
     @close="handleClose"
   >
@@ -31,11 +34,20 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+import { withDefaults } from 'vue'
+
+const props = withDefaults(defineProps<{
   title: string
   width: number | string
   appendToBody?: boolean
-}>()
+  closeOnPressEscape?: boolean
+  showClose?: boolean
+  beforeClose?: (done: () => void) => void
+}>(), {
+  appendToBody: false,
+  closeOnPressEscape: true,
+  showClose: true,
+})
 
 const emit = defineEmits<{
   (e: 'close'): void

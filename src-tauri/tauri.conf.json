@@ -22,7 +22,7 @@
         "decorations": false,
         "center": true,
         "dragDropEnabled": false,
-        "devtools": false
+        "devtools": true
       }
     ],
     "security": {

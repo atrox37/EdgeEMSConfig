@@ -49,7 +49,7 @@
       </div>
 
       <template #footer>
-        <el-button type="warning" @click="dismissUpdate">Remind Later</el-button>
+        <el-button @click="dismissUpdate">Remind Later</el-button>
         <el-button type="primary" :loading="isInstalling" @click="handleInstall">
           Update Now
         </el-button>

@@ -1,6 +1,9 @@
 <template>
   <div class="voltage-class initial-config-page">
     <TitleBar />
+    <div class="initial-config-page__init-button">
+      <el-button type="primary" @click="openInitDialog">Initialize Project</el-button>
+    </div>
     <div class="initial-config-page__container">
       <div class="initial-config-page__card">
         <!-- Monarch Logo -->
@@ -56,6 +59,7 @@
         </div>
       </div>
     </div>
+    <InitProjectDialog ref="initDialogRef" />
   </div>
 </template>
 
@@ -67,9 +71,11 @@ import TitleBar from '@/layout/TitleBar.vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { createApiConfig, saveApiConfig, setAxiosBaseURL, getApiConfig } from '@/utils/apiConfig'
+import InitProjectDialog from './components/InitProjectDialog.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const initDialogRef = ref<InstanceType<typeof InitProjectDialog>>()
 
 interface LoginForm {
   username: string
@@ -79,6 +85,32 @@ interface LoginForm {
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
+
+const openInitDialog = () => {
+  initDialogRef.value?.open()
+}
+
+// 检查是否是404或网络错误
+const isNetworkOr404Error = (error: any): boolean => {
+  // 检查是否是404错误
+  if (error?.response?.status === 404) {
+    return true
+  }
+  
+  // 检查是否是网络错误（有request但没有response）
+  if (error?.request && !error?.response) {
+    return true
+  }
+  
+  // 检查错误消息中是否包含网络相关关键词
+  const errorMessage = error?.message || ''
+  const networkKeywords = ['Network', 'network', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'timeout', '连接', '网络']
+  if (networkKeywords.some(keyword => errorMessage.includes(keyword))) {
+    return true
+  }
+  
+  return false
+}
 
 // 加载保存的IP地址
 const loadSavedIp = async () => {
@@ -140,6 +172,26 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     })
 
     if (!loginResult.success) {
+      // 检查错误消息中是否包含404或网络错误
+      const errorMessage = loginResult.message || ''
+      const isNetworkError = 
+        errorMessage.includes('404') || 
+        errorMessage.includes('Network') || 
+        errorMessage.includes('网络') || 
+        errorMessage.includes('连接') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('ENOTFOUND') ||
+        errorMessage.includes('Request URL not found') ||
+        errorMessage.includes('Network connection error') ||
+        errorMessage.includes('Network request failed')
+      
+      if (isNetworkError) {
+        ElMessage.warning('Unable to connect to server, please initialize project first')
+        openInitDialog()
+        return
+      }
       ElMessage.error(loginResult.message || 'Login failed')
       return
     }
@@ -147,6 +199,26 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     // 3. 获取用户信息
     const userInfoResult = await userStore.getUserInfo()
     if (!userInfoResult.success) {
+      const errorMessage = userInfoResult.message || ''
+      const isNetworkError = 
+        errorMessage.includes('404') || 
+        errorMessage.includes('Network') || 
+        errorMessage.includes('网络') || 
+        errorMessage.includes('连接') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('ENOTFOUND') ||
+        errorMessage.includes('Request URL not found') ||
+        errorMessage.includes('Network connection error') ||
+        errorMessage.includes('Network request failed')
+      
+      if (isNetworkError) {
+        ElMessage.warning('无法连接到服务器，请先初始化项目')
+        await userStore.clearUserData()
+        openInitDialog()
+        return
+      }
       ElMessage.error(userInfoResult.message || 'Failed to get user info')
       // 即使获取用户信息失败，也清除token，让用户重新登录
       await userStore.clearUserData()
@@ -158,7 +230,27 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     await router.push({ name: 'channelConfiguration' })
   } catch (error: any) {
     console.error('登录失败:', error)
-    ElMessage.error(error.message || 'Login failed')
+    const errorMessage = error?.message || String(error) || ''
+    const isNetworkError = 
+      errorMessage.includes('404') || 
+      errorMessage.includes('Network') || 
+      errorMessage.includes('网络') || 
+      errorMessage.includes('连接') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ETIMEDOUT') ||
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes('Request URL not found') ||
+      errorMessage.includes('Network connection error') ||
+      errorMessage.includes('Network request failed') ||
+      isNetworkOr404Error(error)
+    
+    if (isNetworkError) {
+      ElMessage.warning('无法连接到服务器，请先初始化项目')
+      openInitDialog()
+    } else {
+      ElMessage.error(error.message || 'Login failed')
+    }
   } finally {
     isLoading.value = false
   }
@@ -175,6 +267,14 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   overflow: hidden;
   border: $border-width-base solid;
   border-image-source: $border-gradient-base;
+
+  // 初始化项目按钮
+  .initial-config-page__init-button {
+    position: absolute;
+    top: 50px;
+    right: 30px;
+    z-index: 10;
+  }
 
   .initial-config-page__container {
     display: flex;

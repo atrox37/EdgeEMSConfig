@@ -50,14 +50,14 @@ export function useUpdater() {
         return true
       } else {
         if (!silent) {
-          ElMessage.success('当前已是最新版本')
+          ElMessage.success('The current version is the latest')
         }
         return false
       }
     } catch (error) {
-      console.error('检查更新失败:', error)
+      console.error('check update failed:', error)
       if (!silent) {
-        ElMessage.error(`检查更新失败: ${error instanceof Error ? error.message : String(error)}`)
+        ElMessage.error(`check update failed: ${error instanceof Error ? error.message : String(error)}`)
       }
       return false
     } finally {
@@ -75,7 +75,7 @@ export function useUpdater() {
 
     // 格式化更新日志（支持 Markdown 格式）
     const formatNotes = (notes?: string): string => {
-      if (!notes) return '暂无更新说明'
+      if (!notes) return 'No update notes'
       
       // 将 Markdown 格式转换为 HTML（简单处理）
       return notes
@@ -102,10 +102,10 @@ export function useUpdater() {
           </div>
         </div>
       `,
-      '应用更新',
+      'Application Update',
       {
-        confirmButtonText: '立即更新',
-        cancelButtonText: '稍后提醒',
+        confirmButtonText: 'Update Now',
+        cancelButtonText: 'Remind Later',
         dangerouslyUseHTMLString: true,
         type: 'info',
         customClass: 'update-dialog',
@@ -118,7 +118,7 @@ export function useUpdater() {
       })
       .catch(() => {
         // 用户选择稍后提醒
-        console.log('用户选择稍后更新')
+        console.log('user chooses to remind later')
       })
   }
 
@@ -127,21 +127,21 @@ export function useUpdater() {
    */
   const installUpdate = async () => {
     if (!updateAvailable.value) {
-      ElMessage.error('没有可用的更新')
+      ElMessage.error('No available update')
       return
     }
 
     try {
-      ElMessage.info('正在下载更新，请稍候...')
+      ElMessage.info('Downloading update, please wait...')
       
       await updateAvailable.value.downloadAndInstall()
 
       ElMessageBox.confirm(
-        '更新已下载完成，需要重启应用以应用更新。是否立即重启？',
-        '更新完成',
+        'The update has been downloaded, and the application needs to be restarted to apply the update. Do you want to restart immediately?',
+        'Update Completed',
         {
-          confirmButtonText: '立即重启',
-          cancelButtonText: '稍后重启',
+          confirmButtonText: 'Restart Now',
+          cancelButtonText: 'Restart Later',
           type: 'success',
         }
       )
@@ -152,19 +152,19 @@ export function useUpdater() {
             if (updateAvailable.value && typeof (updateAvailable.value as any).restart === 'function') {
               await (updateAvailable.value as any).restart()
             } else {
-              ElMessage.info('请手动重启应用以完成更新')
+              ElMessage.info('Please manually restart the application to complete the update')
             }
           } catch (error) {
-            console.error('重启应用失败:', error)
-            ElMessage.info('请手动重启应用以完成更新')
+            console.error('restart application failed:', error)
+            ElMessage.info('Please manually restart the application to complete the update')
           }
         })
         .catch(() => {
-          ElMessage.info('应用将在下次启动时应用更新')
+          ElMessage.info('The application will apply the update the next time it starts')
         })
     } catch (error) {
-      console.error('安装更新失败:', error)
-      ElMessage.error(`安装更新失败: ${error instanceof Error ? error.message : String(error)}`)
+      console.error('install update failed:', error)
+      ElMessage.error(`install update failed: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

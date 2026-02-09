@@ -119,7 +119,7 @@
                         </el-tooltip>
                       </el-option>
                     </el-select>
-                    <el-button class="combined-row__delete" type="warning" link
+                    <el-button class="combined-row__delete" link
                       @click="removeCombinedRow(v, pairIdx - 1)">
                       <el-icon style="color: red">
                         <CircleClose />
@@ -136,7 +136,7 @@
                   </div>
                 </div>
               </el-form-item>
-              <el-button class="variable-row__delete" type="warning" @click="removeVariable(idx)">
+              <el-button class="variable-row__delete" @click="removeVariable(idx)">
                 <el-icon>
                   <Delete />
                 </el-icon>
@@ -270,7 +270,7 @@
                           </el-select>
 
                           <!-- 从第二个条件开始提供删除按钮（需同时移除其前置 relation） -->
-                          <el-button v-if="Number(i) > 0" class="default-cond-row__delete" type="warning" link
+                          <el-button v-if="Number(i) > 0" class="default-cond-row__delete" link
                             @click="removedefaultCondition(r, i)">
                             <el-icon style="color: red">
                               <CircleClose />
@@ -294,7 +294,7 @@
                     <el-input v-model="r.rule" type="textarea" :rows="2" placeholder="custom rule expression" />
                   </div>
                 </el-form-item>
-                <el-button class="rule-row__delete" type="warning" @click="removeRule(rIdx)">
+                <el-button class="rule-row__delete" @click="removeRule(rIdx)">
                   <el-icon>
                     <Delete />
                   </el-icon>

@@ -1,6 +1,9 @@
 <template>
   <div class="voltage-class loginPage">
     <TitleBar />
+    <div class="loginPage__init-button">
+      <el-button type="primary" @click="openInitDialog">åˆå§‹åŒ–é¡¹ç›®</el-button>
+    </div>
     <div ref="loginFormContainer" class="loginPage__form">
       <ModuleCard title="Monarch">
         <div class="loginPage__form-content">
@@ -18,6 +21,7 @@
         </div>
       </ModuleCard>
     </div>
+    <InitProjectDialog ref="initDialogRef" />
   </div>
 </template>
 
@@ -27,16 +31,22 @@ import { useUserStore } from '@/stores/user'
 import type { LoginParams } from '@/types/user'
 import { useRouter } from 'vue-router'
 import TitleBar from '@/layout/TitleBar.vue'
+import InitProjectDialog from './components/InitProjectDialog.vue'
 // import wsManager from '@/utils/websocket'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loginFormContainer = ref()
+const initDialogRef = ref<InstanceType<typeof InitProjectDialog>>()
 const form = reactive<LoginParams>({
   username: '',
   password: '',
 })
 const isLoading = ref(false)
+
+const openInitDialog = () => {
+  initDialogRef.value?.open()
+}
 const formRules = reactive<FormRules<LoginParams>>({
   username: [{ required: true, message: 'Please enter your username', trigger: 'blur' }],
   password: [
@@ -69,12 +79,12 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
             else router.replace({ path: '/' })
           }
         }
-        // ÕâÀï¿ÉÒÔÌí¼ÓµÇÂ¼ÇëÇóÂß¼­
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
       } else {
-        console.log('±íµ¥Ğ£ÑéÎ´Í¨¹ı')
+        console.log('ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½Î´Í¨ï¿½ï¿½')
       }
     } catch (error) {
-      console.error('µÇÂ¼Ê§°Ü:', error)
+      console.error('ï¿½ï¿½Â¼Ê§ï¿½ï¿½:', error)
     } finally {
       isLoading.value = false
     }
@@ -98,7 +108,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 
   border-image-source: $border-gradient-base;
 
-  // ¶¥²¿±êÌâÀ¸
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   .loginPage__header {
     width: 100%;
     display: flex;
@@ -135,7 +145,15 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     }
   }
 
-  // µÇÂ¼±íµ¥ÇøÓò
+  // åˆå§‹åŒ–é¡¹ç›®æŒ‰é’®
+  .loginPage__init-button {
+    position: absolute;
+    top: 50px;
+    right: 30px;
+    z-index: 10;
+  }
+
+  // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   .loginPage__form {
     position: absolute;
     top: 50%;

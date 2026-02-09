@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { getInstancePoints, getAllInstances } from '@/api/devicesManagement'
+import { getInstancePoints, getAllInstances, getInstancesByIds } from '@/api/devicesManagement'
 
 const formRef = ref()
 const props = defineProps<{ cardData: any }>()
@@ -165,6 +165,7 @@ watch(
     cardData.value.config.input = cardData.value.config.input || {
       name: 'X1',
       instance: undefined,
+      instance_name: '',
       pointType: '',
       point: undefined,
       point_name: '',
@@ -173,10 +174,18 @@ watch(
     cardData.value.config.output = cardData.value.config.output || {
       name: 'Y1',
       instance: undefined,
+      instance_name: '',
       pointType: '',
       point: undefined,
       point_name: '',
       unit: '',
+    }
+    // 确保 instance_name 字段存在
+    if (!cardData.value.config.input.instance_name) {
+      cardData.value.config.input.instance_name = ''
+    }
+    if (!cardData.value.config.output.instance_name) {
+      cardData.value.config.output.instance_name = ''
     }
     cardData.value.config.output.name = 'Y1'
     if (cardData.value.config.input.point != null && cardData.value.config.input.point !== '') {
@@ -266,7 +275,15 @@ async function onInputInstanceChange(preserveSelection: boolean = false) {
   inputPointOptions.value = []
   if (!Number.isFinite(instanceId) || instanceId <= 0) {
     inputPointsCache.value = null
+    cardData.value.config.input.instance_name = ''
     return
+  }
+  // 保存实例名称
+  const instanceOpt = instanceOptions.value.find((opt) => opt.value === instanceId)
+  if (instanceOpt) {
+    cardData.value.config.input.instance_name = instanceOpt.label || ''
+  } else {
+    cardData.value.config.input.instance_name = ''
   }
   try {
     const res = await getInstancePoints(instanceId)
@@ -324,7 +341,15 @@ async function onOutputInstanceChange(preserveSelection: boolean = false) {
   outputPointOptions.value = []
   if (!Number.isFinite(instanceId) || instanceId <= 0) {
     outputPointsCache.value = null
+    cardData.value.config.output.instance_name = ''
     return
+  }
+  // 保存实例名称
+  const instanceOpt = instanceOptions.value.find((opt) => opt.value === instanceId)
+  if (instanceOpt) {
+    cardData.value.config.output.instance_name = instanceOpt.label || ''
+  } else {
+    cardData.value.config.output.instance_name = ''
   }
   try {
     const res = await getInstancePoints(instanceId)
@@ -385,60 +410,126 @@ function validateForm(): Promise<{ valid: boolean; data: any }> {
   })
 }
 
-async function loadPointOptionsOnInit(
-  instance: any,
-  pointType: string,
-  point: any,
-  isInput: boolean,
-) {
-  if (!instance || !pointType) return
-  const instanceId = Number(instance)
-  if (!Number.isFinite(instanceId) || instanceId <= 0) return
-
-  try {
-    const res = await getInstancePoints(instanceId)
-    const data = res?.data || {}
-    if (isInput) {
-      inputPointsCache.value = data
-      inputPointOptions.value = buildPointOptionsFromData(data, pointType as any)
-      if (point != null && point !== '') {
-        onInputPointChange(point)
-      }
-    } else {
-      outputPointsCache.value = data
-      outputPointOptions.value = buildPointOptionsFromData(data, pointType as any)
-      if (point != null && point !== '') {
-        onOutputPointChange(point)
-      }
-    }
-  } catch {
-    if (isInput) {
-      inputPointsCache.value = null
-      inputPointOptions.value = []
-    } else {
-      outputPointsCache.value = null
-      outputPointOptions.value = []
-    }
-  }
-}
-
 defineExpose({ validateForm })
 
 onMounted(() => {
   fetchInstances().then(async () => {
-    // 首次打开时，如果有 instance 和 pointType，主动加载点位数据
-    await loadPointOptionsOnInit(
-      cardData.value.config.input.instance,
-      cardData.value.config.input.pointType,
-      cardData.value.config.input.point,
-      true,
-    )
-    await loadPointOptionsOnInit(
-      cardData.value.config.output.instance,
-      cardData.value.config.output.pointType,
-      cardData.value.config.output.point,
-      false,
-    )
+    // 收集所有需要批量获取的 instance_id
+    const instanceIdsToFetch = new Set<number>()
+    
+    // 检查 input 部分
+    const inputInstanceId = Number(cardData.value.config.input.instance)
+    if (Number.isFinite(inputInstanceId) && inputInstanceId > 0 && cardData.value.config.input.pointType) {
+      instanceIdsToFetch.add(inputInstanceId)
+    }
+    
+    // 检查 output 部分
+    const outputInstanceId = Number(cardData.value.config.output.instance)
+    if (Number.isFinite(outputInstanceId) && outputInstanceId > 0 && cardData.value.config.output.pointType) {
+      instanceIdsToFetch.add(outputInstanceId)
+    }
+
+    // 批量获取实例信息
+    if (instanceIdsToFetch.size > 0) {
+      try {
+        const idsArray = Array.from(instanceIdsToFetch)
+        const res = await getInstancesByIds(idsArray)
+        const instancesList = Array.isArray(res?.data?.list) ? res.data.list : []
+
+        // 处理 input 部分
+        if (inputInstanceId > 0 && cardData.value.config.input.pointType) {
+          const instance = instancesList.find((inst: any) => Number(inst?.instance_id) === inputInstanceId)
+          if (instance) {
+            const pointsData = instance?.points || {}
+            inputPointsCache.value = pointsData
+            inputPointOptions.value = buildPointOptionsFromData(
+              pointsData,
+              cardData.value.config.input.pointType as any,
+            )
+            
+            // 回显时同步保存 instance_name
+            if (!cardData.value.config.input.instance_name) {
+              cardData.value.config.input.instance_name = instance?.instance_name || ''
+            }
+            
+            // 回显时同步保存 point_name 和 unit
+            if (cardData.value.config.input.point != null && cardData.value.config.input.point !== '') {
+              onInputPointChange(cardData.value.config.input.point)
+            }
+          }
+        }
+
+        // 处理 output 部分
+        if (outputInstanceId > 0 && cardData.value.config.output.pointType) {
+          const instance = instancesList.find((inst: any) => Number(inst?.instance_id) === outputInstanceId)
+          if (instance) {
+            const pointsData = instance?.points || {}
+            outputPointsCache.value = pointsData
+            outputPointOptions.value = buildPointOptionsFromData(
+              pointsData,
+              cardData.value.config.output.pointType as any,
+            )
+            
+            // 回显时同步保存 instance_name
+            if (!cardData.value.config.output.instance_name) {
+              cardData.value.config.output.instance_name = instance?.instance_name || ''
+            }
+            
+            // 回显时同步保存 point_name 和 unit
+            if (cardData.value.config.output.point != null && cardData.value.config.output.point !== '') {
+              onOutputPointChange(cardData.value.config.output.point)
+            }
+          }
+        }
+      } catch {
+        // 如果批量请求失败，回退到逐个请求
+        if (inputInstanceId > 0 && cardData.value.config.input.pointType) {
+          try {
+            const res = await getInstancePoints(inputInstanceId)
+            const data = res?.data || {}
+            inputPointsCache.value = data
+            inputPointOptions.value = buildPointOptionsFromData(
+              data,
+              cardData.value.config.input.pointType as any,
+            )
+            if (cardData.value.config.input.point != null && cardData.value.config.input.point !== '') {
+              onInputPointChange(cardData.value.config.input.point)
+            }
+            // 回显时同步保存 instance_name
+            const instanceOpt = instanceOptions.value.find((opt) => opt.value === inputInstanceId)
+            if (instanceOpt && !cardData.value.config.input.instance_name) {
+              cardData.value.config.input.instance_name = instanceOpt.label || ''
+            }
+          } catch {
+            inputPointsCache.value = null
+            inputPointOptions.value = []
+          }
+        }
+        
+        if (outputInstanceId > 0 && cardData.value.config.output.pointType) {
+          try {
+            const res = await getInstancePoints(outputInstanceId)
+            const data = res?.data || {}
+            outputPointsCache.value = data
+            outputPointOptions.value = buildPointOptionsFromData(
+              data,
+              cardData.value.config.output.pointType as any,
+            )
+            if (cardData.value.config.output.point != null && cardData.value.config.output.point !== '') {
+              onOutputPointChange(cardData.value.config.output.point)
+            }
+            // 回显时同步保存 instance_name
+            const instanceOpt = instanceOptions.value.find((opt) => opt.value === outputInstanceId)
+            if (instanceOpt && !cardData.value.config.output.instance_name) {
+              cardData.value.config.output.instance_name = instanceOpt.label || ''
+            }
+          } catch {
+            outputPointsCache.value = null
+            outputPointOptions.value = []
+          }
+        }
+      }
+    }
   })
 })
 </script>

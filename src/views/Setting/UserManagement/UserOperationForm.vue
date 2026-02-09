@@ -64,7 +64,7 @@
     </template>
 
     <template #dialog-footer>
-      <el-button type="warning" @click="onCancel">Cancel</el-button>
+      <el-button @click="onCancel">Cancel</el-button>
       <el-button type="primary" @click="onSubmit">Submit</el-button>
     </template>
   </FormDialog>

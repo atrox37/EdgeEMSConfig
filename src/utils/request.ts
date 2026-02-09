@@ -678,7 +678,7 @@ class Request {
 // 取消所有pending请求的方法
 export const cancelAllPendingRequests = () => {
   pendingRequests.value.forEach((cancelToken: any) => {
-    cancelToken.cancel('路由切换，请求被取消')
+    cancelToken.cancel('request canceled')
   })
   pendingRequests.value.clear()
   updateGlobalLoading()
@@ -689,7 +689,7 @@ export const cancelPendingRequestsByUrl = (url: string, method: string = 'post')
   const prefix = `${method.toLowerCase()}-${url}-`
   pendingRequests.value.forEach((cancelToken: any, key: string) => {
     if (key.startsWith(prefix)) {
-      cancelToken.cancel('请求被取消')
+      cancelToken.cancel('request canceled')
       pendingRequests.value.delete(key)
     }
   })

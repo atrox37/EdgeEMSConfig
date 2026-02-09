@@ -56,7 +56,6 @@
         <el-button
           v-if="!isMonitorMode"
           size="small"
-          type="warning"
           @click="handleExitEdit"
           class="custom-button"
         >
@@ -193,7 +192,6 @@
     <div v-if="!isMonitorMode" class="rule-chain-editor__floating-actions">
       <el-button
         circle
-        type="warning"
         class="floating-btn floating-btn--cancel"
         @click="handleCancel"
         :disabled="!hasUnsavedChanges"
@@ -1365,8 +1363,8 @@ watch(
               box-shadow: 0 4px 12px rgba(79, 195, 247, 0.35);
             }
             &[data-type='action-periodDelta'] {
-              background-color: #ffb74d; // bright amber
-              box-shadow: 0 4px 12px rgba(255, 183, 77, 0.35);
+              background-color: #9c27b0; // purple
+              box-shadow: 0 4px 12px rgba(156, 39, 176, 0.35);
             }
             &[data-type='function-switch'] .rule-chain-editor__card-name,
             &[data-type='function-switch'] .rule-chain-editor__card-description,
@@ -1408,7 +1406,7 @@ watch(
                 }
               }
               &.icon--action-periodDelta {
-                background: #ffa726;
+                background: #7b1fa2;
                 .el-icon {
                   color: #ffffff;
                 }

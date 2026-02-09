@@ -3,6 +3,8 @@ use tauri::LogicalSize;
 use tauri::Manager;
 use tauri::Size;
 
+mod commands;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -16,6 +18,7 @@ pub fn run() {
         .plugin(tauri_plugin_log::Builder::new().level(log::LevelFilter::Info).build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // 获取主窗口并设置无装饰
             let window = app.get_webview_window("main").unwrap();
@@ -28,7 +31,13 @@ pub fn run() {
             let _ = window.center();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            commands::ssh::test_ssh_connection,
+            commands::ssh::upload_file_via_ssh,
+            commands::ssh::execute_ssh_command,
+            commands::ssh::upload_file_via_scp
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
