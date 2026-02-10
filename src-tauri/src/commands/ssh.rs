@@ -3,7 +3,6 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 use std::path::Path;
 use std::time::Duration;
-use std::fs;
 
 fn resolve_remote_path(sess: &Session, remote_path: &str, username: &str) -> Result<String, String> {
     if remote_path == "~" || remote_path.starts_with("~/") {

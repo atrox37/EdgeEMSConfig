@@ -37,7 +37,6 @@
     "@vue-flow/minimap": "^1.5.4",
     "@vueuse/core": "^14.0.0",
     "autofit.js": "^3.2.8",
-    "axios": "^1.11.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.18",
     "echarts": "^6.0.0",

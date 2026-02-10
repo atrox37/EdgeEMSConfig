@@ -11,7 +11,7 @@ const API_CONFIG_KEY = 'api_config'
 export const API_PORTS = {
   main: 6005, // /api
   com: 6001,  // /comApi
-  rule: 6003, // /ruleApi
+  rule: 6002, // /ruleApi
   mod: 6002,  // /modApi
 } as const
 
@@ -73,7 +73,7 @@ export async function clearApiConfig(): Promise<void> {
 }
 
 /**
- * 设置axios的baseURL
+ * 设置HTTP的baseURL
  */
 export async function setAxiosBaseURL(config: ApiConfig): Promise<void> {
   // 动态导入避免循环依赖

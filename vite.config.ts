@@ -69,7 +69,7 @@ export default defineConfig(() => ({
     },
     proxy: {
       '/api': {
-          target: 'http://192.168.30.62:6005',
+          target: 'http://192.168.30.21:6005',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -84,17 +84,17 @@ export default defineConfig(() => ({
       //   // rewrite: (path) => path.replace(/^\/api/, ''),
       // },
       '/comApi': {
-        target: 'http://192.168.30.62:6001',
+        target: 'http://192.168.30.21:6001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/comApi/, ''),
       },
       '/ruleApi': {
-        target: 'http://192.168.30.62:6002',
+        target: 'http://192.168.30.21:6002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ruleApi/, ''),
       },
       '/modApi': {
-          target: 'http://192.168.30.62:6002',
+          target: 'http://192.168.30.21:6002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/modApi/, ''),
       },

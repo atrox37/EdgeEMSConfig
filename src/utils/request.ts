@@ -1,9 +1,9 @@
 /**
- * Axios 请求封装
+ * Tauri Http 请求封装
  * 提供统一的HTTP请求配置、拦截器和错误处理
  */
 
-import axios, { type AxiosRequestConfig } from 'axios'
+import { fetch as httpFetch } from '@tauri-apps/plugin-http'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
@@ -11,7 +11,7 @@ import { useGlobalStore } from '@/stores/global'
 import type { ApiConfig } from '@/utils/apiConfig'
 
 // 存储所有pending的请求（使用 ref 包装 Map 以确保响应式）
-const pendingRequests = ref(new Map<string, any>())
+const pendingRequests = ref(new Map<string, AbortController>())
 
 // 存储当前 API 配置的引用（用于同步访问）
 let currentApiConfigRef: ApiConfig | null = null
@@ -62,7 +62,7 @@ const normalizeForKey = (value: any): any => {
   return value
 }
 
-// 根据 axios config 生成稳定的请求标识，包含 method、url、参数/数据（排除 _t）
+// 根据 config 生成稳定的请求标识，包含 method、url、参数/数据（排除 _t）
 const buildRequestKey = (config: any): string => {
   const method = (config?.method || 'get').toLowerCase()
   const url = config?.url || ''
@@ -88,41 +88,267 @@ export interface ApiResponse<T = any> {
 }
 
 // 定义请求配置的扩展接口
-export interface RequestConfig extends AxiosRequestConfig {
+export interface RequestConfig {
+  url?: string
+  method?: string
+  baseURL?: string
+  headers?: Record<string, string>
+  params?: Record<string, any>
+  data?: any
+  timeout?: number
+  responseType?: 'json' | 'text' | 'blob' | 'arraybuffer'
+  withCredentials?: boolean
   showErrorMessage?: boolean // 是否显示错误消息，默认true
   showSuccessMessage?: boolean // 是否显示成功消息，默认false
   skipGlobalLoading?: boolean // 是否跳过全局loading，默认false
   _isRefreshTokenRequest?: boolean // 是否为刷新token请求（内部使用，避免重复刷新）
+  _retry?: boolean
+  _requestKey?: string
+  _abortController?: AbortController
+  signal?: AbortSignal
 }
 
+interface HttpResponse<T = any> {
+  data: T
+  status: number
+  statusText: string
+  headers: Record<string, string>
+  config: RequestConfig
+  request: { responseType?: RequestConfig['responseType'] }
+  url?: string
+}
+
+const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url)
+
+const joinUrl = (baseURL: string, url: string) => {
+  if (!baseURL || isAbsoluteUrl(url)) return url
+  const trimmedBase = baseURL.replace(/\/+$/, '')
+  const trimmedUrl = url.replace(/^\/+/, '')
+  return `${trimmedBase}/${trimmedUrl}`
+}
+
+const appendQueryParams = (url: string, params?: Record<string, any>) => {
+  if (!params) return url
+  const searchParams = new URLSearchParams()
+  Object.keys(params).forEach((key) => {
+    const value = params[key]
+    if (value === undefined || value === null) return
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item !== undefined && item !== null) {
+          searchParams.append(key, String(item))
+        }
+      })
+    } else {
+      searchParams.append(key, String(value))
+    }
+  })
+  const queryString = searchParams.toString()
+  if (!queryString) return url
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}${queryString}`
+}
+
+const buildBody = (data: any): BodyInit | undefined => {
+  if (data === undefined || data === null) return undefined
+  if (typeof FormData !== 'undefined' && data instanceof FormData) {
+    return data
+  }
+  if (data instanceof Uint8Array) {
+    const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
+    return new Blob([buffer])
+  }
+  if (data instanceof ArrayBuffer) {
+    return new Blob([data])
+  }
+  if (typeof data === 'string') {
+    return data
+  }
+  if (typeof data === 'object') {
+    return JSON.stringify(data)
+  }
+  return String(data)
+}
+
+const normalizeHeaders = (headers: Headers): Record<string, string> => {
+  const result: Record<string, string> = {}
+  headers.forEach((value, key) => {
+    result[key] = value
+  })
+  return result
+}
+
+const parseResponseData = async (response: Response, responseType?: RequestConfig['responseType']) => {
+  if (responseType === 'text') {
+    return response.text()
+  }
+  if (responseType === 'blob' || responseType === 'arraybuffer') {
+    return response.arrayBuffer()
+  }
+  if (response.status === 204) {
+    return null
+  }
+  try {
+    return await response.json()
+  } catch {
+    return response.text()
+  }
+}
+
+const isRequestCanceled = (error: any) =>
+  error?.name === 'AbortError' ||
+  error?.message === 'request canceled' ||
+  error?.message === 'Request canceled'
+
 /**
- * 创建统一的axios实例
+ * 创建统一的服务实例
  * 设置基础配置项
  */
-const service = axios.create({
-  // API的base_url，可以通过环境变量配置
-  baseURL: '',
-  // 请求超时时间 (毫秒)
-  timeout: 30000,
-  // 默认请求头
-  headers: {
-    'Content-Type': 'application/json;charset=UTF-8',
+const service = {
+  defaults: {
+    baseURL: '',
+    timeout: 30000,
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+    withCredentials: false,
+  } as RequestConfig,
+  interceptors: {
+    request: {
+      onFulfilled: undefined as undefined | ((config: RequestConfig) => RequestConfig | Promise<RequestConfig>),
+      onRejected: undefined as undefined | ((error: any) => any),
+      use(onFulfilled: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>, onRejected?: (error: any) => any) {
+        this.onFulfilled = onFulfilled
+        this.onRejected = onRejected
+      },
+    },
+    response: {
+      onFulfilled: undefined as undefined | ((response: HttpResponse) => any),
+      onRejected: undefined as undefined | ((error: any) => any),
+      use(onFulfilled: (response: HttpResponse) => any, onRejected?: (error: any) => any) {
+        this.onFulfilled = onFulfilled
+        this.onRejected = onRejected
+      },
+    },
   },
-  // 跨域请求时是否需要使用凭证
-  withCredentials: false,
-})
+  async request(config: RequestConfig): Promise<any> {
+    let mergedConfig: RequestConfig = {
+      ...this.defaults,
+      ...config,
+      headers: {
+        ...(this.defaults.headers || {}),
+        ...(config.headers || {}),
+      },
+    }
+
+    if (this.interceptors.request.onFulfilled) {
+      try {
+        mergedConfig = await this.interceptors.request.onFulfilled(mergedConfig)
+      } catch (error) {
+        if (this.interceptors.request.onRejected) {
+          return Promise.reject(this.interceptors.request.onRejected(error))
+        }
+        return Promise.reject(error)
+      }
+    }
+
+    try {
+      const response = await performRequest(mergedConfig)
+      if (this.interceptors.response.onFulfilled) {
+        return this.interceptors.response.onFulfilled(response)
+      }
+      return response
+    } catch (error) {
+      if (this.interceptors.response.onRejected) {
+        return this.interceptors.response.onRejected(error)
+      }
+      throw error
+    }
+  },
+  get(url: string, config?: RequestConfig) {
+    return this.request({ ...config, url, method: 'get' })
+  },
+  delete(url: string, config?: RequestConfig) {
+    return this.request({ ...config, url, method: 'delete' })
+  },
+  post(url: string, data?: any, config?: RequestConfig) {
+    return this.request({ ...config, url, data, method: 'post' })
+  },
+  put(url: string, data?: any, config?: RequestConfig) {
+    return this.request({ ...config, url, data, method: 'put' })
+  },
+  patch(url: string, data?: any, config?: RequestConfig) {
+    return this.request({ ...config, url, data, method: 'patch' })
+  },
+}
+
+const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
+  const method = (config.method || 'get').toUpperCase()
+  const baseURL = config.baseURL || ''
+  const url = config.url || ''
+  const fullUrl = appendQueryParams(joinUrl(baseURL, url), config.params)
+  const body = method === 'GET' || method === 'DELETE' ? undefined : buildBody(config.data)
+
+  try {
+    const response = await httpFetch(fullUrl, {
+      method,
+      headers: config.headers,
+      body,
+      connectTimeout: config.timeout,
+      signal: config.signal,
+    })
+
+    const responseData = await parseResponseData(response, config.responseType)
+
+    const normalizedResponse: HttpResponse = {
+      data: responseData,
+      status: response.status,
+      statusText: response.statusText || '',
+      headers: normalizeHeaders(response.headers),
+      config,
+      request: { responseType: config.responseType },
+      url: response.url || fullUrl,
+    }
+
+    if (normalizedResponse.status < 200 || normalizedResponse.status >= 300) {
+      const error: any = new Error(`HTTP error ${normalizedResponse.status}`)
+      error.response = normalizedResponse
+      error.config = config
+      error.request = normalizedResponse.request
+      throw error
+    }
+
+    return normalizedResponse
+  } catch (error: any) {
+    if (isRequestCanceled(error)) {
+      error.config = config
+      error.request = { responseType: config.responseType }
+      throw error
+    }
+
+    if (error?.response) {
+      error.config = config
+      error.request = { responseType: config.responseType }
+      throw error
+    }
+
+    const wrappedError: any = new Error(error?.message || 'Network request failed')
+    wrappedError.config = config
+    wrappedError.request = { responseType: config.responseType }
+    throw wrappedError
+  }
+}
 /**
  * 请求拦截器
  * 在发送请求之前做一些统一处理
  */
 const requestInterceptor = (config: any) => {
   const originalUrl = config.url || ''
-  let targetBaseURL = service.defaults.baseURL || ''
+  let targetBaseURL = config.baseURL || service.defaults.baseURL || ''
   let processedUrl = originalUrl
 
   // 判断是否为开发环境（Vite 开发模式）
   const isDev = import.meta.env.DEV
-  let useViteProxy = false
 
   // 处理包含 /comApi、/modApi、/ruleApi 的请求路径
   // 使用同步方式获取配置（通过引用）
@@ -130,59 +356,32 @@ const requestInterceptor = (config: any) => {
 
   // 检查并处理特殊 API 路径
   if (originalUrl.startsWith('/comApi')) {
-    if (isDev) {
-      // 开发模式：保留前缀，让 Vite 代理处理（避免 CORS）
-      processedUrl = originalUrl
-      targetBaseURL = '' // 使用相对路径，让 Vite 代理处理
-      useViteProxy = true
-    } else {
-      // 生产模式：删除前缀，使用完整的 baseURL
-      processedUrl = originalUrl.replace(/^\/comApi/, '')
-      if (apiConfig?.comApiURL) {
-        targetBaseURL = apiConfig.comApiURL
-      }
+    processedUrl = originalUrl.replace(/^\/comApi/, '')
+    if (apiConfig?.comApiURL) {
+      targetBaseURL = apiConfig.comApiURL
     }
   } else if (originalUrl.startsWith('/modApi')) {
-    if (isDev) {
-      // 开发模式：保留前缀，让 Vite 代理处理
-      processedUrl = originalUrl
-      targetBaseURL = ''
-      useViteProxy = true
-    } else {
-      // 生产模式：删除前缀，使用完整的 baseURL
-      processedUrl = originalUrl.replace(/^\/modApi/, '')
-      if (apiConfig?.modApiURL) {
-        targetBaseURL = apiConfig.modApiURL
-      }
+    processedUrl = originalUrl.replace(/^\/modApi/, '')
+    if (apiConfig?.modApiURL) {
+      targetBaseURL = apiConfig.modApiURL
     }
   } else if (originalUrl.startsWith('/ruleApi')) {
-    if (isDev) {
-      // 开发模式：保留前缀，让 Vite 代理处理
-      processedUrl = originalUrl
-      targetBaseURL = ''
-      useViteProxy = true
-    } else {
-      // 生产模式：删除前缀，使用完整的 baseURL
-      processedUrl = originalUrl.replace(/^\/ruleApi/, '')
-      if (apiConfig?.ruleApiURL) {
-        targetBaseURL = apiConfig.ruleApiURL
-      }
+    processedUrl = originalUrl.replace(/^\/ruleApi/, '')
+    if (apiConfig?.ruleApiURL) {
+      targetBaseURL = apiConfig.ruleApiURL
     }
   }
 
   // 如果 URL 被处理过，更新 config
   if (processedUrl !== originalUrl || targetBaseURL !== (config.baseURL || service.defaults.baseURL || '')) {
     config.url = processedUrl
-    if (useViteProxy) {
-      config.baseURL = ''
-    } else if (targetBaseURL) {
+    if (targetBaseURL) {
       config.baseURL = targetBaseURL
     } else {
-      // ??? targetBaseURL ??????????????? baseURL
       config.baseURL = service.defaults.baseURL || ''
     }
     console.log(`[请求拦截器] ${isDev ? '开发模式' : '生产模式'} - 路径转换: ${originalUrl} -> ${processedUrl}`, {
-      baseURL: useViteProxy ? '(??Vite??)' : targetBaseURL,
+      baseURL: targetBaseURL,
       isDev,
     })
   }
@@ -210,21 +409,22 @@ const requestInterceptor = (config: any) => {
 
   // 如果存在相同的pending请求，取消它（但需要检查是否跳过全局loading）
   if (!skipGlobalLoading && pendingRequests.value.has(requestKey)) {
-    const cancelToken = pendingRequests.value.get(requestKey)
-    cancelToken.cancel('请求被取消')
+    const cancelController = pendingRequests.value.get(requestKey)
+    cancelController?.abort('request canceled')
     pendingRequests.value.delete(requestKey)
     updateGlobalLoading()
   }
 
-  // 创建新的cancelToken
-  const cancelToken = axios.CancelToken.source()
-  config.cancelToken = cancelToken.token
+  // 创建新的 AbortController
+  const abortController = new AbortController()
+  config.signal = abortController.signal
+  config._abortController = abortController
   // 将 requestKey 保存到 config 中，以便在错误处理时能够清除
   config._requestKey = requestKey
 
   // 如果配置了 skipGlobalLoading，则不添加到 pendingRequests
   if (!skipGlobalLoading) {
-    pendingRequests.value.set(requestKey, cancelToken)
+    pendingRequests.value.set(requestKey, abortController)
     updateGlobalLoading()
   }
 
@@ -288,7 +488,10 @@ const processQueue = (error: any, token: string | null = null) => {
  * 响应拦截器工厂函数
  * 创建统一的响应拦截器，避免代码重复
  */
-const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '') => {
+const createResponseInterceptor = (
+  serviceInstance: any,
+  logPrefix: string = '',
+): [(response: any) => any, (error: any) => any] => {
   // 响应成功时的处理
   const responseSuccessHandler = (response: any) => {
     // 请求完成后，从pendingRequests中移除
@@ -359,7 +562,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
   // 响应失败时的处理
   const responseErrorHandler = async (error: any) => {
     // 如果是取消请求的错误，尝试清除 pendingRequests
-    if (axios.isCancel(error)) {
+    if (isRequestCanceled(error)) {
       console.log(`${logPrefix}[请求已取消] ${error.message}`)
       // 尝试从 error.config 中获取 requestKey（Cancel 错误可能没有 config）
       const cancelError = error as any
@@ -426,7 +629,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
         })
           .then((token) => {
             originalRequest.headers['Authorization'] = `Bearer ${token}`
-            return serviceInstance(originalRequest)
+            return serviceInstance.request(originalRequest)
           })
           .catch((err) => {
             return Promise.reject(err)
@@ -449,7 +652,7 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
           processQueue(null, userStore.token)
 
           // 重试原请求
-          return serviceInstance(originalRequest)
+          return serviceInstance.request(originalRequest)
         } else {
           throw new Error(result.message || 'Token refresh failed')
         }
@@ -529,7 +732,8 @@ const createResponseInterceptor = (serviceInstance: any, logPrefix: string = '')
 }
 
 // 为服务实例添加响应拦截器
-service.interceptors.response.use(...createResponseInterceptor(service))
+const [responseSuccessHandler, responseErrorHandler] = createResponseInterceptor(service)
+service.interceptors.response.use(responseSuccessHandler, responseErrorHandler)
 
 /**
  * 封装的请求方法类
@@ -677,8 +881,8 @@ class Request {
 
 // 取消所有pending请求的方法
 export const cancelAllPendingRequests = () => {
-  pendingRequests.value.forEach((cancelToken: any) => {
-    cancelToken.cancel('request canceled')
+  pendingRequests.value.forEach((cancelController) => {
+    cancelController.abort('request canceled')
   })
   pendingRequests.value.clear()
   updateGlobalLoading()
@@ -687,9 +891,9 @@ export const cancelAllPendingRequests = () => {
 // 取消指定 URL 的 pending 请求（按 method 前缀匹配）
 export const cancelPendingRequestsByUrl = (url: string, method: string = 'post') => {
   const prefix = `${method.toLowerCase()}-${url}-`
-  pendingRequests.value.forEach((cancelToken: any, key: string) => {
+  pendingRequests.value.forEach((cancelController, key: string) => {
     if (key.startsWith(prefix)) {
-      cancelToken.cancel('request canceled')
+      cancelController.abort('request canceled')
       pendingRequests.value.delete(key)
     }
   })
