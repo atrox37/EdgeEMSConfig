@@ -22,6 +22,11 @@
 
 ## 代码规范
 
+### 样式（SCSS）规范（新增）
+- **必须优先使用全局变量**：项目样式开发时，颜色/间距/圆角/阴影/字体等，优先使用 `@src/assets/styles/_variables.scss` 中的变量（例如 `$primary-color`、`$spacing-md`、`$border-radius-base`）。
+- **避免硬编码**：除非是第三方库限制或确有必要，否则不要在组件内写死 `#fff/#000/px` 等常量。
+- **说明**：项目已在 `vite.config.ts` 中通过 `scss.additionalData` 全局注入 `@use "@/assets/styles/_variables.scss" as *;`，组件内可直接使用这些变量。
+
 ### Vue 3 开发规范
 ```typescript
 // ✅ 推荐：使用 Composition API + <script setup>

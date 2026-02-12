@@ -9,7 +9,7 @@
       margin-bottom: $spacing-lg;
       display: flex;
       align-items: flex-start;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
 
       // &:last-child {
       //   margin-bottom: 0;
@@ -41,6 +41,7 @@
         display: flex;
         align-items: flex-start;
         line-height: 32px;
+        height: 100%;
 
         // ��֤������Ϣ
         .el-form-item__error {
@@ -113,12 +114,11 @@
       }
     }
 
-    // ���ڱ���
     &.el-form--inline {
       .el-form-item {
         display: inline-flex;
-        margin-bottom: 20px;
-        margin-right: 20px;
+        margin-bottom: 10px;
+        margin-right: 10px;
 
         .el-form-item__label {
           margin-bottom: 0;

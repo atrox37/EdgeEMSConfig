@@ -852,6 +852,7 @@ class Request {
       const response = await service.get(url, {
         params,
         responseType: 'blob',
+        showErrorMessage: false,
       })
       console.log('response', response)
       // 创建blob链接
@@ -873,8 +874,34 @@ class Request {
 
       ElMessage.success('File downloaded successfully')
     } catch (error) {
+      const errorMessage = (() => {
+        if ((error as any)?.response?.status === 404) {
+          return 'File not found'
+        }
+        const responseData = (error as any)?.response?.data
+        if (!responseData) return undefined
+        if (typeof responseData === 'string') {
+          try {
+            const parsed = JSON.parse(responseData)
+            return parsed?.detail?.message || parsed?.message
+          } catch {
+            return responseData
+          }
+        }
+        if (responseData instanceof ArrayBuffer) {
+          try {
+            const text = new TextDecoder('utf-8').decode(responseData)
+            const parsed = JSON.parse(text)
+            return parsed?.detail?.message || parsed?.message
+          } catch {
+            return undefined
+          }
+        }
+        return responseData?.detail?.message || responseData?.message
+      })()
+
       console.error('File download failed:', error)
-      ElMessage.error('File download failed')
+      ElMessage.error(errorMessage || 'File download failed')
     }
   }
 }

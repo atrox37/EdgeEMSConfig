@@ -2,7 +2,6 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
@@ -17,8 +16,7 @@ const host = process.env.TAURI_DEV_HOST
 export default defineConfig(() => ({
   plugins: [
     vue(),
-    // 启用 Vue DevTools
-    vueDevTools(),
+    // 已禁用 Vue DevTools（避免开发模式暴露调试入口）
     AutoImport({
       imports: ['vue', 'vue-router', 'pinia'],
       resolvers: [ElementPlusResolver()],
@@ -123,7 +121,7 @@ export default defineConfig(() => ({
   },
   // 优化依赖预构建
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'element-plus', 'axios', 'echarts'],
+    include: ['vue', 'vue-router', 'pinia', 'element-plus', 'echarts'],
   },
 
   // 构建配置（针对 Tauri WebView 目标与调试）

@@ -491,25 +491,8 @@ defineExpose({ open, close })
     display: flex;
     flex-direction: column;
 
-    :deep(.light-collapse-card) {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
 
-    :deep(.light-collapse-card__body) {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
 
-    :deep(.light-collapse-card__body-inner) {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
   }
 
 }

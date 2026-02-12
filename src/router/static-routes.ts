@@ -3,6 +3,7 @@ import ChannelIcon from '@/components/icons/ChannelIcon.vue'
 import InstanceIcon from '@/components/icons/InstanceIcon.vue'
 import RuleIcon from '@/components/icons/RuleIcon.vue'
 import SystemConfigIcon from '@/components/icons/SystemConfigIcon.vue'
+import HomeConfigIcon from '@/components/icons/HomeConfigIcon.vue'
 
 export const staticRoutes: RouteRecordRaw[] = [
   {
@@ -111,6 +112,16 @@ export const staticRoutes: RouteRecordRaw[] = [
           title: 'System Config',
           activeNav: '/systemConfig',
           icon: SystemConfigIcon,
+        },
+      },
+      {
+        path: '/homeConfiguration',
+        name: 'homeConfiguration',
+        component: () => import('@/views/Setting/HomeConfiguration/index.vue'),
+        meta: {
+          title: 'Home Config',
+          activeNav: '/homeConfiguration',
+          icon: HomeConfigIcon,
         },
       },
     ],

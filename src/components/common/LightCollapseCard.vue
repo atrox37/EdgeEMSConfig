@@ -105,13 +105,14 @@ watch(
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/styles/variables' as *;
 
 .light-collapse-card {
+  height: 100%;
   border: 1px solid $white-alpha-10;
   border-radius: 10px;
   background: linear-gradient(180deg, $white-alpha-05, transparent);
   overflow: hidden;
+  width: 100%;
 
   .light-collapse-card__header {
     width: 100%;
@@ -181,13 +182,16 @@ watch(
   }
 
   .light-collapse-card__body {
+    height: calc(100% - 42.5px);
     overflow: hidden;
     transition: max-height 0.28s ease, opacity 0.2s ease;
     will-change: max-height, opacity;
   }
 
   .light-collapse-card__body-inner {
+    height: 100%;
     padding: 6px 16px 16px;
+    overflow: auto;
   }
 
   &.is-open {
