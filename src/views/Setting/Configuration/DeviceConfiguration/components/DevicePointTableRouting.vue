@@ -42,7 +42,7 @@
         v-loading="props.loading"
       >
         <!-- Point ID -->
-        <el-table-column label="Point ID" width="120">
+        <el-table-column label="Point ID" width="120" class-name="point-id-column">
           <template #default="{ row }">
             <span>{{ getPointId(row) }}</span>
           </template>
@@ -58,18 +58,19 @@
         <!-- Channel -->
         <el-table-column label="Channel" min-width="180">
           <template #default="{ row }">
-            <div class="cell-content">
-              <template v-if="props.isEditing && row.isEditing">
-                <div class="inline-edit-container">
-                  <el-select
-                    v-model="row.routing.channel_id"
-                    popper-class="inline-mapping-popper"
-                    :fit-input-width="true"
-                    placeholder="Select channel"
-                    @change="() => onSelectChannel(row)"
-                    clearable
-                    filterable
-                  >
+            <div class="point-table-cell-wrapper">
+              <template v-if="props.isEditing">
+                <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_channel_id')">
+                  <div class="inline-edit-container">
+                    <el-select
+                      v-model="row.routing.channel_id"
+                      popper-class="inline-mapping-popper"
+                      :fit-input-width="true"
+                      placeholder="Select channel"
+                      @change="() => onSelectChannel(row)"
+                      clearable
+                      filterable
+                    >
                     <el-option
                       v-for="opt in props.channels"
                       :key="opt.id"
@@ -77,13 +78,12 @@
                       :value="opt.id"
                     />
                   </el-select>
+                  </div>
                 </div>
               </template>
-              <template v-else>
-                <span :class="getFieldClass(row, 'routing_channel_id')">{{
-                  row.routing?.channel_name ?? ''
-                }}</span>
-              </template>
+              <span v-else :class="getFieldClass(row, 'routing_channel_id')">{{
+                row.routing?.channel_name ?? ''
+              }}</span>
               <div v-if="props.isEditing && getRoutingFieldError(row, 'channel_id')" class="field-error">
                 {{ getRoutingFieldError(row, 'channel_id') }}
               </div>
@@ -94,18 +94,19 @@
         <!-- Channel Point Type -->
         <el-table-column label="Channel Point Type" min-width="180">
           <template #default="{ row }">
-            <div class="cell-content">
-              <template v-if="props.isEditing && row.isEditing">
-                <div class="inline-edit-container">
-                  <el-select
-                    v-model="row.routing.channel_type"
-                    popper-class="inline-mapping-popper"
-                    :fit-input-width="true"
-                    :disabled="!row.routing?.channel_id"
-                    @change="() => onChannelTypeChange(row)"
-                    clearable
-                    filterable
-                  >
+            <div class="point-table-cell-wrapper">
+              <template v-if="props.isEditing">
+                <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_channel_type')">
+                  <div class="inline-edit-container">
+                    <el-select
+                      v-model="row.routing.channel_type"
+                      popper-class="inline-mapping-popper"
+                      :fit-input-width="true"
+                      :disabled="!row.routing?.channel_id"
+                      @change="() => onChannelTypeChange(row)"
+                      clearable
+                      filterable
+                    >
                     <el-option
                       v-for="opt in getChannelTypeOptions()"
                       :key="opt.value"
@@ -113,13 +114,12 @@
                       :value="opt.value"
                     />
                   </el-select>
+                  </div>
                 </div>
               </template>
-              <template v-else>
-                <span :class="getFieldClass(row, 'routing_channel_type')">{{
-                  getDeviceRoutingTypeLabel(row.routing?.channel_type)
-                }}</span>
-              </template>
+              <span v-else :class="getFieldClass(row, 'routing_channel_type')">{{
+                getDeviceRoutingTypeLabel(row.routing?.channel_type)
+              }}</span>
               <div v-if="props.isEditing && getRoutingFieldError(row, 'channel_type')" class="field-error">
                 {{ getRoutingFieldError(row, 'channel_type') }}
               </div>
@@ -130,19 +130,20 @@
         <!-- Channel Point -->
         <el-table-column label="Channel Point" min-width="220">
           <template #default="{ row }">
-            <div class="cell-content">
-              <template v-if="props.isEditing && row.isEditing">
-                <div class="inline-edit-container">
-                  <el-select
-                    v-model="row.routing.channel_point_id"
-                    popper-class="inline-mapping-popper"
-                    :fit-input-width="true"
-                    placeholder="Select point"
-                    :disabled="!row.routing?.channel_id || !row.routing?.channel_type"
-                    @change="(val: string | number) => onSelectChannelPoint(row, val)"
-                    clearable
-                    filterable
-                  >
+            <div class="point-table-cell-wrapper">
+              <template v-if="props.isEditing">
+                <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_channel_point_id')">
+                  <div class="inline-edit-container">
+                    <el-select
+                      v-model="row.routing.channel_point_id"
+                      popper-class="inline-mapping-popper"
+                      :fit-input-width="true"
+                      placeholder="Select point"
+                      :disabled="!row.routing?.channel_id || !row.routing?.channel_type"
+                      @change="(val: string | number) => onSelectChannelPoint(row, val)"
+                      clearable
+                      filterable
+                    >
                     <el-option
                       v-for="opt in getChannelPointOptions(row)"
                       :key="opt.value"
@@ -150,13 +151,12 @@
                       :value="opt.value"
                     />
                   </el-select>
+                  </div>
                 </div>
               </template>
-              <template v-else>
-                <span :class="getFieldClass(row, 'routing_channel_point_id')">{{
-                  row.routing?.channel_point_name ?? ''
-                }}</span>
-              </template>
+              <span v-else :class="getFieldClass(row, 'routing_channel_point_id')">{{
+                row.routing?.channel_point_name ?? ''
+              }}</span>
               <div v-if="props.isEditing && getRoutingFieldError(row, 'channel_point_id')" class="field-error">
                 {{ getRoutingFieldError(row, 'channel_point_id') }}
               </div>
@@ -167,33 +167,32 @@
         <!-- Enabled -->
         <el-table-column label="Enabled" min-width="120">
           <template #default="{ row }">
-            <div class="cell-content">
-              <template v-if="props.isEditing && row.isEditing">
-                <div class="inline-edit-container">
-                  <el-select
-                    v-model="row.routing.enabled"
-                    :teleported="false"
-                    popper-class="inline-mapping-popper"
-                    :fit-input-width="true"
-                    placeholder="Select"
-                    @change="() => onRoutingFieldChange(row, 'enabled')"
-                    clearable
-                    filterable
-                  >
+            <div class="point-table-cell-wrapper">
+              <template v-if="props.isEditing">
+                <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_enabled')">
+                  <div class="inline-edit-container">
+                    <el-select
+                      v-model="row.routing.enabled"
+                      popper-class="inline-mapping-popper"
+                      :fit-input-width="true"
+                      placeholder="Select"
+                      @change="() => onRoutingFieldChange(row, 'enabled')"
+                      clearable
+                      filterable
+                    >
                     <el-option label="true" :value="true" />
                     <el-option label="false" :value="false" />
                   </el-select>
+                  </div>
                 </div>
               </template>
-              <template v-else>
-                <span :class="getFieldClass(row, 'routing_enabled')">{{
-                  row.routing?.enabled === true
-                    ? 'true'
-                    : row.routing?.enabled === false
-                      ? 'false'
-                      : ''
-                }}</span>
-              </template>
+              <span v-else :class="getFieldClass(row, 'routing_enabled')">{{
+                row.routing?.enabled === true
+                  ? 'true'
+                  : row.routing?.enabled === false
+                    ? 'false'
+                    : ''
+              }}</span>
               <div v-if="props.isEditing && getRoutingFieldError(row, 'enabled')" class="field-error">
                 {{ getRoutingFieldError(row, 'enabled') }}
               </div>
@@ -201,32 +200,7 @@
           </template>
         </el-table-column>
 
-        <!-- Operation -->
-        <el-table-column
-          v-if="props.isEditing"
-          label="Operation"
-          min-width="150"
-          fixed="right"
-          class-name="operation-column"
-        >
-          <template #default="{ row }">
-            <div class="point-table__operation-cell">
-              <template v-if="row.isEditing">
-                <div class="point-table__cancel-btn" @click="handleCancelEdit(row)">
-                  <el-icon><Close /></el-icon>
-                </div>
-                <div class="point-table__confirm-btn" @click="handleConfirmEdit(row)">
-                  <el-icon><Check /></el-icon>
-                </div>
-              </template>
-              <template v-else>
-                <div class="point-table__edit-btn" @click="handleStartEdit(row)">
-                  <el-icon><Edit /></el-icon>
-                </div>
-              </template>
-            </div>
-          </template>
-        </el-table-column>
+        <!-- Operation：直接编辑模式下已移除行级 Edit/Confirm/Cancel，此列隐藏 -->
       </el-table>
     </div>
 
@@ -247,7 +221,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Edit, Close, Check } from '@element-plus/icons-vue'
 import type {
   InstanceActionItem,
   InstanceMeasurementItem,
@@ -374,6 +347,11 @@ watch(
 
     if (val.isEditing) {
       importedFileName.value = ''
+      // 预加载已有 channel_id 的行的通道点位，以便 Channel Point 下拉可选
+      editPoints.value.forEach((p: any) => {
+        const chId = Number(p.routing?.channel_id || 0)
+        if (chId > 0) ensureChannelPoints(chId)
+      })
       editPoints.value.forEach((p: any) => {
         validateRoutingValidity(p)
         refreshRoutingFieldErrorsForRow(p)
@@ -409,7 +387,8 @@ function getPointTypeChar(): 'M' | 'A' | 'P' {
 
 const getChannelTypeOptions = () => getDeviceRoutingTypeOptions(props.category)
 
-function getRowClass(item: any) {
+function getRowClass({ row }: { row?: any }) {
+  const item = row || {}
   const classes = [`row-status-${item.rowStatus || 'normal'}`]
   if (props.isEditing && (item as any).isInvalid) classes.push('row-invalid')
   if (!props.isEditing) {
@@ -470,51 +449,6 @@ function onChannelTypeChange(item: any) {
   item.routing.channel_point_id = undefined
   item.routing.channel_point_name = ''
   onRoutingFieldChange(item, 'channel_type')
-}
-
-function handleStartEdit(item: any) {
-  item.originalData = {
-    routing_channel_id: item.routing?.channel_id,
-    routing_channel_type: item.routing?.channel_type,
-    routing_channel_point_id: item.routing?.channel_point_id,
-    routing_enabled: item.routing?.enabled,
-    routing_channel_name: item.routing?.channel_name,
-    routing_channel_point_name: item.routing?.channel_point_name,
-  }
-  const chId = Number(item.routing?.channel_id || 0)
-  if (chId > 0) {
-    const ch = props.channels?.find((c) => Number(c.id) === chId)
-    if (ch && !item.routing?.channel_name) item.routing.channel_name = ch.name
-    ensureChannelPoints(chId)
-  }
-  item.isEditing = true
-}
-function handleCancelEdit(item: any) {
-  if (item.originalData) {
-    item.routing = {
-      channel_id: item.originalData.routing_channel_id,
-      channel_type: item.originalData.routing_channel_type,
-      channel_point_id: item.originalData.routing_channel_point_id,
-      enabled: item.originalData.routing_enabled,
-      channel_name: item.originalData.routing_channel_name,
-      channel_point_name: item.originalData.routing_channel_point_name,
-    }
-    delete item.originalData
-  }
-  item.isEditing = false
-  item.rowStatus = 'normal'
-  item.modifiedFields = []
-  item.isInvalid = false
-  item.fieldErrors = {}
-  validateRoutingValidity(item)
-}
-function handleConfirmEdit(item: any) {
-  fillRoutingNames(item)
-  updateRoutingChangeStatus(item)
-  validateRoutingValidity(item)
-  refreshRoutingFieldErrorsForRow(item)
-  delete item.originalData
-  item.isEditing = false
 }
 
 function validateRoutingValidity(item: any): boolean {
@@ -627,6 +561,7 @@ function getEditedData() {
   }> = []
   editPoints.value.forEach((item: any) => {
     if (!item.routing) return
+    fillRoutingNames(item)
     const changed = item.modifiedFields || []
     const consider =
       changed.includes('routing_channel_id') ||
@@ -1046,28 +981,74 @@ defineExpose({
     }
 
     // 根据行状态着色（移除左侧状态条，改为行背景色）
-    :deep(.row-status-added) {
-      background-color: rgba(103, 194, 58, 0.1);
+    // 新增/修改/删除：在 Point ID 单元格左侧显示 10px 状态条（与 PointTableMappings 一致）
+    :deep(.row-status-added td.point-id-column),
+    :deep(.row-status-modified td.point-id-column),
+    :deep(.row-status-deleted td.point-id-column) {
+      position: relative;
+      padding-left: 14px;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 10px;
+      }
     }
-    :deep(.row-status-modified) {
-      background-color: rgba(64, 158, 255, 0.1);
+    :deep(.row-status-added td.point-id-column::before) {
+      background-color: #67c23a;
+    }
+    :deep(.row-status-modified td.point-id-column::before) {
+      background-color: #409eff;
+    }
+    :deep(.row-status-deleted td.point-id-column::before) {
+      background-color: #f56c6c;
     }
     :deep(.row-status-deleted) {
-      background-color: rgba(245, 108, 108, 0.1);
-      opacity: 0.6;
+      opacity: 0.7;
     }
+    // 错误行：整行背景色（更透明）
     :deep(.row-invalid) {
-      background-color: rgba(245, 108, 108, 0.1);
+      background-color: rgba(167, 0, 0, 0.18);
     }
 
-    :deep(td .cell) {
+    :deep(td.el-table__cell) {
       position: relative;
       height: 32px;
     }
-
-    .cell-content {
-      position: relative;
+    :deep(.point-table-cell-wrapper) {
+      position: static;
+      display: flex;
+      align-items: center;
+      min-height: 32px;
+      width: 100%;
     }
+    :deep(.point-table-cell-content) {
+      flex: 1;
+      // padding-bottom: 9px;
+      // box-sizing: border-box;
+      // .inline-edit-container :deep(.el-input__inner),
+      // .inline-edit-container :deep(.el-select .el-input__inner) {
+      //   height: 22px !important;
+      //   line-height: 22px !important;
+      // }
+    }
+    :deep(.point-table-cell-wrapper .field-error) {
+      position: absolute;
+      bottom: 0;
+      left: 12px;
+      right: 0;
+      height: 9px;
+      line-height: 9px;
+      font-size: 9px;
+      color: #ff4d4f;
+      overflow: hidden;
+    }
+
+    // .cell-content {
+    //   position: relative;
+    // }
   }
 
   // 顶部工具栏中的筛选下拉与输入框左侧对齐
@@ -1088,6 +1069,9 @@ defineExpose({
     .point-table__publish-btn,
     .point-table__restore-btn {
       cursor: pointer;
+      &:hover {
+        color: inherit;
+      }
       display: flex;
       align-items: center;
       gap: 4px;
@@ -1144,6 +1128,23 @@ defineExpose({
   // 字段状态颜色（保持原色用于区分）
   .field-modified {
     color: #409eff !important;
+    :deep(.el-select .el-select__placeholder),
+    :deep(.el-select .el-select__wrapper) {
+      color: #409eff;
+    }
+    :deep(.el-select .el-select__wrapper) {
+      box-shadow: 0 0 0 1px #409eff inset !important;
+    }
+  }
+  .field-added {
+    color: #67c23a !important;
+    :deep(.el-select .el-select__placeholder),
+    :deep(.el-select .el-select__wrapper) {
+      color: #67c23a !important;
+    }
+    :deep(.el-select .el-select__wrapper) {
+      box-shadow: 0 0 0 1px #67c23a inset !important;
+    }
   }
 
   // 分页样式（固定高度，独立出去）
@@ -1164,15 +1165,5 @@ defineExpose({
     }
   }
 
-  .field-error {
-    position: absolute;
-    top: 100%;
-    left: 12px;
-    margin-top: 2px;
-    width: 100%;
-    color: #ff4d4f;
-    font-size: 12px;
-    line-height: 1;
-  }
 }
 </style>

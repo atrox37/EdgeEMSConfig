@@ -24,11 +24,14 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
             let _ = window.set_decorations(false);
             // 强制窗口尺寸与居中（避免平台默认行为覆盖）
+            // 强制窗口尺寸与居中（避免平台默认行为覆盖）
             let _ = window.set_size(Size::Logical(LogicalSize {
                 width: 1050.0,
                 height: 630.0,
             }));
             let _ = window.center();
+            let _ = window.show();
+            let _ = window.set_focus();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

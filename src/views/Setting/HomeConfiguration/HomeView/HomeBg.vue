@@ -167,15 +167,15 @@
           <div class="no-rem__card">
             <div class="no-rem__card-title">PV</div>
             <div class="no-rem__card-content">
-              <div
-                class="no-rem__card-content-item"
-                :class="{ 'edit-ring': props.isEditing }"
-                @click="onMetricClick('tuopu-pv-P', 'PV P')"
-              >
-                <div class="no-rem__name">{{ getPointLabel('tuopu-pv-P', 'P') }}:</div>
-                <div class="no-rem__value">{{ pv.P }}</div>
-                <div class="no-rem__unit">{{ getPointUnit('tuopu-pv-P', 'kw') }}</div>
-              </div>
+            <div
+              class="no-rem__card-content-item"
+              :class="{ 'edit-ring': props.isEditing }"
+              @click="onMetricClick(TOPOLOGY_PV_FIRST_ID, 'PV P')"
+            >
+              <div class="no-rem__name">{{ getPointLabel(TOPOLOGY_PV_FIRST_ID, 'P') }}:</div>
+              <div class="no-rem__value">{{ pv.P }}</div>
+              <div class="no-rem__unit">{{ getPointUnit(TOPOLOGY_PV_FIRST_ID, 'kw') }}</div>
+            </div>
             </div>
             <!-- <div class="no-rem__card-alarm"></div> -->
           </div>
@@ -207,15 +207,15 @@
           <div class="no-rem__card">
             <div class="no-rem__card-title">Load</div>
             <div class="no-rem__card-content">
-              <div
-                class="no-rem__card-content-item"
-                :class="{ 'edit-ring': props.isEditing }"
-                @click="onMetricClick('tuopu-load-P', 'Load P')"
-              >
-                <span class="no-rem__name">{{ getPointLabel('tuopu-load-P', 'P') }}:</span>
-                <span class="no-rem__value">{{ load.P }}</span>
-                <span class="no-rem__unit">{{ getPointUnit('tuopu-load-P', 'kw') }}</span>
-              </div>
+            <div
+              class="no-rem__card-content-item"
+              :class="{ 'edit-ring': props.isEditing }"
+              @click="onMetricClick(TOPOLOGY_LOAD_FIRST_ID, 'Load P')"
+            >
+              <span class="no-rem__name">{{ getPointLabel(TOPOLOGY_LOAD_FIRST_ID, 'P') }}:</span>
+              <span class="no-rem__value">{{ load.P }}</span>
+              <span class="no-rem__unit">{{ getPointUnit(TOPOLOGY_LOAD_FIRST_ID, 'kw') }}</span>
+            </div>
             </div>
           </div>
         </foreignObject>
@@ -250,24 +250,24 @@
           <div class="no-rem__card">
             <div class="no-rem__card-title">Diesel</div>
             <div class="no-rem__card-content">
-              <div
-                class="no-rem__card-content-item"
-                :class="{ 'edit-ring': props.isEditing }"
-                @click="onMetricClick('tuopu-diesel-P', 'Diesel P')"
-              >
-                <span class="no-rem__name">{{ getPointLabel('tuopu-diesel-P', 'P') }}:</span>
-                <span class="no-rem__value">{{ diesel.p }}</span>
-                <span class="no-rem__unit">{{ getPointUnit('tuopu-diesel-P', 'kw') }}</span>
-              </div>
-              <div
-                class="no-rem__card-content-item"
-                :class="{ 'edit-ring': props.isEditing }"
-                @click="onMetricClick('tuopu-diesel-Oil', 'Diesel Oil')"
-              >
-                <span class="no-rem__name">{{ getPointLabel('tuopu-diesel-Oil', 'Oil') }}:</span>
-                <span class="no-rem__value">{{ diesel.oil }}</span>
-                <span class="no-rem__unit">{{ getPointUnit('tuopu-diesel-Oil', '%') }}</span>
-              </div>
+            <div
+              class="no-rem__card-content-item"
+              :class="{ 'edit-ring': props.isEditing }"
+              @click="onMetricClick(TOPOLOGY_DIESEL_FIRST_ID, 'Diesel P')"
+            >
+              <span class="no-rem__name">{{ getPointLabel(TOPOLOGY_DIESEL_FIRST_ID, 'P') }}:</span>
+              <span class="no-rem__value">{{ diesel.p }}</span>
+              <span class="no-rem__unit">{{ getPointUnit(TOPOLOGY_DIESEL_FIRST_ID, 'kw') }}</span>
+            </div>
+            <div
+              class="no-rem__card-content-item"
+              :class="{ 'edit-ring': props.isEditing }"
+              @click="onMetricClick(TOPOLOGY_DIESEL_SECOND_ID, 'Diesel Oil')"
+            >
+              <span class="no-rem__name">{{ getPointLabel(TOPOLOGY_DIESEL_SECOND_ID, 'Oil') }}:</span>
+              <span class="no-rem__value">{{ diesel.oil }}</span>
+              <span class="no-rem__unit">{{ getPointUnit(TOPOLOGY_DIESEL_SECOND_ID, '%') }}</span>
+            </div>
             </div>
           </div>
         </foreignObject>
@@ -298,24 +298,24 @@
           <div class="no-rem__card">
             <div class="no-rem__card-title">ESS</div>
             <div class="no-rem__card-content">
-              <div
-                class="no-rem__card-content-item"
-                :class="{ 'edit-ring': props.isEditing }"
-                @click="onMetricClick('tuopu-ess-P', 'ESS P')"
-              >
-                <span class="no-rem__name">{{ getPointLabel('tuopu-ess-P', 'P') }}:</span>
-                <span class="no-rem__value">{{ ess.p }}</span>
-                <span class="no-rem__unit">{{ getPointUnit('tuopu-ess-P', 'kw') }}</span>
-              </div>
-              <div
-                class="no-rem__card-content-item"
-                :class="{ 'edit-ring': props.isEditing }"
-                @click="onMetricClick('tuopu-ess-SOC', 'ESS SOC')"
-              >
-                <span class="no-rem__name">{{ getPointLabel('tuopu-ess-SOC', 'SOC') }}:</span>
-                <span class="no-rem__value">{{ ess.soc }}</span>
-                <span class="no-rem__unit">{{ getPointUnit('tuopu-ess-SOC', '%') }}</span>
-              </div>
+            <div
+              class="no-rem__card-content-item"
+              :class="{ 'edit-ring': props.isEditing }"
+              @click="onMetricClick(TOPOLOGY_ESS_FIRST_ID, 'ESS P')"
+            >
+              <span class="no-rem__name">{{ getPointLabel(TOPOLOGY_ESS_FIRST_ID, 'P') }}:</span>
+              <span class="no-rem__value">{{ ess.p }}</span>
+              <span class="no-rem__unit">{{ getPointUnit(TOPOLOGY_ESS_FIRST_ID, 'kw') }}</span>
+            </div>
+            <div
+              class="no-rem__card-content-item"
+              :class="{ 'edit-ring': props.isEditing }"
+              @click="onMetricClick(TOPOLOGY_ESS_SECOND_ID, 'ESS SOC')"
+            >
+              <span class="no-rem__name">{{ getPointLabel(TOPOLOGY_ESS_SECOND_ID, 'SOC') }}:</span>
+              <span class="no-rem__value">{{ ess.soc }}</span>
+              <span class="no-rem__unit">{{ getPointUnit(TOPOLOGY_ESS_SECOND_ID, '%') }}</span>
+            </div>
             </div>
             <!-- <div class="no-rem__card-alarm"></div> -->
           </div>
@@ -719,6 +719,15 @@
 </template>
 <script setup lang="ts">
 import jiantou from '@/assets/images/jiantou.png'
+import { HOMEPAGE_POINT_IDS } from '@/types/homeConfiguration'
+
+const TOPOLOGY_PV_FIRST_ID = String(HOMEPAGE_POINT_IDS.TOPOLOGY_PV_FIRST)
+const TOPOLOGY_LOAD_FIRST_ID = String(HOMEPAGE_POINT_IDS.TOPOLOGY_LOAD_FIRST)
+const TOPOLOGY_DIESEL_FIRST_ID = String(HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_FIRST)
+const TOPOLOGY_DIESEL_SECOND_ID = String(HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_SECOND)
+const TOPOLOGY_ESS_FIRST_ID = String(HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_FIRST)
+const TOPOLOGY_ESS_SECOND_ID = String(HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_SECOND)
+
 const props = withDefaults(
   defineProps<{
     data: {
@@ -814,6 +823,11 @@ const { pv, ess, load, diesel } = toRefs(props.data)
 .edit-ring {
   cursor: pointer;
   position: relative;
+  &:first-child{
+    &::after{
+      border-top-width: 1px;
+    }
+  }
 }
 
 /* Normal mark: outline aligns to the target element */
@@ -822,9 +836,11 @@ const { pv, ess, load, diesel } = toRefs(props.data)
   position: absolute;
   inset: 0;
   border: 1px solid $primary-color;
+  border-top-width: 0;
   border-radius: inherit;
   pointer-events: none;
   box-sizing: border-box;
+  inset: -3px 0;
 }
 
 .no-rem__name {

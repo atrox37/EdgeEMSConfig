@@ -4,6 +4,7 @@
 // 引入主题变量
 
 .voltage-class {
+
   // 开关组件基础样式
   .el-switch {
     // 重置默认样式
@@ -18,7 +19,7 @@
     user-select: none;
     cursor: pointer;
 
-    // 开关核心容�?
+    // 开关核心轨道（未选中时为灰色）
     .el-switch__core {
       position: relative;
       display: inline-block;
@@ -28,7 +29,7 @@
       min-width: 40px;
       border: none;
       border-radius: $border-radius-round;
-      background: $bg-color-transparent-white-20;
+      background: $border-color-gray;
       transition: all $transition-base;
       cursor: pointer;
       // 添加阴影，让开关更明显
@@ -108,12 +109,12 @@
       }
     }
 
-    // 悬停状�?
+    // 悬停状态
     &:hover:not(.is-disabled) {
       .el-switch__core {
         // 悬停时增强阴影
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 0 4px rgba(0, 0, 0, 0.1);
-        
+
         &::after {
           content: '';
           position: absolute;
@@ -128,7 +129,7 @@
       }
     }
 
-    // 聚焦状�?
+    // 聚焦状态
     &:focus-visible {
       .el-switch__core {
         outline: $border-width-medium solid $primary-color-alpha-20;
@@ -136,19 +137,24 @@
       }
     }
 
-    // 禁用状�?
+    // 禁用状态
     &.is-disabled {
       cursor: not-allowed;
       opacity: 1;
 
       .el-switch__core {
-        background: $switch-disabled-bg;
+        background: $primary-color-alpha-35;
         border-color: $border-color-base;
         cursor: not-allowed;
 
         .el-switch__action {
-          background: $text-color-primary;
+          background: $white-alpha-100;
           box-shadow: none;
+        }
+
+        .el-icon {
+          color: $primary-color !important;
+          animation: switch-loading 1s linear infinite;
         }
       }
 
@@ -164,12 +170,18 @@
         }
       }
     }
-    // 加载状�?
+
+    // 加载状态：圆形保持白色，背景为主题色带透明度
     &.is-loading {
+      .el-switch__core {
+        background: $primary-color-alpha-35 !important;
+      }
+
       .el-switch__action {
-        background: #9e9e9e !important; // 灰色圆球
+        background: $white-alpha-100 !important;
+
         .el-icon {
-          color: #ffffff !important; // 白色图标（在灰色背景上更清晰）
+          color: $primary-color !important;
           animation: switch-loading 1s linear infinite;
         }
       }
@@ -201,14 +213,14 @@
     }
   }
 
-  // 开关加载动�?
+  // 开关加载动画
   @keyframes switch-loading {
     0% {
       transform: rotate(0deg);
     }
+
     100% {
       transform: rotate(360deg);
     }
   }
 }
-

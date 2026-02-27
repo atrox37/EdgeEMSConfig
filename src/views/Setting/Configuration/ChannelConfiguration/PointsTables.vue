@@ -4,13 +4,30 @@
         <el-page-header @back="handleBack" class="points-tables-page__header">
             <template #content>
                 <div class="points-tables-page__header-content">
-                    <span class="points-tables-page__header-title">{{ pageTitle }}</span>
-                    <!-- 模式切换下拉�?-->
-                    <el-select v-if="!isEditing" v-model="viewModeSwitch" class="points-tables-page__view-mode-select"
-                        @change="handleViewModeChange">
-                        <el-option label="Points" :value="false" />
-                        <el-option label="Mappings" :value="true" />
-                    </el-select>
+                    <!-- 右侧通道名称（字体小于标题） -->
+                    <span v-if="channelName" class="points-tables-page__channel-name">
+                        {{ channelName }} -&nbsp;
+                    </span>
+                    <!-- 模式切换下拉菜单：首次打开默认为 Points Table -->
+                    <el-dropdown v-if="!isEditing" trigger="click" class="points-tables-page__view-mode-dropdown"
+                        @command="handleDropdownCommand">
+                        <span class="points-tables-page__dropdown-trigger">
+                            {{ viewMode === 'points' ? 'Points Table' : 'Mappings Table' }}
+                            <el-icon class="el-icon--right">
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item command="points">Points Table</el-dropdown-item>
+                                <el-dropdown-item command="mappings">Mappings Table</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                    <span v-else class="points-tables-page__header-title">{{ viewMode === 'points' ? 'Points Table' :
+                        'Mappings Table'
+                        }}</span>
+
                 </div>
             </template>
         </el-page-header>
@@ -20,7 +37,7 @@
                 <div class="config-section__tabs-wrapper">
                     <el-tabs v-model="activeTab" type="card" :before-leave="handleBeforeLeave"
                         @tab-change="handleTabChange" class="config-section__tabs">
-                        <el-tab-pane label="telemetry" name="telemetry" v-if="channelProtocol !== 'di_do'">
+                        <el-tab-pane label="Telemetry" name="telemetry" v-if="channelProtocol !== 'di_do'">
                             <template v-if="viewMode === 'points'">
                                 <PointTablePoints ref="telemetryTableRef" pointType="T" :points="pointsData.telemetry"
                                     :original-points="originalPointsData.telemetry" :view-mode="viewMode"
@@ -40,7 +57,7 @@
                                     :channelProtocol="channelProtocol" />
                             </template>
                         </el-tab-pane>
-                        <el-tab-pane label="signal" name="signal">
+                        <el-tab-pane label="Signal" name="signal">
                             <template v-if="viewMode === 'points'">
                                 <PointTablePoints ref="signalTableRef" pointType="S" :points="pointsData.signal"
                                     :original-points="originalPointsData.signal" :view-mode="viewMode"
@@ -60,7 +77,7 @@
                                     :channelProtocol="channelProtocol" />
                             </template>
                         </el-tab-pane>
-                        <el-tab-pane label="control" name="control">
+                        <el-tab-pane label="Control" name="control">
                             <template v-if="viewMode === 'points'">
                                 <PointTablePoints ref="controlTableRef" pointType="C" :points="pointsData.control"
                                     :original-points="originalPointsData.control" :view-mode="viewMode"
@@ -80,7 +97,7 @@
                                     :channelProtocol="channelProtocol" />
                             </template>
                         </el-tab-pane>
-                        <el-tab-pane label="adjustment" name="adjustment" v-if="channelProtocol !== 'di_do'">
+                        <el-tab-pane label="Adjustment" name="adjustment" v-if="channelProtocol !== 'di_do'">
                             <template v-if="viewMode === 'points'">
                                 <PointTablePoints ref="adjustmentTableRef" pointType="A" :points="pointsData.adjustment"
                                     :original-points="originalPointsData.adjustment" :view-mode="viewMode"
@@ -102,15 +119,15 @@
                         </el-tab-pane>
                     </el-tabs>
 
-                    <!-- Status 筛选器 -->
+                    <!-- Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选 -->
                     <div v-if="isEditing" class="config-section__status-filter">
-                        <el-checkbox-group v-model="statusFilterValue" @change="handleStatusFilterChange"
-                            class="status-checkbox-group">
-                            <el-checkbox v-for="option in statusFilterOptions" :key="option.value"
-                                :label="option.value">
-                                {{ option.label }}
-                            </el-checkbox>
+                        <el-checkbox-group v-model="statusCheckboxValue" class="status-checkbox-group" @change="handleStatusCheckboxChange">
+                            <el-checkbox v-if="viewMode === 'points'" label="modified">modified</el-checkbox>
+                            <el-checkbox v-if="viewMode === 'points'" label="added">added</el-checkbox>
+                            <el-checkbox v-if="viewMode === 'points'" label="deleted">deleted</el-checkbox>
+                            <el-checkbox v-if="viewMode === 'mappings'" label="modified">modified</el-checkbox>
                         </el-checkbox-group>
+                        <el-checkbox v-model="invalidChecked" class="status-invalid-checkbox">invalid</el-checkbox>
                     </div>
                 </div>
 
@@ -120,8 +137,8 @@
 
         <!-- Footer Actions -->
         <div class="points-tables-page__footer">
-            <el-button v-if="!isPublish" @click="handleCancel">
-                {{ isEditing ? 'Cancel Edit' : 'Cancel' }}
+            <el-button v-if="isEditing && !isPublish" @click="handleCancelEdit">
+                Cancel Edit
             </el-button>
             <el-button v-if="!isEditing && !isPublish" type="primary" @click="handleEdit">
                 Edit
@@ -138,6 +155,7 @@
 import { nextTick, watch, computed, onMounted, onUnmounted, ref, provide, readonly } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import PointTablePoints from './components/PointTablePoints.vue'
 import PointTableMappings from './components/PointTableMappings.vue'
 import IconButton from '@/components/common/IconButton.vue'
@@ -177,51 +195,24 @@ const channelProtocol = ref<'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_d
 const viewModeSwitch = ref(false) // false = points, true = mappings
 const viewMode = computed(() => (viewModeSwitch.value ? 'mappings' : 'points'))
 const editFilters = ref<string[]>([])
-// Status 筛选器：使�?checkbox-group 但限制为单�?
-const statusFilterValue = ref<string[]>([])
-// Status 筛选选项：根�?viewMode 显示不同选项
-const statusFilterOptions = computed(() => {
-    if (viewMode.value === 'points') {
-        return [
-            { label: 'modified', value: 'modified' },
-            { label: 'added', value: 'added' },
-            { label: 'deleted', value: 'deleted' },
-            { label: 'invalid', value: 'invalid' },
-        ]
-    } else {
-        return [
-            { label: 'modified', value: 'modified' },
-            { label: 'invalid', value: 'invalid' },
-        ]
-    }
-})
-// Status 筛选器变化处理：限制为单�?
-const handleStatusFilterChange = (values: string[]) => {
-    // 限制为单选：如果选择了多个，只保留最后一�?
-    if (values.length > 1) {
-        const lastValue = values[values.length - 1]
-        statusFilterValue.value = [lastValue]
-        editFilters.value = [lastValue]
-    } else {
-        editFilters.value = values
-    }
+// Status 筛选器：modified/added/deleted 多选框互斥（仅可选一或全不选），invalid 独立复选
+const statusCheckboxValue = ref<string[]>([])
+const invalidChecked = ref(false)
+const handleStatusCheckboxChange = (val: string[]) => {
+    if (val.length > 1) statusCheckboxValue.value = [val[val.length - 1]]
 }
-// 监听 editFilters 变化，同步到 statusFilterValue（用于外部设置时同步�?
 watch(
-    () => editFilters.value,
-    (val) => {
-        if (Array.isArray(val) && val.length > 0) {
-            // 如果 editFilters 有值，同步�?statusFilterValue
-            const currentValue = statusFilterValue.value
-            if (currentValue.length === 0 || currentValue[0] !== val[0]) {
-                statusFilterValue.value = [val[0]]
-            }
+    [statusCheckboxValue, invalidChecked],
+    () => {
+        if (invalidChecked.value) {
+            editFilters.value = ['invalid']
+        } else if (statusCheckboxValue.value.length > 0) {
+            editFilters.value = [statusCheckboxValue.value[0]]
         } else {
-            // 如果 editFilters 为空，清�?statusFilterValue
-            statusFilterValue.value = []
+            editFilters.value = []
         }
     },
-    { immediate: true },
+    { immediate: true, deep: true },
 )
 const isPublish = ref(false) // 批量发布模式
 const publishDirty = ref(false) // 发布数据是否有修�?
@@ -293,23 +284,22 @@ provide(
     }),
 )
 
-// 页面标题
-const pageTitle = computed(() => {
-    const modeLabel = viewMode.value === 'points' ? 'Points Table' : 'Mappings Table'
-    const namePart = channelName.value ? ` - ${channelName.value}` : ''
-    return `${modeLabel}${namePart}`
-})
-
-// 返回处理
-const handleBack = () => {
-    router.push('/channelConfiguration')
-}
-
 // 模式切换处理
 const handleViewModeChange = () => {
-    // 模式切换时重置筛�?
-    editFilters.value = []
-    statusFilterValue.value = []
+    // 模式切换时重置筛选
+            editFilters.value = []
+            statusCheckboxValue.value = []
+            invalidChecked.value = false
+}
+
+// 下拉菜单选择
+const handleDropdownCommand = (command: string) => {
+    if (command === 'points') {
+        viewModeSwitch.value = false
+    } else if (command === 'mappings') {
+        viewModeSwitch.value = true
+    }
+    handleViewModeChange()
 }
 
 const handleEdit = (payload?: { fromImport?: boolean } | MouseEvent) => {
@@ -318,8 +308,9 @@ const handleEdit = (payload?: { fromImport?: boolean } | MouseEvent) => {
             ? (payload as { fromImport?: boolean }).fromImport
             : false
     isEditing.value = true
-    editFilters.value = []
-    statusFilterValue.value = []
+            editFilters.value = []
+            statusCheckboxValue.value = []
+            invalidChecked.value = false
     // 用户主动进入编辑时，清除四个表中上一次的导入文件名；
     // 若由子表导入触发（fromImport），则保留当前导入文件名�?
     if (!fromImport) {
@@ -347,9 +338,8 @@ const handleSubmit = async () => {
     // 编辑提交前：检查四个Tab是否存在 invalid
     const ensureInvalidHandled = (targetTab: 'telemetry' | 'signal' | 'control' | 'adjustment') => {
         // 勾�?invalid 筛�?
-        if (!editFilters.value.includes('invalid')) {
-            editFilters.value = uniqueArray([...(editFilters.value || []), 'invalid'])
-            statusFilterValue.value = ['invalid']
+        if (!invalidChecked.value) {
+            invalidChecked.value = true
         }
         // 切换到有问题�?Tab
         activeTab.value = targetTab
@@ -357,12 +347,21 @@ const handleSubmit = async () => {
 
     if (viewMode.value === 'mappings') {
         const invalidTabs: Array<'telemetry' | 'signal' | 'control' | 'adjustment'> = []
-        if (telemetryTableRef.value?.hasInvalid?.()) invalidTabs.push('telemetry')
-        if (signalTableRef.value?.hasInvalid?.()) invalidTabs.push('signal')
-        if (controlTableRef.value?.hasInvalid?.()) invalidTabs.push('control')
-        if (adjustmentTableRef.value?.hasInvalid?.()) invalidTabs.push('adjustment')
+        const refs = [
+            { ref: telemetryTableRef, tab: 'telemetry' as const },
+            { ref: signalTableRef, tab: 'signal' as const },
+            { ref: controlTableRef, tab: 'control' as const },
+            { ref: adjustmentTableRef, tab: 'adjustment' as const },
+        ]
+        refs.forEach(({ ref, tab }) => {
+            if (ref.value?.hasInvalid?.()) invalidTabs.push(tab)
+        })
         if (invalidTabs.length > 0) {
-            ElMessage.warning('Mappings Table has invalid data, please correct and submit again')
+            refs.forEach(({ ref }) => {
+                if (ref.value?.hasInvalid?.() && ref.value?.getInvalidDetails) {
+                    ref.value.getInvalidDetails()
+                }
+            })
             ensureInvalidHandled(invalidTabs[0])
             return
         }
@@ -392,16 +391,26 @@ const handleSubmit = async () => {
             await refreshPointsBaseline()
             // 提交完成后清空筛选并显示全部
             clearStatusFilters()
-            statusFilterValue.value = []
+            statusCheckboxValue.value = []
+            invalidChecked.value = false
         }
     } else {
         const invalidTabs: Array<'telemetry' | 'signal' | 'control' | 'adjustment'> = []
-        if (telemetryTableRef.value?.hasInvalid?.()) invalidTabs.push('telemetry')
-        if (signalTableRef.value?.hasInvalid?.()) invalidTabs.push('signal')
-        if (controlTableRef.value?.hasInvalid?.()) invalidTabs.push('control')
-        if (adjustmentTableRef.value?.hasInvalid?.()) invalidTabs.push('adjustment')
+        const pointRefs = [
+            { ref: telemetryTableRef, tab: 'telemetry' as const },
+            { ref: signalTableRef, tab: 'signal' as const },
+            { ref: controlTableRef, tab: 'control' as const },
+            { ref: adjustmentTableRef, tab: 'adjustment' as const },
+        ]
+        pointRefs.forEach(({ ref, tab }) => {
+            if (ref.value?.hasInvalid?.()) invalidTabs.push(tab)
+        })
         if (invalidTabs.length > 0) {
-            ElMessage.warning('Points Table has invalid data, please correct and submit again')
+            pointRefs.forEach(({ ref }) => {
+                if (ref.value?.hasInvalid?.() && ref.value?.getInvalidDetails) {
+                    ref.value.getInvalidDetails()
+                }
+            })
             ensureInvalidHandled(invalidTabs[0])
             return
         }
@@ -494,7 +503,8 @@ const handleSubmit = async () => {
             await refreshPointsBaseline()
             // 提交完成后清空筛选并显示全部
             clearStatusFilters()
-            statusFilterValue.value = []
+            statusCheckboxValue.value = []
+            invalidChecked.value = false
         }
     }
 }
@@ -605,85 +615,79 @@ const getCurrentTableRef = () => {
     return tableRefsByTab[activeTab.value as TabName] || null
 }
 
-// 取消处理
-const handleCancel = async () => {
-    // 如果正在编辑，检查是否有修改
-    if (isEditing.value) {
-        const hasChanges =
-            (viewMode.value === 'points' &&
-                (telemetryTableRef.value?.hasChanges?.() ||
-                    signalTableRef.value?.hasChanges?.() ||
-                    controlTableRef.value?.hasChanges?.() ||
-                    adjustmentTableRef.value?.hasChanges?.())) ||
-            (viewMode.value === 'mappings' &&
-                (telemetryTableRef.value?.hasChanges?.() ||
-                    signalTableRef.value?.hasChanges?.() ||
-                    controlTableRef.value?.hasChanges?.() ||
-                    adjustmentTableRef.value?.hasChanges?.()))
-        if (hasChanges) {
-            try {
-                await ElMessageBox.confirm(
-                    'You have unsaved changes. Do you want to discard them?',
-                    'Unsaved Changes',
-                    {
-                        confirmButtonText: 'Discard',
-                        cancelButtonText: 'Cancel',
-                        type: 'warning',
-                    },
-                )
-                isEditing.value = false
-                editFilters.value = []
-                statusFilterValue.value = []
-                telemetryTableRef.value?.clearImportedFileName?.()
-                signalTableRef.value?.clearImportedFileName?.()
-                controlTableRef.value?.clearImportedFileName?.()
-                adjustmentTableRef.value?.clearImportedFileName?.()
-                clearAllSignalFilters()
-            } catch {
-                // 用户取消，不做任何操�?
-                return
-            }
-        } else {
-            isEditing.value = false
-            editFilters.value = []
-            statusFilterValue.value = []
-            telemetryTableRef.value?.clearImportedFileName?.()
-            signalTableRef.value?.clearImportedFileName?.()
-            controlTableRef.value?.clearImportedFileName?.()
-            adjustmentTableRef.value?.clearImportedFileName?.()
-        }
-        return
-    }
+// 获取是否有未保存的修改
+const getHasChanges = () =>
+    (viewMode.value === 'points' &&
+        (telemetryTableRef.value?.hasChanges?.() ||
+            signalTableRef.value?.hasChanges?.() ||
+            controlTableRef.value?.hasChanges?.() ||
+            adjustmentTableRef.value?.hasChanges?.())) ||
+    (viewMode.value === 'mappings' &&
+        (telemetryTableRef.value?.hasChanges?.() ||
+            signalTableRef.value?.hasChanges?.() ||
+            controlTableRef.value?.hasChanges?.() ||
+            adjustmentTableRef.value?.hasChanges?.()))
 
-    // 如果处于发布模式且有未提交的值，提醒用户
-    if (isPublish.value && publishDirty.value) {
+// 执行退出编辑并恢复原始数据
+const performCancelEdit = () => {
+    pointsData.value = deepClone(originalPointsData.value)
+    isEditing.value = false
+    isPublish.value = false
+    publishDirty.value = false
+            editFilters.value = []
+            statusCheckboxValue.value = []
+            invalidChecked.value = false
+    telemetryTableRef.value?.clearImportedFileName?.()
+    signalTableRef.value?.clearImportedFileName?.()
+    controlTableRef.value?.clearImportedFileName?.()
+    adjustmentTableRef.value?.clearImportedFileName?.()
+    resetPublishAll()
+    clearAllSignalFilters()
+}
+
+// 返回：编辑模式且有修改时弹出确认（与 Cancel Edit 类似），否则直接返回
+const handleBack = async () => {
+    if (isEditing.value && getHasChanges()) {
         try {
             await ElMessageBox.confirm(
-                'You have unsaved publish values. Do you want to submit them before closing?',
+                'You have unsaved changes. Do you want to discard them?',
                 'Unsaved Changes',
                 {
-                    confirmButtonText: 'Submit',
-                    cancelButtonText: 'Discard',
+                    confirmButtonText: 'Discard',
+                    cancelButtonText: 'Cancel',
                     type: 'warning',
                 },
             )
-            // 用户选择提交
-            await handleSubmitPublish()
-            clearAllSignalFilters()
-            handleBack()
         } catch {
-            // 用户选择放弃或取�?
-            controlTableRef.value?.resetPublish?.()
-            adjustmentTableRef.value?.resetPublish?.()
-            publishDirty.value = false
-            isPublish.value = false
-            clearAllSignalFilters()
-            handleBack()
+            return
         }
+    }
+    if (isEditing.value) {
+        performCancelEdit()
     } else {
         clearAllSignalFilters()
-        handleBack()
     }
+    router.push('/channelConfiguration')
+}
+
+// 取消编辑：退出编辑模式并恢复原始数据（遵循之前的逻辑）
+const handleCancelEdit = async () => {
+    if (getHasChanges()) {
+        try {
+            await ElMessageBox.confirm(
+                'You have unsaved changes. Do you want to discard them?',
+                'Unsaved Changes',
+                {
+                    confirmButtonText: 'Discard',
+                    cancelButtonText: 'Cancel',
+                    type: 'warning',
+                },
+            )
+        } catch {
+            return
+        }
+    }
+    performCancelEdit()
 }
 
 // 统一清理：关闭前清理所有表�?Signal Name 筛�?
@@ -696,8 +700,9 @@ const clearAllSignalFilters = () => {
 
 // 统一清空状态筛选并显示全部
 const clearStatusFilters = () => {
-    editFilters.value = []
-    statusFilterValue.value = []
+            editFilters.value = []
+            statusCheckboxValue.value = []
+            invalidChecked.value = false
     clearAllSignalFilters()
 }
 
@@ -751,7 +756,7 @@ const initData = async () => {
                 payload.updates.forEach((upd: any) => {
                     if (upd.channel_id !== channelId.value) return
                     const refMap = dataTypeToRef[upd.data_type as DataType]
-                    refMap?.value?.applyRealtimeValues?.(upd.values)
+                    refMap?.value?.applyRealtimeValues?.(upd.values, upd.ts)
                 })
             },
         },
@@ -803,7 +808,9 @@ watch(
         .points-tables-page__header-content {
             display: flex;
             align-items: center;
-            gap: 20px;
+            justify-content: space-between;
+            flex: 1;
+            min-width: 0;
 
             .points-tables-page__header-title {
                 font-size: $font-size-large;
@@ -811,8 +818,25 @@ watch(
                 color: $text-color-primary;
             }
 
-            .points-tables-page__view-mode-select {
-                width: 150px;
+            .points-tables-page__dropdown-trigger {
+                display: inline-flex;
+                align-items: center;
+                font-size: $font-size-large;
+                font-weight: $font-weight-semibold;
+                color: $text-color-primary;
+                cursor: pointer;
+
+                .el-icon--right {
+                    margin-left: 4px;
+                }
+            }
+
+            .points-tables-page__channel-name {
+                font-size: $font-size-large;
+                font-weight: $font-weight-semibold;
+                color: $text-color-primary;
+                flex-shrink: 0;
+                margin-left: 4px;
             }
         }
     }
@@ -896,6 +920,12 @@ watch(
                 flex-wrap: wrap;
                 align-items: center;
             }
+            :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+                border-color: #fff !important;
+            }
+            :deep(.status-invalid-checkbox .el-checkbox__input.is-checked .el-checkbox__inner::after) {
+                border-color: #fff !important;
+            }
         }
     }
 
@@ -927,5 +957,3 @@ watch(
     line-height: 32px;
 }
 </style>
-
-

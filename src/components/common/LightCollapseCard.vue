@@ -1,7 +1,12 @@
 <template>
   <section
     class="light-collapse-card"
-    :class="{ 'is-open': modelValue, 'is-disabled': disabled, 'is-initial': !isReady }"
+    :class="{
+      'is-open': modelValue,
+      'is-disabled': disabled,
+      'is-initial': !isReady,
+      'is-non-collapsible': !collapsible,
+    }"
   >
     <button
       class="light-collapse-card__header"
@@ -57,10 +62,16 @@ const updateHeight = () => {
   bodyHeight.value = bodyRef.value.scrollHeight
 }
 
-const bodyStyle = computed(() => ({
-  maxHeight: props.modelValue ? (props.autoHeight ? '100%' : `${bodyHeight.value}px`) : '0px',
-  opacity: props.modelValue ? '1' : '0',
-}))
+const bodyStyle = computed(() => {
+  // 不可折叠时：直接展开，不依赖 bodyHeight，避免初始挂载时的展开动画
+  if (!props.collapsible) {
+    return { maxHeight: 'none', opacity: '1' }
+  }
+  return {
+    maxHeight: props.modelValue ? (props.autoHeight ? '100%' : `${bodyHeight.value}px`) : '0px',
+    opacity: props.modelValue ? '1' : '0',
+  }
+})
 
 const toggle = () => {
   if (props.disabled || !props.collapsible) return
@@ -107,7 +118,7 @@ watch(
 <style scoped lang="scss">
 
 .light-collapse-card {
-  height: 100%;
+  //height: 100%;
   border: 1px solid $white-alpha-10;
   border-radius: 10px;
   background: linear-gradient(180deg, $white-alpha-05, transparent);
@@ -216,6 +227,13 @@ watch(
   }
 
   &.is-initial {
+    .light-collapse-card__body {
+      transition: none;
+    }
+  }
+
+  // 不可折叠时：禁用展开/收起动画，始终直接展示
+  &.is-non-collapsible {
     .light-collapse-card__body {
       transition: none;
     }

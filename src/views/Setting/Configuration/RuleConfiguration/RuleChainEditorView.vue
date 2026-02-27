@@ -205,7 +205,7 @@
         class="floating-btn floating-btn--submit"
         @click="handleSave"
         :disabled="!hasUnsavedChanges"
-        title="Save"
+        title="Submit"
       >
         √
       </el-button>

@@ -136,9 +136,17 @@ export function validateMappingField(
     }
     case 'bit_position': {
       const rawBp = m.bit_position
-      if (rawBp === undefined || rawBp === null || rawBp === '') return ''
+      const canEdit = canEditMappingBitPosition(item)
+      if (rawBp === undefined || rawBp === null || rawBp === '') {
+        if (!isPartialFill) return canEdit ? 'required' : ''
+        return ''
+      }
       const n = Number(rawBp)
-      if (!Number.isInteger(n) || n < 0 || n > 15) return 'must be 0-15 when provided'
+      if (canEdit) {
+        if (!Number.isInteger(n) || n < 0 || n > 15) return 'must be 0-15 when provided'
+        return ''
+      }
+      if (n !== 0) return 'must be empty or 0'
       return ''
     }
     default:
@@ -206,9 +214,7 @@ export function validateMappingRow(point: PointInfo, ctx: MappingValidationConte
     return false
   }
 
-  const allowedByPoint = FC_BY_POINT[ctx.pointType] || []
-  const base = dt === 'bool' || dt === 'boolean' ? [1, 2, 5, 15] : [3, 4, 6, 16]
-  const allowedFC = base.filter((c) => allowedByPoint.includes(c))
+  const allowedFC = FC_BY_POINT[ctx.pointType] || []
   const fc = Number(m.function_code)
   if (!allowedFC.includes(fc)) {
     ;(point as any).isInvalid = true

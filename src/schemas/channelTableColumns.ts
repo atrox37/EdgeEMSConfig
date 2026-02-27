@@ -1,4 +1,5 @@
 import type { PointInfo } from '@/types/channelConfiguration'
+import { formatUpdateTime } from '@/utils/csvExport'
 import { FC_BY_POINT } from '@/validators/channelMappings'
 
 export interface PointColumn {
@@ -56,9 +57,9 @@ export function getPointColumns(options: {
       key: 'point_id',
       prop: 'point_id',
       label: 'Point ID',
-      minWidth: 130,
+      minWidth: 80,
       className: 'point-id-column',
-      editor: 'number',
+      editor: 'input',
       isEditable: true,
       fieldClassKey: 'point_id',
       errorKey: 'point_id',
@@ -66,6 +67,8 @@ export function getPointColumns(options: {
       precision: 0,
       canEdit: options.canEditPointId,
       onChange: (row) => options.onFieldInput(row, 'point_id'),
+      onInput: (row) => options.onFieldInput(row, 'point_id'),
+      placeholder: 'Point ID',
       display: (row) => String(row.point_id),
     },
     {
@@ -86,49 +89,69 @@ export function getPointColumns(options: {
   ]
 
   if (!options.isEditing) {
-    base.push({
-      key: 'value',
-      prop: 'value',
-      label: 'Value',
-      minWidth: 120,
-      className: 'value-column',
-      editor: 'input',
-      isEditable: false,
-      fieldClassKey: 'value',
-      errorKey: 'value',
-      display: (row) => String((row as any).value ?? '-'),
-    })
+    base.push(
+      {
+        key: 'value',
+        prop: 'value',
+        label: 'Value',
+        minWidth: 120,
+        className: 'value-column',
+        editor: 'input',
+        isEditable: false,
+        fieldClassKey: 'value',
+        errorKey: 'value',
+        display: (row) => String((row as any).value ?? '-'),
+      },
+      {
+        key: 'update_time',
+        prop: 'update_time',
+        label: 'Update Time',
+        minWidth: 160,
+        className: 'update-time-column',
+        editor: 'input',
+        isEditable: false,
+        fieldClassKey: 'update_time',
+        errorKey: 'update_time',
+        display: (row) => formatUpdateTime((row as any).update_ts),
+      },
+    )
   }
 
   if (options.isTA) {
     base.push(
-      {
-        key: 'scale',
-        prop: 'scale',
-        label: 'Scale',
-        minWidth: 80,
-        className: 'scale-column',
-        editor: 'number',
-        isEditable: true,
-        fieldClassKey: 'scale',
-        errorKey: 'scale',
-        min: 0,
-        onChange: (row) => options.onFieldInput(row, 'scale'),
-        display: (row) => String(row.scale ?? ''),
-      },
-      {
-        key: 'offset',
-        prop: 'offset',
-        label: 'Offset',
-        minWidth: 80,
-        className: 'offset-column',
-        editor: 'number',
-        isEditable: true,
-        fieldClassKey: 'offset',
-        errorKey: 'offset',
-        onChange: (row) => options.onFieldInput(row, 'offset'),
-        display: (row) => String(row.offset ?? ''),
-      },
+    {
+      key: 'scale',
+      prop: 'scale',
+      label: 'Scale',
+      minWidth: 80,
+      className: 'scale-column',
+      editor: 'input',
+      isEditable: true,
+      fieldClassKey: 'scale',
+      errorKey: 'scale',
+      min: 0,
+      precision: 6,
+      onChange: (row) => options.onFieldInput(row, 'scale'),
+      onInput: (row) => options.onFieldInput(row, 'scale'),
+      placeholder: 'Scale',
+      display: (row) => String(row.scale ?? ''),
+    },
+    {
+      key: 'offset',
+      prop: 'offset',
+      label: 'Offset',
+      minWidth: 80,
+      className: 'offset-column',
+      editor: 'input',
+      isEditable: true,
+      fieldClassKey: 'offset',
+      errorKey: 'offset',
+      precision: 6,
+      onChange: (row) => options.onFieldInput(row, 'offset'),
+      onInput: (row) => options.onFieldInput(row, 'offset'),
+      placeholder: 'Offset',
+      display: (row) => String(row.offset ?? ''),
+    },
       {
         key: 'unit',
         prop: 'unit',
@@ -188,12 +211,23 @@ export function getMappingColumns(options: {
         label: 'GPIO Number',
         minWidth: 120,
         className: 'gpio-number-column',
-        editor: 'number',
+        editor: 'input',
         fieldClassKey: 'mapping_gpio_number',
         errorKey: 'gpio_number',
         min: 1,
         step: 1,
         onChange: (row) => options.onMappingFieldChange(row, 'gpio_number'),
+        onInput: (row, val: string) => {
+          const trimmed = String(val ?? '').trim()
+          if (trimmed === '') {
+            (row.protocol_mapping as any).gpio_number = undefined
+          } else {
+            const n = parseInt(trimmed, 10)
+            if (!isNaN(n)) (row.protocol_mapping as any).gpio_number = n
+          }
+          options.onMappingFieldChange(row, 'gpio_number')
+        },
+        placeholder: 'GPIO',
         display: (row) => String((row.protocol_mapping as any)?.gpio_number ?? ''),
       },
     ]
@@ -206,12 +240,23 @@ export function getMappingColumns(options: {
       label: 'Slave ID',
       minWidth: 80,
       className: 'slave-id-column',
-      editor: 'number',
+      editor: 'input',
       fieldClassKey: 'mapping_slave_id',
       errorKey: 'slave_id',
       min: 0,
       max: 999,
       onChange: (row) => options.onMappingFieldChange(row, 'slave_id'),
+      onInput: (row, val: string) => {
+        const trimmed = String(val ?? '').trim()
+        if (trimmed === '') {
+          (row.protocol_mapping as any).slave_id = undefined
+        } else {
+          const n = parseInt(trimmed, 10)
+          if (!isNaN(n)) (row.protocol_mapping as any).slave_id = n
+        }
+        options.onMappingFieldChange(row, 'slave_id')
+      },
+      placeholder: '0-999',
       display: (row) => String(row.protocol_mapping?.slave_id ?? ''),
     },
     {
@@ -278,13 +323,24 @@ export function getMappingColumns(options: {
       label: 'Bit Position',
       minWidth: 130,
       className: 'bit-position-column',
-      editor: 'number',
+      editor: 'input',
       fieldClassKey: 'mapping_bit_position',
       errorKey: 'bit_position',
       min: 0,
       max: 15,
       disabled: (row) => !options.canEditMappingBitPosition(row),
       onChange: (row) => options.onMappingFieldChange(row, 'bit_position'),
+      onInput: (row, val: string) => {
+        const trimmed = String(val ?? '').trim()
+        if (trimmed === '') {
+          (row.protocol_mapping as any).bit_position = undefined
+        } else {
+          const n = parseInt(trimmed, 10)
+          if (!isNaN(n)) (row.protocol_mapping as any).bit_position = n
+        }
+        options.onMappingFieldChange(row, 'bit_position')
+      },
+      placeholder: '0-15',
       display: (row) => String(row.protocol_mapping?.bit_position ?? ''),
     },
   ]

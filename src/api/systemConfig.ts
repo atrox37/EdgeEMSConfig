@@ -1,11 +1,8 @@
 import { Request, cancelPendingRequestsByUrl } from '@/utils/request'
 
 export const importConfigFile = (formData: FormData) => {
-  return Request.post('/api/v1/config/import', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+  // 不显式设置 Content-Type，让请求层自动为 FormData 生成 multipart/form-data; boundary=...
+  return Request.post('/api/v1/config/import', formData)
 }
 
 export const downloadConfigExport = (filename: string) => {

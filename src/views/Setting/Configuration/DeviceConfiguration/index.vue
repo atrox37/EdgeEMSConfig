@@ -59,7 +59,7 @@
           <el-table-column prop="instance_id" label="ID" width="100" />
           <el-table-column prop="instance_name" label="Instance Name" min-width="200" />
           <el-table-column prop="product_name" label="Product Name" min-width="200" />
-          <el-table-column min-width="200" fixed="right">
+          <el-table-column min-width="230" fixed="right">
             <template #header>
               <IconButton type="primary" :icon="userAddIcon" text="New"
                 custom-class="rule-management__btn rule-management__table-header-btn" @click="handleAddUser" />
@@ -72,7 +72,7 @@
                 </div>
                 <div class="rule-management__operation-item" @click="openPointsDialog(row)">
                   <img :src="pointIcon" />
-                  <span class="rule-management__operation-text">Points</span>
+                  <span class="rule-management__operation-text">Points/Routings</span>
                 </div>
                 <!-- <div class="rule-management__operation-item" @click="openMappingsDialog(row)">
                   <img :src="tableEditIcon" />
@@ -186,10 +186,9 @@ const handleDesktopFilterChange = (_key?: string, _value?: any) => {
   }, 500)
 }
 
-// 初始化页面，重新发起所有请求
+// 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
 const handleReload = () => {
   reloadFilters()
-  fetchTableData(true)
 }
 
 // 移除筛选标�?

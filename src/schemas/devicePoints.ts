@@ -4,6 +4,7 @@ export interface DevicePointCsvRow {
   point_id: number
   point_name: string
   value?: string | number
+  update_time?: string
   unit?: string
   description?: string
 }
@@ -26,6 +27,7 @@ export const devicePointCsvSchema: CsvFieldDef<DevicePointCsvRow>[] = [
   { key: 'point_id', header: 'point_id' },
   { key: 'point_name', header: 'point_name' },
   { key: 'value', header: 'value', required: false },
+  { key: 'update_time', header: 'update_time', required: false },
   { key: 'unit', header: 'unit', required: false },
   { key: 'description', header: 'description', required: false },
 ]

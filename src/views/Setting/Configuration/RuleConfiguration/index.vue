@@ -126,10 +126,9 @@ const switchLoadings = ref<boolean[]>([])
 const levelSelectRef = ref<HTMLElement | null>(null)
 const ruleEditDialogRef = ref()
 
-// 初始化页面，重新发起所有请求
+// 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
 const handleReload = () => {
   reloadFilters()
-  fetchTableData(true)
 }
 
 function openCreateDialog() {

@@ -96,15 +96,15 @@
           }
           .cell {
             padding: 0;
-            height: 22px;
+            min-height: 22px;
             line-height: 22px;
             display: flex;
             align-items: center;
             // justify-content: center;
-            text-align: center;
+            // text-align: center;
             &.el-tooltip {
               // width: 100% !important;
-              padding-right: 40px;
+              padding-right: 20px;
               span {
                 overflow: hidden;
                 text-overflow: ellipsis;

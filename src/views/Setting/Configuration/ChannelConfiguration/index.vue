@@ -111,7 +111,7 @@
             </template>
           </el-table-column>
           <!-- <el-table-column prop="error_count" label="Error Count" /> -->
-          <el-table-column min-width="300" fixed="right">
+          <el-table-column min-width="330" fixed="right">
             <template #header>
               <IconButton type="primary" :icon="userAddIcon" text="New"
                 custom-class="rule-management__btn rule-management__table-header-btn" @click="addChannel" />
@@ -124,7 +124,7 @@
                 </div>
                 <div class="rule-management__operation-item" @click="handlePointsTables(row)">
                   <img :src="buttonPointsIcon" />
-                  <span class="rule-management__operation-text">Points </span>
+                  <span class="rule-management__operation-text">Points/Mappings</span>
                 </div>
                 <!-- <div class="rule-management__operation-item" @click="handleMappings(row)">
                   <img :src="tableEditIcon" />
@@ -284,10 +284,9 @@ const handleDesktopFilterChange = (_key?: string, _value?: any) => {
   }, 500)
 }
 
-// 初始化页面，重新发起所有请求
+// 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
 const handleReload = () => {
   reloadFilters()
-  fetchTableData(true)
 }
 
 // 移除筛选标�?

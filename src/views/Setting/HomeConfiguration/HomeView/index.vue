@@ -5,16 +5,16 @@
       <div class="home-left-top">
         <div
           v-for="item in energyDashboardList"
-          :key="item.title"
+          :key="item.pointId"
           class="configurable-card home-left-top-item"
           :class="{ 'edit-ring': props.isEditing }"
-          @click="onCardClick(`energy-${item.title}`, item.title)"
+          @click="onCardClick(String(item.pointId), item.title)"
         >
           <EnergyCard
-            :title="getPointLabel(`energy-${item.title}`, item.title)"
-            :icon="getPointIcon(`energy-${item.title}`, item.icon)"
+            :title="getPointLabel(String(item.pointId), item.title)"
+            :icon="getPointIcon(String(item.pointId), item.icon)"
             :value="item.value"
-            :unit="getPointUnit(`energy-${item.title}`, (item as any).unit ?? '')"
+            :unit="getPointUnit(String(item.pointId), (item as any).unit ?? '')"
           />
         </div>
       </div>
@@ -32,26 +32,20 @@
       <div class="home-left-bottom">
         <div class="home-left-LineChart">
           <ModuleCard title="Power Curve">
-            <!-- 临时隐藏图表本体（卡片与标题保留） -->
             <LineChart
-              v-if="showCharts"
               :xAxiosOption="xAxiosOption"
               :yAxiosOption="lineChartYAxiosOption"
               :series="lineChartSeries"
             />
-            <div v-else class="home-chart-hidden"></div>
           </ModuleCard>
         </div>
         <div class="home-left-EnergyChart">
           <ModuleCard title="Energy Chart">
-            <!-- 临时隐藏图表本体（卡片与标题保留） -->
             <StackedBarChart
-              v-if="showCharts"
               :xAxiosOption="xAxiosOption"
               :yAxiosOption="yAxiosOption"
               :series="exampleSeries"
             />
-            <div v-else class="home-chart-hidden"></div>
           </ModuleCard>
         </div>
       </div>
@@ -60,17 +54,17 @@
       <div class="home-station">
         <ModuleCard title="Station infomation">
           <div class="home-stationList">
-            <div v-for="item in stationInfoList" :key="item.title" class="home-stationItem">
+            <div v-for="item in stationInfoList" :key="item.pointId" class="home-stationItem">
               <div
                 class="configurable-card"
                 :class="{ 'edit-ring': props.isEditing }"
-                @click.stop="onCardClick(`station-${item.title}`, item.title)"
+                @click.stop="onCardClick(String(item.pointId), item.title)"
               >
                 <EnergyCard
-                  :title="getPointLabel(`station-${item.title}`, item.title)"
-                  :icon="getPointIcon(`station-${item.title}`, item.icon)"
+                  :title="getPointLabel(String(item.pointId), item.title)"
+                  :icon="getPointIcon(String(item.pointId), item.icon)"
                   :value="item.value"
-                  :unit="getPointUnit(`station-${item.title}`, (item as any).unit ?? '')"
+                  :unit="getPointUnit(String(item.pointId), (item as any).unit ?? '')"
                 />
               </div>
             </div>
@@ -112,15 +106,15 @@
                         'edit-ring--device-left': props.isEditing && dataItem.title === 'P',
                         'edit-ring--device-right': props.isEditing && dataItem.title === 'U',
                       }"
-                      @click="onDeviceMetricClick(item.name, dataItem.title)"
+                      @click="onDeviceMetricClick(item.name, dataItem.title, dataItem.pointId)"
                     >
                       <span class="deviceValue-item-title">{{
-                        getPointLabel(`device-${item.name}-${dataItem.title}`, dataItem.title)
+                        getPointLabel(String(dataItem.pointId), dataItem.title)
                       }}:</span>
                       <span class="deviceValue-item-value">{{ dataItem.value }}</span>
                       &nbsp;
                       <span class="deviceValue-item-unit">{{
-                        getPointUnit(`device-${item.name}-${dataItem.title}`, dataItem.unit)
+                        getPointUnit(String(dataItem.pointId), dataItem.unit)
                       }}</span>
                     </div>
                   </div>
@@ -189,9 +183,7 @@ import iconEssEnergy from '@/assets/icons/icon-ess-energy.svg'
 
 import HomeBg from './HomeBg.vue'
 import { getIconUrl } from '../iconOptions'
-
-// 临时开关：隐藏图表（Power Curve / Energy Chart）
-const showCharts = false
+import { HOMEPAGE_POINT_IDS } from '@/types/homeConfiguration'
 
 const props = withDefaults(
   defineProps<{
@@ -244,10 +236,10 @@ const isDeviceMetricConfigurable = (title: string): boolean => {
   return title === 'P' || title === 'U'
 }
 
-const onDeviceMetricClick = (deviceName: string, metricTitle: string) => {
+const onDeviceMetricClick = (deviceName: string, metricTitle: string, pointId: number) => {
   if (!props.isEditing) return
   if (!isDeviceMetricConfigurable(metricTitle)) return
-  emit('cardClick', { id: `device-${deviceName}-${metricTitle}`, title: `${deviceName} ${metricTitle}` })
+  emit('cardClick', { id: String(pointId), title: `${deviceName} ${metricTitle}` })
 }
 
 const buildPointRecords = () => {
@@ -260,9 +252,8 @@ const buildPointRecords = () => {
   }
 
   for (const item of energyDashboardList) {
-    const id = `energy-${item.title}`
     points.push({
-      id,
+      id: String(item.pointId),
       module: 'Energy Dashboard',
       defaultLabel: String(item.title),
       defaultUnit: String((item as any).unit ?? ''),
@@ -271,9 +262,8 @@ const buildPointRecords = () => {
   }
 
   for (const item of stationInfoList) {
-    const id = `station-${item.title}`
     points.push({
-      id,
+      id: String(item.pointId),
       module: 'Station Information',
       defaultLabel: String(item.title),
       defaultUnit: String((item as any).unit ?? ''),
@@ -285,9 +275,8 @@ const buildPointRecords = () => {
     const deviceIcon = deviceIconMap[device.name] ?? ''
     for (const m of device.data as any[]) {
       if (!isDeviceMetricConfigurable(m.title)) continue
-      const id = `device-${device.name}-${m.title}`
       points.push({
-        id,
+        id: String(m.pointId),
         module: 'Device Information',
         context: String(device.name),
         defaultLabel: String(m.title),
@@ -298,12 +287,12 @@ const buildPointRecords = () => {
   }
 
   points.push(
-    { id: 'tuopu-pv-P', module: 'Topology', context: 'PV', defaultLabel: 'P', defaultUnit: 'kw' },
-    { id: 'tuopu-load-P', module: 'Topology', context: 'Load', defaultLabel: 'P', defaultUnit: 'kw' },
-    { id: 'tuopu-diesel-P', module: 'Topology', context: 'Diesel', defaultLabel: 'P', defaultUnit: 'kw' },
-    { id: 'tuopu-diesel-Oil', module: 'Topology', context: 'Diesel', defaultLabel: 'Oil', defaultUnit: '%' },
-    { id: 'tuopu-ess-P', module: 'Topology', context: 'ESS', defaultLabel: 'P', defaultUnit: 'kw' },
-    { id: 'tuopu-ess-SOC', module: 'Topology', context: 'ESS', defaultLabel: 'SOC', defaultUnit: '%' },
+    { id: String(HOMEPAGE_POINT_IDS.TOPOLOGY_PV_FIRST), module: 'Topology', context: 'PV', defaultLabel: 'P', defaultUnit: 'kw' },
+    { id: String(HOMEPAGE_POINT_IDS.TOPOLOGY_LOAD_FIRST), module: 'Topology', context: 'Load', defaultLabel: 'P', defaultUnit: 'kw' },
+    { id: String(HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_FIRST), module: 'Topology', context: 'Diesel', defaultLabel: 'P', defaultUnit: 'kw' },
+    { id: String(HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_SECOND), module: 'Topology', context: 'Diesel', defaultLabel: 'Oil', defaultUnit: '%' },
+    { id: String(HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_FIRST), module: 'Topology', context: 'ESS', defaultLabel: 'P', defaultUnit: 'kw' },
+    { id: String(HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_SECOND), module: 'Topology', context: 'ESS', defaultLabel: 'SOC', defaultUnit: '%' },
   )
 
   emit('pointsReady', points)
@@ -328,48 +317,24 @@ const tuopuData = ref({
 const deviceInfoList = reactive([
   {
     data: [
-      {
-        title: 'P',
-        value: '-',
-        unit: 'KW',
-      },
-      {
-        title: 'U',
-        value: '-',
-        unit: 'V',
-      },
+      { title: 'P', value: '-', unit: 'KW', pointId: HOMEPAGE_POINT_IDS.DEVICE_PV_LEFT },
+      { title: 'U', value: '-', unit: 'V', pointId: HOMEPAGE_POINT_IDS.DEVICE_PV_RIGHT },
     ],
     icon: devicePV,
     name: 'PV',
   },
   {
     data: [
-      {
-        title: 'P',
-        value: '-',
-        unit: 'KW',
-      },
-      {
-        title: 'U',
-        value: '-',
-        unit: 'V',
-      },
+      { title: 'P', value: '-', unit: 'KW', pointId: HOMEPAGE_POINT_IDS.DEVICE_DIESEL_LEFT },
+      { title: 'U', value: '-', unit: 'V', pointId: HOMEPAGE_POINT_IDS.DEVICE_DIESEL_RIGHT },
     ],
     icon: deviceDiesel,
     name: 'Diesel Generator',
   },
   {
     data: [
-      {
-        title: 'P',
-        value: '-',
-        unit: 'KW',
-      },
-      {
-        title: 'U',
-        value: '-',
-        unit: 'V',
-      },
+      { title: 'P', value: '-', unit: 'KW', pointId: HOMEPAGE_POINT_IDS.DEVICE_ESS_LEFT },
+      { title: 'U', value: '-', unit: 'V', pointId: HOMEPAGE_POINT_IDS.DEVICE_ESS_RIGHT },
     ],
     icon: deviceBattery,
     name: 'ESS',
@@ -391,16 +356,16 @@ const deviceInfoList = reactive([
   //   name: 'ESS',
   // },
 ])
-const energyDashboardList = reactive<(EnergyCard & { iconName: string })[]>([
-  { title: 'PV Energy', icon: iconPvEnergy, iconName: 'icon-pv-energy', value: '-', unit: 'kWh' },
-  { title: 'Diesel Energy', icon: iconDieselEnergy, iconName: 'icon-diesel-energy', value: '-', unit: 'KWh' },
-  { title: 'Energy Used', icon: iconEnergyUsed, iconName: 'icon-energy-used', value: '-', unit: 'kWh' },
-  { title: 'Saving Billing', icon: iconSavingBilling, iconName: 'icon-saving-billing', value: '-' },
+const energyDashboardList = reactive<(EnergyCard & { iconName: string; pointId: number })[]>([
+  { title: 'PV Energy', icon: iconPvEnergy, iconName: 'icon-pv-energy', value: '-', unit: 'kWh', pointId: HOMEPAGE_POINT_IDS.ENERGY_FIRST },
+  { title: 'Diesel Energy', icon: iconDieselEnergy, iconName: 'icon-diesel-energy', value: '-', unit: 'KWh', pointId: HOMEPAGE_POINT_IDS.ENERGY_SECOND },
+  { title: 'Energy Used', icon: iconEnergyUsed, iconName: 'icon-energy-used', value: '-', unit: 'kWh', pointId: HOMEPAGE_POINT_IDS.ENERGY_THIRD },
+  { title: 'Saving Billing', icon: iconSavingBilling, iconName: 'icon-saving-billing', value: '-', pointId: HOMEPAGE_POINT_IDS.ENERGY_FOURTH },
 ])
-const stationInfoList = reactive<(EnergyCard & { iconName: string })[]>([
-  { title: 'PV', icon: iconPvEnergy, iconName: 'icon-pv-energy', value: '-', unit: 'kW' },
-  { title: 'Diesel', icon: iconDieselEnergy, iconName: 'icon-diesel-energy', value: '-', unit: 'kW' },
-  { title: 'ESS', icon: iconEssEnergy, iconName: 'icon-ess-energy', value: '-', unit: 'KWh' },
+const stationInfoList = reactive<(EnergyCard & { iconName: string; pointId: number })[]>([
+  { title: 'PV', icon: iconPvEnergy, iconName: 'icon-pv-energy', value: '-', unit: 'kW', pointId: HOMEPAGE_POINT_IDS.STATION_FIRST },
+  { title: 'Diesel', icon: iconDieselEnergy, iconName: 'icon-diesel-energy', value: '-', unit: 'kW', pointId: HOMEPAGE_POINT_IDS.STATION_SECOND },
+  { title: 'ESS', icon: iconEssEnergy, iconName: 'icon-ess-energy', value: '-', unit: 'KWh', pointId: HOMEPAGE_POINT_IDS.STATION_THIRD },
 ])
 
 // Expose all configurable points (index starts from 1 in parent)
@@ -502,7 +467,7 @@ const handleNext = () => {
   position: relative;
   width: 100%;
   height: 100%;
-  padding:0.2rem;
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   z-index: 2;
@@ -510,10 +475,10 @@ const handleNext = () => {
   &::before {
     content: '';
     position: absolute;
-    top: -0.2rem;
-    left: -0.2rem;
-    width: calc(100% + 0.4rem);
-    height: calc(100% + 0.4rem);
+    top: -20px;
+    left: -20px;
+    width: calc(100% + 40px);
+    height: calc(100% + 40px);
     background: url('@/assets/images/home-bg.png') no-repeat center center;
     background-size: 100% 100%;
     z-index: 1;
@@ -522,31 +487,31 @@ const handleNext = () => {
   .home-left {
     position: relative;
     z-index: 2;
-    width: calc(100% - 3.9rem);
+    width: calc(100% - 390px);
     height: 100%;
-    margin-right: 0.2rem;
+    margin-right: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 
     .home-left-top {
       width: 100%;
-      height: 0.8rem;
-      padding-top: 0.1rem;
+      height: 80px;
+      padding-top: 10px;
       display: flex;
       justify-content: space-between;
       z-index: 1;
 
       .home-left-top-item {
        max-width: 25%;
-       padding-right: 0.1rem;
-        height: 0.7rem;
+       padding-right: 10px;
+        height: 70px;
         box-sizing: border-box;
 
         /* Add a bit of inner padding only for the top-left dashboard cards */
         :deep(.card__container) {
           width: 100%;
-          padding: 0.08rem 0.12rem;
+          padding: 8px 12px;
           box-sizing: border-box;
         }
       }
@@ -554,7 +519,7 @@ const handleNext = () => {
 
     .home-left-middle {
       width: 100%;
-      height: calc(69% - 1.2rem);
+      height: calc(69% - 120px);
       flex: 1;
       // background-image: url('@/assets/images/tuopu.png');
       // background-size: 100% 100%;
@@ -575,12 +540,12 @@ const handleNext = () => {
       justify-content: space-between;
 
       .home-left-EnergyChart {
-        width: calc((100% - 0.2rem) / 2);
+        width: calc((100% - 20px) / 2);
         height: 100%;
       }
 
       .home-left-LineChart {
-        width: calc((100% - 0.2rem) / 2);
+        width: calc((100% - 20px) / 2);
         height: 100%;
       }
     }
@@ -590,12 +555,12 @@ const handleNext = () => {
     position: relative;
     z-index: 2;
 
-    width: 3.7rem;
+    width: 370px;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 0.2rem;
+    gap: 20px;
 
     .home-station {
       width: 100%;
@@ -603,13 +568,13 @@ const handleNext = () => {
 
       .home-stationList {
         height: 100%;
-        padding-top: 0.2rem;
+        padding-top: 20px;
 
         .home-stationItem {
           height: 33.33%;
-          padding-top: 0.12rem;
-          padding-bottom: 0.13rem;
-          border-bottom: 0.01rem dashed rgba(255, 255, 255, 0.2);
+          padding-top: 12px;
+          padding-bottom: 13px;
+          border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
 
           &:last-child {
             border-bottom: none;
@@ -638,9 +603,9 @@ const handleNext = () => {
 
           .home-deviceValue {
             width: 100%;
-            padding: 0.15rem 0;
-            margin-bottom: 0.2rem;
-            border-bottom: 0.01rem dashed rgba(255, 255, 255, 0.2);
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
             display: flex;
             justify-content: space-between;
 
@@ -649,40 +614,40 @@ const handleNext = () => {
               display: flex;
               align-items: flex-end;
               justify-content: center;
-              font-size: 0.16rem;
+              font-size: 16px;
               font-weight: 400;
               color: rgba(255, 255, 255, 0.6);
-              height: 0.16rem;
+              height: 16px;
 
               .deviceValue-item-title {
-                font-size: 0.16rem;
+                font-size: 16px;
                 font-weight: 600;
-                margin-right: 0.09rem;
+                margin-right: 9px;
               }
 
               .deviceValue-item-value {
-                font-size: 0.22rem;
+                font-size: 22px;
                 font-weight: 700;
                 color: #fff;
-                line-height: 0.26rem;
+                line-height: 26px;
               }
 
               .deviceValue-item-unit {
-                font-size: 0.14rem;
+                font-size: 14px;
                 font-weight: 400;
               }
             }
           }
 
           img {
-            width: 1.2rem;
-            height: 0.73rem;
+            width: 120px;
+            height: 73px;
             object-fit: contain;
-            margin-bottom: 0.05rem;
+            margin-bottom: 5px;
           }
 
           .item-name {
-            font-size: 0.18rem;
+            font-size: 18px;
             font-weight: 500;
             line-height: 100%;
             letter-spacing: 0%;
@@ -719,39 +684,39 @@ const handleNext = () => {
           /* IE and Edge */
 
           &::-webkit-scrollbar {
-            width: 0.04rem;
-            height: 0.04rem;
+            width: 4px;
+            height: 4px;
           }
 
           &::-webkit-scrollbar-thumb {
-            border-radius: 0.02rem;
+            border-radius: 2px;
           }
         }
 
         .home-altersItem {
-          min-height: 0.9rem;
-          border-bottom: 0.01rem dashed rgba(255, 255, 255, 0.2);
+          min-height: 90px;
+          border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
           display: flex;
           align-items: center;
 
           .alters__item-name {
-            width: 0.4rem;
-            font-size: 0.16rem;
+            width: 40px;
+            font-size: 16px;
             font-weight: 700;
-            line-height: 0.16rem;
-            margin-right: 0.17rem;
+            line-height: 16px;
+            margin-right: 17px;
           }
 
           .alters__item-icon {
-            width: 0.46rem;
-            height: 0.2rem;
+            width: 46px;
+            height: 20px;
             object-fit: contain;
-            margin-right: 0.1rem;
+            margin-right: 10px;
           }
 
           .alters__item-msg {
-            font-size: 0.14rem;
-            line-height: 0.16rem;
+            font-size: 14px;
+            line-height: 16px;
             font-weight: 400;
 
             &:last-child {
@@ -787,22 +752,19 @@ const handleNext = () => {
     border-radius: inherit;
     pointer-events: none;
     box-sizing: border-box;
-  }
-
-  /* Device Information: slightly larger ring */
-  .edit-ring--device::after {
-    inset: -0.04rem; /* ~4px in the original 1rem=100px design */
+    inset: -10px -20px;
   }
 
   /* Device Information: 2x height; keep one side "normal" depending on left/right column */
+  .edit-ring--device-left::after, .edit-ring--device-right::after {
+    inset: -15px 0; /* top right bottom left */
+  }
   .edit-ring--device-left::after {
-    inset: -0.08rem -0.04rem -0.08rem 0; /* top right bottom left */
+    border-right-width: 1px;
   }
-
   .edit-ring--device-right::after {
-    inset: -0.08rem 0 -0.08rem -0.04rem; /* top right bottom left */
+    border-left-width: 1px;
   }
-
 }
 
 :deep(.el-carousel, .el-carousel .el-carousel__container) {
@@ -822,7 +784,7 @@ const handleNext = () => {
 // 自定义carousel控制按钮样式
 .custom-carousel-controls {
   width: 100%;
-  height: 0.32rem;
+  height: 32px;
   position: absolute;
   top: 50%;
   left: 0;
@@ -833,13 +795,13 @@ const handleNext = () => {
 
 .custom-arrow {
   position: absolute;
-  width: 0.32rem;
-  height: 0.32rem;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
 
   img {
-    width: 0.32rem;
-    height: 0.32rem;
+    width: 32px;
+    height: 32px;
     object-fit: contain;
   }
 
@@ -849,16 +811,11 @@ const handleNext = () => {
 }
 
 .custom-arrow-left {
-  left: 0.1rem;
+  left: 10px;
 }
 
 .custom-arrow-right {
-  right: 0.1rem;
+  right: 10px;
 }
 
-.home-chart-hidden {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-}
 </style>

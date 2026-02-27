@@ -34,7 +34,7 @@
         v-loading="props.loading"
       >
         <!-- Point ID -->
-        <el-table-column label="Point ID" width="120">
+        <el-table-column label="Point ID" width="80" class-name="point-id-column">
           <template #default="{ row }">
             <span>{{ getPointId(row) }}</span>
           </template>
@@ -51,6 +51,13 @@
         <el-table-column label="Value" min-width="120">
           <template #default="{ row }">
             <span class="value-field">{{ row.value ?? '-' }}</span>
+          </template>
+        </el-table-column>
+
+        <!-- Update Time -->
+        <el-table-column label="Update Time" min-width="160" class-name="update-time-column">
+          <template #default="{ row }">
+            <span>{{ formatUpdateTime((row as any).update_ts) }}</span>
           </template>
         </el-table-column>
 
@@ -79,7 +86,7 @@
           <template #default="{ row }">
             <div class="point-table__operation-cell">
               <div
-                class="point-table__publish-btn"
+                class="point-table__publish-btn point-table__execute-btn"
                 v-if="props.category === 'action' || props.category === 'measurement'"
                 @click="handlePublish(row)"
               >
@@ -141,7 +148,12 @@ import type {
 import { InstanceNameKey } from '@/utils/key'
 import { usePointTableBase } from '@/composables/usePointTableBase'
 import { buildCsv } from '@/utils/csvSchema'
-import { downloadCsv, getTimestampCompact } from '@/utils/csvExport'
+import {
+  downloadCsv,
+  formatUpdateTime,
+  formatUpdateTimeForCsv,
+  getTimestampCompact,
+} from '@/utils/csvExport'
 import { devicePointCsvSchema } from '@/schemas/devicePoints'
 
 interface Props {
@@ -237,8 +249,9 @@ function getPointId(item: any): number {
   return 0
 }
 
-function getRowClass(item: any) {
-  const baseClass = (item as any).isImported
+function getRowClass({ row }: { row?: any }) {
+  const item = row || {}
+  const baseClass = (item as any)?.isImported
     ? 'row-status-added'
     : `row-status-${item.rowStatus || 'normal'}`
   const classes: string[] = [baseClass]
@@ -269,20 +282,30 @@ function getPublishCommands(): Array<{ id: string; value: number }> {
   return commands
 }
 
-function applyRealtimeValues(values: Record<string | number, number>) {
+function applyRealtimeValues(
+  values: Record<string | number, number>,
+  ts?: Record<string | number, number>,
+) {
   if (!values || !Array.isArray(editPoints.value)) return
   const valueMap = new Map<number, number>()
   Object.entries(values).forEach(([k, v]) => {
     const id = Number(k)
     if (Number.isFinite(id)) valueMap.set(id, Number(v))
   })
-  if (valueMap.size === 0) return
+  const tsMap = new Map<number, number>()
+  if (ts && typeof ts === 'object') {
+    Object.entries(ts).forEach(([k, v]) => {
+      const id = Number(k)
+      if (Number.isFinite(id)) tsMap.set(id, Number(v))
+    })
+  }
+  if (valueMap.size === 0 && tsMap.size === 0) return
   editPoints.value.forEach((p: any) => {
     const id = getPointId(p)
     const newVal = valueMap.get(id)
-    if (newVal !== undefined) {
-      p.value = newVal
-    }
+    if (newVal !== undefined) p.value = newVal
+    const newTs = tsMap.get(id)
+    if (newTs !== undefined) p.update_ts = newTs
   })
 }
 
@@ -301,6 +324,7 @@ const handleExport = () => {
     point_id: getPointId(item),
     point_name: String(item.name || ''),
     value: item.value ?? '',
+    update_time: formatUpdateTimeForCsv(item.update_ts),
     unit: String(item.unit || ''),
     description: String(item.description || ''),
   }))
@@ -371,18 +395,36 @@ defineExpose({
     }
 
     // 根据行状态着色（移除左侧状态条，改为行背景色）
-    :deep(.row-status-added) {
-      background-color: rgba(103, 194, 58, 0.1);
+    // 新增/修改/删除：在 Point ID 单元格左侧显示 10px 状态条
+    :deep(.row-status-added td.point-id-column),
+    :deep(.row-status-modified td.point-id-column),
+    :deep(.row-status-deleted td.point-id-column) {
+      position: relative;
+      padding-left: 14px;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 10px;
+      }
     }
-    :deep(.row-status-modified) {
-      background-color: rgba(64, 158, 255, 0.1);
+    :deep(.row-status-added td.point-id-column::before) {
+      background-color: #67c23a;
+    }
+    :deep(.row-status-modified td.point-id-column::before) {
+      background-color: #409eff;
+    }
+    :deep(.row-status-deleted td.point-id-column::before) {
+      background-color: #f56c6c;
     }
     :deep(.row-status-deleted) {
-      background-color: rgba(245, 108, 108, 0.1);
-      opacity: 0.6;
+      opacity: 0.7;
     }
+    // 错误行：整行背景色（更透明）
     :deep(.row-invalid) {
-      background-color: rgba(245, 108, 108, 0.1);
+      background-color: rgba(167, 0, 0, 0.18);
     }
 
     :deep(td .cell) {
@@ -417,10 +459,12 @@ defineExpose({
       }
     }
 
-    .point-table__publish-btn {
+    .point-table__publish-btn,
+    .point-table__execute-btn {
       color: #000;
+      cursor: pointer;
       &:hover {
-        color: #ff6900;
+        color: #000;
       }
     }
   }

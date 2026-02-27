@@ -15,9 +15,9 @@
           <div
             class="home-configuration__canvas"
             :style="{
-              width: `${canvasWidthPx}px`,
-              height: `${canvasHeightPx}px`,
-              transform: `translate(-50%, -50%) scale(${previewScale})`,
+              width: `${DESIGN_WIDTH_PX}px`,
+              height: `${DESIGN_HEIGHT_PX}px`,
+              transform: `translate(-50%, -50%) scale(${fitScale})`,
             }"
           >
             <HomeView
@@ -46,24 +46,15 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import HomeView from './HomeView/index.vue'
 import PointConfigDialog from './components/PointConfigDialog.vue'
 import type { PointConfigPayload } from './components/PointConfigDialog.vue'
+import { getHomepagePoints, updateHomepagePoint } from '@/api/homeConfiguration'
+import type { HomepagePointItem } from '@/types/homeConfiguration'
 
 const DESIGN_WIDTH_PX = 1700
 const DESIGN_HEIGHT_PX = 995
-const DESIGN_REM_PX = 100
-
 const previewContainerRef = ref<HTMLElement | null>(null)
 const containerWidthPx = ref(0)
 const containerHeightPx = ref(0)
 let resizeObserver: ResizeObserver | null = null
-
-const rootFontSizePx = computed(() => {
-  // 当前项目不做全局 rem 适配；这里用 root font-size 计算“把 1rem 当 100px”需要的倍数
-  const fontSize = getComputedStyle(document.documentElement).fontSize
-  const parsed = Number.parseFloat(fontSize)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 16
-})
-
-const baseScale = computed(() => DESIGN_REM_PX / rootFontSizePx.value)
 
 const fitScale = computed(() => {
   const w = containerWidthPx.value
@@ -72,12 +63,6 @@ const fitScale = computed(() => {
   return Math.min(w / DESIGN_WIDTH_PX, h / DESIGN_HEIGHT_PX)
 })
 
-// 最终缩放：先把“当前 1rem(默认 16px)”放大到“设计 1rem=100px”，再按容器等比缩放
-const previewScale = computed(() => baseScale.value * fitScale.value)
-
-// 画布尺寸：用 DESIGN/baseScale，保证“放大后”刚好等于设计尺寸，再由 fitScale 决定装进容器
-const canvasWidthPx = computed(() => DESIGN_WIDTH_PX / baseScale.value)
-const canvasHeightPx = computed(() => DESIGN_HEIGHT_PX / baseScale.value)
 
 const isEditing = ref(true)
 const isPointDialogVisible = ref(false)
@@ -102,6 +87,36 @@ interface PointConfig {
 const pointRecords = ref<PointRecord[]>([])
 const pointConfigs = reactive<Record<string, PointConfig>>({})
 const activePointId = ref<string | null>(null)
+const homepagePointsLoading = ref(false)
+
+/** 从 API 响应合并点位配置到 pointConfigs（使用固定 ID 1–19） */
+function mergeHomepagePointsFromApi(items: HomepagePointItem[]) {
+  for (const it of items) {
+    const id = String(it.id)
+    pointConfigs[id] = {
+      ...(pointConfigs[id] || {}),
+      label: it.name ?? '',
+      unit: it.unit ?? '',
+      ...(it.imgurl && { icon: it.imgurl }),
+      ...(it.formula && { formula: it.formula }),
+      ...(it.description && { description: it.description }),
+    }
+  }
+}
+
+async function fetchHomepagePoints() {
+  homepagePointsLoading.value = true
+  try {
+    const res = await getHomepagePoints(100)
+    if (res?.success && res?.data?.items?.length) {
+      mergeHomepagePointsFromApi(res.data.items)
+    }
+  } catch (e) {
+    console.warn('[HomeConfiguration] 获取首页配置点位失败:', e)
+  } finally {
+    homepagePointsLoading.value = false
+  }
+}
 
 const handleRestore = () => {
   // Style-only placeholder
@@ -112,14 +127,27 @@ const handleCardClick = (payload: { id: string; title: string }) => {
   isPointDialogVisible.value = true
 }
 
-const handleSavePointConfig = (payload: PointConfigPayload) => {
-  pointConfigs[payload.cardId] = {
-    ...(pointConfigs[payload.cardId] || {}),
-    label: payload.name,
-    unit: payload.unit,
-    icon: payload.icon,
-    formula: payload.formula,
-    description: payload.description,
+const handleSavePointConfig = async (payload: PointConfigPayload) => {
+  const pointId = Number(payload.cardId)
+  if (!Number.isFinite(pointId) || pointId < 1) return
+  try {
+    await updateHomepagePoint(pointId, {
+      name: payload.name,
+      formula: payload.formula ?? '',
+      unit: payload.unit ?? '',
+      imgurl: payload.icon ?? '',
+      description: payload.description ?? '',
+    })
+    pointConfigs[payload.cardId] = {
+      ...(pointConfigs[payload.cardId] || {}),
+      label: payload.name,
+      unit: payload.unit,
+      icon: payload.icon,
+      formula: payload.formula,
+      description: payload.description,
+    }
+  } catch (e) {
+    console.warn('[HomeConfiguration] 保存点位配置失败:', e)
   }
 }
 
@@ -176,6 +204,7 @@ const activePointDialogCard = computed(() => {
 })
 
 onMounted(() => {
+  fetchHomepagePoints()
   const el = previewContainerRef.value
   if (!el) return
   const updateSize = () => {
@@ -183,7 +212,7 @@ onMounted(() => {
     containerHeightPx.value = el.clientHeight
   }
   updateSize()
-  resizeObserver = new ResizeObserver(() => updateSize())
+  resizeObserver = new ResizeObserver(updateSize)
   resizeObserver.observe(el)
 })
 

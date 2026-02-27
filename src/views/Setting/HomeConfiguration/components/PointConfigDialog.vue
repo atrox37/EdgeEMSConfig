@@ -6,17 +6,42 @@
         :close-on-click-modal="false"
         destroy-on-close
         class="point-config-dialog"
-        style="height: 70%;min-height: 550px;"
+        style="height: 80%;min-height: 550px;"
     >
         <el-form ref="formRef" :model="form" :rules="rules" label-width="96px" class="content-form">
-            <el-form-item label="Name:" prop="name">
-                <el-input v-model="form.name" placeholder="Enter name" />
-            </el-form-item>
+            <LightCollapseCard v-model="basicSettingOpen" title="Basic Setting" :collapsible="false" class="config-section">
+                <div class="config-section__inner">
+                    <el-form-item label="Name:" prop="name">
+                        <el-input v-model="form.name" placeholder="Enter name" />
+                    </el-form-item>
+                    <el-form-item v-if="showIconSelector" label="Icon:" required prop="icon">
+                        <div class="icon-picker">
+                            <div class="icon-picker__grid">
+                                <button
+                                    v-for="opt in iconOptions"
+                                    :key="opt.name"
+                                    type="button"
+                                    class="icon-picker__item"
+                                    :class="{ 'is-active': form.icon === opt.name }"
+                                    @click="handleIconPick(opt.name)"
+                                >
+                                    <img :src="opt.url" class="icon-picker__img" :alt="opt.name" />
+                                </button>
+                            </div>
+                        </div>
+                    </el-form-item>
+                    <el-form-item label="Unit:" prop="unit">
+                        <el-input v-model="form.unit" placeholder="e.g. kW / kWh / %" />
+                    </el-form-item>
+                    <el-form-item label="Description:" prop="description">
+                        <el-input v-model="form.description"
+                            placeholder="Enter description (optional)" />
+                    </el-form-item>
+                </div>
+            </LightCollapseCard>
 
-            <el-form-item label="Formula:" required class="formula-item">
-                <LightCollapseCard v-model="isFormulaOpen" title="Formula Builder" class="formula-card" auto-height>
-                    <div class="formula-scroll">
-                        <div class="formula-lines">
+            <LightCollapseCard v-model="formulaSettingOpen" title="Formula Setting" :collapsible="false" class="formula-item">
+                <div ref="formulaScrollRef" class="formula-lines">
                         <div v-for="(line, idx) in form.formulaLines" :key="line.id" class="formula-line">
                             <div class="formula-line__operator">
                                 <el-select v-if="idx > 0" v-model="line.operator" placeholder="op"
@@ -78,12 +103,12 @@
                                 </template>
 
                                 <template v-else>
-                                    <el-input-number v-model="line.numberValue" :min="-999999999" :max="999999999"
+                                    <el-input-number v-model="line.numberValue"
                                         :step="1" :controls="false" align="left" class="input-item" />
                                 </template>
                             </div>
 
-                            <div class="formula-line__actions">
+                            <div v-if="idx > 0" class="formula-line__actions">
                                 <el-button class="icon-btn" type="danger" link @click="removeLine(idx)">
                                     <el-icon class="icon-btn__delete">
                                         <CircleClose />
@@ -99,52 +124,26 @@
                                 </el-icon>
                             </el-button>
                         </div>
-                        </div>
-                    </div>
-                </LightCollapseCard>
-            </el-form-item>
-
-            <el-form-item v-if="showIconSelector" label="Icon:" prop="icon">
-                <div class="icon-picker">
-                    <div class="icon-picker__grid">
-                        <button
-                            v-for="opt in iconOptions"
-                            :key="opt.name"
-                            type="button"
-                            class="icon-picker__item"
-                            :class="{ 'is-active': form.icon === opt.name }"
-                            @click="handleIconPick(opt.name)"
-                        >
-                            <img :src="opt.url" class="icon-picker__img" :alt="opt.name" />
-                        </button>
-                    </div>
                 </div>
-            </el-form-item>
-
-            <el-form-item label="Unit:" prop="unit">
-                <el-input v-model="form.unit" placeholder="e.g. kW / kWh / %" />
-            </el-form-item>
-
-            <el-form-item label="Description:" prop="description">
-                <el-input v-model="form.description" 
-                    placeholder="Enter description (optional)" />
-            </el-form-item>
+            </LightCollapseCard>
         </el-form>
 
         <template #footer>
             <el-button @click="visible = false">Cancel</el-button>
-            <el-button type="primary" @click="handleSave">Save</el-button>
+            <el-button type="primary" @click="handleSave">Submit</el-button>
         </template>
     </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch, onMounted } from 'vue'
+import { computed, nextTick, reactive, ref, watch, onMounted } from 'vue'
 import { CircleClose, CirclePlus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
 import type { FormRules } from 'element-plus'
 import { getAllChannels, getPointsTables } from '@/api/channelsManagement'
 import { getAllInstances, getInstancePoints } from '@/api/devicesManagement'
+import { Request } from '@/utils/request'
 import type { PointInfoResponse, PointType } from '@/types/channelConfiguration'
 import type { InstancePointList } from '@/types/deviceConfiguration'
 import { AVAILABLE_ICONS } from '../iconOptions'
@@ -380,7 +379,8 @@ const operatorOptions: Array<{ label: string; value: OperatorType }> = [
     { label: '÷', value: '÷' },
 ]
 
-const isFormulaOpen = ref(true)
+const basicSettingOpen = ref(true)
+const formulaSettingOpen = ref(true)
 
 function createFormulaLine(): FormulaLine {
     return {
@@ -420,30 +420,37 @@ const buildBasicSnapshot = (card: DialogCardInfo | null) => {
     }
 }
 
-function initializeFormFromCard(card: DialogCardInfo | null) {
+async function initializeFormFromCard(card: DialogCardInfo | null) {
     if (!card) return
     form.cardId = card.id
     form.name = card.label
     form.icon = card.icon ?? ''
     form.unit = card.unit
     form.description = card.description ?? ''
-    form.formulaLines = card.formula ? parseFormulaString(card.formula) : [createFormulaLine()]
-    form.formulaLines.forEach((line) => {
+    const formulaLines = card.formula
+      ? parseFormulaString(card.formula)
+      : [createFormulaLine()]
+    form.formulaLines = formulaLines
+    if (card.formula) {
+      await batchPrefetchForFormula(card.formula)
+    } else {
+      formulaLines.forEach((line) => {
         const chId = Number(line.comsrv?.channelId ?? 0)
         const instId = Number(line.instance?.instanceId ?? 0)
-        if (line.type === 'Channel' && chId > 0) ensureChannelPoints(chId)
-        if (line.type === 'Instance' && instId > 0) ensureInstancePoints(instId)
-    })
+        if (line.type === 'Channel' && Number.isFinite(chId) && chId > 0) ensureChannelPoints(chId)
+        if (line.type === 'Instance' && Number.isFinite(instId) && instId > 0) ensureInstancePoints(instId)
+      })
+    }
     initializedCardId.value = card.id
 }
 
 watch(
     () => visible.value,
-    (isOpen, wasOpen) => {
+    async (isOpen, wasOpen) => {
         if (isOpen && !wasOpen) {
             basicSnapshot.value = buildBasicSnapshot(props.card)
             hasCommitted.value = false
-            initializeFormFromCard(props.card)
+            // 不在此处调用 initializeFormFromCard，由 watch([visible, card?.id]) 统一初始化，避免重复调用导致请求被取消
             return
         }
         if (!isOpen && wasOpen) {
@@ -476,6 +483,73 @@ function codeToChannelDataType(code: string): ChannelDataType {
 function codeToInstanceDataType(code: string): InstanceDataType {
     const map: Record<string, InstanceDataType> = { P: 'Property', M: 'Measurement', A: 'Action' }
     return map[code] ?? 'Property'
+}
+
+/** 从 formula 字符串中提取有效的 channel ID 和 instance ID（空/无效的不查询） */
+function extractIdsFromFormula(formula: string): {
+  channelIds: number[]
+  instanceIds: number[]
+} {
+  if (!formula || typeof formula !== 'string')
+    return { channelIds: [], instanceIds: [] }
+  const channelIds = new Set<number>()
+  const instanceIds = new Set<number>()
+  const re = /comsrv:(\d+):[TSCA]:\d+|inst:(\d+):[PMA]:\d+/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(formula)) !== null) {
+    if (m[1]) {
+      const id = Number(m[1])
+      if (Number.isFinite(id) && id > 0) channelIds.add(id)
+    }
+    if (m[2]) {
+      const id = Number(m[2])
+      if (Number.isFinite(id) && id > 0) instanceIds.add(id)
+    }
+  }
+  return {
+    channelIds: Array.from(channelIds),
+    instanceIds: Array.from(instanceIds),
+  }
+}
+
+/** 批量预取 formula 回显所需的 channel 点位和 instance 点位（仅对有效 ID 查询，空参数不查） */
+async function batchPrefetchForFormula(formula: string) {
+  const { channelIds, instanceIds } = extractIdsFromFormula(formula)
+  const promises: Promise<any>[] = []
+  for (const chId of channelIds) {
+    if (!Number.isFinite(chId) || chId <= 0) continue
+    if (!channelPointsCache.value[chId]) {
+      promises.push(
+        getPointsTables(chId, undefined, { skipGlobalLoading: true }).then(
+          (res) => {
+            if (res?.success && res.data) {
+              channelPointsCache.value[chId] = res.data as PointInfoResponse
+            } else if (
+              res &&
+              ((res as any).telemetry ||
+                (res as any).signal ||
+                (res as any).control ||
+                (res as any).adjustment)
+            ) {
+              channelPointsCache.value[chId] = res as unknown as PointInfoResponse
+            }
+          },
+        ),
+      )
+    }
+  }
+  for (const instId of instanceIds) {
+    if (!Number.isFinite(instId) || instId <= 0) continue
+    if (!instancePointsCache.value[instId]) {
+      promises.push(
+        Request.get(`/modApi/api/instances/${instId}/points`, undefined, { skipGlobalLoading: true }).then((res: any) => {
+          const data = res?.data
+          if (data) instancePointsCache.value[instId] = data
+        }),
+      )
+    }
+  }
+  await Promise.all(promises)
 }
 
 function parseFormulaString(formula: string): FormulaLine[] {
@@ -516,10 +590,10 @@ function parseFormulaString(formula: string): FormulaLine[] {
 
 watch(
     () => [visible.value, props.card?.id] as const,
-    ([isOpen, cardId]) => {
+    async ([isOpen, cardId]) => {
         if (!isOpen || !cardId) return
         if (initializedCardId.value === cardId) return
-        initializeFormFromCard(props.card)
+        await initializeFormFromCard(props.card)
     },
     { immediate: true },
 )
@@ -567,8 +641,13 @@ const buildPayload = (): PointConfigPayload => {
     }
 }
 
+const formulaScrollRef = ref<HTMLElement | null>(null)
+
 const addLine = () => {
     form.formulaLines.push(createFormulaLine())
+    nextTick(() => {
+        formulaScrollRef.value?.scrollTo({ top: formulaScrollRef.value.scrollHeight, behavior: 'smooth' })
+    })
 }
 
 const removeLine = (idx: number) => {
@@ -616,9 +695,33 @@ function buildFormulaString(): string {
         .join('')
 }
 
+/** 校验 Formula 每一行是否已完整选择（必填） */
+function validateFormulaLines(): boolean {
+    for (let i = 0; i < form.formulaLines.length; i++) {
+        const line = form.formulaLines[i]
+        if (line.type === 'Channel') {
+            const chId = Number(line.comsrv?.channelId ?? 0)
+            const pointId = Number(line.comsrv?.pointId ?? 0)
+            if (!Number.isFinite(chId) || chId <= 0 || !Number.isFinite(pointId) || pointId <= 0) {
+                ElMessage.warning(`Formula row ${i + 1}: please select channel and point`)
+                return false
+            }
+        } else if (line.type === 'Instance') {
+            const instId = Number(line.instance?.instanceId ?? 0)
+            const pointId = Number(line.instance?.pointId ?? 0)
+            if (!Number.isFinite(instId) || instId <= 0 || !Number.isFinite(pointId) || pointId <= 0) {
+                ElMessage.warning(`Formula row ${i + 1}: please select instance and point`)
+                return false
+            }
+        }
+    }
+    return true
+}
+
 const handleSave = async () => {
     await formRef.value?.validate?.()
     if (!props.card) return
+    if (!validateFormulaLines()) return
     hasCommitted.value = true
     emit('save', buildPayload())
     visible.value = false
@@ -644,11 +747,35 @@ const handleSave = async () => {
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  gap: 16px;
 
-  /* Let only the formula section grow/shrink */
+  .config-section__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .config-section,
   .formula-item {
-    max-height: calc(100% - 224px);
+    flex-shrink: 0;
+  }
+
+  .formula-item {
+    flex: 1 1 auto;
     min-height: 0;
+    max-height: 60%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .formula-item__wrap {
+    margin-bottom: 0;
+    // flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   /* Make selects/inputs fill their flex cell */
   :deep(.el-select),
@@ -661,15 +788,18 @@ const handleSave = async () => {
 
 
 .formula-scroll {
-  /* Limit max height & allow internal scrolling; height comes from flex container */
+  flex: 1;
+  min-height: 0;
   overflow: auto;
-  padding-right: $width-scrollbar;
+//   padding-right: $width-scrollbar;
 }
 
 .formula-lines {
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
+  height: 100%;
+  overflow: auto;
 }
 
 .formula-line {

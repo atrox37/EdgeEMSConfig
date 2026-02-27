@@ -4,17 +4,30 @@
     <el-page-header @back="handleBack" class="points-tables-page__header">
       <template #content>
         <div class="points-tables-page__header-content">
-          <span class="points-tables-page__header-title">{{ pageTitle }}</span>
-          <!-- 模式切换下拉框 -->
-          <el-select
+                    <!-- 右侧实例名称（样式与标题一致；编辑模式下不显示，避免红色焦点区域） -->
+                    <span v-if="instanceName" class="points-tables-page__channel-name">
+            {{ instanceName }} -&nbsp;
+          </span>
+          <!-- 模式切换下拉菜单：首次打开默认为 Points Table -->
+          <el-dropdown
             v-if="!isEditing"
-            v-model="viewModeSwitch"
-            class="points-tables-page__view-mode-select"
-            @change="handleViewModeChange"
+            trigger="click"
+            class="points-tables-page__view-mode-dropdown"
+            @command="handleDropdownCommand"
           >
-            <el-option label="Points" :value="false" />
-            <el-option label="Routing" :value="true" />
-          </el-select>
+            <span class="points-tables-page__dropdown-trigger">
+              {{ viewMode === 'points' ? 'Points Table' : 'Routings Table' }}
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="points">Points Table</el-dropdown-item>
+                <el-dropdown-item command="routing">Routings Table</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <span v-else class="points-tables-page__header-title"> {{ viewMode === 'points' ? 'Points Table' : 'Routings Table' }}</span>
+
         </div>
       </template>
     </el-page-header>
@@ -112,17 +125,15 @@
             </el-tab-pane>
           </el-tabs>
 
-          <!-- Status 筛选器 -->
+          <!-- Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选 -->
           <div v-if="isEditing" class="config-section__status-filter">
-            <el-checkbox-group
-              v-model="statusFilterValue"
-              @change="handleStatusFilterChange"
-              class="status-checkbox-group"
-            >
-              <el-checkbox v-for="option in statusFilterOptions" :key="option.value" :label="option.value">
-                {{ option.label }}
-              </el-checkbox>
+            <el-checkbox-group v-model="statusCheckboxValue" class="status-checkbox-group" @change="handleStatusCheckboxChange">
+              <el-checkbox v-if="viewMode === 'points'" label="modified">modified</el-checkbox>
+              <el-checkbox v-if="viewMode === 'points'" label="added">added</el-checkbox>
+              <el-checkbox v-if="viewMode === 'points'" label="deleted">deleted</el-checkbox>
+              <el-checkbox v-if="viewMode === 'routing'" label="modified">modified</el-checkbox>
             </el-checkbox-group>
+            <el-checkbox v-model="invalidChecked" class="status-invalid-checkbox">invalid</el-checkbox>
           </div>
         </div>
       </div>
@@ -130,10 +141,15 @@
 
     <!-- Footer Actions -->
     <div class="points-tables-page__footer">
-      <el-button v-if="!isPublish" @click="handleCancel">
-        {{ isEditing ? 'Cancel Edit' : 'Cancel' }}
+      <el-button v-if="isEditing" @click="handleCancelEdit">
+        Cancel Edit
       </el-button>
-      <el-button v-if="viewMode === 'routing' && !isEditing && !isPublish" type="primary" @click="handleEdit">
+      <el-button
+        v-if="!isEditing && !isPublish"
+        type="primary"
+        :disabled="viewMode === 'points'"
+        @click="handleEdit"
+      >
         Edit
       </el-button>
       <IconButton v-if="isEditing" type="primary" :icon="submitIcon" text="Submit" @click="handleSubmit" />
@@ -153,6 +169,7 @@
 import { watch, computed, onMounted, onUnmounted, ref, provide, readonly } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import DevicePointTablePoints from './components/DevicePointTablePoints.vue'
 import DevicePointTableRouting from './components/DevicePointTableRouting.vue'
 import IconButton from '@/components/common/IconButton.vue'
@@ -194,50 +211,24 @@ provide(InstanceIdKey, readonly(instanceId))
 const viewModeSwitch = ref(false) // false=points, true=routing
 const viewMode = computed(() => (viewModeSwitch.value ? 'routing' : 'points'))
 const editFilters = ref<string[]>([])
-// Status 筛选器：使用 checkbox-group 但限制为单选
-const statusFilterValue = ref<string[]>([])
-// Status 筛选选项：Points 显示完整状态，Routing 仅显示 modified/invalid
-const statusFilterOptions = computed(() => {
-  if (viewMode.value === 'points') {
-    return [
-      { label: 'modified', value: 'modified' },
-      { label: 'added', value: 'added' },
-      { label: 'deleted', value: 'deleted' },
-      { label: 'invalid', value: 'invalid' },
-    ]
-  }
-  return [
-    { label: 'modified', value: 'modified' },
-    { label: 'invalid', value: 'invalid' },
-  ]
-})
-// Status 筛选器变化处理：限制为单选
-const handleStatusFilterChange = (values: string[]) => {
-  // 限制为单选：如果选择了多个，只保留最后一个
-  if (values.length > 1) {
-    const lastValue = values[values.length - 1]
-    statusFilterValue.value = [lastValue]
-    editFilters.value = [lastValue]
-  } else {
-    editFilters.value = values
-  }
+// Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选
+const statusCheckboxValue = ref<string[]>([])
+const invalidChecked = ref(false)
+const handleStatusCheckboxChange = (val: string[]) => {
+  if (val.length > 1) statusCheckboxValue.value = [val[val.length - 1]]
 }
-// 监听 editFilters 变化，同步到 statusFilterValue（用于外部设置时同步）
 watch(
-  () => editFilters.value,
-  (val) => {
-    if (Array.isArray(val) && val.length > 0) {
-      // 如果 editFilters 有值，同步到 statusFilterValue
-      const currentValue = statusFilterValue.value
-      if (currentValue.length === 0 || currentValue[0] !== val[0]) {
-        statusFilterValue.value = [val[0]]
-      }
+  [statusCheckboxValue, invalidChecked],
+  () => {
+    if (invalidChecked.value) {
+      editFilters.value = ['invalid']
+    } else if (statusCheckboxValue.value.length > 0) {
+      editFilters.value = [statusCheckboxValue.value[0]]
     } else {
-      // 如果 editFilters 为空，清空 statusFilterValue
-      statusFilterValue.value = []
+      editFilters.value = []
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 // 原始基线
 const originalPointsData = ref<{
@@ -256,23 +247,23 @@ const propertyPointsRef = ref<any>()
 const measurementRoutingRef = ref<any>()
 const actionRoutingRef = ref<any>()
 
-// 页面标题
-const pageTitle = computed(() => {
-  const modeLabel = viewMode.value === 'points' ? 'Points' : 'Routing'
-  const namePart = instanceName.value ? ` - ${instanceName.value}` : ''
-  return `Points Tables - ${modeLabel}${namePart}`
-})
-
-// 返回处理
-const handleBack = () => {
-  router.push('/modelConfiguration')
-}
 
 // 模式切换处理
 const handleViewModeChange = () => {
   // 模式切换时重置筛选
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
+}
+
+// 下拉菜单选择
+const handleDropdownCommand = (command: string) => {
+  if (command === 'points') {
+    viewModeSwitch.value = false
+  } else if (command === 'routing') {
+    viewModeSwitch.value = true
+  }
+  handleViewModeChange()
 }
 
 // 根据激活 tab 获取对应表格实例
@@ -407,7 +398,8 @@ async function loadChannelsForRouting() {
 const handleEdit = async () => {
   isEditing.value = true
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   // 进入编辑模式时加载通道列表
   await loadChannelsForRouting()
 }
@@ -421,10 +413,9 @@ const handleSubmit = async () => {
   if (measurementRoutingRef.value?.hasInvalid?.()) invalidTabs.push('measurement')
   if (actionRoutingRef.value?.hasInvalid?.()) invalidTabs.push('action')
   if (invalidTabs.length > 0) {
-    ElMessage.warning('Routing has invalid data, please correct and submit again')
+    ElMessage.warning('Routings has invalid data, please correct and submit again')
     // 自动切换状态筛选为 invalid，并跳转到首个有问题的 Tab
-    editFilters.value = ['invalid']
-    statusFilterValue.value = ['invalid']
+    invalidChecked.value = true
     activeTab.value = invalidTabs[0]
     return
   }
@@ -444,11 +435,12 @@ const handleSubmit = async () => {
   }))
   const res = await updateInstanceRouting(instanceId.value, routingPayload)
   if (res.success) {
-    ElMessage.success('Routing updated successfully')
+    ElMessage.success('Routings updated successfully')
     isEditing.value = false
     // 刷新基线
     editFilters.value = []
-    statusFilterValue.value = []
+    statusCheckboxValue.value = []
+    invalidChecked.value = false
     await refreshPointsBaseline()
   }
 }
@@ -472,67 +464,64 @@ const refreshPointsBaseline = async () => {
   }
 }
 
-// 取消处理
-const handleCancel = async () => {
-  // 如果正在编辑，检查是否有修改
-  if (isEditing.value) {
-    const hasChanges =
-      measurementRoutingRef.value?.hasChanges?.() || actionRoutingRef.value?.hasChanges?.()
-    if (hasChanges) {
-      try {
-        await ElMessageBox.confirm(
-          'You have unsaved changes. Do you want to discard them?',
-          'Unsaved Changes',
-          {
-            confirmButtonText: 'Discard',
-            cancelButtonText: 'Cancel',
-            type: 'warning',
-          },
-        )
-        isEditing.value = false
-        editFilters.value = []
-        statusFilterValue.value = []
-        measurementRoutingRef.value?.clearImportedFileName?.()
-        actionRoutingRef.value?.clearImportedFileName?.()
-      } catch {
-        // 用户取消，不做任何操作
-        return
-      }
-    } else {
-      isEditing.value = false
-      editFilters.value = []
-      statusFilterValue.value = []
-      measurementRoutingRef.value?.clearImportedFileName?.()
-      actionRoutingRef.value?.clearImportedFileName?.()
-    }
-    return
-  }
+// 获取是否有未保存的修改
+const getHasChanges = () =>
+  measurementRoutingRef.value?.hasChanges?.() || actionRoutingRef.value?.hasChanges?.()
 
-  // 如果处于发布模式且有未提交的值，提醒用户
-  if (isPublish.value && publishDirty.value) {
+// 执行退出编辑并恢复原始数据
+const performCancelEdit = () => {
+  measurementRows.value = JSON.parse(JSON.stringify(originalPointsData.value.measurement))
+  actionRows.value = JSON.parse(JSON.stringify(originalPointsData.value.action))
+  propertyRows.value = JSON.parse(JSON.stringify(originalPointsData.value.property))
+  isEditing.value = false
+  editFilters.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
+  measurementRoutingRef.value?.clearImportedFileName?.()
+  actionRoutingRef.value?.clearImportedFileName?.()
+}
+
+// 返回：编辑模式且有修改时弹出确认（与 Cancel Edit 类似），否则直接返回
+const handleBack = async () => {
+  if (isEditing.value && getHasChanges()) {
     try {
       await ElMessageBox.confirm(
-        'You have unsaved publish values. Do you want to submit them before closing?',
+        'You have unsaved changes. Do you want to discard them?',
         'Unsaved Changes',
         {
-          confirmButtonText: 'Submit',
-          cancelButtonText: 'Discard',
+          confirmButtonText: 'Discard',
+          cancelButtonText: 'Cancel',
           type: 'warning',
         },
       )
-      // 用户选择提交
-      await handleSubmitPublish()
-      handleBack()
     } catch {
-      // 用户选择放弃或取消
-      resetPublishAll()
-      publishDirty.value = false
-      isPublish.value = false
-      handleBack()
+      return
     }
-  } else {
-    handleBack()
   }
+  if (isEditing.value) {
+    performCancelEdit()
+  }
+  router.push('/modelConfiguration')
+}
+
+// 取消编辑：退出编辑模式并恢复原始数据（遵循之前的逻辑）
+const handleCancelEdit = async () => {
+  if (getHasChanges()) {
+    try {
+      await ElMessageBox.confirm(
+        'You have unsaved changes. Do you want to discard them?',
+        'Unsaved Changes',
+        {
+          confirmButtonText: 'Discard',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+        },
+      )
+    } catch {
+      return
+    }
+  }
+  performCancelEdit()
 }
 
 // 初始化数据
@@ -553,7 +542,8 @@ const initData = async () => {
   isPublish.value = false
   publishDirty.value = false
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   // 默认 Points 视图和 property Tab
   viewModeSwitch.value = false
   activeTab.value = 'property'
@@ -584,14 +574,15 @@ const initData = async () => {
           if (Number(upd.channel_id) !== Number(instanceId.value)) return
           const dt = String(upd.data_type || '').toUpperCase()
           const values = upd.values || {}
+          const ts = upd.ts || {}
           const map: Record<string, number> = {}
           Object.keys(values).forEach((k) => (map[k] = Number(values[k])))
           if (dt === 'M') {
-            measurementPointsRef.value?.applyRealtimeValues?.(map)
+            measurementPointsRef.value?.applyRealtimeValues?.(map, ts)
           } else if (dt === 'A') {
-            actionPointsRef.value?.applyRealtimeValues?.(map)
+            actionPointsRef.value?.applyRealtimeValues?.(map, ts)
           } else if (dt === 'P') {
-            propertyPointsRef.value?.applyRealtimeValues?.(map)
+            propertyPointsRef.value?.applyRealtimeValues?.(map, ts)
           }
         })
       },
@@ -647,7 +638,9 @@ watch(
     .points-tables-page__header-content {
       display: flex;
       align-items: center;
-      gap: 20px;
+      justify-content: space-between;
+      flex: 1;
+      min-width: 0;
 
       .points-tables-page__header-title {
         font-size: $font-size-large;
@@ -655,8 +648,25 @@ watch(
         color: $text-color-primary;
       }
 
-      .points-tables-page__view-mode-select {
-        width: 150px;
+      .points-tables-page__dropdown-trigger {
+        display: inline-flex;
+        align-items: center;
+        font-size: $font-size-large;
+        font-weight: $font-weight-semibold;
+        color: $text-color-primary;
+        cursor: pointer;
+
+        .el-icon--right {
+          margin-left: 4px;
+        }
+      }
+
+      .points-tables-page__channel-name {
+        font-size: $font-size-large;
+        font-weight: $font-weight-semibold;
+        color: $text-color-primary;
+        flex-shrink: 0;
+        margin-left: 4px;
       }
     }
   }
@@ -736,9 +746,14 @@ watch(
 
       .status-checkbox-group {
         display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
+        gap: 8px;
         align-items: center;
+      }
+      .status-invalid-checkbox {
+        margin-left: 4px;
+      }
+      :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+        border-color: #fff !important;
       }
     }
   }

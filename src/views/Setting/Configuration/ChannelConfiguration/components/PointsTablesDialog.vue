@@ -35,7 +35,7 @@
                   class="config-section__tabs"
                 >
                   <el-tab-pane
-                    label="telemetry"
+                    label="Telemetry"
                     name="telemetry"
                     v-if="channelProtocol !== 'di_do'"
                   >
@@ -74,7 +74,7 @@
                       />
                     </template>
                   </el-tab-pane>
-                  <el-tab-pane label="signal" name="signal">
+                  <el-tab-pane label="Signal" name="signal">
                     <template v-if="viewMode === 'points'">
                       <PointTablePoints
                         ref="signalTableRef"
@@ -110,7 +110,7 @@
                       />
                     </template>
                   </el-tab-pane>
-                  <el-tab-pane label="control" name="control">
+                  <el-tab-pane label="Control" name="control">
                     <template v-if="viewMode === 'points'">
                       <PointTablePoints
                         ref="controlTableRef"
@@ -147,7 +147,7 @@
                     </template>
                   </el-tab-pane>
                   <el-tab-pane
-                    label="adjustment"
+                    label="Adjustment"
                     name="adjustment"
                     v-if="channelProtocol !== 'di_do'"
                   >
@@ -188,21 +188,15 @@
                   </el-tab-pane>
                 </el-tabs>
 
-                <!-- Status 筛选器 - 使用定位放在 tab 右侧，在 tab 下方线段的上方 -->
+                <!-- Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选 -->
                 <div v-if="isEditing" class="config-section__status-filter">
-                  <el-checkbox-group
-                    v-model="statusFilterValue"
-                    @change="handleStatusFilterChange"
-                    class="status-checkbox-group"
-                  >
-                    <el-checkbox
-                      v-for="option in statusFilterOptions"
-                      :key="option.value"
-                      :label="option.value"
-                    >
-                      {{ option.label }}
-                    </el-checkbox>
+                  <el-checkbox-group v-model="statusCheckboxValue" class="status-checkbox-group" @change="handleStatusCheckboxChange">
+                    <el-checkbox v-if="viewMode === 'points'" label="modified">modified</el-checkbox>
+                    <el-checkbox v-if="viewMode === 'points'" label="added">added</el-checkbox>
+                    <el-checkbox v-if="viewMode === 'points'" label="deleted">deleted</el-checkbox>
+                    <el-checkbox v-if="viewMode === 'mappings'" label="modified">modified</el-checkbox>
                   </el-checkbox-group>
+                  <el-checkbox v-model="invalidChecked" class="status-invalid-checkbox">invalid</el-checkbox>
                 </div>
             </div>
           </div>
@@ -284,51 +278,24 @@ const channelProtocol = ref<'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_d
 const viewModeSwitch = ref(false) // false = points, true = mappings
 const viewMode = computed(() => (viewModeSwitch.value ? 'mappings' : 'points'))
 const editFilters = ref<string[]>([])
-// Status 筛选器：使用 checkbox-group 但限制为单选
-const statusFilterValue = ref<string[]>([])
-// Status 筛选选项：根据 viewMode 显示不同选项
-const statusFilterOptions = computed(() => {
-  if (viewMode.value === 'points') {
-    return [
-      { label: 'modified', value: 'modified' },
-      { label: 'added', value: 'added' },
-      { label: 'deleted', value: 'deleted' },
-      { label: 'invalid', value: 'invalid' },
-    ]
-  } else {
-    return [
-      { label: 'modified', value: 'modified' },
-      { label: 'invalid', value: 'invalid' },
-    ]
-  }
-})
-// Status 筛选器变化处理：限制为单选
-const handleStatusFilterChange = (values: string[]) => {
-  // 限制为单选：如果选择了多个，只保留最后一个
-  if (values.length > 1) {
-    const lastValue = values[values.length - 1]
-    statusFilterValue.value = [lastValue]
-    editFilters.value = [lastValue]
-  } else {
-    editFilters.value = values
-  }
+// Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选
+const statusCheckboxValue = ref<string[]>([])
+const invalidChecked = ref(false)
+const handleStatusCheckboxChange = (val: string[]) => {
+  if (val.length > 1) statusCheckboxValue.value = [val[val.length - 1]]
 }
-// 监听 editFilters 变化，同步到 statusFilterValue（用于外部设置时同步）
 watch(
-  () => editFilters.value,
-  (val) => {
-    if (Array.isArray(val) && val.length > 0) {
-      // 如果 editFilters 有值，同步到 statusFilterValue
-      const currentValue = statusFilterValue.value
-      if (currentValue.length === 0 || currentValue[0] !== val[0]) {
-        statusFilterValue.value = [val[0]]
-      }
+  [statusCheckboxValue, invalidChecked],
+  () => {
+    if (invalidChecked.value) {
+      editFilters.value = ['invalid']
+    } else if (statusCheckboxValue.value.length > 0) {
+      editFilters.value = [statusCheckboxValue.value[0]]
     } else {
-      // 如果 editFilters 为空，清空 statusFilterValue
-      statusFilterValue.value = []
+      editFilters.value = []
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 const showSignalNameFilter = ref(false)
 const isPublish = ref(false) // 批量发布模式
@@ -395,7 +362,8 @@ provide(
 const handleEdit = (payload?: { fromImport?: boolean }) => {
   isEditing.value = true
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   // 用户主动进入编辑时，清除四个表中上一次的导入文件名；
   // 若由子表导入触发（fromImport），则保留当前导入文件名。
   if (!payload?.fromImport) {
@@ -423,25 +391,33 @@ const handleSubmit = async () => {
   // 编辑提交前：检查四个Tab是否存在 invalid
   const ensureInvalidHandled = (targetTab: 'telemetry' | 'signal' | 'control' | 'adjustment') => {
     // 勾选 invalid 筛选
-    if (!editFilters.value.includes('invalid')) {
-      editFilters.value = uniqueArray([...(editFilters.value || []), 'invalid'])
-      statusFilterValue.value = ['invalid']
+    if (!invalidChecked.value) {
+      invalidChecked.value = true
     }
     // 切换到有问题的 Tab
     activeTab.value = targetTab
   }
 
-  if (viewMode.value === 'mappings') {
-    const invalidTabs: Array<'telemetry' | 'signal' | 'control' | 'adjustment'> = []
-    if (telemetryTableRef.value?.hasInvalid?.()) invalidTabs.push('telemetry')
-    if (signalTableRef.value?.hasInvalid?.()) invalidTabs.push('signal')
-    if (controlTableRef.value?.hasInvalid?.()) invalidTabs.push('control')
-    if (adjustmentTableRef.value?.hasInvalid?.()) invalidTabs.push('adjustment')
-    if (invalidTabs.length > 0) {
-      ElMessage.warning('Mappings Table has invalid data, please correct and submit again')
-      ensureInvalidHandled(invalidTabs[0])
-      return
-    }
+    if (viewMode.value === 'mappings') {
+      const invalidTabs: Array<'telemetry' | 'signal' | 'control' | 'adjustment'> = []
+      const mappingRefs = [
+        { ref: telemetryTableRef, tab: 'telemetry' as const },
+        { ref: signalTableRef, tab: 'signal' as const },
+        { ref: controlTableRef, tab: 'control' as const },
+        { ref: adjustmentTableRef, tab: 'adjustment' as const },
+      ]
+      mappingRefs.forEach(({ ref, tab }) => {
+        if (ref.value?.hasInvalid?.()) invalidTabs.push(tab)
+      })
+      if (invalidTabs.length > 0) {
+        mappingRefs.forEach(({ ref }) => {
+          if (ref.value?.hasInvalid?.() && ref.value?.getInvalidDetails) {
+            ref.value.getInvalidDetails()
+          }
+        })
+        ensureInvalidHandled(invalidTabs[0])
+        return
+      }
 
     const param: BatchUpdateMappingPointRequest = {
       mappings: [
@@ -468,19 +444,27 @@ const handleSubmit = async () => {
       await refreshPointsBaseline()
       // 提交完成后清空筛选并显示全部
       clearStatusFilters()
-      statusFilterValue.value = []
     }
-  } else {
-    const invalidTabs: Array<'telemetry' | 'signal' | 'control' | 'adjustment'> = []
-    if (telemetryTableRef.value?.hasInvalid?.()) invalidTabs.push('telemetry')
-    if (signalTableRef.value?.hasInvalid?.()) invalidTabs.push('signal')
-    if (controlTableRef.value?.hasInvalid?.()) invalidTabs.push('control')
-    if (adjustmentTableRef.value?.hasInvalid?.()) invalidTabs.push('adjustment')
-    if (invalidTabs.length > 0) {
-      ElMessage.warning('Points Table has invalid data, please correct and submit again')
-      ensureInvalidHandled(invalidTabs[0])
-      return
-    }
+    } else {
+      const invalidTabs: Array<'telemetry' | 'signal' | 'control' | 'adjustment'> = []
+      const pointRefs = [
+        { ref: telemetryTableRef, tab: 'telemetry' as const },
+        { ref: signalTableRef, tab: 'signal' as const },
+        { ref: controlTableRef, tab: 'control' as const },
+        { ref: adjustmentTableRef, tab: 'adjustment' as const },
+      ]
+      pointRefs.forEach(({ ref, tab }) => {
+        if (ref.value?.hasInvalid?.()) invalidTabs.push(tab)
+      })
+      if (invalidTabs.length > 0) {
+        pointRefs.forEach(({ ref }) => {
+          if (ref.value?.hasInvalid?.() && ref.value?.getInvalidDetails) {
+            ref.value.getInvalidDetails()
+          }
+        })
+        ensureInvalidHandled(invalidTabs[0])
+        return
+      }
 
     // 组装批量增删改 payload
     const toArray = (x: any) => (Array.isArray(x) ? x : [])
@@ -570,7 +554,6 @@ const handleSubmit = async () => {
       await refreshPointsBaseline()
       // 提交完成后清空筛选并显示全部
       clearStatusFilters()
-      statusFilterValue.value = []
     }
   }
 }
@@ -667,7 +650,8 @@ const handleDialogBeforeClose = async (done: () => void) => {
         )
         isEditing.value = false
         editFilters.value = []
-        statusFilterValue.value = []
+        statusCheckboxValue.value = []
+        invalidChecked.value = false
         telemetryTableRef.value?.clearImportedFileName?.()
         signalTableRef.value?.clearImportedFileName?.()
         controlTableRef.value?.clearImportedFileName?.()
@@ -681,7 +665,8 @@ const handleDialogBeforeClose = async (done: () => void) => {
     } else {
       isEditing.value = false
       editFilters.value = []
-      statusFilterValue.value = []
+      statusCheckboxValue.value = []
+      invalidChecked.value = false
       telemetryTableRef.value?.clearImportedFileName?.()
       signalTableRef.value?.clearImportedFileName?.()
       controlTableRef.value?.clearImportedFileName?.()
@@ -875,7 +860,8 @@ const open = async (
   publishDirty.value = false
   viewModeSwitch.value = false
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   channelId.value = id
   if (name) channelName.value = name
   if (protocol) channelProtocol.value = protocol
@@ -915,7 +901,7 @@ const open = async (
         payload.updates.forEach((upd: any) => {
           if (upd.channel_id !== channelId.value) return
           const refMap = dataTypeToRef[upd.data_type as DataType]
-          refMap?.value?.applyRealtimeValues?.(upd.values)
+          refMap?.value?.applyRealtimeValues?.(upd.values, upd.ts)
         })
       },
     },
@@ -1001,7 +987,8 @@ const clearAllSignalFilters = () => {
 // 统一清空状态筛选并显示全部
 const clearStatusFilters = () => {
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   clearAllSignalFilters()
 }
 
@@ -1033,7 +1020,8 @@ const handleClose = async () => {
         isEditing.value = false
         // 退出编辑时，清空编辑筛选（防止仍勾选 invalid 导致只显示错误或无数据）
         editFilters.value = []
-        statusFilterValue.value = []
+        statusCheckboxValue.value = []
+        invalidChecked.value = false
         // 清除所有表格的导入文件名
         telemetryTableRef.value?.clearImportedFileName?.()
         signalTableRef.value?.clearImportedFileName?.()
@@ -1047,7 +1035,8 @@ const handleClose = async () => {
       isEditing.value = false
       // 退出编辑时，清空编辑筛选（防止仍勾选 invalid 导致只显示错误或无数据）
       editFilters.value = []
-      statusFilterValue.value = []
+      statusCheckboxValue.value = []
+      invalidChecked.value = false
       // 清除所有表格的导入文件名
       telemetryTableRef.value?.clearImportedFileName?.()
       signalTableRef.value?.clearImportedFileName?.()
@@ -1184,6 +1173,12 @@ defineExpose({
           gap: 12px;
           flex-wrap: wrap;
           align-items: center;
+        }
+        :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+          border-color: #fff !important;
+        }
+        :deep(.status-invalid-checkbox .el-checkbox__input.is-checked .el-checkbox__inner::after) {
+          border-color: #fff !important;
         }
       }
     }

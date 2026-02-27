@@ -198,7 +198,8 @@ const parseResponseData = async (response: Response, responseType?: RequestConfi
 const isRequestCanceled = (error: any) =>
   error?.name === 'AbortError' ||
   error?.message === 'request canceled' ||
-  error?.message === 'Request canceled'
+  error?.message === 'Request canceled' ||
+  error?.message === 'Request cancelled'
 
 /**
  * 创建统一的服务实例
@@ -435,8 +436,12 @@ const requestInterceptor = (config: any) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  // 如果是POST/PUT/PATCH请求且没有设置Content-Type，设置为json
-  if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
+  // 对于 FormData，不设置 Content-Type，让底层 HTTP 客户端自动添加 multipart/form-data; boundary=...
+  // 手动设置 multipart/form-data 而不带 boundary 会导致服务器解析失败返回 400
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  } else if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
+    // 如果是POST/PUT/PATCH请求且没有设置Content-Type，设置为json
     if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json'
     }
@@ -504,14 +509,20 @@ const createResponseInterceptor = (
       updateGlobalLoading()
     }
 
-    console.log(
-      `${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`,
-      response,
-    )
-
     const { data } = response
     const customConfig = response.config as any
-    console.log(data)
+    // 开发模式下分组输出请求/响应，便于在 DevTools Console 中查看
+    if (import.meta.env.DEV) {
+      const label = `${response.config.method?.toUpperCase()} ${response.config.url}`
+      console.groupCollapsed(`[HTTP 响应] ${label}`)
+      console.log('URL:', response.url)
+      console.log('Status:', response.status, response.statusText)
+      console.log('Headers:', response.headers)
+      console.log('Response Data:', data)
+      console.groupEnd()
+    } else {
+      console.log(`${logPrefix}[响应] ${response.config.method?.toUpperCase()} ${response.config.url}`, response)
+    }
 
     // 检查业务状态码
     // 如果返回的是blob类型，直接认为请求成功，否则判断业务code或success

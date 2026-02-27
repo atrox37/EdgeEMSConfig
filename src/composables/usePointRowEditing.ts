@@ -48,13 +48,34 @@ export function usePointRowEditing(options: UsePointRowEditingOptions) {
     const list = options.listRef.value || []
     const originalIndex = list.findIndex((p) => p === item)
     if (originalIndex === -1) return
+    ;(list[originalIndex] as any).__beforeDeleteSnapshot = JSON.parse(
+      JSON.stringify(list[originalIndex]),
+    )
     list[originalIndex].rowStatus = 'deleted'
+    ;(list[originalIndex] as any).isInvalid = false
   }
 
   const restorePoint = (item: PointInfo, originalPoints: PointInfo[]) => {
     const list = options.listRef.value || []
     const originalIndex = list.findIndex((p) => p === item)
     if (originalIndex === -1) return
+
+    const snapshot = (item as any).__beforeDeleteSnapshot
+    if (snapshot && typeof snapshot === 'object') {
+      const restoredFromSnapshot: any = {
+        ...snapshot,
+        isEditing: false,
+      }
+      ;(restoredFromSnapshot as any).rowKey = (item as any).rowKey
+      ;(restoredFromSnapshot as any).originalPointId = (item as any).originalPointId
+      delete (restoredFromSnapshot as any).__beforeDeleteSnapshot
+      delete (restoredFromSnapshot as any).fieldErrors
+      list.splice(originalIndex, 1, restoredFromSnapshot)
+      options.validateRow(restoredFromSnapshot)
+      options.refreshFieldErrorsForRow(restoredFromSnapshot)
+      applyDuplicatePointIdInvalid()
+      return
+    }
 
     const original = originalPoints.find((p) => p.point_id === item.point_id)
     if (original) {
@@ -65,10 +86,11 @@ export function usePointRowEditing(options: UsePointRowEditingOptions) {
       }
       ;(restoredItem as any).rowKey = (item as any).rowKey
       ;(restoredItem as any).originalPointId = (item as any).originalPointId
+      delete (restoredItem as any).fieldErrors
       list.splice(originalIndex, 1, restoredItem)
-      applyDuplicatePointIdInvalid()
       options.validateRow(restoredItem)
       options.refreshFieldErrorsForRow(restoredItem)
+      applyDuplicatePointIdInvalid()
     }
   }
 

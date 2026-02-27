@@ -13,6 +13,7 @@ export interface PointCsvRow {
   point_id: string
   point_name: string
   value?: string
+  update_time?: string
   scale?: string
   offset?: string
   unit?: string
@@ -35,6 +36,7 @@ const POINT_BASE_FIELDS: CsvFieldDef<PointCsvRow>[] = [
   { key: 'point_id', header: 'point_id' },
   { key: 'point_name', header: 'point_name' },
   { key: 'value', header: 'value', required: false },
+  { key: 'update_time', header: 'update_time', required: false },
 ]
 
 const POINT_TA_FIELDS: CsvFieldDef<PointCsvRow>[] = [

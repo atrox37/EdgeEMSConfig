@@ -101,21 +101,12 @@
                   </el-tab-pane>
                 </el-tabs>
 
-                <!-- Status 筛选器 - 使用定位放在 tab 右侧，在 tab 下方线段的上方 -->
+                <!-- Status 筛选器：modified 复选，invalid 独立复选 -->
                 <div v-if="isEditing" class="config-section__status-filter">
-                  <el-checkbox-group
-                    v-model="statusFilterValue"
-                    @change="handleStatusFilterChange"
-                    class="status-checkbox-group"
-                  >
-                    <el-checkbox
-                      v-for="option in statusFilterOptions"
-                      :key="option.value"
-                      :label="option.value"
-                    >
-                      {{ option.label }}
-                    </el-checkbox>
+                  <el-checkbox-group v-model="statusCheckboxValue" class="status-checkbox-group">
+                    <el-checkbox label="modified">modified</el-checkbox>
                   </el-checkbox-group>
+                  <el-checkbox v-model="invalidChecked" class="status-invalid-checkbox">invalid</el-checkbox>
                 </div>
               </LoadingBg>
             </div>
@@ -191,42 +182,21 @@ provide(InstanceIdKey, readonly(instanceId))
 const viewModeSwitch = ref(false) // false=points, true=routing
 const viewMode = computed(() => (viewModeSwitch.value ? 'routing' : 'points'))
 const editFilters = ref<string[]>([])
-// Status 筛选器：使用 checkbox-group 但限制为单选
-const statusFilterValue = ref<string[]>([])
-// Status 筛选选项：Routing 模式只有 modified 和 invalid
-const statusFilterOptions = computed(() => {
-  return [
-    { label: 'modified', value: 'modified' },
-    { label: 'invalid', value: 'invalid' },
-  ]
-})
-// Status 筛选器变化处理：限制为单选
-const handleStatusFilterChange = (values: string[]) => {
-  // 限制为单选：如果选择了多个，只保留最后一个
-  if (values.length > 1) {
-    const lastValue = values[values.length - 1]
-    statusFilterValue.value = [lastValue]
-    editFilters.value = [lastValue]
-  } else {
-    editFilters.value = values
-  }
-}
-// 监听 editFilters 变化，同步到 statusFilterValue（用于外部设置时同步）
+// Status 筛选器：modified 复选，invalid 独立复选
+const statusCheckboxValue = ref<string[]>([])
+const invalidChecked = ref(false)
 watch(
-  () => editFilters.value,
-  (val) => {
-    if (Array.isArray(val) && val.length > 0) {
-      // 如果 editFilters 有值，同步到 statusFilterValue
-      const currentValue = statusFilterValue.value
-      if (currentValue.length === 0 || currentValue[0] !== val[0]) {
-        statusFilterValue.value = [val[0]]
-      }
+  [statusCheckboxValue, invalidChecked],
+  () => {
+    if (invalidChecked.value) {
+      editFilters.value = ['invalid']
+    } else if (statusCheckboxValue.value.length > 0) {
+      editFilters.value = [statusCheckboxValue.value[0]]
     } else {
-      // 如果 editFilters 为空，清空 statusFilterValue
-      statusFilterValue.value = []
+      editFilters.value = []
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 const publishDirty = ref(false)
 // 原始基线
@@ -255,7 +225,8 @@ async function open(id: number, name: string) {
   isPublish.value = false
   publishDirty.value = false
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   // 默认 Points 视图和 property Tab
   viewModeSwitch.value = false
   activeTab.value = 'property'
@@ -303,14 +274,15 @@ async function open(id: number, name: string) {
           if (Number(upd.channel_id) !== Number(instanceId.value)) return
           const dt = String(upd.data_type || '').toUpperCase()
           const values = upd.values || {}
+          const ts = upd.ts || {}
           const map: Record<string, number> = {}
           Object.keys(values).forEach((k) => (map[k] = Number(values[k])))
           if (dt === 'M') {
-            measurementPointsRef.value?.applyRealtimeValues?.(map)
+            measurementPointsRef.value?.applyRealtimeValues?.(map, ts)
           } else if (dt === 'A') {
-            actionPointsRef.value?.applyRealtimeValues?.(map)
+            actionPointsRef.value?.applyRealtimeValues?.(map, ts)
           } else if (dt === 'P') {
-            propertyPointsRef.value?.applyRealtimeValues?.(map)
+            propertyPointsRef.value?.applyRealtimeValues?.(map, ts)
           }
         })
       },
@@ -407,7 +379,8 @@ async function handleCancel() {
         )
         isEditing.value = false
         editFilters.value = []
-        statusFilterValue.value = []
+        statusCheckboxValue.value = []
+        invalidChecked.value = false
         measurementRoutingRef.value?.clearImportedFileName?.()
         actionRoutingRef.value?.clearImportedFileName?.()
       } catch {
@@ -417,7 +390,8 @@ async function handleCancel() {
     } else {
       isEditing.value = false
       editFilters.value = []
-      statusFilterValue.value = []
+      statusCheckboxValue.value = []
+      invalidChecked.value = false
       measurementRoutingRef.value?.clearImportedFileName?.()
       actionRoutingRef.value?.clearImportedFileName?.()
     }
@@ -452,7 +426,8 @@ async function loadChannelsForRouting() {
 const handleEdit = async () => {
   isEditing.value = true
   editFilters.value = []
-  statusFilterValue.value = []
+  statusCheckboxValue.value = []
+  invalidChecked.value = false
   // 进入编辑模式时加载通道列表
   await loadChannelsForRouting()
 }
@@ -467,8 +442,7 @@ const handleSubmit = async () => {
   if (invalidTabs.length > 0) {
     ElMessage.warning('Routing has invalid data, please correct and submit again')
     // 自动切换状态筛选为 invalid，并跳转到首个有问题的 Tab
-    editFilters.value = ['invalid']
-    statusFilterValue.value = ['invalid']
+    invalidChecked.value = true
     activeTab.value = invalidTabs[0]
     return
   }
@@ -492,7 +466,8 @@ const handleSubmit = async () => {
     isEditing.value = false
     // 刷新基线
     editFilters.value = []
-    statusFilterValue.value = []
+    statusCheckboxValue.value = []
+    invalidChecked.value = false
     try {
       const resp = await getInstancePoints(instanceId.value)
       if (resp.success) {
@@ -656,9 +631,14 @@ watch(
 
           .status-checkbox-group {
             display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 8px;
             align-items: center;
+          }
+          .status-invalid-checkbox {
+            margin-left: 4px;
+          }
+          :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+            border-color: #fff !important;
           }
         }
       }

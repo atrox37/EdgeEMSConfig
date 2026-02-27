@@ -23,7 +23,7 @@
       </div>
       <!-- 非编辑模式：显示Batch Publish和Export -->
       <template v-if="!props.isEditing">
-        <el-button :type="props.publishMode ? 'warning' : 'primary'" @click="handleTogglePublish">
+        <el-button :type="props.publishMode ? 'default' : 'primary'" @click="handleTogglePublish">
           {{ props.publishMode ? 'Cancel Publish' : 'Batch Publish' }}
         </el-button>
         <el-button v-if="!props.publishMode" type="primary" @click="handleExport">
@@ -63,49 +63,42 @@
           :label="col.label"
           :min-width="col.minWidth"
           :class-name="col.className"
-          :show-overflow-tooltip="col.showOverflow"
+          :show-overflow-tooltip="(props.isEditing && col.key === 'signal_name') ? false : (col.showOverflow ?? false)"
         >
           <template #default="{ row }">
-            <div class="cell-content">
-              <template v-if="col.isEditable && (!col.canEdit || col.canEdit(row)) && row.isEditing">
-                <div class="inline-edit-container">
-                  <el-input-number
-                    v-if="col.editor === 'number'"
-                    v-model="(row as any)[col.key]"
-                    :min="col.min"
-                    :max="col.max"
-                    :controls="false"
-                    align="left"
-                    :precision="col.precision"
-                    @change="() => col.onChange && col.onChange(row)"
-                    style="width: 100% !important"
-                  />
-                  <el-input
-                    v-else-if="col.editor === 'input'"
-                    v-model="(row as any)[col.key]"
-                    :placeholder="col.placeholder || ''"
-                    @input="() => col.onInput && col.onInput(row)"
-                    style="width: 100% !important"
-                  />
-                  <el-select
-                    v-else-if="col.editor === 'select'"
-                    v-model="(row as any)[col.key]"
-                    :fit-input-width="true"
-                    filterable
-                    @change="() => col.onChange && col.onChange(row)"
-                  >
-                    <el-option
-                      v-for="option in col.getOptions ? col.getOptions(row) : []"
-                      :key="option.value"
-                      :label="option.label"
-                      :value="option.value"
+            <div class="point-table-cell-wrapper">
+              <template
+                v-if="col.isEditable && (!col.canEdit || col.canEdit(row)) && props.isEditing && row.rowStatus !== 'deleted'"
+              >
+                <div class="point-table-cell-content" :class="getFieldClass(row, col.fieldClassKey)">
+                  <div class="inline-edit-container">
+                    <el-input
+                      v-if="col.editor === 'input'"
+                      :model-value="getCellInputValue(row, col)"
+                      :placeholder="col.placeholder || ''"
+                      style="width: 100% !important"
+                      @input="(val: string) => handleNumberOrTextInput(row, col, val)"
+                      @blur="() => handleNumberOrTextBlur(row, col)"
                     />
-                  </el-select>
+                    <el-select
+                      v-else-if="col.editor === 'select'"
+                      v-model="(row as any)[col.key]"
+                      :fit-input-width="true"
+                      filterable
+                      :placeholder="col.placeholder || ''"
+                      @change="() => col.onChange && col.onChange(row)"
+                    >
+                      <el-option
+                        v-for="option in col.getOptions ? col.getOptions(row) : []"
+                        :key="option.value"
+                        :label="option.label"
+                        :value="option.value"
+                      />
+                    </el-select>
+                  </div>
                 </div>
               </template>
-              <template v-else>
-                <span :class="getFieldClass(row, col.fieldClassKey)">{{ col.display(row) }}</span>
-              </template>
+              <span v-else :class="getFieldClass(row, col.fieldClassKey)">{{ col.display(row) }}</span>
               <div
                 v-if="props.isEditing && getFieldError(row, col.errorKey) && row.rowStatus !== 'deleted'"
                 class="field-error"
@@ -120,42 +113,34 @@
         <el-table-column
           v-if="!props.publishMode"
           label="Operation"
-          min-width="169"
+          width="169"
           fixed="right"
           class-name="operation-column"
         >
           <template #header>
-            <el-icon
+            <div
               v-if="props.isEditing"
-              style="cursor: pointer; color: #67c23a"
+              class="point-table__add-btn"
               @click="handleAddNewPoint"
             >
-              <Plus />
-            </el-icon>
+              <el-icon><Plus /></el-icon>
+              <span>Add</span>
+            </div>
             <span v-else>Operation</span>
           </template>
           <template #default="{ row }">
             <div class="point-table__operation-cell">
               <template v-if="props.isEditing">
-                <template v-if="row.isEditing">
-                  <div class="point-table__confirm-btn" @click="handleConfirmInlineEdit(row)">
-                    <el-icon><Check /></el-icon>
-                  </div>
-                  <div class="point-table__cancel-btn" @click="handleCancelInlineEdit(row)">
-                    <el-icon><Close /></el-icon>
-                  </div>
-                </template>
-                <template v-else-if="row.rowStatus === 'deleted'">
-                  <div class="point-table__restore-btn" @click="restorePoint(row, originalPointsList)">
+                <template v-if="row.rowStatus === 'deleted'">
+                  <div class="point-table__restore-btn" @click="handleRestorePoint(row)">
                     <el-icon><RefreshLeft /></el-icon>
+                    <span>Restore</span>
                   </div>
                 </template>
                 <template v-else>
-                  <div class="point-table__edit-btn" @click="handleStartInlineEdit(row)">
-                    <el-icon><Edit /></el-icon>
-                  </div>
-                  <div class="point-table__delete-btn" @click="deletePoint(row)">
+                  <div class="point-table__delete-btn" @click="handleDeletePoint(row)">
                     <el-icon><Delete /></el-icon>
+                    <span>Delete</span>
                   </div>
                 </template>
               </template>
@@ -169,11 +154,11 @@
           </template>
         </el-table-column>
 
-        <!-- Publish Value -->
+        <!-- Publish Value（与 Operation 列宽一致） -->
         <el-table-column
           v-else
           label="Publish Value"
-          min-width="182"
+          min-width="169"
           fixed="right"
           class-name="publish-value-column"
         >
@@ -227,12 +212,9 @@ import { ElMessage } from 'element-plus'
 import { OriginalPointsKey, ChannelNameKey } from '@/utils/key'
 import {
   Delete,
-  Edit,
   Plus,
   Position,
   RefreshLeft,
-  Close,
-  Check,
 } from '@element-plus/icons-vue'
 import type { PointInfo } from '@/types/channelConfiguration'
 import ValuePublishDialog from './ValuePublishDialog.vue'
@@ -246,7 +228,12 @@ import { usePointInlineEditing } from '@/composables/usePointInlineEditing'
 import { getPointCsvSchema } from '@/schemas/channelProtocols'
 import { getPointColumns } from '@/schemas/channelTableColumns'
 import { buildCsv } from '@/utils/csvSchema'
-import { buildChannelCsvFilename, downloadCsv, getTimestampCompact } from '@/utils/csvExport'
+import {
+  buildChannelCsvFilename,
+  downloadCsv,
+  formatUpdateTimeForCsv,
+  getTimestampCompact,
+} from '@/utils/csvExport'
 import { validatePointField, validatePointRow } from '@/validators/channelPoints'
 // lodash-es 替换
 const toLower = (v: any) => String(v ?? '').toLowerCase()
@@ -311,9 +298,25 @@ const pendingNewRow = ref<PointInfo | null>(null)
 const importedFileName = ref('')
 const showSignalNameFilter = ref(false)
 const publishValues = ref<Record<string, number | null>>({})
+const numericInputDraft = ref<Record<string, string>>({})
 const valuePublishDialogRef = ref<InstanceType<typeof ValuePublishDialog> | null>(null)
 let rowKeySeed = 1
 const createRowKey = () => `row_${Date.now()}_${rowKeySeed++}`
+
+const getCellDraftKey = (row: any, col: any) => `${String((row as any).rowKey ?? row.point_id)}::${String(col.key)}`
+const isNumericColumn = (col: any) =>
+  col && (col.min !== undefined || col.max !== undefined || col.precision !== undefined)
+const getCellInputValue = (row: any, col: any) => {
+  if (isNumericColumn(col)) {
+    const key = getCellDraftKey(row, col)
+    if (Object.prototype.hasOwnProperty.call(numericInputDraft.value, key)) {
+      return numericInputDraft.value[key]
+    }
+  }
+  return typeof (row as any)[col.key] === 'number'
+    ? String((row as any)[col.key])
+    : String((row as any)[col.key] ?? '')
+}
 
 // 列表筛选：支持 signal name 关键字与"Status（modified/added/deleted/invalid）"
 // Status 筛选由父组件通过 editFilters prop 传递
@@ -364,7 +367,7 @@ filteredPoints = computed(() => {
   if (props.editFilters && props.editFilters.length > 0) {
     const filterValue = props.editFilters[0]
     if (filterValue === 'invalid') {
-      result = result.filter((p) => (p as any).isInvalid === true)
+      result = result.filter((p) => (p as any).rowStatus !== 'deleted' && (p as any).isInvalid === true)
     } else {
       result = result.filter((p) => (p as any).rowStatus === filterValue)
     }
@@ -416,8 +419,7 @@ const {
   refreshFieldErrorsForRow,
 })
 
-const { handleStartInlineEdit, handleCancelInlineEdit, handleConfirmInlineEdit } =
-  usePointInlineEditing({
+const { updateRowChangeStatus } = usePointInlineEditing({
     editPoints,
     originalPointsList,
     pendingNewRow,
@@ -428,6 +430,24 @@ const { handleStartInlineEdit, handleCancelInlineEdit, handleConfirmInlineEdit }
     recomputeAllValidity,
     refreshFieldErrorsForRow,
   })
+
+function handleDeletePoint(row: PointInfo) {
+  if ((row as any).isNewUnconfirmed) {
+    const idx = editPoints.value.findIndex((p: any) => (p as any).rowKey === (row as any).rowKey)
+    if (idx !== -1) editPoints.value.splice(idx, 1)
+    recomputeAllValidity()
+    refreshFieldErrorsForList()
+  } else {
+    deletePoint(row)
+    recomputeAllValidity()
+    refreshFieldErrorsForList()
+  }
+}
+function handleRestorePoint(row: PointInfo) {
+  restorePoint(row, originalPointsList.value)
+  recomputeAllValidity()
+  refreshFieldErrorsForList()
+}
 
 const { handlePointsCsvContent } = usePointCsvHandlers({
   pointType: () => props.pointType,
@@ -490,13 +510,7 @@ watch(
   () => props.isEditing,
   (editing) => {
     if (editing && Array.isArray(editPoints.value)) {
-      // 进入编辑状态：清理未确认的新增行，重置 pendingNewRow
-      const unconfirmedIndex = editPoints.value.findIndex((p: any) => p.isNewUnconfirmed)
-      if (unconfirmedIndex !== -1) {
-        editPoints.value.splice(unconfirmedIndex, 1)
-      }
       pendingNewRow.value = null
-      // 执行有效性检测
       editPoints.value.forEach((p) => validateRowValidity(p))
       refreshFieldErrorsForList()
     } else if (!editing) {
@@ -533,11 +547,6 @@ const getNextPointId = () => {
   return allIds.length > 0 ? Math.max(...allIds) + 1 : 1
 }
 const handleAddNewPoint = () => {
-  if (pendingNewRow.value) {
-    scrollToTop()
-    ElMessage.warning('Please confirm or cancel the pending new point first')
-    return
-  }
   const newId = getNextPointId()
   const newPoint: PointInfo = {
     point_id: newId,
@@ -548,15 +557,16 @@ const handleAddNewPoint = () => {
     data_type: 'float',
     reverse: false,
     description: '',
-    isEditing: true,
     isNewUnconfirmed: true,
-    rowStatus: 'normal',
+    rowStatus: 'added',
   }
   ;(newPoint as any).rowKey = createRowKey()
   ;(newPoint as any).originalPointId = undefined
-  ;(newPoint as any).hideErrorsOnce = true
+  ;(newPoint as any).hideErrorsOnce = false
   editPoints.value.unshift(newPoint)
-  pendingNewRow.value = newPoint
+  validateRowValidity(newPoint)
+  refreshFieldErrorsForRow(newPoint)
+  applyDuplicatePointIdInvalid()
   scrollToTop()
 }
 const scrollToTop = () => {
@@ -596,10 +606,55 @@ function getFieldError(item: any, field: string): string {
 function onFieldInput(item: any, field: string) {
   if (item && (item as any).hideErrorsOnce) (item as any).hideErrorsOnce = false
   validateAndSetField(item, field)
-  // 当 point_id 变化时，需要重新检查所有行的重复情况
-  if (field === 'point_id') {
-    applyDuplicatePointIdInvalid()
+  updateRowChangeStatus(item)
+}
+function handleNumberOrTextInput(row: any, col: any, val: string) {
+  const isNum = isNumericColumn(col)
+  if (isNum) {
+    const allowDecimal = col.precision !== undefined && col.precision > 0
+    const draftKey = getCellDraftKey(row, col)
+    let sanitized = String(val ?? '').replace(/[^\d.-]/g, '')
+    sanitized = sanitized.replace(/(?!^)-/g, '')
+    const firstDot = sanitized.indexOf('.')
+    if (firstDot >= 0) {
+      sanitized = sanitized.slice(0, firstDot + 1) + sanitized.slice(firstDot + 1).replace(/\./g, '')
+    }
+    numericInputDraft.value[draftKey] = sanitized
+    if (sanitized === '' || sanitized === '-') {
+      row[col.key] = undefined
+    } else {
+      const parsed = allowDecimal ? parseFloat(sanitized) : parseInt(sanitized, 10)
+      if (!isNaN(parsed)) {
+        let v = parsed
+        if (col.min !== undefined && v < col.min) v = col.min
+        if (col.max !== undefined && v > col.max) v = col.max
+        row[col.key] = v
+      }
+    }
+  } else {
+    row[col.key] = val
   }
+  ;(col.onInput || col.onChange)?.(row)
+}
+function handleNumberOrTextBlur(row: any, col: any) {
+  if (!isNumericColumn(col)) return
+  const draftKey = getCellDraftKey(row, col)
+  const draft = numericInputDraft.value[draftKey]
+  if (typeof draft !== 'string') return
+  if (draft === '' || draft === '-' || draft === '.' || draft === '-.') {
+    row[col.key] = undefined
+  } else {
+    const allowDecimal = col.precision !== undefined && col.precision > 0
+    const parsed = allowDecimal ? parseFloat(draft) : parseInt(draft, 10)
+    if (!isNaN(parsed)) {
+      let v = parsed
+      if (col.min !== undefined && v < col.min) v = col.min
+      if (col.max !== undefined && v > col.max) v = col.max
+      row[col.key] = v
+    }
+  }
+  delete numericInputDraft.value[draftKey]
+  ;(col.onInput || col.onChange)?.(row)
 }
 function getPublishCommands(): Array<{ id: string; value: number }> {
   const commands: Array<{ id: string; value: number }> = []
@@ -632,20 +687,30 @@ function clearCurrentTabPublish() {
   notifyPublishChange()
 }
 
-// 实时值更新：根据 point_id 批量写入 value
-function applyRealtimeValues(values: Record<string | number, number>) {
+// 实时值更新：根据 point_id 批量写入 value 和 update_ts（时间戳）
+function applyRealtimeValues(
+  values: Record<string | number, number>,
+  ts?: Record<string | number, number>,
+) {
   if (!values || !Array.isArray(editPoints.value)) return
   const valueMap = new Map<number, number>()
   Object.entries(values).forEach(([k, v]) => {
     const id = Number(k)
     if (Number.isFinite(id)) valueMap.set(id, Number(v))
   })
-  if (valueMap.size === 0) return
+  const tsMap = new Map<number, number>()
+  if (ts && typeof ts === 'object') {
+    Object.entries(ts).forEach(([k, v]) => {
+      const id = Number(k)
+      if (Number.isFinite(id)) tsMap.set(id, Number(v))
+    })
+  }
+  if (valueMap.size === 0 && tsMap.size === 0) return
   editPoints.value.forEach((p: any) => {
     const newVal = valueMap.get(p.point_id)
-    if (newVal !== undefined) {
-      p.value = newVal
-    }
+    if (newVal !== undefined) p.value = newVal
+    const newTs = tsMap.get(p.point_id)
+    if (newTs !== undefined) p.update_ts = newTs
   })
 }
 
@@ -684,6 +749,7 @@ const handleExport = () => {
     point_id: String(point.point_id ?? ''),
     point_name: String(point.signal_name ?? ''),
     value: String(point.value ?? ''),
+    update_time: formatUpdateTimeForCsv((point as any).update_ts),
     scale: String(point.scale ?? ''),
     offset: String(point.offset ?? ''),
     unit: String(point.unit ?? ''),
@@ -732,6 +798,33 @@ defineExpose({
               !validateRowValidity(p as PointInfo)) /* 保守校验一次 */,
         )
       : false
+  },
+  getInvalidDetails: () => {
+    ;(editPoints.value || []).forEach((p: any) => {
+      if (p && p.rowStatus !== 'deleted') (p as any).hideErrorsOnce = false
+    })
+    refreshFieldErrorsForList()
+    applyDuplicatePointIdInvalid()
+    const tabNames: Record<string, string> = {
+      T: 'Telemetry',
+      S: 'Signal',
+      C: 'Control',
+      A: 'Adjustment',
+    }
+    const tab = tabNames[props.pointType] || props.pointType
+    const lines: string[] = []
+    ;(editPoints.value || []).forEach((p: any) => {
+      if (!p || p.rowStatus === 'deleted') return
+      const errs = (p.fieldErrors && Object.entries(p.fieldErrors).filter(([, v]: [string, unknown]) => v)) || []
+      if (errs.length > 0) {
+        const id = p.point_id ?? '-'
+        const name = p.signal_name ? ` (${String(p.signal_name).slice(0, 20)}${String(p.signal_name).length > 20 ? '...' : ''})` : ''
+        errs.forEach(([field, msg]: [string, string]) => {
+          lines.push(`${tab} Point ${id}${name} - ${field}: ${msg}`)
+        })
+      }
+    })
+    return lines
   },
   hasChanges,
 })
@@ -785,28 +878,89 @@ defineExpose({
       position: relative;
     }
 
-    // 根据行状态着色（移除左侧状态条，改为行背景色）
-    :deep(.row-status-added) {
-      background-color: rgba(103, 194, 58, 0.1);
+    // 新增/修改/删除：在 Point ID 单元格左侧显示 10px 状态条
+    :deep(.row-status-added td.point-id-column),
+    :deep(.row-status-modified td.point-id-column),
+    :deep(.row-status-deleted td.point-id-column) {
+      position: relative;
+      padding-left: 14px;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 10px;
+      }
     }
-    :deep(.row-status-modified) {
-      background-color: rgba(64, 158, 255, 0.1);
+    :deep(.row-status-added td.point-id-column::before) {
+      background-color: #67c23a;
+    }
+    :deep(.row-status-modified td.point-id-column::before) {
+      background-color: #409eff;
+    }
+    :deep(.row-status-deleted td.point-id-column::before) {
+      background-color: #f56c6c;
     }
     :deep(.row-status-deleted) {
-      background-color: rgba(245, 108, 108, 0.1);
-      opacity: 0.6;
+      opacity: 0.7;
     }
+    // 错误行：整行背景色（更透明）
     :deep(.row-invalid) {
-      background-color: rgba(245, 108, 108, 0.1);
+      background-color: rgba(167, 0, 0, 0.18);
     }
 
-    :deep(td .cell) {
-      position: relative;
-      height: 32px;
+    // :deep(td.el-table__cell) {
+    //   position: relative;
+    //   height: 32px;
+    // }
+    :deep(.point-table-cell-wrapper) {
+      position: static;
+      display: flex;
+      align-items: center;
+      min-height: 32px;
+      width: 100%;
+    }
+    :deep(.point-table-cell-content) {
+      flex: 1;
+      // padding-bottom: 9px;
+      box-sizing: border-box;
+      // .inline-edit-container :deep(.el-input__inner),
+      // .inline-edit-container :deep(.el-input-number .el-input__inner) {
+      //   height: 22px !important;
+      //   line-height: 22px !important;
+      // }
+    }
+    :deep(.point-table-cell-wrapper .field-error) {
+      position: absolute;
+      bottom: 0;
+      left: 12px;
+      right: 0;
+      height: 9px;
+      line-height: 9px;
+      font-size: 9px;
+      color: #ff4d4f;
+      overflow: hidden;
     }
 
-    .cell-content {
-      position: relative;
+    // .cell-content {
+    //   position: relative;
+    // }
+  }
+
+  // 表头 Add 按钮（在 Operation 列 header）
+  :deep(.point-table__add-btn) {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: #67c23a;
+    font-size: 16px;
+    span {
+      font-size: 12px;
+    }
+    &:hover {
+      color: #85ce61;
     }
   }
 
@@ -882,11 +1036,17 @@ defineExpose({
       }
     }
 
-    .point-table__setting-btn,
-    .point-table__publish-btn {
+    .point-table__setting-btn {
       color: #000;
       &:hover {
         color: #ff6900;
+      }
+    }
+    .point-table__publish-btn {
+      color: #000;
+      cursor: pointer;
+      &:hover {
+        color: #000;
       }
     }
   }
@@ -927,9 +1087,33 @@ defineExpose({
   // 字段状态颜色（保持原色用于区分）
   .field-modified {
     color: #409eff !important;
+    :deep(.el-input__inner),
+    :deep(.el-input__wrapper),
+    :deep(.el-input-number .el-input__inner),
+    :deep(.el-input-number .el-input__wrapper),
+    :deep(.el-select .el-select__placeholder),
+    :deep(.el-select .el-select__wrapper) {
+      color: #409eff !important;
+    }
+    :deep(.el-input__wrapper),
+    :deep(.el-select .el-select__wrapper) {
+      box-shadow: 0 0 0 1px #409eff inset !important;
+    }
   }
   .field-added {
     color: #67c23a !important;
+    :deep(.el-input__inner),
+    :deep(.el-input__wrapper),
+    :deep(.el-input-number .el-input__inner),
+    :deep(.el-input-number .el-input__wrapper),
+    :deep(.el-select .el-select__placeholder),
+    :deep(.el-select .el-select__wrapper) {
+      color: #67c23a !important;
+    }
+    :deep(.el-input__wrapper),
+    :deep(.el-select .el-select__wrapper) {
+      box-shadow: 0 0 0 1px #67c23a inset !important;
+    }
   }
   .field-deleted {
     color: #f56c6c !important;
@@ -955,15 +1139,5 @@ defineExpose({
     }
   }
 
-  .field-error {
-    position: absolute;
-    top: 100%;
-    left: 12px;
-    margin-top: 2px;
-    width: 100%;
-    color: #ff4d4f;
-    font-size: 12px;
-    line-height: 1;
-  }
 }
 </style>

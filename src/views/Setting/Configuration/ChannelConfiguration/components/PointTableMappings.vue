@@ -74,49 +74,44 @@
           :class-name="col.className"
         >
           <template #default="{ row }">
-            <div class="cell-content">
-              <template v-if="props.isEditing && row.isEditing">
-                <div class="inline-edit-container">
-                  <el-input-number
-                    v-if="col.editor === 'number'"
-                    v-model="(row.protocol_mapping as any)[col.key]"
-                    :min="col.min"
-                    :max="col.max"
-                    :step="col.step || 1"
-                    :controls="false"
-                    align="left"
-                    :disabled="col.disabled ? col.disabled(row) : false"
-                    @change="() => col.onChange && col.onChange(row)"
-                    style="width: 100% !important"
-                  />
-                  <el-input
-                    v-else-if="col.editor === 'input'"
-                    :model-value="col.getValue ? col.getValue(row) : (row.protocol_mapping as any)[col.key]"
-                    :placeholder="col.placeholder || ''"
-                    style="width: 100% !important"
-                    @input="(val: any) => col.onInput && col.onInput(row, String(val))"
-                  />
-                  <el-select
-                    v-else-if="col.editor === 'select'"
-                    v-model="(row.protocol_mapping as any)[col.key]"
-                    :fit-input-width="true"
-                    :filterable="true"
-                    :clearable="true"
-                    :popper-class="col.popperClass || 'inline-mapping-popper'"
-                    @change="() => col.onChange && col.onChange(row)"
-                  >
-                    <el-option
-                      v-for="option in col.getOptions ? col.getOptions(row) : []"
-                      :key="option.value"
-                      :label="option.label"
-                      :value="option.value"
+            <div class="point-table-cell-wrapper">
+              <template v-if="props.isEditing">
+                <div
+                  class="point-table-cell-content"
+                  :class="[
+                    getFieldClass(row, col.fieldClassKey),
+                    getMappingFieldError(row, col.errorKey) ? 'field-has-error' : '',
+                  ]"
+                >
+                  <div class="inline-edit-container">
+                    <el-input
+                      v-if="col.editor === 'input'"
+                      :model-value="col.getValue ? col.getValue(row) : String((row.protocol_mapping as any)[col.key] ?? '')"
+                      :placeholder="col.placeholder || ''"
+                      style="width: 100% !important"
+                      @input="(val: any) => col.onInput ? col.onInput(row, String(val)) : (col.onChange && col.onChange(row))"
                     />
-                  </el-select>
+                    <el-select
+                      v-else-if="col.editor === 'select'"
+                      v-model="(row.protocol_mapping as any)[col.key]"
+                      :fit-input-width="true"
+                      :filterable="true"
+                      :clearable="true"
+                      :placeholder="col.placeholder || ''"
+                      :popper-class="col.popperClass || 'inline-mapping-popper'"
+                      @change="() => col.onChange && col.onChange(row)"
+                    >
+                      <el-option
+                        v-for="option in col.getOptions ? col.getOptions(row) : []"
+                        :key="option.value"
+                        :label="option.label"
+                        :value="option.value"
+                      />
+                    </el-select>
+                  </div>
                 </div>
               </template>
-              <template v-else>
-                <span :class="getFieldClass(row, col.fieldClassKey)">{{ col.display(row) }}</span>
-              </template>
+              <span v-else :class="getFieldClass(row, col.fieldClassKey)">{{ col.display(row) }}</span>
               <div v-if="props.isEditing && getMappingFieldError(row, col.errorKey)" class="field-error">
                 {{ getMappingFieldError(row, col.errorKey) }}
               </div>
@@ -124,32 +119,7 @@
           </template>
         </el-table-column>
 
-        <!-- Operation -->
-        <el-table-column
-          v-if="props.isEditing"
-          label="Operation"
-          min-width="150"
-          fixed="right"
-          class-name="operation-column"
-        >
-          <template #default="{ row }">
-            <div class="point-table__operation-cell">
-              <template v-if="row.isEditing">
-                <div class="point-table__cancel-btn" @click="handleCancelMappingEdit(row)">
-                  <el-icon><Close /></el-icon>
-                </div>
-                <div class="point-table__confirm-btn" @click="handleConfirmMappingEdit(row)">
-                  <el-icon><Check /></el-icon>
-                </div>
-              </template>
-              <template v-else>
-                <div class="point-table__edit-btn" @click="handleStartMappingEdit(row)">
-                  <el-icon><Edit /></el-icon>
-                </div>
-              </template>
-            </div>
-          </template>
-        </el-table-column>
+        <!-- Operation：直接编辑模式下已移除行级 Edit/Confirm/Cancel，此列隐藏 -->
       </el-table>
     </div>
 
@@ -172,7 +142,6 @@ import { ref, watch, computed, inject } from 'vue'
 // 移除 pxToResponsive，不再需要
 import { ElMessage } from 'element-plus'
 import { OriginalPointsKey, ChannelNameKey } from '@/utils/key'
-import { Edit, Close, Check } from '@element-plus/icons-vue'
 import type { PointInfo, UpdateMappingPoint } from '@/types/channelConfiguration'
 import { DATA_TYPE_OPTIONS } from '@/types/channelConfiguration'
 import { getMappingCsvSchema } from '@/schemas/channelProtocols'
@@ -327,9 +296,6 @@ const {
   updateMappingChangeStatus,
   resetBitPositionIfNeeded,
   adjustByteOrderForNewType,
-  handleStartMappingEdit,
-  handleCancelMappingEdit,
-  handleConfirmMappingEdit,
 } = useMappingRowEditing({
   channelProtocol: () => props.channelProtocol,
   originalPointsList,
@@ -399,11 +365,28 @@ watch(
   { immediate: true, deep: true },
 )
 
-// 进入编辑状态时，再次执行有效性检测，确保无效项高亮
+// 进入编辑状态时，为缺少 protocol_mapping 的行初始化，并执行有效性检测
+function ensureProtocolMappingForEdit(p: PointInfo) {
+  if (!p.protocol_mapping) {
+    if (props.channelProtocol === 'di_do') {
+      ;(p as any).protocol_mapping = {}
+    } else {
+      p.protocol_mapping = {
+        slave_id: undefined,
+        function_code: undefined,
+        register_address: undefined,
+        data_type: undefined,
+        byte_order: undefined,
+        bit_position: undefined,
+      }
+    }
+  }
+}
 watch(
   () => props.isEditing,
   (editing) => {
     if (editing && Array.isArray(editPoints.value)) {
+      editPoints.value.forEach(ensureProtocolMappingForEdit)
       editPoints.value.forEach((p) => validateMappingValidity(p))
       refreshMappingFieldErrorsForList()
     } else if (!editing) {
@@ -616,6 +599,29 @@ defineExpose({
         )
       : false
   },
+  getInvalidDetails: () => {
+    refreshMappingFieldErrorsForList()
+    const tabNames: Record<string, string> = {
+      T: 'Telemetry',
+      S: 'Signal',
+      C: 'Control',
+      A: 'Adjustment',
+    }
+    const tab = tabNames[props.pointType] || props.pointType
+    const lines: string[] = []
+    ;(editPoints.value || []).forEach((p: any) => {
+      if (!p || p.rowStatus === 'deleted') return
+      const errs = (p.fieldErrors && Object.entries(p.fieldErrors).filter(([, v]: [string, unknown]) => v)) || []
+      if (errs.length > 0) {
+        const id = p.point_id ?? '-'
+        const name = p.signal_name ? ` (${String(p.signal_name).slice(0, 20)}${String(p.signal_name).length > 20 ? '...' : ''})` : ''
+        errs.forEach(([field, msg]: [string, string]) => {
+          lines.push(`${tab} Point ${id}${name} - ${field}: ${msg}`)
+        })
+      }
+    })
+    return lines
+  },
   scrollToTop: () => {
     // 重置到第一页
     currentPage.value = 1
@@ -673,28 +679,79 @@ defineExpose({
     }
 
     // 根据行状态着色（移除左侧状态条，改为行背景色）
-    :deep(.row-status-added) {
-      background-color: rgba(103, 194, 58, 0.1);
+    // 新增/修改/删除：在 Point ID 单元格左侧显示 10px 状态条
+    :deep(.row-status-added td.point-id-column),
+    :deep(.row-status-modified td.point-id-column),
+    :deep(.row-status-deleted td.point-id-column) {
+      position: relative;
+      padding-left: 14px;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 10px;
+      }
     }
-    :deep(.row-status-modified) {
-      background-color: rgba(64, 158, 255, 0.1);
+    :deep(.row-status-added td.point-id-column::before) {
+      background-color: #67c23a;
+    }
+    :deep(.row-status-modified td.point-id-column::before) {
+      background-color: #409eff;
+    }
+    :deep(.row-status-deleted td.point-id-column::before) {
+      background-color: #f56c6c;
     }
     :deep(.row-status-deleted) {
-      background-color: rgba(245, 108, 108, 0.1);
-      opacity: 0.6;
+      opacity: 0.7;
     }
+    // 错误行：整行背景色（更透明）
     :deep(.row-invalid) {
-      background-color: rgba(245, 108, 108, 0.1);
+      background-color: rgba(167, 0, 0, 0.18);
     }
 
-    :deep(td .cell) {
+    :deep(td.el-table__cell) {
       position: relative;
       height: 32px;
     }
-
-    .cell-content {
-      position: relative;
+    :deep(.point-table-cell-wrapper) {
+      position: static;
+      display: flex;
+      align-items: center;
+      min-height: 32px;
+      width: 100%;
     }
+    :deep(.point-table-cell-content.field-has-error) {
+      .el-input__wrapper,
+      .el-select .el-select__wrapper {
+        box-shadow: 0 0 0 1px #f56c6c inset;
+      }
+    }
+    :deep(.point-table-cell-content) {
+      flex: 1;
+      box-sizing: border-box;
+      // .inline-edit-container :deep(.el-input__inner),
+      // .inline-edit-container :deep(.el-input-number .el-input__inner) {
+      //   height: 22px !important;
+      //   line-height: 22px !important;
+      // }
+    }
+    :deep(.point-table-cell-wrapper .field-error) {
+      position: absolute;
+      bottom: 0;
+      left:12px;
+      right: 0;
+      height: 9px;
+      line-height: 9px;
+      font-size: 9px;
+      color: #ff4d4f;
+      overflow: hidden;
+    }
+
+    // .cell-content {
+    //   position: relative;
+    // }
   }
 
   // 让筛选下拉与输入框左侧对齐
@@ -775,11 +832,16 @@ defineExpose({
       }
     }
 
-    .point-table__setting-btn,
-    .point-table__publish-btn {
+    .point-table__setting-btn {
       color: #000;
       &:hover {
         color: #ff6900;
+      }
+    }
+    .point-table__publish-btn {
+      color: #000;
+      &:hover {
+        color: #000;
       }
     }
   }
@@ -819,9 +881,33 @@ defineExpose({
   // 字段状态颜色（保持原色用于区分）
   .field-modified {
     color: #409eff !important;
+    :deep(.el-input__inner),
+    :deep(.el-input__wrapper),
+    :deep(.el-input-number .el-input__inner),
+    :deep(.el-input-number .el-input__wrapper),
+    :deep(.el-select .el-select__placeholder),
+    :deep(.el-select .el-select__wrapper) {
+      color: #409eff !important;
+    }
+    :deep(.el-input__wrapper),
+    :deep(.el-select .el-select__wrapper) {
+      box-shadow: 0 0 0 1px #409eff inset !important;
+    }
   }
   .field-added {
     color: #67c23a !important;
+    :deep(.el-input__inner),
+    :deep(.el-input__wrapper),
+    :deep(.el-input-number .el-input__inner),
+    :deep(.el-input-number .el-input__wrapper),
+    :deep(.el-select .el-select__placeholder),
+    :deep(.el-select .el-select__wrapper) {
+      color: #67c23a !important;
+    }
+    :deep(.el-input__wrapper),
+    :deep(.el-select .el-select__wrapper) {
+      box-shadow: 0 0 0 1px #67c23a inset !important;
+    }
   }
   .field-deleted {
     color: #f56c6c !important;
@@ -849,16 +935,6 @@ defineExpose({
     }
   }
 
-  .field-error {
-    position: absolute;
-    top: 100%;
-    left: 12px;
-    margin-top: 2px;
-    width: 100%;
-    color: #ff4d4f;
-    font-size: 12px;
-    line-height: 1;
-  }
 }
 
 </style>
