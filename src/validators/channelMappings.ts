@@ -80,6 +80,7 @@ export function validateMappingField(
     hasByteOrder,
   ].filter(Boolean).length
 
+  const isAllEmpty = filledFieldsCount === 0
   const isPartialFill = filledFieldsCount > 0 && filledFieldsCount < 5
 
   switch (field) {
@@ -90,6 +91,7 @@ export function validateMappingField(
       return ''
     }
     case 'slave_id': {
+      if (isAllEmpty) return ''
       if (isPartialFill && !hasSlaveId) return 'required'
       if (m.slave_id === undefined || m.slave_id === null || m.slave_id === '') return ''
       const sid = Number(m.slave_id)
@@ -97,6 +99,7 @@ export function validateMappingField(
       return ''
     }
     case 'function_code': {
+      if (isAllEmpty) return ''
       if (isPartialFill && !hasFunctionCode) return 'required'
       if (m.function_code === undefined || m.function_code === null || m.function_code === '')
         return ''
@@ -106,6 +109,7 @@ export function validateMappingField(
       return ''
     }
     case 'register_address': {
+      if (isAllEmpty) return ''
       if (isPartialFill && !hasRegisterAddress) return 'required'
       if (m.register_address == null || m.register_address === '') return ''
       const ra = Number(m.register_address)
@@ -113,6 +117,7 @@ export function validateMappingField(
       return ''
     }
     case 'data_type': {
+      if (isAllEmpty) return ''
       if (isPartialFill && !hasDataType) return 'required'
       if (m.data_type === undefined || m.data_type === null || m.data_type === '') return ''
       const dt = normalizeType(m.data_type || '')
@@ -121,6 +126,7 @@ export function validateMappingField(
       return ''
     }
     case 'byte_order': {
+      if (isAllEmpty) return ''
       if (isPartialFill && !hasByteOrder) return 'required'
       if (m.byte_order === undefined || m.byte_order === null || m.byte_order === '') return ''
       {
@@ -135,18 +141,21 @@ export function validateMappingField(
       return ''
     }
     case 'bit_position': {
+      // 该字段不可编辑时，直接清空并视为无错误
+      if (!canEditMappingBitPosition(item as PointInfo)) {
+        if (m.bit_position !== undefined && m.bit_position !== null && m.bit_position !== '') {
+          m.bit_position = undefined
+        }
+        return ''
+      }
+      if (isAllEmpty) return ''
       const rawBp = m.bit_position
-      const canEdit = canEditMappingBitPosition(item)
       if (rawBp === undefined || rawBp === null || rawBp === '') {
-        if (!isPartialFill) return canEdit ? 'required' : ''
+        if (isPartialFill || filledFieldsCount === 5) return 'required'
         return ''
       }
       const n = Number(rawBp)
-      if (canEdit) {
-        if (!Number.isInteger(n) || n < 0 || n > 15) return 'must be 0-15 when provided'
-        return ''
-      }
-      if (n !== 0) return 'must be empty or 0'
+      if (!Number.isInteger(n) || n < 0 || n > 15) return 'must be 0-15 when provided'
       return ''
     }
     default:
@@ -201,6 +210,15 @@ export function validateMappingRow(point: PointInfo, ctx: MappingValidationConte
     return false
   }
 
+  // 五个主映射字段均为空时，视为“未配置”，不判定为无效
+  if (filledFieldsCount === 0) {
+    if (!canEditMappingBitPosition(point) && m.bit_position !== undefined && m.bit_position !== null && m.bit_position !== '') {
+      m.bit_position = undefined
+    }
+    ;(point as any).isInvalid = false
+    return true
+  }
+
   const slaveId = Number(m.slave_id)
   if (!Number.isInteger(slaveId) || slaveId < 1 || slaveId > 247) {
     ;(point as any).isInvalid = true
@@ -237,16 +255,16 @@ export function validateMappingRow(point: PointInfo, ctx: MappingValidationConte
   }
 
   const canEdit = canEditMappingBitPosition(point)
-  const bp = Number(m.bit_position)
   if (canEdit) {
+    const bp = Number(m.bit_position)
     if (!Number.isInteger(bp) || bp < 0 || bp > 15) {
       ;(point as any).isInvalid = true
       return false
     }
   } else {
-    if (bp !== 0 && m.bit_position !== undefined && m.bit_position !== null && m.bit_position !== '') {
-      ;(point as any).isInvalid = true
-      return false
+    // 不可编辑时统一清空，不再允许保留 0 或其他值
+    if (m.bit_position !== undefined && m.bit_position !== null && m.bit_position !== '') {
+      m.bit_position = undefined
     }
   }
 

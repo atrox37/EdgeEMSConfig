@@ -119,7 +119,7 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
     if (!item.protocol_mapping) return
     if (!canEditMappingBitPosition(item)) {
       const currentBp = item.protocol_mapping.bit_position
-      if (currentBp !== 0 && currentBp !== undefined && currentBp !== null) {
+      if (currentBp !== undefined && currentBp !== null) {
         ;(item.protocol_mapping as any).bit_position = undefined
       }
     }

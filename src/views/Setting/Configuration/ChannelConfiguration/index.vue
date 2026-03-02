@@ -16,28 +16,28 @@
               </template>
               <el-form :model="filters" label-width="100px" class="rule-management__filter-form">
                 <el-form-item label="Protocol:" class="rule-management__filter-form-item">
-                  <el-select v-model="filters.protocol" placeholder="select protocol" clearable style="width: 100%"
-                    @change="handleFilterChange('protocol', filters.protocol)">
+                  <el-select v-model="filters.protocol" placeholder="Select protocol" clearable style="width: 100%"
+                    :teleported="false" @change="handleFilterChange('protocol', filters.protocol)">
                     <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                       :value="option.value" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Enabled:" class="rule-management__filter-form-item">
-                  <el-select v-model="filters.enabled" placeholder="select enabled status" clearable style="width: 100%"
-                    @change="handleFilterChange()">
+                  <el-select v-model="filters.enabled" placeholder="Select enabled status" clearable style="width: 100%"
+                    :teleported="false" @change="handleFilterChange()">
                     <el-option label="Enabled" :value="true" />
                     <el-option label="Disabled" :value="false" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Connected:" class="rule-management__filter-form-item-last">
-                  <el-select v-model="filters.connected" placeholder="select connected status" clearable
-                    style="width: 100%" @change="handleFilterChange()">
+                  <el-select v-model="filters.connected" placeholder="Select connected status" clearable
+                    style="width: 100%" :teleported="false" @change="handleFilterChange()">
                     <el-option label="Connected" :value="true" />
                     <el-option label="Disconnected" :value="false" />
                   </el-select>
                 </el-form-item>
                 <div style="text-align: right; margin-top: 12px;">
-                  <el-button size="small" @click="showFilterPopover = false">Close</el-button>
+                  <el-button size="small" @click="handleCloseFilterPopover">Close</el-button>
                   <el-button type="primary" size="small" @click="applyFilters">Apply</el-button>
                 </div>
               </el-form>
@@ -79,9 +79,10 @@
         <div class="rule-management__reload-icon" @click="handleReload">
           <img :src="tableRefreshIcon" alt="Reload" />
         </div>
-
-
-
+      </div>
+      <div v-if="false" class="rule-management__search-form-second-row">
+        <IconButton type="primary" :icon="sidebarSettingIcon" text="Template" custom-class="rule-management__btn"
+          @click="handleTemplateManagement" />
       </div>
       <div class="rule-management__table">
         <el-table v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
@@ -111,7 +112,7 @@
             </template>
           </el-table-column>
           <!-- <el-table-column prop="error_count" label="Error Count" /> -->
-          <el-table-column min-width="330" fixed="right">
+          <el-table-column min-width="380" fixed="right">
             <template #header>
               <IconButton type="primary" :icon="userAddIcon" text="New"
                 custom-class="rule-management__btn rule-management__table-header-btn" @click="addChannel" />
@@ -140,6 +141,21 @@
                   <img :src="tableDeleteIcon" />
                   <span class="rule-management__operation-text">Delete</span>
                 </div>
+                <el-dropdown v-if="false" trigger="click" placement="bottom-end" :teleported="true">
+                  <div class="rule-management__operation-item rule-management__operation-item--more">
+                    <el-icon>
+                      <MoreFilled />
+                    </el-icon>
+                  </div>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item @click="openAssignTemplateDialog(row)">
+                        Assign Template
+                      </el-dropdown-item>
+                      <el-dropdown-item @click="openAsTemplateDialog(row)">As Template</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
 
                 <!-- <el-dropdown
                   trigger="click"
@@ -176,11 +192,12 @@
         </div>
       </div>
     </div>
-    <ChannelDetailDialog
-      ref="channelDetailDialogRef"
-      @submit="handleChannelDialogSubmit"
-      @cancel="handleChannelDialogCancel"
-    />
+    <ChannelDetailDialog ref="channelDetailDialogRef" @submit="handleChannelDialogSubmit"
+      @cancel="handleChannelDialogCancel" />
+
+    <AssignTemplateDialog v-if="false" ref="assignTemplateDialogRef" :template-options="templateOptions"
+      @submit="submitAssignTemplate" />
+    <AsTemplateDialog v-if="false" ref="asTemplateDialogRef" @submit="submitAsTemplate" />
   </div>
 </template>
 
@@ -192,13 +209,19 @@ import userAddIcon from '@/assets/icons/user-add.svg'
 import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import buttonDetailIcon from '@/assets/icons/button-detail.svg'
 import buttonPointsIcon from '@/assets/icons/button-point.svg'
+import sidebarSettingIcon from '@/assets/icons/sidebar-setting.svg'
 import { ChangeChannelEnabled } from '@/api/channelsManagement'
+import { applyTemplateToChannel, createTemplateFromChannel, getTemplates } from '@/api/channelTemplates'
 import type { ChannelListItem } from '@/types/channelConfiguration'
+import type { ChannelTemplateListItem } from '@/types/channelTemplates'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { MoreFilled } from '@element-plus/icons-vue'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import { useRouter } from 'vue-router'
 import ChannelDetailDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/ChannelDetailDialog.vue'
+import AssignTemplateDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/AssignTemplateDialog.vue'
+import AsTemplateDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/AsTemplateDialog.vue'
 
 const router = useRouter()
 const channelDetailDialogRef = ref<InstanceType<typeof ChannelDetailDialog> | null>(null)
@@ -226,6 +249,12 @@ filters.enabled = null
 filters.connected = null
 const ruleManagementRef = ref<HTMLElement | null>(null)
 const showFilterPopover = ref(false)
+const mobileFilterSnapshot = ref<{
+  protocol: string | null
+  enabled: boolean | null
+  connected: boolean | null
+} | null>(null)
+const mobileFilterApplied = ref(false)
 
 // 筛选标签管�?
 interface FilterTag {
@@ -268,7 +297,7 @@ let debounceTimer: any = null
 
 // 处理筛选变�?（移动端）
 const handleFilterChange = (_key?: string, _value?: any) => {
-  updateFilterTags()
+  // 移动端筛选仅在点击 Apply 后生效
 }
 
 // 处理桌面端筛选变化（带防抖）
@@ -304,22 +333,58 @@ const removeFilterTag = (key: string) => {
 
 // 应用筛�?
 const applyFilters = () => {
+  mobileFilterApplied.value = true
   updateFilterTags()
   showFilterPopover.value = false
   fetchTableData(true)
 }
 
+const handleCloseFilterPopover = () => {
+  if (mobileFilterSnapshot.value) {
+    filters.protocol = mobileFilterSnapshot.value.protocol
+    filters.enabled = mobileFilterSnapshot.value.enabled
+    filters.connected = mobileFilterSnapshot.value.connected
+  }
+  showFilterPopover.value = false
+  updateFilterTags()
+}
+
 // 监听筛选变�?
 watch([() => filters.protocol, () => filters.enabled, () => filters.connected], () => {
+  if (showFilterPopover.value) return
   updateFilterTags()
 }, { deep: true })
+
+watch(
+  () => showFilterPopover.value,
+  visible => {
+    if (visible) {
+      mobileFilterSnapshot.value = {
+        protocol: (filters.protocol as string | null) ?? null,
+        enabled: (filters.enabled as boolean | null) ?? null,
+        connected: (filters.connected as boolean | null) ?? null,
+      }
+      mobileFilterApplied.value = false
+      return
+    }
+
+    if (!mobileFilterApplied.value && mobileFilterSnapshot.value) {
+      filters.protocol = mobileFilterSnapshot.value.protocol
+      filters.enabled = mobileFilterSnapshot.value.enabled
+      filters.connected = mobileFilterSnapshot.value.connected
+      updateFilterTags()
+    }
+    mobileFilterSnapshot.value = null
+  },
+)
 // 展开行控�?
 const expandedRows = ref<number[]>([])
 
 const channelControlLoadings = ref<boolean[][]>([])
 
-// Points Tables 对话框相关数�?
-const currentChannelId = ref<number>(0)
+const templateOptions = ref<ChannelTemplateListItem[]>([])
+const assignTemplateDialogRef = ref<InstanceType<typeof AssignTemplateDialog> | null>(null)
+const asTemplateDialogRef = ref<InstanceType<typeof AsTemplateDialog> | null>(null)
 
 watch(
   tableData,
@@ -352,6 +417,78 @@ const handlePointsTables = (row: ChannelListItem) => {
       protocol: row.protocol,
     },
   })
+}
+
+const handleTemplateManagement = () => {
+  router.push('/channelConfiguration/templates')
+}
+
+const loadTemplateOptions = async (protocol?: string) => {
+  const res = await getTemplates((protocol || undefined) as any)
+  if (res.success) {
+    templateOptions.value = Array.isArray(res.data) ? res.data : []
+  }
+}
+
+const openAssignTemplateDialog = async (row: ChannelListItem) => {
+  await loadTemplateOptions(String(row.protocol || ''))
+  assignTemplateDialogRef.value?.open({
+    channel_id: Number(row.id),
+    channel_name: String(row.name || row.id),
+  })
+}
+
+const submitAssignTemplate = async (payload: {
+  channel_id: number
+  channel_name: string
+  template_id: number
+}) => {
+  try {
+    await ElMessageBox.confirm(
+      `Apply selected template to channel ${payload.channel_name}?`,
+      'Confirm',
+      {
+        type: 'warning',
+        confirmButtonText: 'Apply',
+        cancelButtonText: 'Cancel',
+      },
+    )
+  } catch {
+    return
+  }
+  const res = await applyTemplateToChannel(payload.template_id, payload.channel_id, {
+    clear_existing: true,
+    slave_id_override: null,
+  })
+  if (res.success) {
+    ElMessage.success((res as any).data?.message || 'Template applied successfully')
+    assignTemplateDialogRef.value?.close()
+  }
+}
+
+const openAsTemplateDialog = (row: ChannelListItem) => {
+  asTemplateDialogRef.value?.open({
+    channel_id: Number(row.id),
+    channel_name: String(row.name || row.id),
+    protocol: String(row.protocol || ''),
+  })
+}
+
+const submitAsTemplate = async (payload: {
+  channel_id: number
+  channel_name: string
+  name: string
+  description: string
+  protocol: string
+}) => {
+  const res = await createTemplateFromChannel(payload.channel_id, {
+    name: payload.name,
+    description: payload.description,
+  })
+  if (res.success) {
+    ElMessage.success('Template created from channel successfully')
+    asTemplateDialogRef.value?.close()
+  }
 }
 
 // 处理启用状态变�?
@@ -420,7 +557,9 @@ const handleChannelDialogCancel = () => {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dcdfe6;
 
       //   padding-bottom: 20px;
       :deep(.el-form-item) {
@@ -512,6 +651,17 @@ const handleChannelDialogCancel = () => {
           }
         }
       }
+
+      :deep(.el-select) {
+        width: 180px;
+      }
+    }
+
+    .rule-management__search-form-second-row {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
     }
 
     .rule-management__table-operations {
@@ -588,6 +738,17 @@ const handleChannelDialogCancel = () => {
             font-size: 14px;
             color: #000000;
           }
+
+          &.rule-management__operation-item--more {
+            width: 32px;
+            height: 32px;
+            justify-content: center;
+
+            .el-icon {
+              font-size: 20px;
+              color: #606266;
+            }
+          }
         }
       }
 
@@ -629,6 +790,7 @@ const handleChannelDialogCancel = () => {
     }
   }
 }
+
 
 // 媒体查询：小�?200px时隐藏桌面端筛选框，显示移动端筛选按�?
 @media (max-width: 1059px) {

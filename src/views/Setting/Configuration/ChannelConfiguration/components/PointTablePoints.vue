@@ -22,7 +22,7 @@
         </el-select>
       </div>
       <!-- 非编辑模式：显示Batch Publish和Export -->
-      <template v-if="!props.isEditing">
+      <template v-if="!props.isEditing && props.showActions">
         <el-button :type="props.publishMode ? 'default' : 'primary'" @click="handleTogglePublish">
           {{ props.publishMode ? 'Cancel Publish' : 'Batch Publish' }}
         </el-button>
@@ -32,7 +32,7 @@
       </template>
 
       <!-- 编辑模式：显示文件名和Import -->
-      <template v-else>
+      <template v-else-if="props.showActions">
         <span v-if="importedFileName" class="imported-file-name">{{ importedFileName }}</span>
         <el-button type="primary" @mousedown="handleImportClick">Import</el-button>
       </template>
@@ -111,7 +111,7 @@
 
         <!-- Operation / Publish Value -->
         <el-table-column
-          v-if="!props.publishMode"
+          v-if="props.showOperationColumn && !props.publishMode"
           label="Operation"
           width="169"
           fixed="right"
@@ -156,7 +156,7 @@
 
         <!-- Publish Value（与 Operation 列宽一致） -->
         <el-table-column
-          v-else
+          v-else-if="props.showOperationColumn"
           label="Publish Value"
           min-width="169"
           fixed="right"
@@ -265,6 +265,8 @@ interface Props {
   editFilters: string[]
   isEditing: boolean
   publishMode?: boolean
+  showOperationColumn?: boolean
+  showActions?: boolean
   loading?: boolean
   channelProtocol?: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
 }
@@ -272,6 +274,8 @@ const props = withDefaults(defineProps<Props>(), {
   viewMode: 'points',
   editFilters: () => [],
   publishMode: false,
+  showOperationColumn: true,
+  showActions: true,
   loading: false,
   channelProtocol: 'modbus_tcp',
 })

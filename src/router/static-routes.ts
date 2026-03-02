@@ -1,4 +1,4 @@
-﻿import type { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import ChannelIcon from '@/components/icons/ChannelIcon.vue'
 import InstanceIcon from '@/components/icons/InstanceIcon.vue'
 import RuleIcon from '@/components/icons/RuleIcon.vue'
@@ -32,17 +32,6 @@ export const staticRoutes: RouteRecordRaw[] = [
           title: 'Channel Config',
           activeNav: '/channelConfiguration',
           icon: ChannelIcon,
-        },
-      },
-      {
-        path: '/channelConfiguration/detail',
-        name: 'channelDetail',
-        component: () =>
-          import('@/views/Setting/Configuration/ChannelConfiguration/Detail.vue'),
-        meta: {
-          title: 'Channel Detail',
-          activeNav: '/channelConfiguration',
-          hidden: true, // 不在侧边栏显示
         },
       },
       {

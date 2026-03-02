@@ -22,12 +22,12 @@
         </el-select>
       </div>
       <!-- 非编辑模式：显示Export -->
-      <template v-if="!props.isEditing">
+      <template v-if="!props.isEditing && props.showActions">
         <el-button type="primary" @click="handleExport">Export</el-button>
       </template>
 
       <!-- 编辑模式：显示文件名和Import -->
-      <template v-else>
+      <template v-else-if="props.showActions">
         <span v-if="importedFileName" class="imported-file-name">{{ importedFileName }}</span>
         <el-button type="primary" @mousedown="handleImportClick">Import</el-button>
       </template>
@@ -88,16 +88,18 @@
                       v-if="col.editor === 'input'"
                       :model-value="col.getValue ? col.getValue(row) : String((row.protocol_mapping as any)[col.key] ?? '')"
                       :placeholder="col.placeholder || ''"
+                      :disabled="col.disabled ? col.disabled(row) : false"
                       style="width: 100% !important"
                       @input="(val: any) => col.onInput ? col.onInput(row, String(val)) : (col.onChange && col.onChange(row))"
                     />
                     <el-select
                       v-else-if="col.editor === 'select'"
                       v-model="(row.protocol_mapping as any)[col.key]"
+                      :disabled="col.disabled ? col.disabled(row) : false"
                       :fit-input-width="true"
                       :filterable="true"
                       :clearable="true"
-                      :placeholder="col.placeholder || ''"
+                      :placeholder="getSelectPlaceholder(row, col)"
                       :popper-class="col.popperClass || 'inline-mapping-popper'"
                       @change="() => col.onChange && col.onChange(row)"
                     >
@@ -175,12 +177,14 @@ interface Props {
   viewMode: 'points' | 'mappings'
   editFilters: string[]
   isEditing: boolean
+  showActions?: boolean
   loading?: boolean
   channelProtocol: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
 }
 const props = withDefaults(defineProps<Props>(), {
   viewMode: 'mappings',
   editFilters: () => [],
+  showActions: true,
   loading: false,
 })
 
@@ -436,14 +440,24 @@ const mappingColumns = computed(() =>
   }),
 )
 
+const getSelectPlaceholder = (_row: PointInfo, col: any) => {
+  const key = String(col?.key || '')
+  if (key === 'function_code') return 'Select code'
+  if (key === 'data_type') return 'Select type'
+  if (key === 'byte_order') return 'Select order'
+  return col.placeholder || 'Select'
+}
+
 function onMappingFieldChange(item: any, field: string) {
   updateMappingChangeStatus(item)
-  validateAndSetMappingField(item, field)
+  validateMappingValidity(item)
+  refreshMappingFieldErrorsForRow(item)
 }
 function onFunctionCodeChange(item: any) {
   resetBitPositionIfNeeded(item)
   updateMappingChangeStatus(item)
-  validateAndSetMappingField(item, 'function_code')
+  validateMappingValidity(item)
+  refreshMappingFieldErrorsForRow(item)
 }
 
 // 当不满足位编辑能力时，重置 bit_position
@@ -469,7 +483,8 @@ const onMappingRegisterAddressInput = (item: PointInfo, str: string) => {
     }
   }
   updateMappingChangeStatus(item)
-  validateAndSetMappingField(item, 'register_address')
+  validateMappingValidity(item)
+  refreshMappingFieldErrorsForRow(item)
 }
 
 // 校验当前映射行有效性；返回 true 表示有效
@@ -485,9 +500,9 @@ function onMappingDataTypeChange(item: PointInfo) {
   resetBitPositionIfNeeded(item)
   adjustByteOrderForNewType(item)
   updateMappingChangeStatus(item)
-  // 同步更新与数据类型相关的字段错误
-  validateAndSetMappingField(item, 'data_type')
-  validateAndSetMappingField(item, 'byte_order')
+  validateMappingValidity(item)
+  // 数据类型联动后（byte_order/bit_position 可能变化），整行错误要立即重算
+  refreshMappingFieldErrorsForRow(item)
 }
 const getEditedData = () => {
   const updates: UpdateMappingPoint[] = []
@@ -880,14 +895,14 @@ defineExpose({
 
   // 字段状态颜色（保持原色用于区分）
   .field-modified {
-    color: #409eff !important;
+    color: #409eff;
     :deep(.el-input__inner),
     :deep(.el-input__wrapper),
     :deep(.el-input-number .el-input__inner),
     :deep(.el-input-number .el-input__wrapper),
     :deep(.el-select .el-select__placeholder),
     :deep(.el-select .el-select__wrapper) {
-      color: #409eff !important;
+      color: #409eff;
     }
     :deep(.el-input__wrapper),
     :deep(.el-select .el-select__wrapper) {
@@ -895,14 +910,14 @@ defineExpose({
     }
   }
   .field-added {
-    color: #67c23a !important;
+    color: #67c23a;
     :deep(.el-input__inner),
     :deep(.el-input__wrapper),
     :deep(.el-input-number .el-input__inner),
     :deep(.el-input-number .el-input__wrapper),
     :deep(.el-select .el-select__placeholder),
     :deep(.el-select .el-select__wrapper) {
-      color: #67c23a !important;
+      color: #67c23a;
     }
     :deep(.el-input__wrapper),
     :deep(.el-select .el-select__wrapper) {

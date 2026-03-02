@@ -8,7 +8,7 @@
         <!-- 桌面端：显示筛选框 -->
         <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
           <el-form-item label="Product Name:">
-            <el-select v-model="filters.product_name" placeholder="Please select product name" clearable filterable
+            <el-select v-model="filters.product_name" placeholder="Select product name" clearable filterable
               :append-to="levelSelectRef || undefined"
               @change="handleDesktopFilterChange('product_name', filters.product_name)">
               <el-option v-for="opt in productOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
@@ -293,7 +293,9 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dcdfe6;
 
       //   padding-bottom: 20px;
       :deep(.el-form-item) {
@@ -471,6 +473,9 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
         justify-content: flex-end;
       }
     }
+  }
+  :deep(.el-select){
+    width:180px;
   }
 }
 

@@ -212,7 +212,9 @@ watch(
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dcdfe6;
       //   padding-bottom: 20px;
       :deep(.el-form-item) {
         margin-bottom: 0;

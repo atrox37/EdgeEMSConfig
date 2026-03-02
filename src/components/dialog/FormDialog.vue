@@ -9,6 +9,7 @@
     :show-close="showClose"
     :before-close="beforeClose"
     :append-to-body="appendToBody"
+    :class="dialogClass"
     @close="handleClose"
   >
     <!-- dialog-head��ۣ�Ĭ����ʾ���� -->
@@ -34,17 +35,18 @@
 </template>
 
 <script setup lang="ts">
-import { withDefaults } from 'vue'
 
 const props = withDefaults(defineProps<{
   title: string
   width: number | string
   appendToBody?: boolean
+  dialogClass?: string
   closeOnPressEscape?: boolean
   showClose?: boolean
   beforeClose?: (done: () => void) => void
 }>(), {
   appendToBody: false,
+  dialogClass: '',
   closeOnPressEscape: true,
   showClose: true,
 })

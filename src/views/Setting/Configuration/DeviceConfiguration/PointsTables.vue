@@ -732,7 +732,7 @@ watch(
       right: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       z-index: 10;
       // 与 tab 标签对齐（tab 标签的高度通常是 40px 左右）
       height: 40px;

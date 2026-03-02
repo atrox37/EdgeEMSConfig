@@ -11,7 +11,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 
 .voltage-class {
   .el-select {
-    width: 180px;
+    // width: 180px;
 
     .el-select__wrapper {
       padding: 0 12px;
@@ -101,7 +101,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 }
 
 %menu-item-base {
-  height: 32px;
+  min-height: 32px;
   line-height: 32px;
   font-weight: 300;
   color: $text-color-primary;
@@ -309,16 +309,19 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
     border-color: $popper-border-color !important;
     z-index: 999;
   }
-  .el-popper__arrow {
-    top: -5px !important;
-  }
-  .el-popper__arrow,
-  .el-popper__arrow::before {
-    visibility: hidden;
-    height: 10px;
-    width: 10px;
-    border-radius: 0 !important;
-    border-width: 1px !important;
-  }
+  // .el-popper__arrow {
+  //   top: -5px !important;
+  // }
+  // .el-popper__arrow,
+  // .el-popper__arrow::before {
+  //   visibility: hidden;
+  //   height: 10px;
+  //   width: 10px;
+  //   border-radius: 0 !important;
+  //   border-width: 1px !important;
+  // }
+}
+.el-select__placeholder.is-transparent{
+  color:#a8abb2 !important;
 }
 

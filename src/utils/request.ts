@@ -188,10 +188,13 @@ const parseResponseData = async (response: Response, responseType?: RequestConfi
   if (response.status === 204) {
     return null
   }
+  // 只读取一次 body，避免 json 解析失败后再次读取导致 "body stream already read"
+  const rawText = await response.text()
+  if (!rawText) return null
   try {
-    return await response.json()
+    return JSON.parse(rawText)
   } catch {
-    return response.text()
+    return rawText
   }
 }
 
