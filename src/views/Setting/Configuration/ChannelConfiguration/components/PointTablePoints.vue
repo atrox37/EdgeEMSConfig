@@ -248,6 +248,7 @@ const pointColumns = computed(() =>
       (row as any).rowStatus === 'added' ||
       (row as any).isNewUnconfirmed ||
       (row as any).isImported,
+    showRealtimeColumns: props.showRealtimeColumns,
   }),
 )
 
@@ -269,6 +270,7 @@ interface Props {
   showActions?: boolean
   loading?: boolean
   channelProtocol?: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+  showRealtimeColumns?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   viewMode: 'points',
@@ -278,6 +280,7 @@ const props = withDefaults(defineProps<Props>(), {
   showActions: true,
   loading: false,
   channelProtocol: 'modbus_tcp',
+  showRealtimeColumns: true,
 })
 const emit = defineEmits<{
   'publish-change': [dirty: boolean]

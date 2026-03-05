@@ -1,30 +1,24 @@
 <template>
   <FormDialog ref="dialogRef" title="Assign Template" width="520px">
     <template #dialog-body>
-      <el-form :model="form" label-width="120px">
-        <el-form-item label="Channel:">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+        <el-form-item label="Channel:" prop="channel_name" required>
           <el-input :model-value="form.channel_name" disabled />
         </el-form-item>
-        <el-form-item label="Template:">
+        <el-form-item label="Template:" prop="template_id" required>
           <el-select
             v-model="form.template_id"
+            :fit-input-width="true"
             filterable
             clearable
             placeholder="Select template"
-            class="template-select"
-            popper-class="template-option-popper"
           >
             <el-option
-              v-for="template in templateOptions"
+              v-for="template in matchedTemplateOptions"
               :key="template.template_id"
               :label="template.name"
               :value="template.template_id"
-            >
-              <div class="template-option">
-                <div class="template-option__name">{{ template.name }}</div>
-                <div class="template-option__desc">{{ template.description || '-' }}</div>
-              </div>
-            </el-option>
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -37,8 +31,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import type { ChannelTemplateListItem } from '@/types/channelTemplates'
 
@@ -51,16 +46,28 @@ const emit = defineEmits<{
 }>()
 
 const dialogRef = ref<{ dialogVisible: boolean } | null>(null)
+const formRef = ref<FormInstance>()
 const form = ref({
   channel_id: 0,
   channel_name: '',
+  channel_protocol: '',
   template_id: null as number | null,
 })
+const rules: FormRules = {
+  channel_name: [{ required: true, message: 'Channel is required', trigger: 'change' }],
+  channel_protocol: [{ required: true, message: 'Channel protocol is required', trigger: 'change' }],
+  template_id: [{ required: true, message: 'Template is required', trigger: 'change' }],
+}
 
-const open = (payload: { channel_id: number; channel_name: string }) => {
+const matchedTemplateOptions = computed(() =>
+  props.templateOptions.filter(template => template.protocol === form.value.channel_protocol),
+)
+
+const open = (payload: { channel_id: number; channel_name: string; channel_protocol: string }) => {
   form.value = {
     channel_id: payload.channel_id,
     channel_name: payload.channel_name,
+    channel_protocol: payload.channel_protocol,
     template_id: null,
   }
   if (dialogRef.value) dialogRef.value.dialogVisible = true
@@ -70,15 +77,20 @@ const close = () => {
   if (dialogRef.value) dialogRef.value.dialogVisible = false
 }
 
-const submit = () => {
-  if (!form.value.template_id) {
-    ElMessage.warning('Template is required')
+const submit = async () => {
+  const valid = await formRef.value?.validate().then(() => true).catch(() => false)
+  if (!valid) return
+  const selectedTemplate = matchedTemplateOptions.value.find(
+    template => template.template_id === Number(form.value.template_id),
+  )
+  if (!selectedTemplate) {
+    ElMessage.warning('Template protocol must match channel protocol')
     return
   }
   emit('submit', {
     channel_id: form.value.channel_id,
     channel_name: form.value.channel_name,
-    template_id: form.value.template_id,
+    template_id: Number(form.value.template_id),
   })
 }
 
@@ -88,30 +100,4 @@ defineExpose({
 })
 </script>
 
-<style scoped lang="scss">
-:deep(.template-option-popper .el-select-dropdown__item) {
-  white-space: normal;
-}
-
-.template-option {
-  width: 100%;
-  line-height: 1.2;
-
-  .template-option__name {
-    font-size: 13px;
-    color: #303133;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .template-option__desc {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #909399;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-</style>
+<style scoped lang="scss"></style>

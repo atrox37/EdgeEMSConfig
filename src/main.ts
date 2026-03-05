@@ -15,6 +15,7 @@ import { useUserStore } from '@/stores/user'
 import { permissionDirective } from './utils/directives'
 import { installElMessage } from './plugins/elMessage'
 import { getApiConfig, setAxiosBaseURL } from './utils/apiConfig'
+import { installSelectOverflowTooltip } from './utils/selectTooltip'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -28,6 +29,7 @@ installElMessage(app)
 
 // 注册自定义指令 v-permission
 app.directive('permission', permissionDirective)
+installSelectOverflowTooltip()
 
 app.use(router)
 

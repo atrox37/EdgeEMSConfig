@@ -8,7 +8,7 @@
         <!-- 桌面端：显示筛选框 -->
         <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
           <el-form-item label="Product Name:">
-            <el-select v-model="filters.product_name" placeholder="Select product name" clearable filterable
+            <el-select v-model="filters.product_name" :fit-input-width="true" placeholder="Select product name" clearable filterable
               :append-to="levelSelectRef || undefined"
               @change="handleDesktopFilterChange('product_name', filters.product_name)">
               <el-option v-for="opt in productOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
@@ -26,7 +26,7 @@
               </template>
 <el-form :model="filters" label-width="120px" class="rule-management__filter-form">
   <el-form-item label="productName:" class="rule-management__filter-form-item-last">
-    <el-select v-model="filters.product_name" placeholder="Please select productName" clearable filterable
+    <el-select v-model="filters.product_name" :fit-input-width="true" placeholder="Please select productName" clearable filterable
       style="width: 100%" @change="handleFilterChange()">
       <el-option v-for="opt in productOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
     </el-select>
@@ -296,7 +296,9 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
       margin-bottom: 10px;
       padding-bottom: 10px;
       border-bottom: 1px solid #dcdfe6;
-
+      :deep(.el-select){
+    width:180px;
+  }
       //   padding-bottom: 20px;
       :deep(.el-form-item) {
         margin: 0;
@@ -474,9 +476,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
       }
     }
   }
-  :deep(.el-select){
-    width:180px;
-  }
+
 }
 
 

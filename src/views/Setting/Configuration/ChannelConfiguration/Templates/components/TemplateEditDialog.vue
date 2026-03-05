@@ -1,12 +1,12 @@
 <template>
   <FormDialog ref="dialogRef" title="Edit Template" width="520px">
     <template #dialog-body>
-      <el-form :model="form" label-width="110px">
-        <el-form-item label="Name:">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="Name:" prop="name" required>
           <el-input v-model="form.name" />
         </el-form-item>
         <el-form-item label="Description:">
-          <el-input v-model="form.description" type="textarea" :rows="3" />
+          <el-input v-model="form.description" type="textarea" :rows="3" resize="none" />
         </el-form-item>
       </el-form>
     </template>
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import type { ChannelTemplateListItem } from '@/types/channelTemplates'
 
@@ -28,11 +28,15 @@ const emit = defineEmits<{
 }>()
 
 const dialogRef = ref<{ dialogVisible: boolean } | null>(null)
+const formRef = ref<FormInstance>()
 const form = ref<{ template_id: number; name: string; description: string }>({
   template_id: 0,
   name: '',
   description: '',
 })
+const rules: FormRules = {
+  name: [{ required: true, message: 'Name is required', trigger: 'blur' }],
+}
 
 const open = (row: ChannelTemplateListItem) => {
   form.value = {
@@ -47,19 +51,13 @@ const close = () => {
   if (dialogRef.value) dialogRef.value.dialogVisible = false
 }
 
-const submit = () => {
-  if (!form.value.name.trim()) {
-    ElMessage.warning('Name is required')
-    return
-  }
-  if (!form.value.description.trim()) {
-    ElMessage.warning('Description is required')
-    return
-  }
+const submit = async () => {
+  const valid = await formRef.value?.validate().then(() => true).catch(() => false)
+  if (!valid) return
   emit('submit', {
     template_id: form.value.template_id,
     name: form.value.name.trim(),
-    description: form.value.description.trim(),
+    description: form.value.description,
   })
 }
 

@@ -6,11 +6,17 @@
           <span class="points-tables-page__channel-name">
             {{ templateDetail?.name || '' }} -&nbsp;
           </span>
-          <el-dropdown trigger="click" @command="handleDropdownCommand">
+          <el-dropdown trigger="click" :teleported="true" @command="handleDropdownCommand">
             <span class="points-tables-page__dropdown-trigger">
               {{ viewMode === 'points' ? 'Points Table' : 'Mappings Table' }}
               <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="points">Points Table</el-dropdown-item>
+                <el-dropdown-item command="mappings">Mappings Table</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
         </div>
       </template>
@@ -31,6 +37,7 @@
                   :is-editing="false"
                   :show-operation-column="false"
                   :show-actions="false"
+                  :show-realtime-columns="false"
                   :channel-protocol="templateProtocol"
                 />
               </div>
@@ -63,6 +70,7 @@
                   :is-editing="false"
                   :show-operation-column="false"
                   :show-actions="false"
+                  :show-realtime-columns="false"
                   :channel-protocol="templateProtocol"
                 />
               </div>
@@ -95,6 +103,7 @@
                   :is-editing="false"
                   :show-operation-column="false"
                   :show-actions="false"
+                  :show-realtime-columns="false"
                   :channel-protocol="templateProtocol"
                 />
               </div>
@@ -127,6 +136,7 @@
                   :is-editing="false"
                   :show-operation-column="false"
                   :show-actions="false"
+                  :show-realtime-columns="false"
                   :channel-protocol="templateProtocol"
                 />
               </div>
@@ -149,6 +159,7 @@
         </el-tabs>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -345,8 +356,17 @@ onMounted(() => {
   .template-detail-page__content {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     padding: 20px;
+  }
+
+  .rule-management__expand-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   :deep(.el-tabs) {
@@ -368,6 +388,19 @@ onMounted(() => {
 
   .template-detail-page__table-panel {
     height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  :deep(.point-table) {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(.point-table__wrapper) {
+    flex: 1;
     min-height: 0;
     overflow: hidden;
   }

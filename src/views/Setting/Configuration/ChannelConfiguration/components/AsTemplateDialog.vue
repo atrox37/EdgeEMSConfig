@@ -1,15 +1,18 @@
 <template>
   <FormDialog ref="dialogRef" title="As Template" width="560px">
     <template #dialog-body>
-      <el-form :model="form" label-width="120px">
-        <el-form-item label="Channel:">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+        <el-form-item label="Channel:" prop="channel_name" required>
           <el-input :model-value="form.channel_name" disabled />
         </el-form-item>
-        <el-form-item label="Name:">
+        <el-form-item label="Name:" prop="name" required>
           <el-input v-model="form.name" />
         </el-form-item>
+        <el-form-item label="Protocol:" prop="protocol" required>
+          <el-input :model-value="form.protocol" disabled />
+        </el-form-item>
         <el-form-item label="Description:">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input v-model="form.description" type="textarea" :rows="2" resize="none" />
         </el-form-item>
       </el-form>
     </template>
@@ -22,7 +25,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 
 const emit = defineEmits<{
@@ -39,6 +42,7 @@ const emit = defineEmits<{
 }>()
 
 const dialogRef = ref<{ dialogVisible: boolean } | null>(null)
+const formRef = ref<FormInstance>()
 const form = ref({
   channel_id: 0,
   channel_name: '',
@@ -46,6 +50,11 @@ const form = ref({
   description: '',
   protocol: '',
 })
+const rules: FormRules = {
+  channel_name: [{ required: true, message: 'Channel is required', trigger: 'change' }],
+  name: [{ required: true, message: 'Name is required', trigger: 'blur' }],
+  protocol: [{ required: true, message: 'Protocol is required', trigger: 'change' }],
+}
 
 const open = (payload: { channel_id: number; channel_name: string; protocol: string }) => {
   form.value = {
@@ -62,15 +71,9 @@ const close = () => {
   if (dialogRef.value) dialogRef.value.dialogVisible = false
 }
 
-const submit = () => {
-  if (!form.value.name.trim()) {
-    ElMessage.warning('Name is required')
-    return
-  }
-  if (!form.value.description.trim()) {
-    ElMessage.warning('Description is required')
-    return
-  }
+const submit = async () => {
+  const valid = await formRef.value?.validate().then(() => true).catch(() => false)
+  if (!valid) return
   emit('submit', {
     channel_id: form.value.channel_id,
     channel_name: form.value.channel_name,

@@ -145,6 +145,9 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 // Select �����˵���ʽ
 .el-select__popper.el-popper {
   @extend %popper-base;
+  width: var(--el-select-popper-width) !important;
+  min-width: var(--el-select-popper-width) !important;
+  max-width: var(--el-select-popper-width) !important;
   // background-color: rgba(84, 98, 140, 0.4) !important;
   // inset: 210px auto auto 396px !important;
   // top: 44px !important;
@@ -163,7 +166,10 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 
       .el-select-dropdown__item {
         @extend %menu-item-base;
-
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        height: auto;
         &.selected {
           background-color: $hover-bg !important;
           color: $text-color-primary;
@@ -191,6 +197,18 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
   .el-popper__arrow,
   .el-popper__arrow:before {
     display: none !important;
+  }
+}
+
+// Keep custom multi-line popper behavior where needed.
+.el-select__popper.el-popper.template-option-popper {
+  width: var(--el-select-popper-width) !important;
+  min-width: var(--el-select-popper-width) !important;
+  max-width: var(--el-select-popper-width) !important;
+
+  .el-select-dropdown .el-select-dropdown__list .el-select-dropdown__item {
+    white-space: normal;
+    text-overflow: unset;
   }
 }
 

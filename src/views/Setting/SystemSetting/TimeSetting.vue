@@ -13,6 +13,7 @@
           <div class="time-setting-form-item" ref="timeSettingFormItemRef">
             <el-select
               v-model="formData.timeZone"
+              :fit-input-width="true"
               placeholder="Please select"
               :append-to="timeSettingFormItemRef"
             >

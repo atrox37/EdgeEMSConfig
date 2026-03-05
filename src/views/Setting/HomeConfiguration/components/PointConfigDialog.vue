@@ -44,7 +44,7 @@
                 <div ref="formulaScrollRef" class="formula-lines">
                         <div v-for="(line, idx) in form.formulaLines" :key="line.id" class="formula-line">
                             <div class="formula-line__operator">
-                                <el-select v-if="idx > 0" v-model="line.operator" placeholder="op"
+                                <el-select v-if="idx > 0" v-model="line.operator" :fit-input-width="true" placeholder="op"
                                     class="operator-select">
                                     <el-option v-for="op in operatorOptions" :key="op.value" :label="op.label"
                                         :value="op.value" />
@@ -53,26 +53,26 @@
                             </div>
 
                             <div class="formula-line__inputs">
-                                <el-select v-model="line.type" placeholder="type" class="input-item">
+                                <el-select v-model="line.type" :fit-input-width="true" placeholder="type" class="input-item">
                                     <el-option v-for="item in typeOptions" :key="item.value" :label="item.label"
                                         :value="item.value" />
                                 </el-select>
 
                                 <template v-if="line.type === 'Channel'">
-                                    <el-select v-model="line.comsrv.channelId" placeholder="channel" class="input-item"
+                                    <el-select v-model="line.comsrv.channelId" :fit-input-width="true" placeholder="channel" class="input-item"
                                         filterable clearable
                                         @change="() => onChannelChange(line)">
                                         <el-option v-for="item in comsrvChannelOptions" :key="item.value"
                                             :label="item.label" :value="item.value" />
                                     </el-select>
-                                    <el-select v-model="line.comsrv.dataType" placeholder="data type"
+                                    <el-select v-model="line.comsrv.dataType" :fit-input-width="true" placeholder="data type"
                                         class="input-item"
                                         :disabled="!line.comsrv.channelId"
                                         @change="() => onChannelDataTypeChange(line)">
                                         <el-option v-for="item in comsrvDataTypeOptions" :key="item.value"
                                             :label="item.label" :value="item.value" />
                                     </el-select>
-                                    <el-select v-model="line.comsrv.pointId" placeholder="point" class="input-item"
+                                    <el-select v-model="line.comsrv.pointId" :fit-input-width="true" placeholder="point" class="input-item"
                                         filterable clearable
                                         :disabled="!line.comsrv.channelId || !line.comsrv.dataType">
                                         <el-option v-for="item in getComsrvPointOptionsForLine(line)" :key="item.value"
@@ -81,20 +81,20 @@
                                 </template>
 
                                 <template v-else-if="line.type === 'Instance'">
-                                    <el-select v-model="line.instance.instanceId" placeholder="instance"
+                                    <el-select v-model="line.instance.instanceId" :fit-input-width="true" placeholder="instance"
                                         class="input-item" filterable clearable
                                         @change="() => onInstanceChange(line)">
                                         <el-option v-for="item in instanceOptions" :key="item.value" :label="item.label"
                                             :value="item.value" />
                                     </el-select>
-                                    <el-select v-model="line.instance.dataType" placeholder="data type"
+                                    <el-select v-model="line.instance.dataType" :fit-input-width="true" placeholder="data type"
                                         class="input-item"
                                         :disabled="!line.instance.instanceId"
                                         @change="() => onInstanceDataTypeChange(line)">
                                         <el-option v-for="item in instanceDataTypeOptions" :key="item.value"
                                             :label="item.label" :value="item.value" />
                                     </el-select>
-                                    <el-select v-model="line.instance.pointId" placeholder="instance point"
+                                    <el-select v-model="line.instance.pointId" :fit-input-width="true" placeholder="instance point"
                                         class="input-item" filterable clearable
                                         :disabled="!line.instance.instanceId || !line.instance.dataType">
                                         <el-option v-for="item in getInstancePointOptionsForLine(line)" :key="item.value"

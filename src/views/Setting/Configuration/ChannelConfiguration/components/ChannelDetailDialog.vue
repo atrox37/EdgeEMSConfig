@@ -18,7 +18,7 @@
                 <span class="channel-detail__text">{{ form.id }}</span>
               </el-form-item>
               <el-form-item v-if="isAdd" label="ID Mode:" prop="channel_id_mode">
-                <el-select v-model="channelIdMode" placeholder="Please select mode">
+                <el-select v-model="channelIdMode" :fit-input-width="true" placeholder="Please select mode">
                   <el-option label="Auto" value="auto" />
                   <el-option label="Manual" value="manual" />
                 </el-select>
@@ -48,16 +48,18 @@
                 }}</span>
                   <el-select
                   v-else
-                    v-model="form.protocol"
-                    placeholder="Please select protocol"
-                  >
-                    <el-option
-                      v-for="option in PROTOCOL_OPTIONS"
-                      :key="option.value"
-                      :label="option.label"
-                      :value="option.value"
-                    />
-                  </el-select>
+                  v-model="form.protocol"
+                  :fit-input-width="true"
+                  :disabled="!isAdd"
+                  placeholder="Please select protocol"
+                >
+                  <el-option
+                    v-for="option in PROTOCOL_OPTIONS"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  />
+                </el-select>
                 
               </el-form-item>
               <el-form-item label="Enabled:" style="margin-right: 0" prop="enabled">
@@ -85,6 +87,7 @@
                   v-model="form.description"
                   type="textarea"
                   :rows="2"
+                  resize="none"
                   placeholder="Please enter description"
                 />
               </el-form-item>
@@ -281,6 +284,7 @@
               <el-form-item label="Level:" style="margin-right: 0" prop="logging.level" class="channel-detail__parameter-item">
                 <el-select
                   v-model="form.logging.level"
+                  :fit-input-width="true"
                   placeholder="Please select level"
                 >
                   <el-option label="Info" value="info" />

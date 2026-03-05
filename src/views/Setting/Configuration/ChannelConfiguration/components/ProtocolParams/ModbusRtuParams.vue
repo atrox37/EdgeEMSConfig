@@ -31,7 +31,7 @@
       <span v-if="!isEditing" class="protocol-params__text">{{
         (form.parameters as any).parity || '-'
       }}</span>
-      <el-select v-else v-model="(form.parameters as any).parity" placeholder="please enter parity">
+      <el-select v-else v-model="(form.parameters as any).parity" :fit-input-width="true" placeholder="please enter parity">
         <el-option label="N" value="N" />
         <el-option label="E" value="E" />
         <el-option label="O" value="O" />

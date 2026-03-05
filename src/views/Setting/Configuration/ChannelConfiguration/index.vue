@@ -16,21 +16,21 @@
               </template>
               <el-form :model="filters" label-width="100px" class="rule-management__filter-form">
                 <el-form-item label="Protocol:" class="rule-management__filter-form-item">
-                  <el-select v-model="filters.protocol" placeholder="Select protocol" clearable style="width: 100%"
+                  <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="Select protocol" clearable style="width: 100%"
                     :teleported="false" @change="handleFilterChange('protocol', filters.protocol)">
                     <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                       :value="option.value" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Enabled:" class="rule-management__filter-form-item">
-                  <el-select v-model="filters.enabled" placeholder="Select enabled status" clearable style="width: 100%"
+                  <el-select v-model="filters.enabled" :fit-input-width="true" placeholder="Select enabled status" clearable style="width: 100%"
                     :teleported="false" @change="handleFilterChange()">
                     <el-option label="Enabled" :value="true" />
                     <el-option label="Disabled" :value="false" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Connected:" class="rule-management__filter-form-item-last">
-                  <el-select v-model="filters.connected" placeholder="Select connected status" clearable
+                  <el-select v-model="filters.connected" :fit-input-width="true" placeholder="Select connected status" clearable
                     style="width: 100%" :teleported="false" @change="handleFilterChange()">
                     <el-option label="Connected" :value="true" />
                     <el-option label="Disconnected" :value="false" />
@@ -54,7 +54,7 @@
         <!-- 桌面端：显示筛选框 -->
         <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
           <el-form-item label="Protocol:">
-            <el-select v-model="filters.protocol" placeholder="select protocol" :teleported="false" clearable
+            <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="select protocol" :teleported="false" clearable
               @change="handleDesktopFilterChange('protocol', filters.protocol)">
               <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                 :value="option.value" />
@@ -80,7 +80,7 @@
           <img :src="tableRefreshIcon" alt="Reload" />
         </div>
       </div>
-      <div v-if="false" class="rule-management__search-form-second-row">
+      <div class="rule-management__search-form-second-row">
         <IconButton type="primary" :icon="sidebarSettingIcon" text="Template" custom-class="rule-management__btn"
           @click="handleTemplateManagement" />
       </div>
@@ -141,7 +141,7 @@
                   <img :src="tableDeleteIcon" />
                   <span class="rule-management__operation-text">Delete</span>
                 </div>
-                <el-dropdown v-if="false" trigger="click" placement="bottom-end" :teleported="true">
+                <el-dropdown trigger="click" placement="bottom-end" :teleported="true">
                   <div class="rule-management__operation-item rule-management__operation-item--more">
                     <el-icon>
                       <MoreFilled />
@@ -195,9 +195,9 @@
     <ChannelDetailDialog ref="channelDetailDialogRef" @submit="handleChannelDialogSubmit"
       @cancel="handleChannelDialogCancel" />
 
-    <AssignTemplateDialog v-if="false" ref="assignTemplateDialogRef" :template-options="templateOptions"
+    <AssignTemplateDialog ref="assignTemplateDialogRef" :template-options="templateOptions"
       @submit="submitAssignTemplate" />
-    <AsTemplateDialog v-if="false" ref="asTemplateDialogRef" @submit="submitAsTemplate" />
+    <AsTemplateDialog ref="asTemplateDialogRef" @submit="submitAsTemplate" />
   </div>
 </template>
 
@@ -435,6 +435,7 @@ const openAssignTemplateDialog = async (row: ChannelListItem) => {
   assignTemplateDialogRef.value?.open({
     channel_id: Number(row.id),
     channel_name: String(row.name || row.id),
+    channel_protocol: String(row.protocol || ''),
   })
 }
 

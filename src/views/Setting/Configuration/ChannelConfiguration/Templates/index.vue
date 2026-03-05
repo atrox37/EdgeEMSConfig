@@ -11,6 +11,7 @@
         <el-form-item label="Protocol:">
           <el-select
             v-model="protocolFilter"
+            :fit-input-width="true"
             clearable
             placeholder="Select protocol"
             @change="loadTemplates"
@@ -55,13 +56,13 @@
           </template>
           <template #default="{ row }">
             <div class="rule-management__operation">
-              <div class="rule-management__operation-item" @click="handleView(row)">
-                <img :src="buttonDetailIcon" />
-                <span class="rule-management__operation-text">Detail</span>
-              </div>
               <div class="rule-management__operation-item" @click="openEditDialog(row)">
-                <img :src="buttonPointsIcon" />
+                <img :src="buttonDetailIcon" />
                 <span class="rule-management__operation-text">Edit</span>
+              </div>
+              <div class="rule-management__operation-item" @click="handleView(row)">
+                <img :src="buttonPointsIcon" />
+                <span class="rule-management__operation-text">Points/Mappings</span>
               </div>
               <div class="rule-management__operation-item" @click="openApplyDialog(row)">
                 <img :src="buttonPointsIcon" />
@@ -136,7 +137,7 @@ const route = useRoute()
 const loading = ref(false)
 const protocolFilter = ref<string>('')
 const templateList = ref<ChannelTemplateListItem[]>([])
-const channelOptions = ref<Array<{ id: number; name: string }>>([])
+const channelOptions = ref<Array<{ id: number; name: string; protocol: string }>>([])
 const pagination = ref({
   page: 1,
   pageSize: 20,
@@ -189,6 +190,7 @@ const loadChannels = async () => {
     channelOptions.value = list.map((item: any) => ({
       id: Number(item.id),
       name: String(item.name || item.channel_name || item.id),
+      protocol: String(item.protocol || ''),
     }))
   }
 }
@@ -278,7 +280,7 @@ const openCreateDialog = () => {
 
 const submitCreate = async (
   payload:
-    | { mode: 'json'; name: string; description: string; protocol: string; json_text: string }
+    | { mode: 'json'; json_text: string }
     | { mode: 'channel'; name: string; description: string; protocol: string; channel_id: number },
 ) => {
   if (payload.mode === 'json') {
@@ -290,9 +292,9 @@ const submitCreate = async (
       return
     }
     const res = await createTemplate({
-      name: payload.name,
-      description: payload.description,
-      protocol: payload.protocol as any,
+      name: parsed.name,
+      description: parsed.description || '',
+      protocol: parsed.protocol as any,
       points_snapshot: parsed.points_snapshot || {},
       mappings_snapshot: parsed.mappings_snapshot || {},
     })
@@ -424,6 +426,7 @@ onMounted(async () => {
         font-size: 14px;
         color: #000000;
       }
+
     }
   }
 

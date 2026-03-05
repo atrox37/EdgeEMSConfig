@@ -31,6 +31,7 @@
               <el-form-item label="instance:">
                 <el-select
                   v-model="cardData.config.input.instance"
+                  :fit-input-width="true"
                   placeholder="instance"
                   filterable
                   @change="onInputInstanceChange"
@@ -46,6 +47,7 @@
               <el-form-item label="pointType:">
                 <el-select
                   v-model="cardData.config.input.pointType"
+                  :fit-input-width="true"
                   placeholder="point type"
                   :disabled="!cardData.config.input.instance"
                   @change="onInputPointTypeChange"
@@ -57,6 +59,7 @@
               <el-form-item label="point:">
                 <el-select
                   v-model="cardData.config.input.point"
+                  :fit-input-width="true"
                   placeholder="point"
                   filterable
                   :disabled="!cardData.config.input.instance || !cardData.config.input.pointType"
@@ -80,7 +83,7 @@
             </div>
             <div class="section__body period">
               <el-form-item label="period:">
-                <el-select v-model="cardData.config.period" placeholder="period">
+                <el-select v-model="cardData.config.period" :fit-input-width="true" placeholder="period">
                   <el-option label="Daily" value="daily" />
                   <el-option label="Weekly" value="weekly" />
                   <el-option label="Monthly" value="monthly" />
@@ -99,6 +102,7 @@
               <el-form-item label="instance:">
                 <el-select
                   v-model="cardData.config.output.instance"
+                  :fit-input-width="true"
                   placeholder="instance"
                   filterable
                   @change="onOutputInstanceChange"
@@ -114,6 +118,7 @@
               <el-form-item label="pointType:">
                 <el-select
                   v-model="cardData.config.output.pointType"
+                  :fit-input-width="true"
                   placeholder="point type"
                   :disabled="!cardData.config.output.instance"
                   @change="onOutputPointTypeChange"

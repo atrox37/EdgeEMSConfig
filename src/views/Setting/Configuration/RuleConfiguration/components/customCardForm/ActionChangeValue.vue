@@ -48,18 +48,18 @@
 
                 <!-- single 模式：先 instance -> pointType -> point -->
                 <div v-if="v.type !== 'combined'" class="variable-row__controls">
-                  <el-select v-model="v.instance_id" placeholder="instance" class="flex-item variable-row__select"
+                  <el-select v-model="v.instance_id" :fit-input-width="true" placeholder="instance" class="flex-item variable-row__select"
                     filterable @change="() => onVarInstanceChange(idx)">
                     <el-option v-for="opt in instanceOptions" :key="opt.value" :label="opt.label"
                       :value="opt.value as any" />
                   </el-select>
-                  <el-select v-model="v.pointType" placeholder="point type" class="flex-item variable-row__select"
+                  <el-select v-model="v.pointType" :fit-input-width="true" placeholder="point type" class="flex-item variable-row__select"
                     :disabled="!v.instance_id" @change="() => onVarPointTypeChange(idx)">
                     <el-option label="measurement" value="measurement" />
                     <el-option label="property" value="property" />
                     <el-option label="action" value="action" />
                   </el-select>
-                  <el-select v-model="v.point_id" placeholder="point" class="flex-item variable-row__select" filterable
+                  <el-select v-model="v.point_id" :fit-input-width="true" placeholder="point" class="flex-item variable-row__select" filterable
                     :disabled="!v.instance_id || !v.pointType" @change="() => onVarPointChange(idx)">
                     <el-option v-for="opt in getVarPointOptions(idx)" :key="opt.value" :label="opt.label"
                       :value="opt.value" />
@@ -69,43 +69,37 @@
                 <!-- combined：公式编辑器 -->
                 <div v-else class="variable-row__combined">
                   <div class="combined-row">
-                    <el-select v-model="v.formula[0]" class="variable-row__select" placeholder="variable or number"
+                    <el-select v-model="v.formula[0]" :fit-input-width="true" class="variable-row__select" placeholder="variable or number"
                       filterable allow-create default-first-option reserve-keyword
                       @change="(val: any) => onCombinedOperandChange(v, 0, val)">
                       <el-option v-for="opt in getVariableOptionsExcluding(idx)" :key="opt.value" :label="opt.label"
                         :value="opt.value as any">
-                        <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200"
-                          :teleported="true" popper-class="option-tooltip-popper">
-                          <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
-                            {{ opt.label }}
-                          </div>
-                        </el-tooltip>
+                        <div class="option-remind-row" :title="opt.tooltip || opt.label">
+                          {{ opt.label }}
+                        </div>
                       </el-option>
                     </el-select>
-                    <el-select v-model="v.formula[1]" class="variable-row__select" placeholder="op">
+                    <el-select v-model="v.formula[1]" :fit-input-width="true" class="variable-row__select" placeholder="op">
                       <el-option v-for="op in arithmeticOperatorOptions" :key="op" :label="op" :value="op" />
                     </el-select>
-                    <el-select v-model="v.formula[2]" class="variable-row__select" placeholder="variable or number"
+                    <el-select v-model="v.formula[2]" :fit-input-width="true" class="variable-row__select" placeholder="variable or number"
                       filterable allow-create default-first-option reserve-keyword
                       @change="(val: any) => onCombinedOperandChange(v, 2, val)">
                       <el-option v-for="opt in getVariableOptionsExcluding(idx)" :key="opt.value" :label="opt.label"
                         :value="opt.value as any">
-                        <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200"
-                          :teleported="true" popper-class="option-tooltip-popper">
-                          <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
-                            {{ opt.label }}
-                          </div>
-                        </el-tooltip>
+                        <div class="option-remind-row" :title="opt.tooltip || opt.label">
+                          {{ opt.label }}
+                        </div>
                       </el-option>
                     </el-select>
                   </div>
 
                   <div v-for="pairIdx in getCombinedExtraPairCount(v)" :key="`pair-${idx}-${pairIdx}`"
                     class="combined-row">
-                    <el-select v-model="v.formula[3 + (pairIdx - 1) * 2]" class="variable-row__select" placeholder="op">
+                    <el-select v-model="v.formula[3 + (pairIdx - 1) * 2]" :fit-input-width="true" class="variable-row__select" placeholder="op">
                       <el-option v-for="op in arithmeticOperatorOptions" :key="op" :label="op" :value="op" />
                     </el-select>
-                    <el-select v-model="v.formula[3 + (pairIdx - 1) * 2 + 1]" class="variable-row__select"
+                    <el-select v-model="v.formula[3 + (pairIdx - 1) * 2 + 1]" :fit-input-width="true" class="variable-row__select"
                       placeholder="variable or number" filterable allow-create default-first-option reserve-keyword
                       @change="
                         (val: any) =>
@@ -113,12 +107,9 @@
                       ">
                       <el-option v-for="opt in getVariableOptionsExcluding(idx)" :key="opt.value" :label="opt.label"
                         :value="opt.value as any">
-                        <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200"
-                          :teleported="true" popper-class="option-tooltip-popper">
-                          <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
-                            {{ opt.label }}
-                          </div>
-                        </el-tooltip>
+                        <div class="option-remind-row" :title="opt.tooltip || opt.label">
+                          {{ opt.label }}
+                        </div>
                       </el-option>
                     </el-select>
                     <el-button class="combined-row__delete" link
@@ -180,26 +171,20 @@
           </div>
           <div class="section__body rule simple">
             <div v-for="(r, rIdx) in cardData.config.rule" :key="`rule-${rIdx}`" class="rule-row-simple">
-              <el-select v-model="r.Variables" class="rule-row__select" placeholder="Variables" filterable>
+              <el-select v-model="r.Variables" :fit-input-width="true" class="rule-row__select" placeholder="Variables" filterable>
                 <el-option v-for="opt in singleVariableOptions" :key="opt.value" :label="opt.label" :value="opt.value">
-                  <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200" :teleported="true"
-                    popper-class="option-tooltip-popper">
-                    <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
-                      {{ opt.label }}
-                    </div>
-                  </el-tooltip>
+                  <div class="option-remind-row" :title="opt.tooltip || opt.label">
+                    {{ opt.label }}
+                  </div>
                 </el-option>
               </el-select>
               <span class="rule-row__eq">=</span>
-              <el-select v-model="r.value" class="rule-row__select" placeholder="value" filterable allow-create
+              <el-select v-model="r.value" :fit-input-width="true" class="rule-row__select" placeholder="value" filterable allow-create
                 default-first-option reserve-keyword @change="(val: any) => onRuleSimpleValueChange(r, val)">
                 <el-option v-for="opt in variableOptions" :key="opt.value" :label="opt.label" :value="opt.value">
-                  <el-tooltip :content="opt.tooltip || opt.label" placement="right" :show-after="200" :teleported="true"
-                    popper-class="option-tooltip-popper">
-                    <div class="option-tooltip-row" :title="opt.tooltip || opt.label">
-                      {{ opt.label }}
-                    </div>
-                  </el-tooltip>
+                  <div class="option-remind-row" :title="opt.tooltip || opt.label">
+                    {{ opt.label }}
+                  </div>
                 </el-option>
               </el-select>
               <el-button class="rule-row__delete" style="width: 32px !important"
@@ -1118,15 +1103,12 @@ watch(
       gap: 4px;
     }
 
-    .option-tooltip-row {
+    .option-remind-row {
       display: block;
       width: 100%;
-    }
-
-    :deep(.option-tooltip-popper) {
-      max-width: 360px;
-      white-space: normal;
-      word-break: break-word;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     @media (max-width: 1400px) {

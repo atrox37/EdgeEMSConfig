@@ -20,7 +20,7 @@
 
               <el-form-item label="Product Name:" prop="product_name">
                 <!-- 新增时可选，修改时只读 -->
-                <el-select v-if="isCreateMode" v-model="form.product_name" placeholder="Please select product"
+                <el-select v-if="isCreateMode" v-model="form.product_name" :fit-input-width="true" placeholder="Please select product"
                   filterable>
                   <el-option v-for="product in props.productOptions" :key="product.value" :label="product.label"
                     :value="product.value" />

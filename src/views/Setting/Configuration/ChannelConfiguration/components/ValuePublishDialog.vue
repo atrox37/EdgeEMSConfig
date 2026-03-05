@@ -10,6 +10,7 @@
             >
               <el-select
                 v-model="form.value"
+                :fit-input-width="true"
                 placeholder="Select"
                 :teleported="false"
                 append-to=".value-publish__boolean"

@@ -46,6 +46,28 @@ export const staticRoutes: RouteRecordRaw[] = [
         },
       },
       {
+        path: '/channelConfiguration/templates',
+        name: 'channelTemplates',
+        component: () =>
+          import('@/views/Setting/Configuration/ChannelConfiguration/Templates/index.vue'),
+        meta: {
+          title: 'Template Management',
+          activeNav: '/channelConfiguration',
+          hidden: true,
+        },
+      },
+      {
+        path: '/channelConfiguration/templates/detail',
+        name: 'channelTemplateDetail',
+        component: () =>
+          import('@/views/Setting/Configuration/ChannelConfiguration/Templates/Detail.vue'),
+        meta: {
+          title: 'Template Detail',
+          activeNav: '/channelConfiguration',
+          hidden: true,
+        },
+      },
+      {
         path: '/modelConfiguration',
         name: 'modelConfiguration',
         component: () =>

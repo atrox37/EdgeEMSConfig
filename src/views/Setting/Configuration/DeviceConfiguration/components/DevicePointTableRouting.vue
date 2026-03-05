@@ -370,6 +370,13 @@ async function ensureChannelPoints(channelId: number) {
     } else if (res && (res.telemetry || res.signal || res.control || res.adjustment)) {
       channelPointsCache.value[channelId] = res as unknown as PointInfoResponse
     }
+    // 点位缓存到位后，重新计算该通道下所有行的存在性与错误状态，避免旧错误残留
+    editPoints.value.forEach((row: any) => {
+      if (Number(row?.routing?.channel_id || 0) !== Number(channelId)) return
+      recomputeRoutingMeta(row)
+      validateRoutingValidity(row)
+      refreshRoutingFieldErrorsForRow(row)
+    })
   } catch {}
 }
 
@@ -401,6 +408,37 @@ function getFieldClass(item: any, fieldName: string) {
   const status = item.rowStatus
   if (status === 'modified' && item.modifiedFields?.includes(fieldName)) return 'field-modified'
   return ''
+}
+
+function recomputeRoutingMeta(item: any) {
+  if (!item) return
+  const chId = Number(item?.routing?.channel_id || 0)
+  const tp = String(item?.routing?.channel_type || '').trim() as PointType
+  const pointId = Number(item?.routing?.channel_point_id || 0)
+  const cache = channelPointsCache.value[chId]
+  const channelExists = chId > 0 ? props.channels?.some((c) => Number(c.id) === chId) ?? false : undefined
+
+  const nextMeta: { channelExists?: boolean; pointExists?: boolean } = {}
+  if (channelExists !== undefined) {
+    nextMeta.channelExists = channelExists
+  }
+
+  // 仅在“通道存在 + 类型存在 + 点位ID存在 + 已拿到缓存”时判定 pointExists，避免过早报错
+  if (channelExists && tp && pointId > 0 && cache) {
+    let list: any[] = []
+    if (tp === 'T') list = cache.telemetry || []
+    else if (tp === 'S') list = cache.signal || []
+    else if (tp === 'C') list = cache.control || []
+    else if (tp === 'A') list = cache.adjustment || []
+    nextMeta.pointExists = (list || []).some((p: any) => Number(p.point_id) === pointId)
+  } else {
+    nextMeta.pointExists = undefined
+  }
+
+  ;(item as any).__routingMeta = {
+    ...(item as any).__routingMeta,
+    ...nextMeta,
+  }
 }
 
 function onSelectChannel(item: any) {
@@ -482,10 +520,11 @@ function refreshRoutingFieldErrorsForList() {
   if (!Array.isArray(editPoints.value)) return
   editPoints.value.forEach((p: any) => refreshRoutingFieldErrorsForRow(p))
 }
-function onRoutingFieldChange(item: any, field: string) {
+function onRoutingFieldChange(item: any, _field: string) {
+  recomputeRoutingMeta(item)
   updateRoutingChangeStatus(item)
-  const msg = validateRoutingFieldOnly(item, field)
-  setRoutingFieldError(item, field, msg)
+  validateRoutingValidity(item)
+  refreshRoutingFieldErrorsForRow(item)
 }
 function updateRoutingChangeStatus(item: any) {
   const baseline = getOriginalBaselineByPointId(getPointId(item))

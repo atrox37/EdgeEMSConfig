@@ -51,6 +51,7 @@ export function getPointColumns(options: {
   isTA: boolean
   onFieldInput: (row: PointInfo, field: string) => void
   canEditPointId: (row: PointInfo) => boolean
+  showRealtimeColumns?: boolean
 }): PointColumn[] {
   const base: PointColumn[] = [
     {
@@ -88,7 +89,7 @@ export function getPointColumns(options: {
     },
   ]
 
-  if (!options.isEditing) {
+  if (!options.isEditing && options.showRealtimeColumns !== false) {
     base.push(
       {
         key: 'value',
