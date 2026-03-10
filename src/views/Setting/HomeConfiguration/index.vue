@@ -46,8 +46,9 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import HomeView from './HomeView/index.vue'
 import PointConfigDialog from './components/PointConfigDialog.vue'
 import type { PointConfigPayload } from './components/PointConfigDialog.vue'
-import { getHomepagePoints, updateHomepagePoint } from '@/api/homeConfiguration'
+import { getHomepagePoints, resetHomepageConfig, updateHomepagePoint } from '@/api/homeConfiguration'
 import type { HomepagePointItem } from '@/types/homeConfiguration'
+import { ElMessage } from 'element-plus'
 
 const DESIGN_WIDTH_PX = 1700
 const DESIGN_HEIGHT_PX = 995
@@ -88,6 +89,7 @@ const pointRecords = ref<PointRecord[]>([])
 const pointConfigs = reactive<Record<string, PointConfig>>({})
 const activePointId = ref<string | null>(null)
 const homepagePointsLoading = ref(false)
+const resetLoading = ref(false)
 
 /** 从 API 响应合并点位配置到 pointConfigs（使用固定 ID 1–19） */
 function mergeHomepagePointsFromApi(items: HomepagePointItem[]) {
@@ -104,9 +106,23 @@ function mergeHomepagePointsFromApi(items: HomepagePointItem[]) {
   }
 }
 
+function resetPointConfigsToDefaults() {
+  Object.keys(pointConfigs).forEach(key => {
+    delete pointConfigs[key]
+  })
+  for (const p of pointRecords.value) {
+    pointConfigs[p.id] = {
+      label: p.defaultLabel,
+      unit: p.defaultUnit,
+      ...(p.defaultIcon && { icon: p.defaultIcon }),
+    }
+  }
+}
+
 async function fetchHomepagePoints() {
   homepagePointsLoading.value = true
   try {
+    resetPointConfigsToDefaults()
     const res = await getHomepagePoints(100)
     if (res?.success && res?.data?.items?.length) {
       mergeHomepagePointsFromApi(res.data.items)
@@ -118,8 +134,18 @@ async function fetchHomepagePoints() {
   }
 }
 
-const handleRestore = () => {
-  // Style-only placeholder
+const handleRestore = async () => {
+  resetLoading.value = true
+  try {
+    const resetRes = await resetHomepageConfig()
+    if (!resetRes?.success) return
+    await fetchHomepagePoints()
+    ElMessage.success('Homepage configuration cleared')
+  } catch (e) {
+    console.warn('[HomeConfiguration] 清空首页配置失败:', e)
+  } finally {
+    resetLoading.value = false
+  }
 }
 
 const handleCardClick = (payload: { id: string; title: string }) => {

@@ -98,13 +98,13 @@
     <InstanceDetailDialog ref="instanceDetailDialogRef" :product-options="productOptions"
       @submit="fetchTableData(true)" />
 
-    <!-- Mappings 对话框（DeviceConfiguration 专用�?-->
+    <!-- Mappings 对话框（DeviceConfiguration 专用-->
     <!-- <MappingsDialog ref="MappingsDialogRef" /> -->
   </div>
 </template>
 
 <script setup lang="ts">
-// 正确引入SVG图标，避免部署后图片加载不出�?
+// 正确引入SVG图标，避免部署后图片加载不出
 import tableRefreshIcon from '@/assets/icons/table-refresh.svg'
 import tableSearchIcon from '@/assets/icons/table-search.svg'
 import userAddIcon from '@/assets/icons/user-add.svg'
@@ -144,7 +144,7 @@ const filterTriggerRef = ref<HTMLElement | null>(null)
 const showFilterPopover = ref(false)
 const router = useRouter()
 const ruleManagementRef = ref<HTMLElement | null>(null)
-// 筛选标签管�?
+// 筛选标签管
 interface FilterTag {
   key: string
   label: string
@@ -153,7 +153,7 @@ interface FilterTag {
 
 const activeFilterTags = ref<FilterTag[]>([])
 
-// 更新筛选标�?
+// 更新筛选标签
 const updateFilterTags = () => {
   activeFilterTags.value = []
   if (filters.product_name !== null && filters.product_name !== undefined && filters.product_name !== '') {
@@ -168,7 +168,7 @@ const updateFilterTags = () => {
 // 防抖定时器
 let debounceTimer: any = null
 
-// // 处理筛选变�?（移动端）
+// // 处理筛选变（移动端）
 // const handleFilterChange = (_key?: string, _value?: any) => {
 //   updateFilterTags()
 // }
@@ -191,7 +191,7 @@ const handleReload = () => {
   reloadFilters()
 }
 
-// 移除筛选标�?
+// 移除筛选标签
 const removeFilterTag = (key: string) => {
   if (key === 'product_name') {
     filters.product_name = ''
@@ -200,14 +200,14 @@ const removeFilterTag = (key: string) => {
   fetchTableData(true)
 }
 
-// 应用筛�?
+// 应用筛选
 const applyFilters = () => {
   updateFilterTags()
   showFilterPopover.value = false
   fetchTableData(true)
 }
 
-// 监听筛选变�?
+// 监听筛选变
 watch(() => filters.product_name, () => {
   updateFilterTags()
 }, { deep: true })
@@ -236,7 +236,7 @@ const currentConfigData = ref({
 
 // 添加规则
 const handleAddUser = () => {
-  // 设备实例新增：以实例名形式调�?open 并进入编辑态。这里传空字符串代表新建�?
+  // 设备实例新增：以实例名形式调open 并进入编辑态。这里传空字符串代表新建
   instanceDetailDialogRef.value?.open(null as any)
 }
 
@@ -245,7 +245,7 @@ const handleDetail = (row: DeviceInstanceBasic) => {
   instanceDetailDialogRef.value?.open(row.instance_id as any)
 }
 
-// 打开 Device Points/Mappings 对话�?
+// 打开 Device Points/Mappings 对话
 const openPointsDialog = (row: DeviceInstanceBasic) => {
   router.push({
     path: '/modelConfiguration/pointsTables',
@@ -480,7 +480,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
 }
 
 
-// // 媒体查询：小�?200px时隐藏桌面端筛选框，显示移动端筛选按�?
+// // 媒体查询：小200px时隐藏桌面端筛选框，显示移动端筛选按
 // @media (max-width: 1199px) {
 //   .voltage-class .rule-management {
 //     .rule-management__content {
@@ -497,7 +497,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
 //   }
 // }
 
-// // 媒体查询：大于等�?200px时显示桌面端筛选框，隐藏移动端筛选按�?
+// // 媒体查询：大于等200px时显示桌面端筛选框，隐藏移动端筛选按
 // @media (min-width: 1200px) {
 //   .voltage-class .rule-management {
 //     .rule-management__content {

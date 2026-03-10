@@ -1,0 +1,21 @@
+@use "@/assets/styles/_variables.scss" as *;
+
+.el-card {
+  border-radius: $border-radius-base;
+  border: 1px solid $border-color-white-10;
+  background: linear-gradient(180deg, $white-alpha-05, transparent);
+  box-shadow: $box-shadow-base;
+  color: $text-color-primary;
+
+  .el-card__header {
+    padding: 10px 12px;
+    border-bottom: 1px solid $border-color-white-10;
+    color: $text-color-primary;
+    font-weight: $font-weight-semibold;
+  }
+
+  .el-card__body {
+    color: $text-color-primary;
+    padding: 10px 12px;
+  }
+}

@@ -1,5 +1,18 @@
 import { Request, cancelPendingRequestsByUrl } from '@/utils/request'
 
+export interface NetworkConfigResponse {
+  dhcp: boolean
+  ip: string
+  subnet_mask: string
+  gateway: string
+  dns1: string
+  dns2: string
+}
+
+export interface NetworkConfigRequest extends NetworkConfigResponse {
+  lan: 1 | 2 | 3 | 4
+}
+
 export const importConfigFile = (formData: FormData) => {
   // 不显式设置 Content-Type，让请求层自动为 FormData 生成 multipart/form-data; boundary=...
   return Request.post('/api/v1/config/import', formData)
@@ -23,4 +36,28 @@ export const abortUpgrade = () => {
 
 export const cancelUpgradeUpload = () => {
   cancelPendingRequestsByUrl('/api/v1/config/upgrade', 'post')
+}
+
+export const getNetworkConfig = (lan: 1 | 2 | 3 | 4) => {
+  return Request.get<NetworkConfigResponse>('/api/v1/network', { lan })
+}
+
+export const updateNetworkConfig = (payload: NetworkConfigRequest) => {
+  return Request.put('/api/v1/network', payload)
+}
+
+export const applyNetworkConfig = () => {
+  return Request.post('/api/v1/network/apply', {})
+}
+
+export const cancelNetworkGetRequests = () => {
+  cancelPendingRequestsByUrl('/api/v1/network', 'get')
+}
+
+export const cancelNetworkUpdateRequests = () => {
+  cancelPendingRequestsByUrl('/api/v1/network', 'put')
+}
+
+export const cancelNetworkApplyRequests = () => {
+  cancelPendingRequestsByUrl('/api/v1/network/apply', 'post')
 }

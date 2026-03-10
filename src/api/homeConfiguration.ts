@@ -27,3 +27,10 @@ export const updateHomepagePoint = (
 ) => {
   return Request.put(`${HOMEPAGE_API}/${pointId}`, data)
 }
+
+/**
+ * 清空首页配置（恢复为空配置）
+ */
+export const resetHomepageConfig = () => {
+  return Request.post(`${HOMEPAGE_API}/reset`, {})
+}

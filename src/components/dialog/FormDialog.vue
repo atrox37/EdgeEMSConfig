@@ -27,7 +27,7 @@
       <slot name="dialog-body"> </slot>
     </template>
 
-    <!-- dialog-footer��ۣ�Ĭ����ʾ�ײ���ť -->
+    <!-- dialog-footer插槽，默认显示底部按钮 -->
     <template #footer>
       <slot name="dialog-footer"> </slot>
     </template>
@@ -57,12 +57,12 @@ const emit = defineEmits<{
 
 const dialogVisible = ref(false)
 
-// �����ر��¼�
+// 关闭弹窗
 const handleClose = () => {
   emit('close')
 }
 
-// ��¶����������
+// 暴露弹窗
 defineExpose({
   dialogVisible,
 })

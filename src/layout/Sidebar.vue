@@ -46,7 +46,7 @@ const globalStore = useGlobalStore()
 const route = useRoute()
 const router = useRouter()
 
-// �Ӿ�̬·���л�ȡ�����ֵ���·�����ڲ����
+// 从静态路由中获取有效的路由列表
 
 const filterRoutesList = computed(() => {
   const mainRoute = router.getRoutes().find((r) => r.name === 'main')
@@ -55,7 +55,7 @@ const filterRoutesList = computed(() => {
 
 const activeMenuPath = ref<string>('/channelConfiguration')
 
-// ����·�ɱ仯�����¼���Ĳ˵�
+// 路由变化时，更新激活菜单路径
 
 watch(
   route,
@@ -104,7 +104,7 @@ watch(
     }
   }
 
-  // Monarch Logo ����
+  // Monarch Logo
   .sidebar__logo-container {
     width: 100%;
     display: flex;
@@ -144,7 +144,7 @@ watch(
 
   .sidebar__nav {
     flex: 1;
-    padding: 30px 16px 0 16px; // �ò˵�ƫ��һЩ
+    padding: 30px 16px 0 16px; // 顶部偏移一点
     overflow-y: auto;
     :deep(.el-menu-item) {
       height: 36px;
@@ -175,15 +175,15 @@ watch(
   }
 
   .sidebar__menu-text {
-    font-weight: $font-weight-semibold; // ��������
-    font-size: $font-size-small; // ��С����
+    font-weight: $font-weight-semibold; // 字体加粗
+    font-size: $font-size-small; // 字体大小
   }
 
   .sidebar__subMenu-title {
     font-family: $font-family-base;
-    font-weight: $font-weight-semibold; // ��������
+    font-weight: $font-weight-semibold; // 字体加粗
     font-style: normal;
-    font-size: $font-size-small; // ��С����
+    font-size: $font-size-small; // 字体大小
     letter-spacing: 0%;
     color: $secondary-color;
   }

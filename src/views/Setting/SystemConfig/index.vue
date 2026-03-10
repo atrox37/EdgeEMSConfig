@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="system-configuration">
     <div class="system-configuration__header">
       <h2 class="system-configuration__title">System Config</h2>
@@ -8,7 +8,24 @@
       <el-card class="system-configuration__card system-configuration__card--fixed">
         <template #header>
           <div class="system-configuration__card-header">
-            <span>Configuration File Management</span>
+            <span class="system-configuration__card-title">Network Management</span>
+            <span class="system-configuration__card-desc">Configure wired LAN IP, mask, gateway and DNS.</span>
+          </div>
+        </template>
+        <div class="system-configuration__card-body">
+          <div class="system-configuration__actions">
+            <el-button type="primary" @click="openNetworkConfigDialog">
+              Configure Wired Network
+            </el-button>
+          </div>
+        </div>
+      </el-card>
+
+      <el-card class="system-configuration__card system-configuration__card--fixed">
+        <template #header>
+          <div class="system-configuration__card-header">
+            <span class="system-configuration__card-title">Configuration File Management</span>
+            <span class="system-configuration__card-desc">Import or export all system configuration files.</span>
           </div>
         </template>
         <div class="system-configuration__card-body">
@@ -29,7 +46,8 @@
       >
         <template #header>
           <div class="system-configuration__card-header">
-            <span>Firmware Upgrade</span>
+            <span class="system-configuration__card-title">Firmware Upgrade</span>
+            <span class="system-configuration__card-desc">Upload and apply a firmware package on device.</span>
           </div>
         </template>
         <div class="system-configuration__card-body">
@@ -92,6 +110,8 @@
       style="display: none"
       @change="handleConfigFileSelect"
     />
+
+    <NetworkConfigDialog ref="networkConfigDialogRef" />
   </div>
 </template>
 
@@ -106,8 +126,10 @@ import {
   importConfigFile,
   uploadUpgradePackage,
 } from '@/api/systemConfig'
+import NetworkConfigDialog from './components/NetworkConfigDialog.vue'
 
 const configFileInputRef = ref<HTMLInputElement>()
+const networkConfigDialogRef = ref<InstanceType<typeof NetworkConfigDialog> | null>(null)
 const configImportLoading = ref(false)
 const configExportLoading = ref(false)
 
@@ -198,6 +220,10 @@ const handleConfigImport = () => {
     configFileInputRef.value.value = ''
   }
   configFileInputRef.value?.click()
+}
+
+const openNetworkConfigDialog = () => {
+  networkConfigDialogRef.value?.open()
 }
 
 const handleConfigFileSelect = async (event: Event) => {
@@ -392,9 +418,22 @@ onUnmounted(() => {
 }
 
 .system-configuration__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.system-configuration__card-title {
   font-weight: $font-weight-semibold;
   font-size: $font-size-base;
   color: $text-color-primary;
+}
+
+.system-configuration__card-desc {
+  font-size: $font-size-small;
+  color: $text-color-secondary;
+  font-weight: $font-weight-normal;
 }
 
 .system-configuration__card--expand {
@@ -498,7 +537,7 @@ onUnmounted(() => {
   font-size: $font-size-small;
   color: $text-color-secondary;
 }
-:deep(.el-card__body){
-  height: calc(100% - 57px);
-}
+// :deep(.el-card__body){
+//   height: calc(100% - 57px);
+// }
 </style>
