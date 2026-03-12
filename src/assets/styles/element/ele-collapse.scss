@@ -4,6 +4,7 @@
   .el-collapse {
     border: none;
     color: $text-color-primary;
+
     .el-collapse-item__header {
       background-color: $bg-color-input;
       border: $border-width-base solid;
@@ -14,12 +15,15 @@
       font-size: $font-size-medium;
       color: $text-color-primary;
       font-weight: $font-weight-semibold;
+
       .el-collapse-item__title {
         padding-left: 10px;
       }
+
       .el-collapse-item__header-text {
         color: $text-color-primary;
       }
+
       .el-collapse-item__arrow {
         color: $text-color-primary;
         font-size: $font-size-medium;
@@ -27,19 +31,28 @@
         margin: 0 $spacing-md;
       }
     }
+
     .el-collapse-item__wrap {
       background-color: $bg-color-input;
       border: none;
+
       .el-collapse-item__content {
         padding-bottom: 10px;
         font-style: $font-size-medium;
       }
     }
   }
+
   .el-tabs {
     color: $text-color-primary;
+
     .el-tabs__header {
       margin: 0 0 10px;
+
+      .el-tabs__item:last-child {
+        border-right: none !important;
+      }
+
       &.is-top {
         height: 40px;
         // border-bottom: 0px solid rgba(255, 255, 255, 0.4);
@@ -49,34 +62,40 @@
             height: $border-width-medium;
             background-color: $border-color-gray-light;
           }
+
           .el-tabs__nav-scroll {
             .el-tabs__nav {
               height: $height-lg;
               line-height: $height-lg;
+
               &.is-top {
                 border: $border-width-medium solid $border-color-gray-light;
-                border-radius: $border-radius-base;
-                border-bottom: none;
+                border-radius: 0;
+                // border-bottom: none;
               }
+
               .el-tabs__active-bar {
                 display: none;
               }
+
               .el-tabs__item {
                 color: $text-color-primary;
                 font-size: $font-size-base;
-                height: $height-lg;
-                line-height: $height-lg;
+                height: calc($height-lg - $border-width-medium * 2);
+                line-height: calc($height-lg - $border-width-medium * 2);
                 padding: 0 $spacing-md;
                 // min-width: 100px;
-                border-left: $border-width-base solid $border-color-gray-light;
-                border-bottom: $border-width-base solid transparent;
+                border-right: $border-width-medium solid $border-color-gray-light;
+
+                // border-bottom: $border-width-base solid transparent;
                 // background-color: $bg-color-transparent-white-10;
-                &::first-child {
-                  border-left: none;
+                &::last-child {
+                  border-right: none;
                 }
+
                 &.is-active {
                   background-color: $primary-color;
-                  border-bottom: $border-width-medium solid $border-color-gray-light;
+                  // border-bottom: $border-width-medium solid $border-color-gray-light;
                   color: $white-alpha-100;
                 }
               }
@@ -87,4 +106,3 @@
     }
   }
 }
-
