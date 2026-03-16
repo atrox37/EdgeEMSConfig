@@ -14,16 +14,17 @@ export interface NetworkConfigRequest extends NetworkConfigResponse {
 }
 
 export const importConfigFile = (formData: FormData) => {
-  // 不显式设置 Content-Type，让请求层自动为 FormData 生成 multipart/form-data; boundary=...
-  return Request.post('/api/v1/config/import', formData)
+  return Request.post('/api/v1/config/import', formData, {
+    timeout: 60 * 1000,
+  })
 }
 
 export const downloadConfigExport = (filename: string) => {
-  return Request.download('/api/v1/config/export', {}, filename)
+  return Request.download('/api/v1/config/export', {}, filename, { timeout: 60 * 1000 })
 }
 
 export const uploadUpgradePackage = (file: File, config: Record<string, any> = {}) => {
-  return Request.upload('/api/v1/config/upgrade', file, {}, { timeout: 10 * 60 * 1000, ...config })
+  return Request.upload('/api/v1/config/upgrade', file, {}, { timeout: 20 * 60 * 1000, ...config })
 }
 
 export const getUpgradeStatus = () => {

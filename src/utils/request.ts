@@ -286,6 +286,70 @@ const service = {
   },
 }
 
+const isInvalidArrayLengthError = (err: any) =>
+  err?.message === 'Invalid array length' || String(err?.message || '').includes('Invalid array length')
+
+const performRequestWithNativeFetch = async (
+  fullUrl: string,
+  config: RequestConfig,
+  body: BodyInit | undefined,
+): Promise<HttpResponse> => {
+  const method = (config.method || 'get').toUpperCase()
+  const headers = new Headers()
+  if (config.headers) {
+    Object.entries(config.headers).forEach(([k, v]) => {
+      if (v != null && v !== '') headers.set(k, String(v))
+    })
+  }
+  if (body instanceof FormData) {
+    headers.delete('Content-Type')
+  }
+
+  const controller = new AbortController()
+  const timeoutId =
+    config.timeout && config.timeout > 0
+      ? setTimeout(() => controller.abort(), config.timeout)
+      : null
+  if (config.signal) {
+    config.signal.addEventListener('abort', () => controller.abort())
+  }
+
+  const response = await fetch(fullUrl, {
+    method,
+    headers,
+    body,
+    signal: controller.signal,
+  })
+
+  if (timeoutId) clearTimeout(timeoutId)
+
+  const responseData = await parseResponseData(response, config.responseType)
+  const resultHeaders: Record<string, string> = {}
+  response.headers.forEach((v, k) => {
+    resultHeaders[k] = v
+  })
+
+  const normalizedResponse: HttpResponse = {
+    data: responseData,
+    status: response.status,
+    statusText: response.statusText || '',
+    headers: resultHeaders,
+    config,
+    request: { responseType: config.responseType },
+    url: response.url || fullUrl,
+  }
+
+  if (normalizedResponse.status < 200 || normalizedResponse.status >= 300) {
+    const error: any = new Error(`HTTP error ${normalizedResponse.status}`)
+    error.response = normalizedResponse
+    error.config = config
+    error.request = normalizedResponse.request
+    throw error
+  }
+
+  return normalizedResponse
+}
+
 const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
   const method = (config.method || 'get').toUpperCase()
   const baseURL = config.baseURL || ''
@@ -293,7 +357,7 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
   const fullUrl = appendQueryParams(joinUrl(baseURL, url), config.params)
   const body = method === 'GET' || method === 'DELETE' ? undefined : buildBody(config.data)
 
-  try {
+  const doRequest = async (): Promise<HttpResponse> => {
     const response = await httpFetch(fullUrl, {
       method,
       headers: config.headers,
@@ -323,6 +387,10 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
     }
 
     return normalizedResponse
+  }
+
+  try {
+    return await doRequest()
   } catch (error: any) {
     if (isRequestCanceled(error)) {
       error.config = config
@@ -334,6 +402,29 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
       error.config = config
       error.request = { responseType: config.responseType }
       throw error
+    }
+
+    if (
+      isInvalidArrayLengthError(error) &&
+      body instanceof FormData &&
+      ['POST', 'PUT', 'PATCH'].includes(method)
+    ) {
+      console.warn('[request] Tauri httpFetch failed with Invalid array length, retrying with native fetch')
+      try {
+        return await performRequestWithNativeFetch(fullUrl, config, body)
+      } catch (fallbackError: any) {
+        if (isRequestCanceled(fallbackError)) {
+          fallbackError.config = config
+          fallbackError.request = { responseType: config.responseType }
+          throw fallbackError
+        }
+        const wrappedError: any = new Error(
+          fallbackError?.message || error?.message || 'Network request failed',
+        )
+        wrappedError.config = config
+        wrappedError.request = { responseType: config.responseType }
+        throw wrappedError
+      }
     }
 
     const wrappedError: any = new Error(error?.message || 'Network request failed')
@@ -860,13 +951,20 @@ class Request {
    * @param url 下载地址（已包含完整路径，如 /api/v1/export 或 /alarmApi/export）
    * @param params 请求参数
    * @param filename 文件名
+   * @param config 额外请求配置（如 timeout）
    */
-  static async download(url: string, params?: any, filename?: string): Promise<void> {
+  static async download(
+    url: string,
+    params?: any,
+    filename?: string,
+    config?: RequestConfig,
+  ): Promise<void> {
     try {
       const response = await service.get(url, {
         params,
         responseType: 'blob',
         showErrorMessage: false,
+        ...config,
       })
       console.log('response', response)
       // 创建blob链接

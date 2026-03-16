@@ -17,5 +17,6 @@
   .el-card__body {
     color: $text-color-primary;
     padding: 10px 12px;
+    height: calc(100% - 41px);
   }
 }

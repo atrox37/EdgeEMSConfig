@@ -80,14 +80,11 @@
               >
                 Abort Upgrade
               </el-button>
+              <span v-if="upgradeUploadLoading" class="system-configuration__upload-hint-container">
+                <el-icon class="system-configuration__upload-hint-icon"><Warning /></el-icon> <span class="system-configuration__upload-hint-text">Please do not close the window while the upgrade is running.</span>
+              </span>
             </div>
 
-            <div v-if="upgradeProgressVisible" class="system-configuration__upload-progress">
-              <el-progress :percentage="upgradeUploadProgress" :stroke-width="6" />
-              <div class="system-configuration__upload-progress-text">
-                {{ upgradeUploadProgressText }}
-              </div>
-            </div>
           </div>
 
           <div v-if="upgradeStatusVisible" class="system-configuration__upgrade-status">
@@ -95,8 +92,7 @@
               <span>Upgrade Logs</span>
             </div>
             <div ref="upgradeStatusBodyRef" class="system-configuration__upgrade-status-body">
-              <!-- <div class="system-configuration__upgrade-status-message">{{ upgradeStatusMessage }}</div> -->
-              <pre v-if="upgradeStatusLog" class="system-configuration__upgrade-status-log">{{ upgradeStatusLog }}</pre>
+              <pre v-if="upgradeStatusLog" ref="upgradeStatusLogRef" class="system-configuration__upgrade-status-log">{{ upgradeStatusLog }}</pre>
             </div>
           </div>
         </div>
@@ -127,7 +123,7 @@ import {
   uploadUpgradePackage,
 } from '@/api/systemConfig'
 import NetworkConfigDialog from './components/NetworkConfigDialog.vue'
-
+import { Warning } from '@element-plus/icons-vue'
 const configFileInputRef = ref<HTMLInputElement>()
 const networkConfigDialogRef = ref<InstanceType<typeof NetworkConfigDialog> | null>(null)
 const configImportLoading = ref(false)
@@ -141,11 +137,9 @@ const upgradeStatusVisible = ref(false)
 // const upgradeStatusMessage = ref('')
 const upgradeStatusLog = ref('')
 const upgradeStatusBodyRef = ref<HTMLElement | null>(null)
+const upgradeStatusLogRef = ref<HTMLElement | null>(null)
 const upgradeStatusTimer = ref<number | null>(null)
 const upgradeStatusPolling = ref(false)
-const upgradeUploadProgress = ref(0)
-const upgradeUploadProgressText = ref('')
-const upgradeProgressVisible = ref(false)
 const upgradeAbortTriggered = ref(false)
 
 const resetUpgradeSelection = () => {
@@ -153,11 +147,6 @@ const resetUpgradeSelection = () => {
   upgradeFileList.value = []
 }
 
-const resetUpgradeProgress = () => {
-  upgradeUploadProgress.value = 0
-  upgradeUploadProgressText.value = ''
-  upgradeProgressVisible.value = false
-}
 
 const clearUpgradeStatus = () => {
   // upgradeStatusMessage.value = ''
@@ -187,18 +176,21 @@ const startUpgradeStatusPolling = () => {
       if (res?.success) {
         const data = res.data || {}
         const status = String(data.status || '').toLowerCase()
-        // upgradeStatusMessage.value = status === 'finished' ? 'Upgrade finished' : ''
         upgradeStatusLog.value = String(data.log_preview || '')
+        await nextTick()
+        const scrollEl = upgradeStatusLogRef.value ?? upgradeStatusBodyRef.value
+        if (scrollEl) {
+          scrollEl.scrollTop = scrollEl.scrollHeight
+        }
         if (status === 'finished') {
           stopUpgradeStatusPolling()
           upgradeUploadLoading.value = false
-          resetUpgradeProgress()
           ElMessage.success('Upgrade finished')
           return
         }
       }
     } catch (error: any) {
-      // upgradeStatusMessage.value = ''
+      // ignore
     }
     if (upgradeStatusPolling.value) {
       upgradeStatusTimer.value = window.setTimeout(fetchStatus, 2000)
@@ -209,9 +201,9 @@ const startUpgradeStatusPolling = () => {
 
 watch(upgradeStatusLog, async () => {
   await nextTick()
-  const container = upgradeStatusBodyRef.value
-  if (container) {
-    container.scrollTop = container.scrollHeight
+  const scrollEl = upgradeStatusLogRef.value ?? upgradeStatusBodyRef.value
+  if (scrollEl) {
+    scrollEl.scrollTop = scrollEl.scrollHeight
   }
 })
 
@@ -315,34 +307,20 @@ const handleUpgradeUpload = async () => {
       }
     )
 
-    ElMessage.warning('Please do not close the window while the upgrade is running.')
     upgradeUploadLoading.value = true
     upgradeAbortTriggered.value = false
     upgradeStatusVisible.value = true
     clearUpgradeStatus()
-    resetUpgradeProgress()
-    upgradeProgressVisible.value = true
-    upgradeUploadProgressText.value = 'Uploading... 0%'
 
-    const response = await uploadUpgradePackage(file, {
-      onUploadProgress: (event: any) => {
-        if (!event?.total) return
-        const percent = Math.min(100, Math.round((event.loaded / event.total) * 100))
-        upgradeUploadProgress.value = percent
-        upgradeUploadProgressText.value = `Uploading... ${percent}%`
-      },
-    })
+    const response = await uploadUpgradePackage(file)
 
     if (response.success) {
-      ElMessage.success(response.message || 'Upgrade task started')
-      upgradeProgressVisible.value = false
       startUpgradeStatusPolling()
       resetUpgradeSelection()
     } else {
       ElMessage.error(response.message || 'Upload failed')
       stopUpgradeStatusPolling()
       upgradeUploadLoading.value = false
-      resetUpgradeProgress()
     }
   } catch (error: any) {
     const isCanceled =
@@ -355,7 +333,6 @@ const handleUpgradeUpload = async () => {
     }
     stopUpgradeStatusPolling()
     upgradeUploadLoading.value = false
-    resetUpgradeProgress()
   } finally {
     resetUpgradeSelection()
   }
@@ -370,7 +347,6 @@ const handleUpgradeAbort = async () => {
     await abortUpgrade()
     ElMessage.success('Upgrade aborted')
     upgradeUploadLoading.value = false
-    resetUpgradeProgress()
   } catch (error: any) {
     console.error('Abort failed:', error)
     ElMessage.error(error.message || 'Abort failed')
@@ -466,26 +442,32 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
+.system-configuration__upload-hint-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: $font-size-small;
+  color: $warning-color;
+  // flex-basis: 100%;
+}
+// .system-configuration__upload-hint {
+//   font-size: $font-size-small;
+//   color: $warning-color;
+//   flex-basis: 100%;
+//   // margin-top: 4px;
+//   .system-configuration__upload-hint-icon {
+//     font-size: $font-size-small;
+//     color: $warning-color;
+//     // margin-right: 4px;
+//   }
+// }
 
 .system-configuration__upload {
   width: auto;
   align-self: flex-start;
-}
-
-.system-configuration__upload-progress {
-  width: 100%;
-  max-width: 420px;
-}
-
-:deep(.system-configuration__upload-progress .el-progress-bar__inner)  {
-  background-color: $primary-color;
-}
-
-.system-configuration__upload-progress-text {
-  margin-top: 6px;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
 }
 
 .system-configuration__upgrade-status {
@@ -508,8 +490,8 @@ onUnmounted(() => {
 
 .system-configuration__upgrade-status-body {
   padding: 12px 14px;
-  // height: calc(100% - 41px);
-  flex:1;
+  height: calc(100% - 41px);
+  // flex:1;
   overflow: auto;
 }
 

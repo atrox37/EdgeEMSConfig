@@ -86,7 +86,7 @@
             Select Key File (.pem/.key)
           </el-button>
           <div v-if="selectedKeyPath" class="file-info">
-            Selected: {{ selectedKeyPath.split(/[/\\]/).pop() }}
+            Selected: <span class="file-name">{{ selectedKeyPath.split(/[/\\]/).pop() }}</span>
           </div>
         </el-form-item>
 
@@ -100,7 +100,7 @@
             Select File (.run)
           </el-button>
           <div v-if="selectedFileName" class="file-info">
-            Selected: {{ selectedFileName }}
+            Selected: <span class="file-name">{{ selectedFileName }}</span>
           </div>
         </el-form-item>
 
@@ -461,9 +461,13 @@ defineExpose({
     }
   }
   .file-info {
-    margin-top: 8px;
+    // margin-top: 8px;
     font-size: 12px;
     color: $text-color-secondary;
+    .file-name {
+      color: $text-color-primary;
+      font-weight: bold;
+    }
   }
 
   .progress-section {

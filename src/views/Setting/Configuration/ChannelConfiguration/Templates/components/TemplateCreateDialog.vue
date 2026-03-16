@@ -4,20 +4,6 @@
       <el-tabs v-model="mode" class="create-tabs">
         <el-tab-pane label="By JSON" name="json">
           <el-form ref="jsonFormRef" :model="form" :rules="jsonRules" label-width="120px" class="create-mode-form">
-            <el-form-item label="JSON File:" prop="json_file">
-              <div class="json-upload">
-                <el-upload
-                  accept=".json,application/json,text/plain"
-                  :show-file-list="false"
-                  :auto-upload="false"
-                  :limit="1"
-                  :on-change="handleJsonFileChange"
-                >
-                  <el-button type="warning">Choose JSON File</el-button>
-                </el-upload>
-                <span class="json-upload__filename">{{ form.json_file || '-' }}</span>
-              </div>
-            </el-form-item>
             <el-form-item label="JSON Content:" prop="json_text" required>
               <el-input
                 v-model="form.json_text"
@@ -28,6 +14,21 @@
               />
             </el-form-item>
           </el-form>
+          <div class="json-import-hint">
+            <el-icon class="json-import-hint__icon"><InfoFilled /></el-icon>
+            <span class="json-import-hint__text">
+              You can
+              <input
+                ref="jsonFileInputRef"
+                type="file"
+                accept=".json,application/json,text/plain"
+                class="json-import-hint__file-input"
+                @change="handleJsonFileChange"
+              />
+              <span class="json-import-hint__link" @click="triggerJsonFileSelect">select a file</span>
+              to import JSON content (will overwrite the above content).
+            </span>
+          </div>
         </el-tab-pane>
 
         <el-tab-pane label="From Channel" name="channel">
@@ -99,7 +100,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import type { UploadFile } from 'element-plus'
+import { InfoFilled } from '@element-plus/icons-vue'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 
 const props = defineProps<{
@@ -125,6 +126,7 @@ const emit = defineEmits<{
 
 const dialogRef = ref<{ dialogVisible: boolean } | null>(null)
 const jsonFormRef = ref<FormInstance>()
+const jsonFileInputRef = ref<HTMLInputElement | null>(null)
 const channelFormRef = ref<FormInstance>()
 const mode = ref<'json' | 'channel'>('json')
 const form = ref({
@@ -133,7 +135,6 @@ const form = ref({
   protocol: 'modbus_tcp',
   json_text: '',
   channel_id: null as number | null,
-  json_file: '',
 })
 
 const jsonRules: FormRules = {
@@ -162,7 +163,6 @@ const open = (payload?: { protocol?: string; channel_id?: number | null; mode?: 
     protocol: payload?.protocol || props.defaultProtocol || 'modbus_tcp',
     json_text: '',
     channel_id: payload?.channel_id ?? null,
-    json_file: '',
   }
   mode.value = payload?.mode || 'json'
   if (mode.value === 'channel') {
@@ -175,12 +175,19 @@ const close = () => {
   if (dialogRef.value) dialogRef.value.dialogVisible = false
 }
 
-const handleJsonFileChange = async (file: UploadFile) => {
-  if (!file.raw) return
+const triggerJsonFileSelect = () => {
+  jsonFileInputRef.value?.click()
+}
+
+const handleJsonFileChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
   try {
-    form.value.json_file = file.name || ''
-    form.value.json_text = await file.raw.text()
+    form.value.json_text = await file.text()
   } catch {}
+  // 清空 input，确保下次选择同一文件时 change 事件仍会触发
+  input.value = ''
 }
 
 const handleSourceChannelChange = (channelId: number | null) => {
@@ -222,6 +229,8 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+@use '@/assets/styles/variables' as *;
+
 .create-base-form {
   margin-bottom: 8px;
 
@@ -249,20 +258,39 @@ defineExpose({
   margin-top: 6px;
 }
 
-.json-upload {
-  width: 100%;
+.json-import-hint {
   display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.json-upload__filename {
-  flex: 1;
-  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background-color: #f5f7fa;
+  border-radius: 6px;
+  font-size: 13px;
   color: #606266;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  .json-import-hint__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 16px;
+    color: #909399;
+  }
+
+  .json-import-hint__text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.5;
+  }
+
+  .json-import-hint__file-input {
+    display: none;
+  }
+
+  .json-import-hint__link {
+    color: $primary-color;
+    cursor: pointer;
+    text-decoration: underline;
+  }
 }
 
 :deep(.create-template-dialog .el-dialog) {
