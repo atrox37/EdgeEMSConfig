@@ -1,14 +1,22 @@
-﻿import { router } from './index'
+import { router } from './index'
 import { cancelAllPendingRequests } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
+import { hasGatewayFirstSetupBeenSeen } from '@/utils/firstGatewaySetup'
 
-const WHITE_LIST = ['/login']
+const WHITE_LIST = ['/login', '/setup']
 
 router.beforeEach(async (to, _from, next) => {
   // 取消所有pending的请求
   cancelAllPendingRequests()
 
   const userStore = useUserStore()
+
+  // 未完成首次向导前，除 /setup 外一律先进入网关初始化页
+  const gatewaySetupSeen = hasGatewayFirstSetupBeenSeen()
+  if (!gatewaySetupSeen && to.path !== '/setup') {
+    next({ path: '/setup', replace: true })
+    return
+  }
   const isWhiteListed = WHITE_LIST.includes(to.path)
 
   // 白名单页面直接放行

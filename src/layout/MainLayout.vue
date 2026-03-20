@@ -1,9 +1,5 @@
 <template>
   <div class="voltage-class main-layout">
-    <!-- 自动生成 -->
-    <TitleBar />
-
-    <!-- 自动生成 -->
     <div class="main-layout__container">
       <div class="main-layout__left">
         <!-- 顶部菜单 -->
@@ -30,7 +26,6 @@
 <script setup lang="ts">
 import { watch, ref } from "vue";
 import Sidebar from "./Sidebar.vue";
-import TitleBar from "@/layout/TitleBar.vue";
 import { useGlobalStore } from "@/stores/global";
 import { useResponsive } from "@/composables/useResponsive";
 import { useUserStore } from "@/stores/user";
@@ -48,14 +43,11 @@ watch(
   isMobile,
   (mobile) => {
     if (mobile) {
-      // 移动端模式自动折叠
       globalStore.isCollapse = true;
     } else {
-      // 退出移动端模式，如果用户没有设置折叠状态，则默认展开
       if (userPreferredCollapse.value !== null) {
         globalStore.isCollapse = userPreferredCollapse.value;
       } else {
-        // 用户没有设置折叠状态，默认展开
         globalStore.isCollapse = false;
       }
     }
@@ -81,13 +73,9 @@ watch(
   { immediate: true }
 );
 
-// 用户设置的折叠状态控制 Sidebar 折叠按钮
-// 需要通过 watch globalStore.isCollapse 来控制 Sidebar.vue 中的折叠状态
-// 需要一个标志来记录是否已经处理过折叠状态的变化
 watch(
   () => globalStore.isCollapse,
   (newVal) => {
-    // 只在移动端模式下，如果用户没有设置折叠状态，则默认展开
     if (!isMobile.value) {
       userPreferredCollapse.value = newVal;
     }

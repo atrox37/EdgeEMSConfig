@@ -7,9 +7,17 @@ import HomeConfigIcon from '@/components/icons/HomeConfigIcon.vue'
 
 export const staticRoutes: RouteRecordRaw[] = [
   {
+    path: '/setup',
+    name: 'firstGatewaySetup',
+    component: () => import('../views/SetupView/FirstGatewaySetupView.vue'),
+    meta: {
+      activeNav: '/setup',
+    },
+  },
+  {
     path: '/login',
     name: 'login',
-    component: () => import('../views/LoginView/index copy.vue'),
+    component: () => import('../views/LoginView/index.vue'),
     meta: {
       activeNav: '/login',
     },

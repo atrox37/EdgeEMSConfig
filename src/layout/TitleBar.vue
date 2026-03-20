@@ -82,9 +82,9 @@ const appWindow = getCurrentWindow()
 const currentIpAddress = ref<string>('')
 const isUserDropdownOpen = ref(false)
 
-const isLoginPage = computed(() => route.path === '/login')
+const isPublicShellPage = computed(() => route.path === '/login' || route.path === '/setup')
 
-const shouldShowUserInfo = computed(() => userStore.isLoggedIn && !isLoginPage.value)
+const shouldShowUserInfo = computed(() => userStore.isLoggedIn && !isPublicShellPage.value)
 
 const loadCurrentIp = async () => {
   const apiConfig = await getApiConfig()

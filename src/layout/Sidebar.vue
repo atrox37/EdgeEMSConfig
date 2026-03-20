@@ -9,7 +9,11 @@
       <el-menu :collapse="globalStore.isCollapse" class="sidebar__menu" :default-active="activeMenuPath" router
         background-color="transparent" text-color="#033b6c" active-text-color="#ffffff" :unique-opened="true">
         <template v-for="item in filterRoutesList" :key="item.path">
-          <el-sub-menu v-if="item.meta?.isSubMenu" :index="(item.meta?.activeNav as string) || item.path" class="sidebar__subMenu">
+          <el-sub-menu
+            v-if="item.meta?.isSubMenu"
+            :index="(item.meta?.activeNav as string) || item.path"
+            class="sidebar__subMenu"
+          >
             <template #title>
               <component
                 v-if="item.meta?.icon"
@@ -23,13 +27,17 @@
               <span>{{ child.meta?.title || '' }}</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item v-else :index="(item.meta?.activeNav as string) || item.path" class="sidebar__menu-item">
+          <el-menu-item
+            v-else
+            :index="(item.meta?.activeNav as string) || item.path"
+            class="sidebar__menu-item"
+          >
             <component
-                v-if="item.meta?.icon"
-                :is="item.meta.icon"
-                class="sidebar__icon"
-                :class="{ collapse: globalStore.isCollapse }"
-              />
+              v-if="item.meta?.icon"
+              :is="item.meta.icon"
+              class="sidebar__icon"
+              :class="{ collapse: globalStore.isCollapse }"
+            />
             <span class="sidebar__menu-text">{{ item.meta?.title || '' }}</span>
           </el-menu-item>
         </template>
@@ -43,6 +51,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useRoute, useRouter } from 'vue-router'
 
 const globalStore = useGlobalStore()
+
 const route = useRoute()
 const router = useRouter()
 

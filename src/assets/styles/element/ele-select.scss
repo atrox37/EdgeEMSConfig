@@ -300,7 +300,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
   &.is-light {
     // background-color: transparent !important;
     & > .el-popper__arrow {
-      top: -5px !important;
+      // top: -5px !important;
     }
     .el-popper__arrow {
       visibility: visible !important;

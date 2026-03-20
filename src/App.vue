@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import en from 'element-plus/es/locale/lang/en'
 import UpdateChecker from '@/components/UpdateChecker.vue'
+import TitleBar from '@/layout/TitleBar.vue'
 // import wsManager from '@/utils/websocket'
 // import { useRouter } from 'vue-router'
 // import { useGlobalStore } from '@/stores/global'
@@ -120,8 +121,12 @@ const locale = en
 
 <template>
   <el-config-provider :locale="locale">
-    <router-view />
-    <!-- 更新检查组件 -->
+    <div class="app-shell">
+      <TitleBar />
+      <div class="app-shell__body">
+        <router-view />
+      </div>
+    </div>
     <UpdateChecker />
   </el-config-provider>
 </template>
@@ -141,5 +146,21 @@ body {
   padding: 0;
   overflow: hidden;
   position: relative;
+}
+
+.app-shell {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-shell__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>

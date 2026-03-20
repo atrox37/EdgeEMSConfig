@@ -54,13 +54,20 @@ export const useUserStore = defineStore(
           refreshToken.value = response.data.refresh_token
           await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
          
-          return { success: true, message: response.message || 'Login successful' }
+          return { success: true, message: response.message || 'Login successful', statusCode: 200 }
         } else {
-          return { success: false, message: response.message || 'Login failed' }
+          return {
+            success: false,
+            message: response.message || 'Login failed',
+            statusCode: typeof response.code === 'number' ? response.code : undefined,
+          }
         }
       } catch (error: any) {
-        
-        return { success: false, message: error.message || 'Login failed' }
+        return {
+          success: false,
+          message: error.message || 'Login failed',
+          statusCode: error?.response?.status,
+        }
       }
     }
 

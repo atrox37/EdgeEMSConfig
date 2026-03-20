@@ -1,184 +1,411 @@
 <template>
-  <div class="voltage-class loginPage">
-    <TitleBar />
-    <div class="loginPage__init-button">
-      <el-button type="primary" @click="openInitDialog">初始化项目</el-button>
+  <div class="voltage-class initial-config-page">
+    <div class="initial-config-page__init-button">
+      <el-button type="primary" @click="goToSetup">Initialize Project</el-button>
     </div>
-    <div ref="loginFormContainer" class="loginPage__form">
-      <ModuleCard title="Monarch">
-        <div class="loginPage__form-content">
-          <el-form @keyup.enter="handleLogin(formRef)" :model="form" label-position="top" ref="formRef" :rules="formRules">
-            <el-form-item label="Username" prop="username">
-              <el-input v-model="form.username" />
+
+    <div class="initial-config-page__container">
+      <div class="initial-config-page__card">
+        <div class="initial-config-page__logo">
+          <img src="@/assets/images/Monarch-logo.png" alt="Monarch Logo" />
+        </div>
+
+        <div class="initial-config-page__form">
+          <el-form
+            @keyup.enter="handleLogin(formRef)"
+            :model="form"
+            label-position="right"
+            ref="formRef"
+            :rules="formRules"
+            label-width="100px"
+          >
+            <el-form-item label="Username:" prop="username">
+              <el-input
+                v-model="form.username"
+                placeholder="Enter username..."
+                class="initial-config-page__input"
+              />
             </el-form-item>
-            <el-form-item label="Password" prop="password">
-              <el-input v-model="form.password" type="password" />
+
+            <el-form-item label="Password:" prop="password">
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="Enter password..."
+                class="initial-config-page__input"
+                show-password
+              />
             </el-form-item>
-            <el-button type="primary" @click="handleLogin(formRef)" :loading="isLoading"
-              >Log in</el-button
+
+            <el-form-item label="IP Address:" prop="ipAddress">
+              <el-input
+                v-model="form.ipAddress"
+                placeholder="Enter IP address..."
+                class="initial-config-page__input"
+              />
+            </el-form-item>
+
+            <el-button
+              type="primary"
+              @click="handleLogin(formRef)"
+              :loading="isLoading"
+              class="initial-config-page__login-btn"
             >
+              Login
+            </el-button>
           </el-form>
         </div>
-      </ModuleCard>
+      </div>
     </div>
-    <InitProjectDialog ref="initDialogRef" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { useUserStore } from '@/stores/user'
-import type { LoginParams } from '@/types/user'
+import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import TitleBar from '@/layout/TitleBar.vue'
-import InitProjectDialog from './components/InitProjectDialog.vue'
-// import wsManager from '@/utils/websocket'
-
+import { useUserStore } from '@/stores/user'
+import { createApiConfig, saveApiConfig, setAxiosBaseURL, getApiConfig } from '@/utils/apiConfig'
 const router = useRouter()
+const userStore = useUserStore()
+
+interface LoginForm {
+  username: string
+  password: string
+  ipAddress: string
+}
+
 const formRef = ref<FormInstance>()
-const loginFormContainer = ref()
-const initDialogRef = ref<InstanceType<typeof InitProjectDialog>>()
-const form = reactive<LoginParams>({
-  username: '',
-  password: '',
-})
 const isLoading = ref(false)
 
-const openInitDialog = () => {
-  initDialogRef.value?.open()
+const goToSetup = () => {
+  router.push({ path: '/setup' })
 }
-const formRules = reactive<FormRules<LoginParams>>({
-  username: [{ required: true, message: 'Please enter your username', trigger: 'blur' }],
+
+// 检查是否是404或网络错误
+const isNetworkOr404Error = (error: any): boolean => {
+  // 检查是否是404错误
+  if (error?.response?.status === 404) {
+    return true
+  }
+  
+  // 检查是否是网络错误（有request但没有response）
+  if (error?.request && !error?.response) {
+    return true
+  }
+  
+  // 检查错误消息中是否包含网络相关关键词
+  const errorMessage = error?.message || ''
+  const networkKeywords = ['Network', 'network', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'timeout', '连接', '网络']
+  if (networkKeywords.some(keyword => errorMessage.includes(keyword))) {
+    return true
+  }
+  
+  return false
+}
+
+// 加载保存的IP地址
+const loadSavedIp = async () => {
+  const apiConfig = await getApiConfig()
+  if (apiConfig) {
+    form.ipAddress = apiConfig.ipAddress
+  }
+}
+
+const form = reactive<LoginForm>({
+  username: '',
+  password: '',
+  ipAddress: '',
+})
+
+onMounted(() => {
+  void loadSavedIp()
+})
+
+const formRules = reactive<FormRules<LoginForm>>({
+  username: [
+    { required: true, message: 'Please enter username', trigger: 'blur' },
+  ],
   password: [
-    { required: true, message: 'Please enter your password', trigger: 'blur' },
-    // {
-    //   pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/,
-    //   message: 'Password must be 6-12 characters and include both letters and numbers',
-    //   trigger: 'blur',
-    // },
+    { required: true, message: 'Please enter password', trigger: 'blur' },
+  ],
+  ipAddress: [
+    { required: true, message: 'Please enter IP address', trigger: 'blur' },
+    {
+      pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
+      message: 'Please enter a valid IP address',
+      trigger: 'blur',
+    },
   ],
 })
-const userStore = useUserStore()
 
 const handleLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  formEl.validate(async (valid: boolean) => {
-    try {
-      if (valid) {
-        isLoading.value = true
-        const res = await userStore.login(form)
-        if (res.success) {
-          
-          const userInfo = await userStore.getUserInfo()
-          if (userInfo.success) {
-            // wsManager.connect()
-            
-            const redirect = router.currentRoute.value.query.redirect as string
-            
-            if (redirect) router.replace({ path: redirect })
-            else router.replace({ path: '/' })
-          }
-        }
-        // ����������ӵ�¼�����߼�
-      } else {
-        console.log('����У��δͨ��')
-      }
-    } catch (error) {
-      console.error('��¼ʧ��:', error)
-    } finally {
-      isLoading.value = false
+
+  try {
+    const valid = await formEl.validate()
+    if (!valid) {
+      ElMessage.warning('Please fill in all required fields')
+      return
     }
-  })
+
+    isLoading.value = true
+
+    // 1. 根据IP地址创建API配置并设置baseURL
+    const apiConfig = createApiConfig(form.ipAddress)
+    await setAxiosBaseURL(apiConfig)
+    await saveApiConfig(apiConfig)
+
+    // 2. 执行登录
+    const loginResult = await userStore.login({
+      username: form.username,
+      password: form.password,
+    })
+
+    if (!loginResult.success) {
+      if (loginResult.statusCode === 401) {
+        ElMessage.error(loginResult.message || 'Login failed')
+        return
+      }
+      ElMessage.warning(
+        'The gateway may not be ready yet. Please complete setup on this page, or use Initialize Project on the login page later.',
+      )
+      goToSetup()
+      return
+    }
+
+    // 3. 获取用户信息
+    const userInfoResult = await userStore.getUserInfo()
+    if (!userInfoResult.success) {
+      const errorMessage = userInfoResult.message || ''
+      const isNetworkError =
+        errorMessage.includes('404') ||
+        errorMessage.includes('Network') ||
+        errorMessage.includes('网络') ||
+        errorMessage.includes('连接') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('ENOTFOUND') ||
+        errorMessage.includes('Request URL not found') ||
+        errorMessage.includes('Network connection error') ||
+        errorMessage.includes('Network request failed')
+
+      if (isNetworkError) {
+        ElMessage.warning(
+          'Unable to reach the gateway. Please complete setup here, or use Initialize Project on the login page.',
+        )
+        await userStore.clearUserData()
+        goToSetup()
+        return
+      }
+      ElMessage.error(userInfoResult.message || 'Failed to get user info')
+      await userStore.clearUserData()
+      return
+    }
+
+    // 4. 登录成功，跳转到首页
+    ElMessage.success('Login successful')
+    await router.push({ name: 'channelConfiguration' })
+  } catch (error: any) {
+    console.error('登录失败:', error)
+    const errorMessage = error?.message || String(error) || ''
+    const isNetworkError = 
+      errorMessage.includes('404') || 
+      errorMessage.includes('Network') || 
+      errorMessage.includes('网络') || 
+      errorMessage.includes('连接') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ETIMEDOUT') ||
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes('Request URL not found') ||
+      errorMessage.includes('Network connection error') ||
+      errorMessage.includes('Network request failed') ||
+      isNetworkOr404Error(error)
+    
+    if (isNetworkError) {
+      ElMessage.warning('无法连接到服务器，请先初始化项目')
+      goToSetup()
+    } else {
+      ElMessage.error(error.message || 'Login failed')
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 
-.voltage-class.loginPage {
+.voltage-class.initial-config-page {
   width: 100%;
   height: 100%;
-  background: $bg-color-page;
+  background: $bg-gradient-page;
   position: relative;
   overflow: hidden;
-  background-image: url('../../assets/images/login-bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   border: $border-width-base solid;
-
   border-image-source: $border-gradient-base;
 
-  // ����������
-  .loginPage__header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    background: $bg-color-input;
-    border-bottom: $border-width-base solid $border-color-base;
-
-    .loginPage__head-title {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      margin-left: 30px;
-
-      .loginpage__head-icon {
-        width: $size-lg;
-        height: $size-lg;
-        background-image: url('../../assets/images/login-logo.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      }
-
-      .loginPage__head-text {
-        font-family: $font-family-montserrat;
-        font-weight: $font-weight-semibold;
-        font-size: 30px;
-        line-height: 1.5em;
-        color: $text-color-primary;
-      }
-    }
-
-    .loginPage__form-button {
-      margin-top: 20px;
-    }
-  }
-
-  // 初始化项目按钮
-  .loginPage__init-button {
+  .initial-config-page__init-button {
     position: absolute;
     top: 50px;
     right: 30px;
     z-index: 10;
   }
 
-  // ��¼��������
-  .loginPage__form {
-    position: absolute;
-    top: 50%;
-    right: 30px;
-    width: 324px;
-    transform: translateY(-50%);
-    .loginPage__form-content {
-      padding: 40px 21px;
+  .initial-config-page__container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 40px 20px;
+    gap: $spacing-xl;
+  }
+
+  // Logo 区域（在卡片内）
+  .initial-config-page__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    width: 100%;
+
+    img {
+      max-width: 200px;
+      height: auto;
+      object-fit: contain;
+    }
+  }
+
+  .initial-config-page__card {
+    width: 100%;
+    max-width: 500px;
+    background: $bg-color-dark-10;
+    border: $border-width-base solid $border-color-base;
+    border-radius: $border-radius-medium;
+    padding: $spacing-xl $spacing-lg;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: $backdrop-blur-base;
+    box-shadow: $box-shadow-medium;
+  }
+
+  // 标题
+  .initial-config-page__title {
+    font-family: $font-family-montserrat;
+    font-size: $font-size-extra-large;
+    font-weight: $font-weight-semibold;
+    color: $text-color-primary;
+    margin-bottom: $spacing-xl;
+    text-align: center;
+  }
+
+  // 表单区域
+  .initial-config-page__form {
+    width: 100%;
+
+    :deep(.el-form-item) {
+      margin-bottom: $spacing-md;
+
+      .el-form-item__label {
+        color: $text-color-primary;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+        padding: 0;
+        line-height: $height-base;
+
+        &::before {
+          display: none !important;
+        }
+      }
+
+      .el-form-item__content {
+        line-height: $height-base;
+      }
+    }
+
+
+    .initial-config-page__input {
+      width: 100%;
+
+      :deep(.el-input__wrapper) {
+        background: $bg-color-input;
+        border: $border-width-base solid $border-color-base;
+        border-radius: $border-radius-base;
+        padding: 0 $spacing-md;
+        box-shadow: none;
+
+        &:hover {
+          border-color: $primary-color;
+        }
+
+        &.is-focus {
+          border-color: $primary-color;
+        }
+
+        .el-input__inner {
+          color: $text-color-primary;
+          font-size: $font-size-base;
+          height: $height-base;
+
+          &::placeholder {
+            color: $text-color-placeholder;
+          }
+        }
+
+        // Readonly input style
+        &.is-disabled {
+          .el-input__inner {
+            color: $text-color-primary;
+            cursor: default;
+          }
+        }
+      }
+    }
+
+    // Login 按钮
+    .initial-config-page__login-btn {
+      width: 100%;
+      height: $height-base;
+      margin-top: $spacing-md;
+      font-size: $font-size-base;
+      font-weight: $font-weight-medium;
     }
   }
 }
 
-:deep(.el-button.el-button--primary) {
-  height: $height-base;
-  width: $width-input-base;
-  margin-top: 20px;
-}
+// // Element Plus 按钮样式覆盖
+// :deep(.el-button.el-button--primary) {
+//   background: $primary-color !important;
+//   border: none !important;
 
-:deep(.el-form-item__label::before) {
-  display: none !important;
-}
+//   &:hover {
+//     background: $primary-color-hover !important;
+//   }
 
-:deep(.el-form-item .el-form-item__label) {
-  height: 22px !important;
+//   &:active {
+//     background: $primary-color-active !important;
+//   }
+// }
+
+// :deep(.el-button.is-link) {
+//   padding: 0;
+//   height: auto;
+//   background: transparent !important;
+//   border: none !important;
+//   &:hover {
+//     color: #fff !important;
+//   }
+// }
+:deep(.el-input){
+    width: 100% !important;
 }
 </style>
+
 
 
