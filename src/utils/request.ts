@@ -799,6 +799,10 @@ const createResponseInterceptor = (
     }
 
     // 处理其他错误
+    if (isRequestCanceled(error)) {
+      return Promise.reject(error)
+    }
+
     let errorMessage = 'Network request failed'
 
     if (error.response) {

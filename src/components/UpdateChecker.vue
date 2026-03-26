@@ -17,8 +17,8 @@
             {{
               dialogMode === 'manual'
                 ? updateInfo
-                  ? `You¡¯re running version ${currentVersion || '-'}. A newer version is available.`
-                  : `You¡¯re running version ${currentVersion || '-'}. This is the latest version.`
+                  ? `You're running version ${currentVersion || '-'}. A newer version is available.`
+                  : `You're running version ${currentVersion || '-'}. This is the latest version.`
                 : 'A new version is available. Update now or remind later.'
             }}
           </p>

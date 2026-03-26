@@ -190,7 +190,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         errorMessage.includes('ETIMEDOUT') ||
         errorMessage.includes('ENOTFOUND') ||
         errorMessage.includes('Request URL not found') ||
-        errorMessage.includes('Network connection error') ||
+        errorMessage.includes('') ||
         errorMessage.includes('Network request failed')
 
       if (isNetworkError) {
