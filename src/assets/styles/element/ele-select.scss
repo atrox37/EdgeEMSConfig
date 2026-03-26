@@ -36,8 +36,12 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
       }
 
       .el-select__placeholder {
-        color: $field-select-placeholder-color !important;
+        color: $text-color-primary;
+        &.is-transparent{
+          color: $field-select-placeholder-color;
+        }
       }
+      
     }
     &__placeholder{
       color: $field-select-placeholder-color;

@@ -1,10 +1,9 @@
 /**
- * Tauri 更新检查 Composable
- * 用于检查应用更新并显示更新日志
+ * Tauri update checker composable.
  */
 
-import { ref } from 'vue'
-import { check, Update } from '@tauri-apps/plugin-updater'
+import { ref, shallowRef } from 'vue'
+import { check, Update, type DownloadEvent } from '@tauri-apps/plugin-updater'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 interface UpdateInfo {
@@ -13,48 +12,71 @@ interface UpdateInfo {
   date?: string
 }
 
+type InstallPhase = 'idle' | 'downloading' | 'installing'
+
 export function useUpdater() {
   const isChecking = ref(false)
-  const updateAvailable = ref<Update | null>(null)
+  const isInstalling = ref(false)
+  const installPhase = ref<InstallPhase>('idle')
+  const downloadPercent = ref(0)
+  const downloadedBytes = ref(0)
+  const totalBytes = ref<number | null>(null)
+  const progressMessage = ref('')
+  const updateAvailable = shallowRef<Update | null>(null)
   const updateInfo = ref<UpdateInfo | null>(null)
 
-  /**
-   * 检查更新
-   * @param silent 是否静默检查（不显示错误提示）
-   * @returns Promise<boolean> 是否有可用更新
-   */
+  const resetInstallProgress = () => {
+    isInstalling.value = false
+    installPhase.value = 'idle'
+    downloadPercent.value = 0
+    downloadedBytes.value = 0
+    totalBytes.value = null
+    progressMessage.value = ''
+  }
+
+  const clearUpdateState = async () => {
+    if (updateAvailable.value) {
+      try {
+        await updateAvailable.value.close()
+      } catch (error) {
+        console.warn('failed to close previous update resource:', error)
+      }
+    }
+
+    updateAvailable.value = null
+    updateInfo.value = null
+  }
+
   const checkUpdate = async (silent = false): Promise<boolean> => {
     try {
       isChecking.value = true
+      await clearUpdateState()
+      resetInstallProgress()
+
       const update = await check()
 
-      if (update?.available) {
-        updateAvailable.value = update
-
-        // 解析更新信息
-        // Tauri 2.0 updater API: Update 对象直接包含版本信息
-        const version = update.version || ''
-        const notes = (update as any).body || (update as any).notes || ''
-        const date = (update as any).pub_date || ''
-        
-        updateInfo.value = {
-          version,
-          notes,
-          date,
-        }
-
-        if (!silent) {
-          showUpdateDialog()
-        }
-
-        return true
-      } else {
+      if (!update?.available) {
         if (!silent) {
           ElMessage.success('The current version is the latest')
         }
         return false
       }
+
+      updateAvailable.value = update
+      updateInfo.value = {
+        version: update.version || '',
+        notes: update.body || (update.rawJson?.notes as string | undefined) || '',
+        date: update.date || (update.rawJson?.pub_date as string | undefined) || '',
+      }
+
+      if (!silent) {
+        showUpdateDialog()
+      }
+
+      return true
     } catch (error) {
+      await clearUpdateState()
+      resetInstallProgress()
       console.error('check update failed:', error)
       if (!silent) {
         ElMessage.error(`check update failed: ${error instanceof Error ? error.message : String(error)}`)
@@ -65,20 +87,15 @@ export function useUpdater() {
     }
   }
 
-  /**
-   * 显示更新对话框
-   */
   const showUpdateDialog = () => {
     if (!updateInfo.value) return
 
     const { version, notes, date } = updateInfo.value
 
-    // 格式化更新日志（支持 Markdown 格式）
-    const formatNotes = (notes?: string): string => {
-      if (!notes) return 'No update notes'
-      
-      // 将 Markdown 格式转换为 HTML（简单处理）
-      return notes
+    const formatNotes = (value?: string): string => {
+      if (!value) return 'No update notes'
+
+      return value
         .replace(/### (.*?)\n/g, '<h4 style="margin: 10px 0 5px 0; font-weight: 600;">$1</h4>')
         .replace(/- (.*?)\n/g, '<li style="margin: 5px 0;">$1</li>')
         .replace(/\n/g, '<br>')
@@ -91,11 +108,11 @@ export function useUpdater() {
       `
         <div style="max-height: 400px; overflow-y: auto;">
           <div style="margin-bottom: 15px;">
-            <h3 style="margin: 0 0 10px 0; color: #409EFF;">发现新版本 v${version}</h3>
-            ${dateStr ? `<p style="color: #909399; font-size: 12px; margin: 0;">发布日期: ${dateStr}</p>` : ''}
+            <h3 style="margin: 0 0 10px 0; color: #409EFF;">�����°汾 v${version}</h3>
+            ${dateStr ? `<p style="color: #909399; font-size: 12px; margin: 0;">��������: ${dateStr}</p>` : ''}
           </div>
           <div style="margin-top: 15px; padding: 10px; background: #f5f7fa; border-radius: 4px;">
-            <h4 style="margin: 0 0 10px 0; font-weight: 600;">更新内容：</h4>
+            <h4 style="margin: 0 0 10px 0; font-weight: 600;">��������</h4>
             <div style="line-height: 1.6; color: #606266;">
               ${notesHtml}
             </div>
@@ -113,73 +130,93 @@ export function useUpdater() {
       }
     )
       .then(async () => {
-        // 用户选择立即更新
         await installUpdate()
       })
       .catch(() => {
-        // 用户选择稍后提醒
         console.log('user chooses to remind later')
       })
   }
 
-  /**
-   * 安装更新
-   */
-  const installUpdate = async () => {
+  const installUpdate = async (): Promise<boolean> => {
     if (!updateAvailable.value) {
       ElMessage.error('No available update')
-      return
+      return false
     }
 
     try {
-      ElMessage.info('Downloading update, please wait...')
-      
-      await updateAvailable.value.downloadAndInstall()
+      resetInstallProgress()
+      isInstalling.value = true
+      installPhase.value = 'downloading'
+      progressMessage.value = 'Downloading update package...'
 
-      ElMessageBox.confirm(
-        'The update has been downloaded, and the application needs to be restarted to apply the update. Do you want to restart immediately?',
+      await updateAvailable.value.download((event: DownloadEvent) => {
+        if (event.event === 'Started') {
+          totalBytes.value = event.data.contentLength ?? null
+          downloadedBytes.value = 0
+          downloadPercent.value = 0
+          progressMessage.value = totalBytes.value
+            ? 'Downloading update package...'
+            : 'Downloading update package...'
+          return
+        }
+
+        if (event.event === 'Progress') {
+          downloadedBytes.value += event.data.chunkLength
+          if (totalBytes.value && totalBytes.value > 0) {
+            downloadPercent.value = Math.min(100, Math.round((downloadedBytes.value / totalBytes.value) * 100))
+          }
+          return
+        }
+
+        downloadPercent.value = 100
+      })
+
+      installPhase.value = 'installing'
+      progressMessage.value = 'Applying update package...'
+      await updateAvailable.value.install()
+
+      await ElMessageBox.confirm(
+        'The update has been downloaded successfully. Please restart the application to apply the update.',
         'Update Completed',
         {
-          confirmButtonText: 'Restart Now',
-          cancelButtonText: 'Restart Later',
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Later',
           type: 'success',
         }
       )
-        .then(async () => {
-          // Tauri 2.0: 使用 updater 插件的 restart 方法
-          // 如果 Update 对象有 restart 方法，使用它；否则提示用户手动重启
-          try {
-            if (updateAvailable.value && typeof (updateAvailable.value as any).restart === 'function') {
-              await (updateAvailable.value as any).restart()
-            } else {
-              ElMessage.info('Please manually restart the application to complete the update')
-            }
-          } catch (error) {
-            console.error('restart application failed:', error)
-            ElMessage.info('Please manually restart the application to complete the update')
-          }
+        .then(() => {
+          ElMessage.info('Please restart the application to complete the update')
         })
         .catch(() => {
           ElMessage.info('The application will apply the update the next time it starts')
         })
+
+      await clearUpdateState()
+      resetInstallProgress()
+      return true
     } catch (error) {
       console.error('install update failed:', error)
       ElMessage.error(`install update failed: ${error instanceof Error ? error.message : String(error)}`)
+      isInstalling.value = false
+      progressMessage.value = 'Update failed. Please try again.'
+      return false
     }
   }
 
-  /**
-   * 自动检查更新（应用启动时调用）
-   */
   const autoCheckUpdate = () => {
-    // 延迟检查，避免影响应用启动速度
     setTimeout(() => {
-      checkUpdate(true) // 静默检查
+      void checkUpdate(true)
     }, 3000)
   }
 
   return {
     isChecking,
+    isInstalling,
+    installPhase,
+    downloadPercent,
+    downloadedBytes,
+    totalBytes,
+    progressMessage,
     updateAvailable,
     updateInfo,
     checkUpdate,
@@ -188,4 +225,3 @@ export function useUpdater() {
     autoCheckUpdate,
   }
 }
-

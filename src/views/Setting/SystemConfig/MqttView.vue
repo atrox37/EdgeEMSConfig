@@ -780,10 +780,13 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .system-mqtt__status-card {
   flex-shrink: 0;
+  min-height: 250px;
 }
 
 .system-mqtt__status-title {
@@ -888,7 +891,8 @@ onUnmounted(() => {
 
 .system-mqtt__tls-card {
   flex: 1;
-  min-height: 0;
+  flex-shrink: 0;
+  min-height: 230px;
 }
 
 .system-mqtt__tls-card :deep(.el-card__body) {

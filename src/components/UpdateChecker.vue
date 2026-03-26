@@ -17,8 +17,8 @@
             {{
               dialogMode === 'manual'
                 ? updateInfo
-                  ? `Youâ€™re running version ${currentVersion || '-'}. A newer version is available.`
-                  : `Youâ€™re running version ${currentVersion || '-'}. This is the latest version.`
+                  ? `You¡¯re running version ${currentVersion || '-'}. A newer version is available.`
+                  : `You¡¯re running version ${currentVersion || '-'}. This is the latest version.`
                 : 'A new version is available. Update now or remind later.'
             }}
           </p>
@@ -39,6 +39,18 @@
             <span class="update-label">Release Date:</span>
             <span>{{ formatDate(updateInfo.date) }}</span>
           </div>
+        </div>
+
+        <div v-if="isInstalling" class="update-progress">
+          <div class="update-progress__header">
+            <div class="update-progress__title">
+              {{ installPhase === 'installing' ? 'Installing Update' : 'Downloading Update' }}
+            </div>
+            <div class="update-progress__percent">{{ `${progressPercentDisplay}%` }}</div>
+          </div>
+          <el-progress :percentage="progressPercentDisplay" :stroke-width="10" />
+          <div class="update-progress__message">{{ progressMessageDisplay }}</div>
+          <div v-if="progressBytesDisplay" class="update-progress__bytes">{{ progressBytesDisplay }}</div>
         </div>
 
         <div class="update-notes">
@@ -66,26 +78,37 @@
     </template>
 
     <template #dialog-footer>
-      <el-button @click="closeDialog">{{ dialogMode === 'manual' ? 'Close' : 'Remind Later' }}</el-button>
-      <el-button type="primary" :loading="isInstalling" :disabled="!updateInfo" @click="handleInstall">
-        Update Now
+      <el-button :disabled="isInstalling" @click="closeDialog">
+        {{ dialogMode === 'manual' ? 'Close' : 'Remind Later' }}
+      </el-button>
+      <el-button type="primary" :loading="isInstalling" :disabled="!updateInfo || isInstalling" @click="handleInstall">
+        {{ installPhase === 'installing' ? 'Installing...' : isInstalling ? 'Downloading...' : 'Update Now' }}
       </el-button>
     </template>
   </FormDialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { getVersion } from '@tauri-apps/api/app'
 import { useUpdater } from '@/composables/useUpdater'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 
 type DialogMode = 'auto' | 'manual'
 
-const { updateInfo, checkUpdate, installUpdate: installUpdateFn } = useUpdater()
+const {
+  updateInfo,
+  checkUpdate,
+  installUpdate: installUpdateFn,
+  isInstalling,
+  installPhase,
+  downloadPercent,
+  downloadedBytes,
+  totalBytes,
+  progressMessage,
+} = useUpdater()
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null)
-const isInstalling = ref(false)
 const isCheckingUpdate = ref(false)
 const dismissed = ref(false)
 const currentVersion = ref('')
@@ -103,6 +126,35 @@ const formatDate = (dateStr?: string): string => {
     return dateStr
   }
 }
+
+const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+}
+
+const progressPercentDisplay = computed(() => {
+  if (installPhase.value === 'installing') return 100
+  return Math.max(0, Math.min(100, downloadPercent.value))
+})
+
+const progressMessageDisplay = computed(() => {
+  if (progressMessage.value) return progressMessage.value
+  if (installPhase.value === 'installing') return 'Applying update package...'
+  return 'Downloading update package...'
+})
+
+const progressBytesDisplay = computed(() => {
+  if (!isInstalling.value || installPhase.value !== 'downloading') return ''
+  if (totalBytes.value && totalBytes.value > 0) {
+    return `${formatBytes(downloadedBytes.value)} / ${formatBytes(totalBytes.value)}`
+  }
+  if (downloadedBytes.value > 0) {
+    return `${formatBytes(downloadedBytes.value)} downloaded`
+  }
+  return ''
+})
 
 interface ChangelogSection {
   title: string
@@ -134,10 +186,7 @@ const parseChangelogSections = (notes?: string): ChangelogSection[] => {
       return
     }
 
-    const cleaned = line
-      .replace(/^[-*]\s+/, '')
-      .replace(/^\d+\.\s+/, '')
-      .trim()
+    const cleaned = line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').trim()
 
     if (!cleaned) return
     ensureDefaultSection()
@@ -154,6 +203,8 @@ const openDialog = () => {
 }
 
 const closeDialog = () => {
+  if (isInstalling.value) return
+
   if (dialogRef.value) {
     dialogRef.value.dialogVisible = false
   }
@@ -164,13 +215,12 @@ const closeDialog = () => {
 
 const handleInstall = async () => {
   try {
-    isInstalling.value = true
-    await installUpdateFn()
-    closeDialog()
+    const installed = await installUpdateFn()
+    if (installed) {
+      closeDialog()
+    }
   } catch (error) {
     console.error('Failed to install update:', error)
-  } finally {
-    isInstalling.value = false
   }
 }
 
@@ -268,10 +318,47 @@ onUnmounted(() => {
   color: $primary-color;
 }
 
-.update-notes {
-  // padding-top: $spacing-md;
-  // border-top: $border-width-base solid $border-color-white-10;
+.update-progress {
+  margin-bottom: $spacing-md;
+  padding: $spacing-md;
+  border: $border-width-base solid rgba(255, 138, 0, 0.18);
+  border-radius: $border-radius-small;
+  background: linear-gradient(180deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 138, 0, 0.03) 100%);
 
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-md;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $text-color-primary;
+  }
+
+  &__percent {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $primary-color;
+  }
+
+  &__message {
+    margin-top: $spacing-sm;
+    color: $text-color-primary;
+    font-size: $font-size-small;
+  }
+
+  &__bytes {
+    margin-top: $spacing-xs;
+    color: $text-color-white-60;
+    font-size: $font-size-small;
+  }
+}
+
+.update-notes {
   h4 {
     margin: 0 0 $spacing-md 0;
     font-weight: $font-weight-semibold;
