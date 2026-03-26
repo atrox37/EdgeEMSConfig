@@ -15,6 +15,8 @@
       font-size: $font-size-medium;
       color: $text-color-primary;
       font-weight: $font-weight-semibold;
+      min-height: 40px;
+      line-height: 40px;
 
       .el-collapse-item__title {
         padding-left: 10px;
@@ -42,67 +44,78 @@
       }
     }
   }
+}
 
-  .el-tabs {
-    color: $text-color-primary;
+// Global tab style (MQTT-style), except System Config shell tabs.
+.el-tabs:not(.system-config-shell__tabs) {
+  color: $text-color-primary;
 
-    .el-tabs__header {
-      margin: 0 0 10px;
-
-      .el-tabs__item:last-child {
-        border-right: none !important;
-      }
-
-      &.is-top {
-        height: 40px;
-        // border-bottom: 0px solid rgba(255, 255, 255, 0.4);
-
-        .el-tabs__nav-wrap {
-          &:after {
-            height: $border-width-medium;
-            background-color: $border-color-gray-light;
-          }
-
-          .el-tabs__nav-scroll {
-            .el-tabs__nav {
-              height: $height-lg;
-              line-height: $height-lg;
-
-              &.is-top {
-                border: $border-width-medium solid $border-color-gray-light;
-                border-radius: 0;
-                // border-bottom: none;
-              }
-
-              .el-tabs__active-bar {
-                display: none;
-              }
-
-              .el-tabs__item {
-                color: $text-color-primary;
-                font-size: $font-size-base;
-                height: calc($height-lg - $border-width-medium * 2);
-                line-height: calc($height-lg - $border-width-medium * 2);
-                padding: 0 $spacing-md;
-                // min-width: 100px;
-                border-right: $border-width-medium solid $border-color-gray-light;
-
-                // border-bottom: $border-width-base solid transparent;
-                // background-color: $bg-color-transparent-white-10;
-                &::last-child {
-                  border-right: none;
-                }
-
-                &.is-active {
-                  background-color: $primary-color;
-                  // border-bottom: $border-width-medium solid $border-color-gray-light;
-                  color: $white-alpha-100;
-                }
-              }
-            }
-          }
-        }
-      }
+  .el-tabs__header {
+    margin: 0;
+    border-bottom: 1px solid $border-color-base;
+    &.is-top {
+      margin-bottom: 20px;
     }
   }
+
+  .el-tabs__nav-wrap {
+    &::after {
+      display: none;
+    }
+  }
+
+  .el-tabs__nav {
+    border: none !important;
+  }
+
+  .el-tabs__item {
+    position: relative;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 20px;
+    color: $text-color-primary;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    transition: color 0.2s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 2px;
+      background-color: transparent;
+      transition: background-color 0.2s ease;
+    }
+
+    &:hover {
+      color: $primary-color;
+    }
+
+    &.is-active {
+      color: $primary-color;
+
+      &::after {
+        background-color: $primary-color;
+      }
+    }
+
+    &.is-disabled {
+      color: $text-color-disabled;
+      cursor: not-allowed;
+    }
+  }
+
+  .el-tabs__active-bar {
+    display: none;
+  }
+}
+
+.el-tabs--bottom>.el-tabs__header .el-tabs__item:nth-child(2), .el-tabs--top>.el-tabs__header .el-tabs__item:nth-child(2){
+  padding-left: 20px !important;
+}
+.el-tabs--bottom>.el-tabs__header .el-tabs__item:last-child, .el-tabs--top>.el-tabs__header .el-tabs__item:last-child{
+  padding-right: 20px !important;
 }

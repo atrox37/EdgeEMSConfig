@@ -9,7 +9,7 @@
           <el-dropdown trigger="click" :teleported="true" @command="handleDropdownCommand">
             <span class="points-tables-page__dropdown-trigger">
               {{ viewMode === 'points' ? 'Points Table' : 'Mappings Table' }}
-              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              <AppIcon name="i-tabler-chevron-down" className="el-icon--right" />
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -24,7 +24,7 @@
 
     <div class="template-detail-page__content" v-loading="loading">
       <div class="rule-management__expand-content">
-        <el-tabs v-model="activeTab" type="card">
+        <el-tabs v-model="activeTab">
           <el-tab-pane label="Telemetry" name="telemetry" v-if="templateProtocol !== 'di_do'">
             <template v-if="viewMode === 'points'">
               <div class="template-detail-page__table-panel">
@@ -166,8 +166,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import AppIcon from '@/components/AppIcon.vue'
 import PointTablePoints from '@/views/Setting/Configuration/ChannelConfiguration/components/PointTablePoints.vue'
 import PointTableMappings from '@/views/Setting/Configuration/ChannelConfiguration/components/PointTableMappings.vue'
 import type {
@@ -339,8 +339,10 @@ onMounted(() => {
       color: $text-color-primary;
       cursor: pointer;
 
-      .el-icon--right {
+      :deep(.el-icon--right) {
         margin-left: 4px;
+        width: 1em;
+        height: 1em;
       }
     }
 

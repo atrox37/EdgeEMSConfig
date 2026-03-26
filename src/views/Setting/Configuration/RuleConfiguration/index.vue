@@ -7,7 +7,7 @@
         <div class="rule-management__search-form" ref="levelSelectRef">
           <div></div>
           <div class="rule-management__reload-icon" @click="handleReload">
-            <img :src="tableRefreshIcon" alt="Reload" />
+            <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
           </div>
         </div>
         <div class="rule-management__table">
@@ -40,7 +40,7 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column min-width="240" fixed="right">
+            <el-table-column min-width="200" fixed="right">
               <template #header>
                 <IconButton
                   type="primary"
@@ -53,15 +53,15 @@
               <template #default="{ row }">
                 <div class="rule-management__operation">
                   <div class="rule-management__operation-item" @click="openDetail(row)">
-                    <img :src="tableEditIcon" />
+                    <AppIcon name="i-tabler-file-text" className="rule-management__inline-icon" />
                     <span class="rule-management__operation-text">Detail</span>
                   </div>
                   <div class="rule-management__operation-item" @click="openEditDialog(row)">
-                    <img :src="tableEditIcon" />
+                    <AppIcon name="i-tabler-edit" className="rule-management__inline-icon" />
                     <span class="rule-management__operation-text">Edit</span>
                   </div>
                   <div class="rule-management__operation-item" @click="deleteRow(row.id, `Are you sure you want to delete rule '${row.name}'?`, ruleManagementRef)">
-                    <img :src="tableDeleteIcon" />
+                    <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                     <span class="rule-management__operation-text">Delete</span>
                   </div>
                 </div>
@@ -88,11 +88,8 @@
 </template>
 
 <script setup lang="ts">
-import tableRefreshIcon from '@/assets/icons/table-refresh.svg'
-import userAddIcon from '@/assets/icons/user-add.svg'
-import tableEditIcon from '@/assets/icons/table-edit.svg'
-import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import { ElMessage } from 'element-plus'
+import AppIcon from '@/components/AppIcon.vue'
 import RuleEditDialog from './components/RuleEditDialog.vue'
 import { enableRule, disableRule } from '@/api/rulesManagement'
 import { useRoute, useRouter } from 'vue-router'
@@ -125,6 +122,7 @@ const ruleManagementRef = ref<HTMLElement | null>(null)
 const switchLoadings = ref<boolean[]>([])
 const levelSelectRef = ref<HTMLElement | null>(null)
 const ruleEditDialogRef = ref()
+const userAddIcon = 'i-tabler-plus'
 
 // 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
 const handleReload = () => {
@@ -234,6 +232,7 @@ watch(
           opacity: 0.7;
         }
 
+        .rule-management__inline-icon,
         img {
           width: 32px;
           height: 32px;
@@ -282,6 +281,7 @@ watch(
             display: flex;
             align-items: center;
 
+            .rule-management__inline-icon,
             img {
               width: 14px;
               height: 14px;
@@ -324,6 +324,7 @@ watch(
         padding: 8px 16px;
         border-radius: 4px;
 
+        .rule-management__inline-icon,
         img {
           width: 14px;
           height: 14px;

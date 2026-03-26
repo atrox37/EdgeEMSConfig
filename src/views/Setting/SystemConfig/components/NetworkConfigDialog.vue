@@ -71,6 +71,7 @@ import { ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import type { LanValue } from '@/types/systemConfig'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import {
   applyNetworkConfig,
@@ -80,8 +81,6 @@ import {
   getNetworkConfig,
   updateNetworkConfig,
 } from '@/api/systemConfig'
-
-type LanValue = 1 | 2 | 3 | 4
 
 const router = useRouter()
 const userStore = useUserStore()

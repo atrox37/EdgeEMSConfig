@@ -23,9 +23,17 @@
       }"
     >
       <div class="custom-node__icon" :class="`icon--${data.type}`">
-        <img :src="fenzhiIcon" v-if="data.type === 'function-switch'" />
-        <img :src="chongzhiIcon" v-else-if="data.type === 'action-changeValue'" />
-        <img :src="chongzhiIcon" v-else-if="data.type === 'action-periodDelta'" />
+        <AppIcon name="i-tabler-git-fork" className="custom-node__icon-svg" v-if="data.type === 'function-switch'" />
+        <AppIcon
+          name="i-tabler-adjustments"
+          className="custom-node__icon-svg"
+          v-else-if="data.type === 'action-changeValue'"
+        />
+        <AppIcon
+          name="i-tabler-chart-line"
+          className="custom-node__icon-svg"
+          v-else-if="data.type === 'action-periodDelta'"
+        />
       </div>
       <div class="custom-node__info">
         <div class="custom-node__name">{{ data.label }}</div>
@@ -50,7 +58,7 @@
         :position="Position.Right"
         :id="item.name"
         class="custom-node__handle custom-node__handle--right"
-        :style="{ top: `calc(${((idx + 1) / (data.config.rule.length + 1)) * 100}% - 6px)` }"
+        :style="{ top: `calc(${((Number(idx) + 1) / (data.config.rule.length + 1)) * 100}% - 6px)` }"
       >
         <div class="custom-node__handle__text">{{ item.name }}</div>
       </Handle>
@@ -60,10 +68,8 @@
 
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core'
-import { ref, onMounted, nextTick, watch, computed } from 'vue'
-import { QuestionFilled, Switch, Pointer } from '@element-plus/icons-vue'
-import fenzhiIcon from '@/assets/icons/button-fenzhi.svg'
-import chongzhiIcon from '@/assets/icons/button-change.svg'
+import { ref, nextTick, watch, computed } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
 const props = defineProps<{
   data: any
   isMonitorMode?: boolean
@@ -207,10 +213,12 @@ watch(
       background-color: #fff2e6;
       border-radius: 6px;
       margin-right: 12px;
-      .el-icon {
-        font-size: 20px;
+      :deep(svg) {
+        width: 20px;
+        height: 20px;
         color: #ffffff !important;
       }
+      .custom-node__icon-svg,
       img {
         width: 20px;
         height: 20px;
@@ -262,9 +270,9 @@ watch(
         transform: scale(1.1);
       }
 
-      .el-icon {
-        font-size: 14px;
-        font-weight: 700;
+      :deep(svg) {
+        width: 14px;
+        height: 14px;
         color: #ffffff;
       }
     }

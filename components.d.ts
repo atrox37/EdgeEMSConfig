@@ -8,8 +8,10 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AppIcon: typeof import('./src/components/AppIcon.vue')['default']
     BatteryCard: typeof import('./src/components/card/BatteryCard.vue')['default']
     ChannelIcon: typeof import('./src/components/icons/ChannelIcon.vue')['default']
+    ConfigTipsCard: typeof import('./src/components/common/ConfigTipsCard.vue')['default']
     DoughnutChart: typeof import('./src/components/charts/DoughnutChart.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']

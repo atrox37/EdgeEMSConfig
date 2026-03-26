@@ -1,7 +1,7 @@
 <template>
   <div class="titlebar" data-tauri-drag-region>
     <div class="titlebar__left" data-tauri-drag-region>
-      <div class="titlebar__title" data-tauri-drag-region>Monarch Edge Configuration</div>
+      <div class="titlebar__title" data-tauri-drag-region>Monarch Edge Console</div>
     </div>
       <div class="titlebar__right">
       <div class="titlebar__ip-section" v-if="shouldShowUserInfo">
@@ -38,12 +38,29 @@
           </el-dropdown>
       </div>
       <div class="titlebar__controls">
-        <div class="titlebar__button titlebar__button--minimize" @click="minimizeWindow" title="Minimize">
+        <el-dropdown
+          trigger="click"
+          placement="bottom-start"
+          :teleported="false"
+          @command="handleSystemCommand"
+          style="height: 100%;"
+        >
+          <div class="titlebar__button titlebar__button--settings">
+            <img :src="titlebarSettingIcon" class="titlebar__setting-icon" />
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="setting">Setting</el-dropdown-item>
+              <el-dropdown-item command="check-update">Updates</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <div class="titlebar__button titlebar__button--minimize" @click="minimizeWindow">
           <svg width="12" height="2" viewBox="0 0 12 2">
             <rect width="12" height="2" fill="currentColor" />
           </svg>
         </div>
-        <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize" :title="isMaximized ? 'Maximize' : 'Maximize'">
+        <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize">
           <svg v-if="!isMaximized" width="12" height="12" viewBox="0 0 12 12">
             <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
           </svg>
@@ -52,7 +69,7 @@
             <rect x="0" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
           </svg>
         </div>
-        <div class="titlebar__button titlebar__button--close" @click="closeWindow" title="Close">
+        <div class="titlebar__button titlebar__button--close" @click="closeWindow">
           <svg width="12" height="12" viewBox="0 0 12 12">
             <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" />
             <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5" />
@@ -61,6 +78,7 @@
       </div>
     </div>
   </div>
+  <TitlebarSettingDialog ref="settingDialogRef" />
 </template>
 
 <script setup lang="ts">
@@ -69,9 +87,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useUserStore } from '@/stores/user'
 import { getApiConfig } from '@/utils/apiConfig'
+import { ensureDefaultDownloadPath } from '@/utils/downloadPath'
 
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
+import titlebarSettingIcon from '@/assets/icons/titlebar-setting.svg'
+import TitlebarSettingDialog from '@/layout/components/TitlebarSettingDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -81,6 +102,7 @@ const isMaximized = ref(false)
 const appWindow = getCurrentWindow()
 const currentIpAddress = ref<string>('')
 const isUserDropdownOpen = ref(false)
+const settingDialogRef = ref<InstanceType<typeof TitlebarSettingDialog> | null>(null)
 
 const isPublicShellPage = computed(() => route.path === '/login' || route.path === '/setup')
 
@@ -119,10 +141,21 @@ const closeWindow = async () => {
   await appWindow.close()
 }
 
+const handleSystemCommand = async (command: string) => {
+  if (command === 'setting') {
+    settingDialogRef.value?.openDialog()
+    return
+  }
+  if (command === 'check-update') {
+    window.dispatchEvent(new CustomEvent('titlebar-open-updates-dialog'))
+  }
+}
+
 let unlistenResize: (() => void) | null = null
 
 onMounted(async () => {
   isMaximized.value = await appWindow.isMaximized()
+  await ensureDefaultDownloadPath()
   
   unlistenResize = await appWindow.onResized(async () => {
     isMaximized.value = await appWindow.isMaximized()
@@ -325,6 +358,12 @@ const getAvatarName = (name: string): string => {
       }
     }
   }
+}
+
+.titlebar__setting-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 

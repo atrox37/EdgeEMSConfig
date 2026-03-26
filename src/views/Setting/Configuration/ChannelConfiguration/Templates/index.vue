@@ -27,7 +27,7 @@
       </el-form>
       <div class="channel-templates-page__toolbar-actions">
         <div class="rule-management__reload-icon" @click="loadTemplates">
-          <img :src="tableRefreshIcon" alt="Reload" />
+          <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
         </div>
       </div>
     </div>
@@ -44,7 +44,7 @@
         <el-table-column prop="description" label="Description" min-width="220" show-overflow-tooltip />
         <el-table-column prop="protocol" label="Protocol" width="130" />
         <el-table-column prop="created_at" label="Created At" min-width="180" />
-        <el-table-column fixed="right" label="Operation" min-width="360">
+        <el-table-column fixed="right" label="Operation" min-width="390">
           <template #header>
             <IconButton
               type="primary"
@@ -57,19 +57,19 @@
           <template #default="{ row }">
             <div class="rule-management__operation">
               <div class="rule-management__operation-item" @click="openEditDialog(row)">
-                <img :src="buttonDetailIcon" />
+                <AppIcon name="i-tabler-edit" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Edit</span>
               </div>
               <div class="rule-management__operation-item" @click="handleView(row)">
-                <img :src="buttonPointsIcon" />
+                <AppIcon name="i-tabler-transform-point" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Points/Mappings</span>
               </div>
               <div class="rule-management__operation-item" @click="openApplyDialog(row)">
-                <img :src="buttonPointsIcon" />
+                <AppIcon name="i-tabler-send" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Apply</span>
               </div>
               <div class="rule-management__operation-item" @click="handleDelete(row)">
-                <img :src="tableDeleteIcon" />
+                <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Delete</span>
               </div>
             </div>
@@ -111,13 +111,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import tableRefreshIcon from '@/assets/icons/table-refresh.svg'
-import userAddIcon from '@/assets/icons/user-add.svg'
+import AppIcon from '@/components/AppIcon.vue'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import type { ChannelTemplateListItem } from '@/types/channelTemplates'
-import buttonDetailIcon from '@/assets/icons/button-detail.svg'
-import buttonPointsIcon from '@/assets/icons/button-point.svg'
-import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 import {
   applyTemplateToChannel,
   createTemplate,
@@ -130,6 +126,8 @@ import { getAllChannels } from '@/api/channelsManagement'
 import TemplateEditDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateEditDialog.vue'
 import TemplateApplyDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateApplyDialog.vue'
 import TemplateCreateDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateCreateDialog.vue'
+
+const userAddIcon = 'i-tabler-plus'
 
 const router = useRouter()
 const route = useRoute()
@@ -415,6 +413,7 @@ onMounted(async () => {
       align-items: center;
       cursor: pointer;
 
+      .rule-management__inline-icon,
       img {
         width: 14px;
         height: 14px;
@@ -444,6 +443,7 @@ onMounted(async () => {
       opacity: 0.7;
     }
 
+    .rule-management__inline-icon,
     img {
       width: 32px;
       height: 32px;

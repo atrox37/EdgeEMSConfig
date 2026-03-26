@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="voltage-class rule-chain-editor" :class="{ 'is-fullscreen': isFullscreen }">
     <el-page-header
       class="rule-chain-editor__page-header"
@@ -12,9 +12,7 @@
           @click="toggleFullscreen"
           class="custom-button"
         >
-          <el-icon>
-            <FullScreen />
-          </el-icon>
+          <AppIcon name="i-tabler-arrows-maximize" className="rule-chain-editor__toolbar-icon" />
           {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
         </el-button>
         <el-button
@@ -24,9 +22,7 @@
           @click="handleExport"
           class="custom-button"
         >
-          <el-icon>
-            <Upload />
-          </el-icon>
+          <AppIcon name="i-tabler-file-export" className="rule-chain-editor__toolbar-icon" />
           Export
         </el-button>
         <el-button
@@ -36,9 +32,7 @@
           @click="enterEditMode"
           class="custom-button"
         >
-          <el-icon>
-            <Edit />
-          </el-icon>
+          <AppIcon name="i-tabler-pencil" className="rule-chain-editor__toolbar-icon" />
           Edit
         </el-button>
         <el-button
@@ -48,9 +42,7 @@
           @click="handleImportClick"
           class="custom-button"
         >
-          <el-icon>
-            <Download />
-          </el-icon>
+          <AppIcon name="i-tabler-download" className="rule-chain-editor__toolbar-icon" />
           Import
         </el-button>
         <el-button
@@ -92,14 +84,9 @@
                   @dragstart="onDragStart($event, card as unknown as RuleCard)"
                 >
                   <div class="rule-chain-editor__card-icon" :class="`icon--${card.type}`">
-                    <img :src="card.icon" v-if="card.type === 'function-switch'" />
-                    <img
-                      :src="card.icon"
-                      v-else-if="card.type === 'action-changeValue'"
-                    />
-                    <img
-                      :src="card.icon"
-                      v-else-if="card.type === 'action-periodDelta'"
+                    <AppIcon
+                      :name="String(card.icon || 'i-tabler-shape')"
+                      className="rule-chain-editor__card-icon-svg"
                     />
                   </div>
                   <div class="rule-chain-editor__card-content">
@@ -150,7 +137,7 @@
           <template #node-end="nodeProps">
             <EndNode v-bind="nodeProps" />
           </template>
-          <Background variant="lines" :gap="20" color="rgba(255, 138, 0, 0.2)" />
+          <Background variant="lines" :gap="20" color="rgba(180, 180, 180, 0.35)" />
           <MiniMap
             class="rf-minimap-custom"
             :node-stroke-color="'#74b9ff'"
@@ -179,7 +166,7 @@
                   }}</span>
                 </div>
                 <div class="node-vars-bubble__right">
-                  <span>{{ v.value !== undefined ? v.value : '-' }}</span>
+                  <span>{{ formatNodeVarValue(v.value) }}</span>
                   <span v-if="v.unit" class="node-vars-bubble__unit">{{ v.unit }}</span>
                 </div>
               </div>
@@ -228,14 +215,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted, nextTick, Teleport } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { getCurrentFontSize } from '@/utils/responsive'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRuleDetail } from '@/api/rulesManagement'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
-import { FullScreen, Download, Upload, Edit } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import {
   VueFlow,
   ConnectionMode,
@@ -245,8 +232,6 @@ import {
   type Connection,
   type NodeChange,
 } from '@vue-flow/core'
-import changeIcon from '@/assets/icons/button-change.svg'
-import fenzhiIcon from '@/assets/icons/button-fenzhi.svg'
 import CustomNode from './components/customCard/CustomNode.vue'
 import StartNode from './components/customCard/StartNode.vue'
 import EndNode from './components/customCard/EndNode.vue'
@@ -265,6 +250,7 @@ import useDragAndDrop from '@/utils/useDnd'
 import CardEditDialog from './components/CardEditDialog.vue'
 import { updateRule } from '@/api/rulesManagement'
 import wsManager from '@/utils/websocket'
+import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 const {
   updateNode,
   toObject,
@@ -329,7 +315,7 @@ const cardCategories = ref([
         name: 'Switch Function',
         type: 'function-switch',
         description: 'Switch function',
-        icon: fenzhiIcon,
+        icon: 'i-tabler-git-fork',
         config: {
           variables: [],
           rule: [],
@@ -349,7 +335,7 @@ const cardCategories = ref([
         name: 'Change Value',
         type: 'action-changeValue',
         description: 'Change value',
-        icon: changeIcon,
+        icon: 'i-tabler-adjustments',
         config: { rule: [], wires: {} },
       },
       {
@@ -357,7 +343,7 @@ const cardCategories = ref([
         name: 'Period Delta',
         type: 'action-periodDelta',
         description: 'Period delta',
-        icon: changeIcon,
+        icon: 'i-tabler-chart-line',
         config: {
           input: {
             name: 'X1',
@@ -693,7 +679,7 @@ const handleCancel = () => {
   ElMessage.success('Changes discarded')
 }
 
-const handleExport = () => {
+const handleExport = async () => {
   // 使用当前 VueFlow 中的数据导出，确保导出的是当前显示的数据
   const flowObj = toObject()
   const ruleChainData = ruleChainStore.exportRuleChain(
@@ -701,63 +687,96 @@ const handleExport = () => {
     flowObj.edges as FlowEdge[],
   )
   const dataStr = JSON.stringify(ruleChainData, null, 2)
-  const dataBlob = new Blob([dataStr], { type: 'application/json' })
-  const url = URL.createObjectURL(dataBlob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${ruleChainData.name}.json`
-  link.click()
-  URL.revokeObjectURL(url)
-  ElMessage.success('Rule chain exported successfully')
+  const bytes = new TextEncoder().encode(dataStr)
+  const saveResult = await saveBytesWithPreferredPath(
+    bytes,
+    `${ruleChainData.name}.json`,
+    'application/json',
+  )
+  ElMessage.success(`Rule chain exported: ${saveResult.displayPath}`)
 }
 
 const goBackToList = () => {
   router.push({ name: 'ruleConfiguration' })
 }
 
-function applyRuntimeUpdate(data: any) {
-  if (!data || typeof data !== 'object') return
+function normalizeRuleRuntimePayload(rawData: any): {
+  ruleId: number | null
+  executionNodeIds: string[]
+  nodeVariables: Map<string, Record<string, number>>
+} | null {
+  if (!rawData || typeof rawData !== 'object') return null
 
-  if (data.rule_id && Array.isArray(data.execution_path)) {
-    const executionPath = data.execution_path
-    const activeNodeIds = executionPath
-      .map((item: any) => String(item.id))
-      .filter((id: string) => id && id !== 'undefined' && id !== 'null')
+  // Runtime packets now use data.last_execution only.
+  const runtime = rawData.last_execution
+  if (!runtime || typeof runtime !== 'object') return null
+  const ruleIdRaw = rawData.rule_id
+  const ruleId = typeof ruleIdRaw === 'number' ? ruleIdRaw : Number(ruleIdRaw) || null
 
-    const varsNodeIds = new Set<string>()
-    const variablesMap = new Map<string, Record<string, number>>()
-    executionPath.forEach((item: any) => {
+  const executionPath = Array.isArray(runtime.execution_path) ? runtime.execution_path : []
+  const executionNodeIds: string[] = []
+  const nodeVariables = new Map<string, Record<string, number>>()
+
+  executionPath.forEach((item: any) => {
+    // execution_path is string[] of node ids.
+    if (typeof item === 'string' || typeof item === 'number') {
+      const nodeId = String(item)
+      if (nodeId && nodeId !== 'undefined' && nodeId !== 'null') {
+        executionNodeIds.push(nodeId)
+      }
+    }
+  })
+
+  // New payload detail: values are in last_execution.node_details[*].input_values.
+  const nodeDetails = runtime.node_details
+  if (nodeDetails && typeof nodeDetails === 'object') {
+    Object.entries(nodeDetails).forEach(([nodeId, detail]) => {
+      if (!nodeId || nodeId === 'start' || nodeId === 'end') return
+      const inputValues = (detail as any)?.input_values
       if (
-        item.id &&
-        item.id !== 'start' &&
-        item.id !== 'end' &&
-        item.variables &&
-        typeof item.variables === 'object'
+        inputValues &&
+        typeof inputValues === 'object' &&
+        Object.keys(inputValues).length > 0
       ) {
-        varsNodeIds.add(item.id)
-        variablesMap.set(item.id, item.variables)
+        nodeVariables.set(nodeId, inputValues as Record<string, number>)
       }
     })
+  }
 
-    visibleVarsNodes.value = varsNodeIds
-    nodeVariablesData.value = variablesMap
+  return {
+    ruleId,
+    executionNodeIds,
+    nodeVariables,
+  }
+}
 
-    const currentActiveSet = new Set<string>(activeNodeIds)
-    const lastActiveSet = lastActiveNodeIds.value
-    const hasChanged =
-      currentActiveSet.size !== lastActiveSet.size ||
-      !Array.from(currentActiveSet).every((id: string) => lastActiveSet.has(id))
+function applyRuntimeUpdate(data: any) {
+  const normalized = normalizeRuleRuntimePayload(data)
+  if (!normalized) return
 
-    if (hasChanged) {
-      lastActiveNodeIds.value = currentActiveSet
-      applyActiveRuntime(activeNodeIds)
-    }
+  // Guard against unexpected cross-rule payloads.
+  const currentRuleId = Number(currentChainId.value)
+  if (normalized.ruleId != null && currentRuleId && normalized.ruleId !== currentRuleId) return
+  if (!normalized.executionNodeIds.length) return
 
-    if (visibleVarsNodes.value.size > 0) {
-      nextTick(() => {
-        updateAllBubblePositions()
-      })
-    }
+  visibleVarsNodes.value = new Set(normalized.nodeVariables.keys())
+  nodeVariablesData.value = normalized.nodeVariables
+
+  const currentActiveSet = new Set<string>(normalized.executionNodeIds)
+  const lastActiveSet = lastActiveNodeIds.value
+  const hasChanged =
+    currentActiveSet.size !== lastActiveSet.size ||
+    !Array.from(currentActiveSet).every((id: string) => lastActiveSet.has(id))
+
+  if (hasChanged) {
+    lastActiveNodeIds.value = currentActiveSet
+    applyActiveRuntime(normalized.executionNodeIds)
+  }
+
+  if (visibleVarsNodes.value.size > 0) {
+    nextTick(() => {
+      updateAllBubblePositions()
+    })
   }
 }
 
@@ -799,16 +818,43 @@ function enterEditMode() {
   visibleVarsNodes.value.clear()
 }
 
+function isCompositeVariable(varDef: any): boolean {
+  const type = String(varDef?.type || '')
+    .trim()
+    .toLowerCase()
+  return type === 'combined' || type === 'composite' || type === 'object' || type === 'array'
+}
+
+function formatNodeVarValue(value: unknown): string {
+  if (value === undefined || value === null || value === '') return '-'
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Number(value.toFixed(3)).toString()
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return '-'
+    // 仅对纯数字字符串做小数位限制，其它字符串按原样展示
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+      const asNum = Number(trimmed)
+      if (Number.isFinite(asNum)) {
+        return Number(asNum.toFixed(3)).toString()
+      }
+    }
+    return value
+  }
+  return String(value)
+}
+
 function getNodeVarsData(nodeId: string) {
   const node = findNode(nodeId)
   if (!node || node.type === 'start' || node.type === 'end') return null
 
+  const varDefinitions = Array.isArray(node.data?.config?.variables)
+    ? node.data.config.variables.filter((varDef: any) => !isCompositeVariable(varDef))
+    : []
+
   const realtimeVars = nodeVariablesData.value.get(nodeId)
   if (realtimeVars) {
-    const varDefinitions = Array.isArray(node.data?.config?.variables)
-      ? node.data.config.variables
-      : []
-
     return varDefinitions.map((varDef: any) => {
       const varName = varDef.name || varDef.point || ''
       const value = realtimeVars[varName] !== undefined ? realtimeVars[varName] : undefined
@@ -819,7 +865,7 @@ function getNodeVarsData(nodeId: string) {
     })
   }
 
-  return Array.isArray(node.data?.config?.variables) ? node.data.config.variables : null
+  return varDefinitions
 }
 
 function updateBubblePosition(nodeId: string) {
@@ -1232,8 +1278,10 @@ watch(
         padding: 0 8px;
         font-size: 11px;
       }
-      :deep(.el-icon) {
-        font-size: 12px;
+      :deep(.rule-chain-editor__toolbar-icon) {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
       }
     }
 
@@ -1284,8 +1332,8 @@ watch(
             border-bottom-right-radius: 8px;
           }
           :deep(.el-collapse-item__header) {
-            height: 28px;
-            line-height: 28px;
+            // height: 28px;
+            // line-height: 28px;
             padding: 0 4px;
             font-size: 14px;
             font-weight: 600;
@@ -1336,14 +1384,14 @@ watch(
           gap: 8px;
 
           .rule-chain-editor__card {
-            width: 88%;
+            width: 100%;
             display: flex;
             align-items: center;
-            padding: 12px;
+            padding: 6px 10px;
             border-radius: 8px;
             cursor: grab;
             transition: all 0.2s ease;
-            min-width: 200px;
+            // min-width: 200px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
             &:hover {
@@ -1385,8 +1433,9 @@ watch(
               border-radius: 6px;
               margin-right: 12px;
               font-size: 20px;
-              .el-icon {
-                font-size: 20px;
+              :deep(svg) {
+                width: 20px;
+                height: 20px;
               }
               img {
                 width: 20px;
@@ -1395,19 +1444,19 @@ watch(
               }
               &.icon--function-switch {
                 background: #66bb6a;
-                .el-icon {
+                :deep(svg) {
                   color: #ffffff;
                 }
               }
               &.icon--action-changeValue {
                 background: #29b6f6;
-                .el-icon {
+                :deep(svg) {
                   color: #ffffff;
                 }
               }
               &.icon--action-periodDelta {
                 background: #7b1fa2;
-                .el-icon {
+                :deep(svg) {
                   color: #ffffff;
                 }
               }
@@ -1421,11 +1470,11 @@ watch(
               font-weight: 600;
               color: #2c3e50;
               margin-bottom: 4px;
-              font-size: 14px;
+              font-size: 12px;
             }
 
             .rule-chain-editor__card-description {
-              font-size: 12px;
+              font-size: 10px;
               color: #909399;
               line-height: 1.4;
             }
@@ -1559,7 +1608,7 @@ watch(
       }
     }
   }
-  :deep(.custom-button .el-icon) {
+  :deep(.custom-button .rule-chain-editor__toolbar-icon) {
     margin-right: 8px;
   }
 }

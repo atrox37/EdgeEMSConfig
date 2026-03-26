@@ -110,18 +110,14 @@
 
                             <div v-if="idx > 0" class="formula-line__actions">
                                 <el-button class="icon-btn" type="danger" link @click="removeLine(idx)">
-                                    <el-icon class="icon-btn__delete">
-                                        <CircleClose />
-                                    </el-icon>
+                                    <AppIcon name="i-tabler-circle-x-filled" className="icon-btn__delete" />
                                 </el-button>
                             </div>
                         </div>
 
                         <div class="formula-add">
                             <el-button class="icon-btn" type="primary" link @click="addLine">
-                                <el-icon class="icon-btn__add">
-                                    <CirclePlus />
-                                </el-icon>
+                                <AppIcon name="i-tabler-circle-plus" className="icon-btn__add" />
                             </el-button>
                         </div>
                 </div>
@@ -137,8 +133,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch, onMounted } from 'vue'
-import { CircleClose, CirclePlus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import AppIcon from '@/components/AppIcon.vue'
 import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
 import type { FormRules } from 'element-plus'
 import { getAllChannels, getPointsTables } from '@/api/channelsManagement'
@@ -853,11 +849,11 @@ const handleSave = async () => {
   flex: 0 0 auto;
 }
 
-.icon-btn__add {
+.icon-btn :deep(.icon-btn__add) {
   color: $success-color !important;
 }
 
-.icon-btn__delete {
+.icon-btn :deep(.icon-btn__delete) {
   color: $danger-color !important;
 }
 

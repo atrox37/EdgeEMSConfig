@@ -1,7 +1,7 @@
 <template>
   <div class="voltage-class header">
     <div class="header__left">
-      <div class="header__left-title">Norton creek solar energy center</div>
+      <div class="header__left-title">Monarch Edge Console</div>
       <div class="header__left-status">
         <div class="header__left-statusIcon">
           <div class="header__left-statusIconCircle"></div>

@@ -45,9 +45,7 @@
                 @click.stop="addPropertyAtTop"
                 circle
               >
-                <el-icon>
-                  <Plus />
-                </el-icon>
+                <AppIcon name="i-tabler-plus" className="instance-detail__btn-icon" />
               </el-button>
             </template>
             <div class="instance-detail__section instance-detail__section--full">
@@ -71,9 +69,7 @@
                             class="instance-detail__property-value-input">
                             <template #suffix>
                               <el-button @click="removePropertyByIndex(index)" circle>
-                                <el-icon>
-                                  <Delete />
-                                </el-icon>
+                                <AppIcon name="i-tabler-trash" className="instance-detail__btn-icon" />
                               </el-button>
                             </template>
                           </el-input>
@@ -122,7 +118,7 @@
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import { getInstanceDetail } from '@/api/devicesManagement'
 import type { DeviceInstanceDetail, AddDeviceInstanceDetail } from '@/types/deviceConfiguration'
 import { createInstance, updateInstance } from '@/api/devicesManagement'
@@ -378,6 +374,11 @@ defineExpose({ open, close })
   .instance-detail__readonly-text {
     color: $text-color-primary;
     font-size: 14px;
+  }
+
+  :deep(.instance-detail__btn-icon) {
+    width: 16px;
+    height: 16px;
   }
 
   :deep(.el-form-item__content) {

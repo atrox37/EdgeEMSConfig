@@ -1,6 +1,8 @@
 @use "@/assets/styles/_variables.scss" as *;
 /* Element Plus Select �����ʽ */
 
+$field-select-placeholder-color: rgba($text-color-primary, 0.55);
+$field-select-disabled-text-color: rgba($text-color-primary, 0.35);
 
 // ��������
 $popper-border-image: $border-gradient-menu;
@@ -32,10 +34,24 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
         line-height: 32px;
         // padding: 0 12px;
       }
+
+      .el-select__placeholder {
+        color: $field-select-placeholder-color !important;
+      }
     }
     &__placeholder{
-      color: $text-color-primary;
+      color: $field-select-placeholder-color;
     }
+
+    &.is-disabled {
+      .el-select__wrapper {
+        .el-select__selected-item,
+        .el-select__placeholder {
+          color: $field-select-disabled-text-color !important;
+        }
+      }
+    }
+
     .el-select__suffix {
       gap: 6px;
       .el-icon {
@@ -226,9 +242,9 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 
     .el-dropdown-menu {
       z-index: 1000;
-      min-width: 150px;
+      min-width: 130px;
       max-height: 320px;
-      padding: 10px 10px;
+      padding: 5px;
       overflow-y: auto;
       border-radius: 0 !important;
       background-color: $bg-color-dark-2;
@@ -299,9 +315,6 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
 
   &.is-light {
     // background-color: transparent !important;
-    & > .el-popper__arrow {
-      // top: -5px !important;
-    }
     .el-popper__arrow {
       visibility: visible !important;
     }
@@ -340,6 +353,6 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
   // }
 }
 .el-select__placeholder.is-transparent{
-  color:#a8abb2 !important;
+  color: $field-select-placeholder-color !important;
 }
 

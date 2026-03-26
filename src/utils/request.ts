@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 import type { ApiConfig } from '@/utils/apiConfig'
+import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 
 // 存储所有pending的请求（使用 ref 包装 Map 以确保响应式）
 const pendingRequests = ref(new Map<string, AbortController>())
@@ -445,7 +446,7 @@ const requestInterceptor = (config: any) => {
   // 判断是否为开发环境（Vite 开发模式）
   const isDev = import.meta.env.DEV
 
-  // 处理包含 /comApi、/modApi、/ruleApi 的请求路径
+  // 处理包含 /comApi、/modApi、/ruleApi、/hisApi、/netApi 的请求路径
   // 使用同步方式获取配置（通过引用）
   const apiConfig = currentApiConfigRef
 
@@ -464,6 +465,22 @@ const requestInterceptor = (config: any) => {
     processedUrl = originalUrl.replace(/^\/ruleApi/, '')
     if (apiConfig?.ruleApiURL) {
       targetBaseURL = apiConfig.ruleApiURL
+    }
+  } else if (originalUrl.startsWith('/hisApi')) {
+    // Keep /hisApi in the final request path.
+    processedUrl = originalUrl
+    if (apiConfig?.hisApiURL) {
+      targetBaseURL = apiConfig.hisApiURL
+    } else if (apiConfig?.ipAddress) {
+      targetBaseURL = `http://${apiConfig.ipAddress}:6004`
+    }
+  } else if (originalUrl.startsWith('/netApi')) {
+    // Keep /netApi in the final request path.
+    processedUrl = originalUrl
+    if (apiConfig?.netApiURL) {
+      targetBaseURL = apiConfig.netApiURL
+    } else if (apiConfig?.ipAddress) {
+      targetBaseURL = `http://${apiConfig.ipAddress}:6006`
     }
   }
 
@@ -966,25 +983,15 @@ class Request {
         showErrorMessage: false,
         ...config,
       })
-      console.log('response', response)
-      // 创建blob链接
       const blob = new Blob([response.data])
-      const downloadUrl = window.URL.createObjectURL(blob)
-      console.log('downloadUrl', downloadUrl)
-      // 创建下载链接
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = filename || `download_${Date.now()}`
+      const bytes = new Uint8Array(await blob.arrayBuffer())
+      const result = await saveBytesWithPreferredPath(
+        bytes,
+        filename || `download_${Date.now()}`,
+        blob.type || 'application/octet-stream',
+      )
 
-      // 触发下载
-      document.body.appendChild(link)
-      link.click()
-
-      // 清理
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(downloadUrl)
-
-      ElMessage.success('File downloaded successfully')
+      ElMessage.success(`File downloaded: ${result.displayPath}`)
     } catch (error) {
       const errorMessage = (() => {
         if ((error as any)?.response?.status === 404) {

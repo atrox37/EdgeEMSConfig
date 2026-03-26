@@ -3,7 +3,7 @@
     <!-- 卡片内容 -->
     <div class="start-node__content">
       <div class="start-node__icon">
-        <el-icon><CaretRight /></el-icon>
+        <AppIcon name="i-tabler-caret-right-filled" className="start-node__glyph" />
       </div>
       <div class="start-node__info">
         <div class="start-node__name">START</div>
@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core'
-import { CaretRight } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 
 defineProps<{
   data: any
@@ -91,8 +91,9 @@ defineProps<{
       background-color: #ffa726; // orange tile for contrast
       border-radius: 6px;
       margin-right: 12px;
-      .el-icon {
-        font-size: 20px;
+      :deep(.start-node__glyph) {
+        width: 20px;
+        height: 20px;
         color: #ffffff;
       }
     }

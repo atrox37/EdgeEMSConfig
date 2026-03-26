@@ -5,6 +5,8 @@ import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Icons from 'unplugin-icons/vite'
+import IconsResolver from 'unplugin-icons/resolver'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
 // import autoprefixer from 'autoprefixer'
@@ -23,8 +25,18 @@ export default defineConfig(() => ({
       dts: true,
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver(),
+        IconsResolver({
+          prefix: 'i',
+          enabledCollections: ['tabler'],
+        }),
+      ],
       dts: true,
+    }),
+    Icons({
+      compiler: 'vue3',
+      autoInstall: true,
     }),
     // Gzip压缩插件（不压缩图片文件）
     viteCompression({

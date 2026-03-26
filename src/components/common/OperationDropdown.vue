@@ -6,7 +6,7 @@
 
     <el-dropdown v-else trigger="click" @command="handleCommand">
       <el-button link class="operation-more-btn">
-        <el-icon :size="18"><MoreFilled /></el-icon>
+        <AppIcon name="i-tabler-dots" className="operation-dropdown__more-icon" />
       </el-button>
       <template #dropdown>
         <el-dropdown-menu class="operation-dropdown-menu">
@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { MoreFilled } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import { useResponsive } from '@/composables/useResponsive'
 
 const { isNarrow } = useResponsive()
@@ -46,7 +46,12 @@ const handleCommand = (command: string) => {
   .operation-more-btn {
     color: $text-color-primary;
     padding: $size-xs;
-    
+
+    :deep(.operation-dropdown__more-icon) {
+      width: 18px;
+      height: 18px;
+    }
+
     &:hover {
       background: $white-alpha-10;
     }

@@ -8,6 +8,22 @@
 .voltage-class {
   .el-table-v2 {
     background-color: transparent !important;
+    // Table-v2 loading icon/text use secondary theme color.
+    .el-loading-mask {
+      .el-loading-spinner {
+        .path {
+          stroke: $secondary-color !important;
+        }
+
+        .circular {
+          color: $secondary-color !important;
+        }
+
+        .el-loading-text {
+          color: $secondary-color !important;
+        }
+      }
+    }
 
     // ������������������/����
     &::-webkit-scrollbar {

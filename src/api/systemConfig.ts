@@ -1,17 +1,17 @@
 import { Request, cancelPendingRequestsByUrl } from '@/utils/request'
-
-export interface NetworkConfigResponse {
-  dhcp: boolean
-  ip: string
-  subnet_mask: string
-  gateway: string
-  dns1: string
-  dns2: string
-}
-
-export interface NetworkConfigRequest extends NetworkConfigResponse {
-  lan: 1 | 2 | 3 | 4
-}
+import type {
+  CertificateInfoResponse,
+  CertificateType,
+  LanValue,
+  NetworkConfigRequest,
+  NetworkConfigResponse,
+  MqttConfigPayload,
+  MqttConfigResponse,
+  MqttStatusResponse,
+  StorageConfigRequest,
+  StorageGetResponseData,
+  StorageTestRequest,
+} from '@/types/systemConfig'
 
 export const importConfigFile = (formData: FormData) => {
   return Request.post('/api/v1/config/import', formData, {
@@ -39,7 +39,7 @@ export const cancelUpgradeUpload = () => {
   cancelPendingRequestsByUrl('/api/v1/config/upgrade', 'post')
 }
 
-export const getNetworkConfig = (lan: 1 | 2 | 3 | 4) => {
+export const getNetworkConfig = (lan: LanValue) => {
   return Request.get<NetworkConfigResponse>('/api/v1/network', { lan })
 }
 
@@ -61,4 +61,101 @@ export const cancelNetworkUpdateRequests = () => {
 
 export const cancelNetworkApplyRequests = () => {
   cancelPendingRequestsByUrl('/api/v1/network/apply', 'post')
+}
+
+export const getStorageConfig = () => {
+  return Request.get<StorageGetResponseData>('/hisApi/storage')
+}
+
+export const updateStorageConfig = (payload: StorageConfigRequest) => {
+  return Request.put('/hisApi/storage', payload)
+}
+
+export const reconnectStorage = () => {
+  return Request.post('/hisApi/storage/reconnect', {})
+}
+
+export const testStorageConnection = (payload: StorageTestRequest) => {
+  return Request.post('/hisApi/storage/test', payload)
+}
+
+export const cancelStorageGetRequests = () => {
+  cancelPendingRequestsByUrl('/hisApi/storage', 'get')
+}
+
+export const cancelStorageUpdateRequests = () => {
+  cancelPendingRequestsByUrl('/hisApi/storage', 'put')
+}
+
+export const cancelStorageReconnectRequests = () => {
+  cancelPendingRequestsByUrl('/hisApi/storage/reconnect', 'post')
+}
+
+export const cancelStorageTestRequests = () => {
+  cancelPendingRequestsByUrl('/hisApi/storage/test', 'post')
+}
+
+export const getMqttConfig = () => {
+  // /netApi is routed by request interceptor to netApiURL or http://{ip}:6006
+  return Request.get<MqttConfigResponse>('/netApi/mqtt/config')
+}
+
+export const updateMqttConfig = (payload: MqttConfigPayload) => {
+  return Request.post('/netApi/mqtt/config', payload)
+}
+
+export const disconnectMqtt = () => {
+  return Request.post('/netApi/mqtt/disconnect', {})
+}
+
+export const reconnectMqtt = () => {
+  return Request.post('/netApi/mqtt/reconnect', {})
+}
+
+export const getMqttStatus = () => {
+  return Request.get<MqttStatusResponse>('/netApi/mqtt/status')
+}
+
+export const getCertificateInfo = () => {
+  return Request.get<CertificateInfoResponse>('/netApi/certificate/info')
+}
+
+export const uploadCertificateFile = (certType: CertificateType, file: File) => {
+  return Request.upload('/netApi/certificate/upload', file, { cert_type: certType }, { timeout: 60 * 1000 })
+}
+
+export const deleteCertificateFile = (certType: CertificateType) => {
+  return Request.delete(`/netApi/certificate/${certType}`, {})
+}
+
+export const cancelMqttConfigGetRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/mqtt/config', 'get')
+}
+
+export const cancelMqttConfigUpdateRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/mqtt/config', 'post')
+}
+
+export const cancelMqttDisconnectRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/mqtt/disconnect', 'post')
+}
+
+export const cancelMqttReconnectRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/mqtt/reconnect', 'post')
+}
+
+export const cancelMqttStatusGetRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/mqtt/status', 'get')
+}
+
+export const cancelCertificateInfoRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/certificate/info', 'get')
+}
+
+export const cancelCertificateUploadRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/certificate/upload', 'post')
+}
+
+export const cancelCertificateDeleteRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/certificate/', 'delete')
 }

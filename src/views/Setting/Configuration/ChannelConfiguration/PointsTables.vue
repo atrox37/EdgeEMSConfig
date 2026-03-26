@@ -13,9 +13,7 @@
                         @command="handleDropdownCommand">
                         <span class="points-tables-page__dropdown-trigger">
                             {{ viewMode === 'points' ? 'Points Table' : 'Mappings Table' }}
-                            <el-icon class="el-icon--right">
-                                <ArrowDown />
-                            </el-icon>
+                            <AppIcon name="i-tabler-chevron-down" className="el-icon--right" />
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
@@ -26,7 +24,7 @@
                     </el-dropdown>
                     <span v-else class="points-tables-page__header-title">{{ viewMode === 'points' ? 'Points Table' :
                         'Mappings Table'
-                        }}</span>
+                    }}</span>
 
                 </div>
             </template>
@@ -35,7 +33,7 @@
         <div class="points-tables-page__content">
             <div class="voltage-class rule-management__expand-content">
                 <div class="config-section__tabs-wrapper">
-                    <el-tabs v-model="activeTab" type="card" :before-leave="handleBeforeLeave"
+                    <el-tabs v-model="activeTab" :before-leave="handleBeforeLeave"
                         @tab-change="handleTabChange" class="config-section__tabs">
                         <el-tab-pane label="Telemetry" name="telemetry" v-if="channelProtocol !== 'di_do'">
                             <template v-if="viewMode === 'points'">
@@ -121,7 +119,8 @@
 
                     <!-- Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选 -->
                     <div v-if="isEditing" class="config-section__status-filter">
-                        <el-checkbox-group v-model="statusCheckboxValue" class="status-checkbox-group" @change="handleStatusCheckboxChange">
+                        <el-checkbox-group v-model="statusCheckboxValue" class="status-checkbox-group"
+                            @change="handleStatusCheckboxChange">
                             <el-checkbox v-if="viewMode === 'points'" label="modified">modified</el-checkbox>
                             <el-checkbox v-if="viewMode === 'points'" label="added">added</el-checkbox>
                             <el-checkbox v-if="viewMode === 'points'" label="deleted">deleted</el-checkbox>
@@ -155,13 +154,11 @@
 import { nextTick, watch, computed, onMounted, onUnmounted, ref, provide, readonly } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import PointTablePoints from './components/PointTablePoints.vue'
 import PointTableMappings from './components/PointTableMappings.vue'
 import IconButton from '@/components/common/IconButton.vue'
-import tableSubmitIcon from '@/assets/icons/btn-submit.svg'
-// @ts-ignore - SVG导入类型问题
-const submitIcon: string = tableSubmitIcon
+const submitIcon = 'i-tabler-check'
 import type { PointInfoResponse } from '@/types/channelConfiguration'
 import {
     getPointsTables,
@@ -287,9 +284,9 @@ provide(
 // 模式切换处理
 const handleViewModeChange = () => {
     // 模式切换时重置筛选
-            editFilters.value = []
-            statusCheckboxValue.value = []
-            invalidChecked.value = false
+    editFilters.value = []
+    statusCheckboxValue.value = []
+    invalidChecked.value = false
 }
 
 // 下拉菜单选择
@@ -308,9 +305,9 @@ const handleEdit = (payload?: { fromImport?: boolean } | MouseEvent) => {
             ? (payload as { fromImport?: boolean }).fromImport
             : false
     isEditing.value = true
-            editFilters.value = []
-            statusCheckboxValue.value = []
-            invalidChecked.value = false
+    editFilters.value = []
+    statusCheckboxValue.value = []
+    invalidChecked.value = false
     // 用户主动进入编辑时，清除四个表中上一次的导入文件名；
     // 若由子表导入触发（fromImport），则保留当前导入文件名�?
     if (!fromImport) {
@@ -634,9 +631,9 @@ const performCancelEdit = () => {
     isEditing.value = false
     isPublish.value = false
     publishDirty.value = false
-            editFilters.value = []
-            statusCheckboxValue.value = []
-            invalidChecked.value = false
+    editFilters.value = []
+    statusCheckboxValue.value = []
+    invalidChecked.value = false
     telemetryTableRef.value?.clearImportedFileName?.()
     signalTableRef.value?.clearImportedFileName?.()
     controlTableRef.value?.clearImportedFileName?.()
@@ -700,9 +697,9 @@ const clearAllSignalFilters = () => {
 
 // 统一清空状态筛选并显示全部
 const clearStatusFilters = () => {
-            editFilters.value = []
-            statusCheckboxValue.value = []
-            invalidChecked.value = false
+    editFilters.value = []
+    statusCheckboxValue.value = []
+    invalidChecked.value = false
     clearAllSignalFilters()
 }
 
@@ -826,8 +823,10 @@ watch(
                 color: $text-color-primary;
                 cursor: pointer;
 
-                .el-icon--right {
+                :deep(.el-icon--right) {
                     margin-left: 4px;
+                    width: 1em;
+                    height: 1em;
                 }
             }
 
@@ -920,9 +919,11 @@ watch(
                 flex-wrap: wrap;
                 align-items: center;
             }
+
             :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
                 border-color: #fff !important;
             }
+
             :deep(.status-invalid-checkbox .el-checkbox__input.is-checked .el-checkbox__inner::after) {
                 border-color: #fff !important;
             }

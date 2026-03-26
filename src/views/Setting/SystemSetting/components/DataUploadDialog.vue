@@ -406,12 +406,13 @@ const beforeUpload = (file: UploadRawFile | File, certType: CertType) => {
 
 // 定义上传响应类型
 interface UploadResponse {
-  status: string
+  success: boolean
   message: string
-  cert_type: string
-  filename: string
-  path: string
-  config_updated: boolean
+  data?: {
+    cert_type?: string
+    saved_as?: string
+    path?: string
+  }
 }
 
 // 上传进度处理
@@ -428,42 +429,40 @@ const handleUploadProgress = (event: { percent: number }, certType: CertType) =>
 
 // 上传成功处理
 const handleUploadSuccess = (response: UploadResponse, certType: CertType) => {
-  // 根据新的返回数据结构处理
-  const { status, message, path, filename } = response
-
-  if (status === 'success') {
-    // 更新表单数据
-    if (certType === 'ca_cert') {
-      formData.value.ssl.ca_cert.path = path
-      formData.value.ssl.ca_cert.full_path = path
-    } else if (certType === 'client_cert') {
-      formData.value.ssl.client_cert.path = path
-      formData.value.ssl.client_cert.full_path = path
-    } else if (certType === 'client_key') {
-      formData.value.ssl.client_key.path = path
-      formData.value.ssl.client_key.full_path = path
-    }
-
-    // 显示成功消息
-    ElMessage.success(message || 'Upload success')
-
-    // 延迟隐藏进度提示
-    setTimeout(() => {
-      if (certType === 'ca_cert') {
-        caFileName.value = ''
-        caProgress.value = 0
-        caUploading.value = false
-      } else if (certType === 'client_cert') {
-        clientCertFileName.value = ''
-        clientCertProgress.value = 0
-        clientCertUploading.value = false
-      } else if (certType === 'client_key') {
-        clientKeyFileName.value = ''
-        clientKeyProgress.value = 0
-        clientKeyUploading.value = false
-      }
-    }, 1000)
+  if (!response.success) {
+    ElMessage.error(response.message || 'Upload failed')
+    return
   }
+
+  const path = String(response.data?.path || '')
+  if (certType === 'ca_cert') {
+    formData.value.ssl.ca_cert.path = path
+    formData.value.ssl.ca_cert.full_path = path
+  } else if (certType === 'client_cert') {
+    formData.value.ssl.client_cert.path = path
+    formData.value.ssl.client_cert.full_path = path
+  } else if (certType === 'client_key') {
+    formData.value.ssl.client_key.path = path
+    formData.value.ssl.client_key.full_path = path
+  }
+
+  ElMessage.success(response.message || 'Upload success')
+
+  setTimeout(() => {
+    if (certType === 'ca_cert') {
+      caFileName.value = ''
+      caProgress.value = 0
+      caUploading.value = false
+    } else if (certType === 'client_cert') {
+      clientCertFileName.value = ''
+      clientCertProgress.value = 0
+      clientCertUploading.value = false
+    } else if (certType === 'client_key') {
+      clientKeyFileName.value = ''
+      clientKeyProgress.value = 0
+      clientKeyUploading.value = false
+    }
+  }, 1000)
 }
 
 // 上传失败处理
@@ -558,7 +557,7 @@ const submitDialog = async () => {
         },
       })
       const res = await updateMqttConfig({ mqtt_connection: { broker: params } })
-      if (res.status == 'success') {
+      if (res.success) {
         ElMessage.success('Update success')
         close()
         emit('update')

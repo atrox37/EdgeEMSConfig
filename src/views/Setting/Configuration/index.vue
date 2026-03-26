@@ -8,7 +8,7 @@
           @click="handleTabClick('channel configuration')"
           class="configuration__tab-btn"
         >
-          <img :src="channelIcon" class="configuration__tab-icon" />
+          <AppIcon name="i-tabler-link" className="configuration__tab-icon" />
           channel configuration
         </el-button>
         <el-button
@@ -16,7 +16,7 @@
           @click="handleTabClick('Device model configuration')"
           class="configuration__tab-btn"
         >
-          <img :src="instanceIcon" class="configuration__tab-icon" />
+          <AppIcon name="i-tabler-box" className="configuration__tab-icon" />
           Device model configuration
         </el-button>
         <el-button
@@ -24,7 +24,7 @@
           @click="handleTabClick('Rules Configuration')"
           class="configuration__tab-btn"
         >
-          <img :src="ruleIcon" class="configuration__tab-icon" />
+          <AppIcon name="i-tabler-git-branch" className="configuration__tab-icon" />
           Rules configuration
         </el-button>
       </div>
@@ -37,12 +37,7 @@
 </template>
 
 <script setup lang="ts">
-// Correctly import SVG icons to avoid image loading issues after deployment
-import alarmCurrentIcon from '@/assets/icons/alarm-current.svg'
-import alarmHistoryIcon from '@/assets/icons/alarm-history.svg'
-import ruleIcon from '@/assets/icons/button-rule.svg'
-import instanceIcon from '@/assets/icons/button-instance.svg'
-import channelIcon from '@/assets/icons/button-channel.svg'
+import AppIcon from '@/components/AppIcon.vue'
 // Reactive data
 const route = useRoute()
 const router = useRouter()
@@ -63,11 +58,11 @@ const handleTabClick = (
   tab: 'channel configuration' | 'Device model configuration' | 'Rules Configuration',
 ) => {
   if (tab === 'channel configuration') {
-    router.push('/setting/configuration/channelConfiguration')
+    router.push('/channelConfiguration')
   } else if (tab === 'Device model configuration') {
-    router.push('/setting/configuration/modelConfiguration')
+    router.push('/modelConfiguration')
   } else if (tab === 'Rules Configuration') {
-    router.push('/setting/configuration/ruleConfiguration')
+    router.push('/ruleConfiguration')
   }
 }
 </script>

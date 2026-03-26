@@ -75,6 +75,7 @@ interface LoginForm {
   password: string
   ipAddress: string
 }
+const IPV4_PATTERN = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
@@ -133,7 +134,7 @@ const formRules = reactive<FormRules<LoginForm>>({
   ipAddress: [
     { required: true, message: 'Please enter IP address', trigger: 'blur' },
     {
-      pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
+      pattern: IPV4_PATTERN,
       message: 'Please enter a valid IP address',
       trigger: 'blur',
     },
@@ -226,7 +227,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       isNetworkOr404Error(error)
     
     if (isNetworkError) {
-      ElMessage.warning('无法连接到服务器，请先初始化项目')
+      ElMessage.warning('Unable to connect to server, please initialize project first')
       goToSetup()
     } else {
       ElMessage.error(error.message || 'Login failed')

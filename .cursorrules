@@ -27,6 +27,15 @@
 - **避免硬编码**：除非是第三方库限制或确有必要，否则不要在组件内写死 `#fff/#000/px` 等常量。
 - **说明**：项目已在 `vite.config.ts` 中通过 `scss.additionalData` 全局注入 `@use "@/assets/styles/_variables.scss" as *;`，组件内可直接使用这些变量。
 
+### 文案与表单标签规范（新增）
+- **所有 UI 标签必须带冒号**：例如 `Download Path:`、`Current Version:`、`Release Date:`。新增或修改页面时必须保持一致。
+
+### 图标使用规范（新增）
+- **统一方案**：项目图标统一通过 `unplugin-icons + Iconify` 接入。
+- **默认图标集**：当前默认使用 `tabler`，命名格式推荐 `i-tabler-xxx`。
+- **组件入口**：统一使用 `src/components/AppIcon.vue` 渲染图标，避免在业务页面分散接入不同图标方案。
+- **推荐用法**：`<AppIcon name="i-tabler-bolt" class="text-orange-500 text-18px" />`。
+
 ### Vue 3 开发规范
 ```typescript
 // ✅ 推荐：使用 Composition API + <script setup>

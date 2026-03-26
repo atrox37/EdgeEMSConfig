@@ -1,70 +1,67 @@
-# 更新日志
+# Changelog
 
-本文档记录所有版本的更新内容。
+This document records all notable updates by version.
 
-## 格式说明
+## Format
 
-每个版本使用以下格式：
+Each version should follow this structure:
 
 ```markdown
-## [版本号] - YYYY-MM-DD
+## [version] - YYYY-MM-DD
 
-### 新增
-- 功能描述
+### Added
+- Feature description
 
-### 修复
-- 问题描述
+### Fixed
+- Issue description
 
-### 优化
-- 改进描述
+### Optimized
+- Improvement description
 ```
 
 ## [0.1.13] - 2026-02-09
 
-### optimize
-
-Added initialization configuration function
+### Optimized
+- Added initialization configuration functionality.
 
 ## [0.1.12] - 2026-02-06
 
-
-### 优化
-适配前端操作页面的样式
-
-
+### Optimized
+- Updated front-end operation page styling.
 
 ## [0.1.9] - 2025-12-16
 
-### 修复
-- 多平台打包
+### Fixed
+- Improved multi-platform packaging behavior.
 
 ---
 
 ## [0.1.8] - 2025-12-16
 
-### 修复
-- title显示问题
+### Fixed
+- Resolved title display issue.
 
 ---
+
 ## [0.1.7] - 2025-01-XX
 
-### 新增
-- 添加更新日志功能
-- 支持自动更新时显示更新内容
+### Added
+- Added changelog support.
+- Supported displaying update notes in automatic update prompts.
 
-### 修复
-- 修复版本号在安装包文件名中不正确的问题
-- 修复 ARM64 构建路径问题
+### Fixed
+- Fixed incorrect version naming in package file names.
+- Fixed ARM64 build path issues.
 
-### 优化
-- 优化构建流程，自动从 tag 提取版本号
-- 改进错误处理和调试信息
+### Optimized
+- Optimized build flow to extract version from git tag automatically.
+- Improved error handling and debug information.
 
 ---
 
 ## [0.1.0] - 2025-01-XX
 
-### 新增
-- 初始版本发布
-- 基础 PC 管理功能
+### Added
+- Initial release.
+- Basic PC management features.
 

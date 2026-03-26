@@ -15,7 +15,7 @@
             </el-form-item>
           </el-form>
           <div class="json-import-hint">
-            <el-icon class="json-import-hint__icon"><InfoFilled /></el-icon>
+            <AppIcon name="i-tabler-info-circle-filled" className="json-import-hint__icon" />
             <span class="json-import-hint__text">
               You can
               <input
@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { InfoFilled } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 
 const props = defineProps<{
@@ -269,10 +269,11 @@ defineExpose({
   font-size: 13px;
   color: #606266;
 
-  .json-import-hint__icon {
+  :deep(.json-import-hint__icon) {
     flex-shrink: 0;
     margin-top: 1px;
-    font-size: 16px;
+    width: 16px;
+    height: 16px;
     color: #909399;
   }
 

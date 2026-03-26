@@ -36,6 +36,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            commands::file::save_file_to_path,
             commands::ssh::test_ssh_connection,
             commands::ssh::upload_file_via_ssh,
             commands::ssh::execute_ssh_command,

@@ -446,20 +446,25 @@ const handleSubmit = async () => {
     activeTab.value = invalidTabs[0]
     return
   }
-  const mappings = [
-    ...(measurementRoutingRef.value?.getEditedData?.() || []),
-    ...(actionRoutingRef.value?.getEditedData?.() || []),
-  ]
+  const measurementMappings = measurementRoutingRef.value?.getEditedData?.() || []
+  const actionMappings = actionRoutingRef.value?.getEditedData?.() || []
+  const mappings = [...measurementMappings, ...actionMappings]
   if (!mappings.length) {
     ElMessage.info('No routing changes to submit')
     return
   }
-  const routingPayload = mappings.map((item: any) => ({
+  const toRoutingItem = (item: any, pointType: 'M' | 'A') => ({
     channel_id: Number(item.routing.channel_id),
     channel_point_id: Number(item.routing.channel_point_id),
     four_remote: String(item.routing.channel_type || '').toUpperCase(),
     point_id: Number(item.point_id),
-  }))
+    point_type: pointType,
+    enabled: !!item.routing.enabled,
+  })
+  const routingPayload = [
+    ...measurementMappings.map((item: any) => toRoutingItem(item, 'M')),
+    ...actionMappings.map((item: any) => toRoutingItem(item, 'A')),
+  ]
   const res = await updateInstanceRouting(instanceId.value, routingPayload)
   if (res.success) {
     ElMessage.success('Routing updated successfully')

@@ -558,7 +558,7 @@ const clearImportedFileName = () => {
 
 // 导出功能（导出当前tab的映射）
 // 文件名：{channelName}_{tab}_mapping_{timestamp}.csv
-const handleExport = () => {
+const handleExport = async () => {
   if (!editPoints.value || editPoints.value.length === 0) {
     ElMessage.warning('No data to export')
     return
@@ -591,9 +591,8 @@ const handleExport = () => {
     getTimestampCompact(),
   ])
   const csvContent = buildCsv(schema, rows)
-  downloadCsv(csvContent, filename)
-
-  ElMessage.success(`Exported to ${filename}`)
+  const saveResult = await downloadCsv(csvContent, filename)
+  ElMessage.success(`Exported to ${saveResult.displayPath}`)
 }
 
 

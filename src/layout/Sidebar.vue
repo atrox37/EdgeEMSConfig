@@ -165,7 +165,7 @@ watch(
     :deep(.el-sub-menu__title) {
       height: 36px;
       line-height: 36px;
-      padding-left: $spacing-md !important;
+      // padding-left: $spacing-md !important;
       font-size: $font-size-small;
     }
   }
@@ -190,7 +190,7 @@ watch(
 
   .sidebar__subMenu-title {
     font-family: $font-family-base;
-    font-weight: $font-weight-semibold; // 字体加粗
+    font-weight: $font-weight-bold; // 字体加粗
     font-style: normal;
     font-size: $font-size-small; // 字体大小
     letter-spacing: 0%;

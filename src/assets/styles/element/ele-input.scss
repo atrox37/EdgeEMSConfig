@@ -1,6 +1,9 @@
 @use "@/assets/styles/_variables.scss" as *;
 /* Element Plus Input 组件样式 */
 
+$field-placeholder-color: rgba($text-color-primary, 0.55);
+$field-disabled-text-color: rgba($text-color-primary, 0.35);
+
 .voltage-class {
   // Input 基础样式
   .el-input {
@@ -26,16 +29,16 @@
       border-radius: $border-radius-base !important;
       border-color: $border-color-base !important;
       &::placeholder {
-        color: $text-color-placeholder !important;
+        color: $field-placeholder-color !important;
       }
 
       &:disabled {
-        color: $text-color-disabled !important;
+        color: $field-disabled-text-color !important;
         cursor: not-allowed !important;
       }
 
       &:read-only {
-        color: $text-color-primary !important ;
+        color: $text-color-primary;
       }
     }
 
@@ -63,10 +66,10 @@
       }
     }
     .el-input__prefix {
-      padding-left: 0 !important;
+      padding-left: 12px !important;
     }
     .el-input__suffix {
-      padding-right: 0 !important;
+      padding-right: 12px !important;
     }
 
     // 密码显示切换按钮
@@ -149,11 +152,11 @@
       }
 
       &::placeholder {
-        color: $text-color-placeholder !important;
+        color: $field-placeholder-color !important;
       }
 
       &:disabled {
-        color: $text-color-disabled !important;
+        color: $field-disabled-text-color !important;
         cursor: not-allowed !important;
       }
       &:hover {

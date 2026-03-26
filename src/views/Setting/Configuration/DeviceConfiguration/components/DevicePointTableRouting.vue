@@ -923,7 +923,7 @@ void fileInputRef
 const clearImportedFileName = () => {
   importedFileName.value = ''
 }
-const handleExport = () => {
+const handleExport = async () => {
   const allPoints = Array.isArray(props.points) ? props.points : editPoints.value || []
   if (!allPoints || allPoints.length === 0) {
     ElMessage.warning('No data to export')
@@ -948,8 +948,8 @@ const handleExport = () => {
       .trim()
       .replace(/[^\w-]+/g, '_') || 'device'
   const filename = `${safeName}_${props.category}_routing_${getTimestampCompact()}.csv`
-  downloadCsv(csvContent, filename)
-  ElMessage.success(`Exported to ${filename}`)
+  const saveResult = await downloadCsv(csvContent, filename)
+  ElMessage.success(`Exported to ${saveResult.displayPath}`)
 }
 
 // 检查是否有修改

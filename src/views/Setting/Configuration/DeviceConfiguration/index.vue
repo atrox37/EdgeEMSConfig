@@ -47,7 +47,7 @@
 </div>
 </div> -->
         <div class="rule-management__reload-icon" @click="handleReload">
-          <img :src="tableRefreshIcon" alt="Reload" />
+          <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
         </div>
 
 
@@ -59,7 +59,7 @@
           <el-table-column prop="instance_id" label="ID" width="100" />
           <el-table-column prop="instance_name" label="Instance Name" min-width="200" />
           <el-table-column prop="product_name" label="Product Name" min-width="200" />
-          <el-table-column min-width="230" fixed="right">
+          <el-table-column min-width="250" fixed="right">
             <template #header>
               <IconButton type="primary" :icon="userAddIcon" text="New"
                 custom-class="rule-management__btn rule-management__table-header-btn" @click="handleAddUser" />
@@ -67,20 +67,16 @@
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div class="rule-management__operation-item" @click="handleDetail(row)">
-                  <img :src="detailIcon" />
+                  <AppIcon name="i-tabler-file-text" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Detail</span>
                 </div>
                 <div class="rule-management__operation-item" @click="openPointsDialog(row)">
-                  <img :src="pointIcon" />
+                  <AppIcon name="i-tabler-transform-point" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Points/Routings</span>
                 </div>
-                <!-- <div class="rule-management__operation-item" @click="openMappingsDialog(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Mappings</span>
-                </div> -->
                 <div class="rule-management__operation-item"
                   @click="deleteRow(row.instance_id as any, `Are you sure you want to delete instance '${row.instance_name}'?`, ruleManagementRef)">
-                  <img :src="tableDeleteIcon" />
+                  <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Delete</span>
                 </div>
               </div>
@@ -104,17 +100,12 @@
 </template>
 
 <script setup lang="ts">
-// 正确引入SVG图标，避免部署后图片加载不出
-import tableRefreshIcon from '@/assets/icons/table-refresh.svg'
-import tableSearchIcon from '@/assets/icons/table-search.svg'
-import userAddIcon from '@/assets/icons/user-add.svg'
-import tableDeleteIcon from '@/assets/icons/table-delect.svg'
-import detailIcon from '@/assets/icons/button-detail.svg'
-import pointIcon from '@/assets/icons/button-point.svg'
+import AppIcon from '@/components/AppIcon.vue'
+
+const userAddIcon = 'i-tabler-plus'
 
 import InstanceDetailDialog from './components/InstanceDetailDialog.vue'
 import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
-import { ElMessageBox, ElMessage } from 'element-plus'
 import { getProducts } from '@/api/devicesManagement'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import { useRouter } from 'vue-router'
@@ -344,6 +335,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
           opacity: 0.7;
         }
 
+        .rule-management__inline-icon,
         img {
           width: 32px;
           height: 32px;
@@ -449,6 +441,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
             display: flex;
             align-items: center;
 
+            .rule-management__inline-icon,
             img {
               width: 14px;
               height: 14px;

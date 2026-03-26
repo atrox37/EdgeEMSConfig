@@ -13,6 +13,8 @@ export const API_PORTS = {
   com: 6001,  // /comApi
   rule: 6002, // /ruleApi
   mod: 6002,  // /modApi
+  his: 6004,  // /hisApi
+  net: 6006,  // /netApi
 } as const
 
 export interface ApiConfig {
@@ -21,6 +23,8 @@ export interface ApiConfig {
   comApiURL: string
   ruleApiURL: string
   modApiURL: string
+  hisApiURL: string
+  netApiURL: string
 }
 
 /**
@@ -31,6 +35,8 @@ export function createApiConfig(ipAddress: string): ApiConfig {
   const comApiURL = `http://${ipAddress}:${API_PORTS.com}`
   const ruleApiURL = `http://${ipAddress}:${API_PORTS.rule}`
   const modApiURL = `http://${ipAddress}:${API_PORTS.mod}`
+  const hisApiURL = `http://${ipAddress}:${API_PORTS.his}`
+  const netApiURL = `http://${ipAddress}:${API_PORTS.net}`
 
   return {
     ipAddress,
@@ -38,6 +44,8 @@ export function createApiConfig(ipAddress: string): ApiConfig {
     comApiURL,
     ruleApiURL,
     modApiURL,
+    hisApiURL,
+    netApiURL,
   }
 }
 
@@ -93,6 +101,8 @@ export async function setAxiosBaseURL(config: ApiConfig): Promise<void> {
       comApiURL: config.comApiURL,
       modApiURL: config.modApiURL,
       ruleApiURL: config.ruleApiURL,
+      hisApiURL: config.hisApiURL,
+      netApiURL: config.netApiURL,
     })
   }
 }

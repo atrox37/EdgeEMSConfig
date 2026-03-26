@@ -11,7 +11,7 @@
     <!-- 卡片内容 -->
     <div class="end-node__content">
       <div class="end-node__icon">
-        <el-icon><CircleCheck /></el-icon>
+        <AppIcon name="i-tabler-circle-check-filled" className="end-node__glyph" />
       </div>
       <div class="end-node__info">
         <div class="end-node__name">END</div>
@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core'
-import { CircleCheck } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 
 defineProps<{
   data: any
@@ -36,7 +36,7 @@ defineProps<{
     display: flex;
     align-items: center;
     padding: 12px;
-    background-color: #f57c00; // deep orange
+    background-color: #3f444d; // dark gray
     border-radius: 8px;
     cursor: grab;
     transition: all 0.2s ease;
@@ -89,11 +89,12 @@ defineProps<{
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #ef6c00; // deeper orange tile
+      background-color: #2b2f36;
       border-radius: 6px;
       margin-right: 12px;
-      .el-icon {
-        font-size: 20px;
+      :deep(.end-node__glyph) {
+        width: 20px;
+        height: 20px;
         color: #ffffff;
       }
     }

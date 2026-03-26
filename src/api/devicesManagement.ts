@@ -71,6 +71,8 @@ export const updateInstanceRouting = (
     channel_point_id: number
     four_remote: string
     point_id: number
+    point_type: 'M' | 'A'
+    enabled: boolean
   }>,
 ): Promise<ApiResponse<any>> => {
   return Request.put(`/ruleApi/api/instances/${instanceId}/routing`, data)

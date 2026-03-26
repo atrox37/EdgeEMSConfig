@@ -1,5 +1,5 @@
 {
-  "name": "voltage-edge-ems",
+  "name": "monarch-edge-console",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -22,6 +22,7 @@
   "dependencies": {
     "@dagrejs/dagre": "^1.1.5",
     "@element-plus/icons-vue": "^2.3.1",
+    "@iconify/vue": "^5.0.0",
     "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-http": "^2.5.4",
@@ -49,6 +50,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@iconify-json/tabler": "^1.2.32",
     "@tauri-apps/cli": "^2.9.4",
     "@tsconfig/node22": "^22.0.2",
     "@types/jsdom": "^21.1.7",
@@ -74,6 +76,7 @@
     "terser": "^5.43.1",
     "typescript": "~5.8.0",
     "unplugin-auto-import": "^19.3.0",
+    "unplugin-icons": "^23.0.1",
     "unplugin-vue-components": "^28.8.0",
     "vite": "^7.0.0",
     "vite-plugin-compression": "^0.5.1",

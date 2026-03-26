@@ -1,525 +1,205 @@
 <template>
-  <div class="system-configuration">
-    <div class="system-configuration__header">
-      <h2 class="system-configuration__title">System Config</h2>
+  <div class="system-config-shell">
+    <div class="system-config-shell__header">
+      <h2 class="system-config-shell__title">System Config</h2>
     </div>
 
-    <div class="system-configuration__content">
-      <el-card class="system-configuration__card system-configuration__card--fixed">
-        <template #header>
-          <div class="system-configuration__card-header">
-            <span class="system-configuration__card-title">Network Management</span>
-            <span class="system-configuration__card-desc">Configure wired LAN IP, mask, gateway and DNS.</span>
-          </div>
+    <el-tabs v-model="activeTab" class="system-config-shell__tabs" @tab-change="handleTabChange">
+      <el-tab-pane name="network">
+        <template #label>
+          <span class="system-config-shell__tab-label">
+            <AppIcon name="i-tabler-network" className="system-config-shell__tab-icon" />
+            <span>Network</span>
+          </span>
         </template>
-        <div class="system-configuration__card-body">
-          <div class="system-configuration__actions">
-            <el-button type="primary" @click="openNetworkConfigDialog">
-              Configure Wired Network
-            </el-button>
-          </div>
-        </div>
-      </el-card>
-
-      <el-card class="system-configuration__card system-configuration__card--fixed">
-        <template #header>
-          <div class="system-configuration__card-header">
-            <span class="system-configuration__card-title">Configuration File Management</span>
-            <span class="system-configuration__card-desc">Import or export all system configuration files.</span>
-          </div>
+      </el-tab-pane>
+      <el-tab-pane name="storage">
+        <template #label>
+          <span class="system-config-shell__tab-label">
+            <AppIcon name="i-tabler-database" className="system-config-shell__tab-icon" />
+            <span>Storage</span>
+          </span>
         </template>
-        <div class="system-configuration__card-body">
-          <div class="system-configuration__actions">
-            <el-button type="primary" @click="handleConfigImport" :loading="configImportLoading">
-              Import Configuration (.zip)
-            </el-button>
-            <el-button type="primary" @click="handleConfigExport" :loading="configExportLoading">
-              Export Configuration (.zip)
-            </el-button>
-          </div>
-        </div>
-      </el-card>
-
-      <el-card
-        class="system-configuration__card"
-        :class="{ 'system-configuration__card--expand': upgradeStatusVisible }"
-      >
-        <template #header>
-          <div class="system-configuration__card-header">
-            <span class="system-configuration__card-title">Firmware Upgrade</span>
-            <span class="system-configuration__card-desc">Upload and apply a firmware package on device.</span>
-          </div>
+      </el-tab-pane>
+      <el-tab-pane name="mqtt">
+        <template #label>
+          <span class="system-config-shell__tab-label">
+            <AppIcon name="i-tabler-wifi" className="system-config-shell__tab-icon" />
+            <span>MQTT</span>
+          </span>
         </template>
-        <div class="system-configuration__card-body">
-          <div class="system-configuration__upload-section">
-            <div class="system-configuration__upload-actions">
-              <el-upload
-                ref="upgradeUploadRef"
-                class="system-configuration__upload"
-                :auto-upload="false"
-                :on-change="handleUpgradeFileChange"
-                :on-remove="handleUpgradeFileRemove"
-                accept=".run"
-                :limit="1"
-                :file-list="upgradeFileList"
-                :show-file-list="false"
-              >
-                <template #trigger>
-                  <el-button type="primary" :loading="upgradeUploadLoading">
-                    Upload Upgrade Package (.run)
-                  </el-button>
-                </template>
-              </el-upload>
+      </el-tab-pane>
+      <el-tab-pane name="tools">
+        <template #label>
+          <span class="system-config-shell__tab-label">
+            <AppIcon name="i-tabler-tool" className="system-config-shell__tab-icon" />
+            <span>Config File & Upgrade</span>
+          </span>
+        </template>
+      </el-tab-pane>
+    </el-tabs>
 
-              <el-button
-                v-if="upgradeUploadLoading"
-                type="danger"
-                plain
-                @click="handleUpgradeAbort"
-                :disabled="upgradeAbortLoading"
-              >
-                Abort Upgrade
-              </el-button>
-              <span v-if="upgradeUploadLoading" class="system-configuration__upload-hint-container">
-                <el-icon class="system-configuration__upload-hint-icon"><Warning /></el-icon> <span class="system-configuration__upload-hint-text">Please do not close the window while the upgrade is running.</span>
-              </span>
-            </div>
-
-          </div>
-
-          <div v-if="upgradeStatusVisible" class="system-configuration__upgrade-status">
-            <div class="system-configuration__upgrade-status-header">
-              <span>Upgrade Logs</span>
-            </div>
-            <div ref="upgradeStatusBodyRef" class="system-configuration__upgrade-status-body">
-              <pre v-if="upgradeStatusLog" ref="upgradeStatusLogRef" class="system-configuration__upgrade-status-log">{{ upgradeStatusLog }}</pre>
-            </div>
-          </div>
-        </div>
-      </el-card>
+    <div class="system-config-shell__content" :class="{ 'is-tools': activeTab === 'tools' }">
+      <router-view />
     </div>
-
-    <input
-      ref="configFileInputRef"
-      type="file"
-      accept=".zip"
-      style="display: none"
-      @change="handleConfigFileSelect"
-    />
-
-    <NetworkConfigDialog ref="networkConfigDialogRef" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox, type UploadFile, type UploadFiles } from 'element-plus'
-import {
-  abortUpgrade,
-  cancelUpgradeUpload,
-  downloadConfigExport,
-  getUpgradeStatus,
-  importConfigFile,
-  uploadUpgradePackage,
-} from '@/api/systemConfig'
-import NetworkConfigDialog from './components/NetworkConfigDialog.vue'
-import { Warning } from '@element-plus/icons-vue'
-const configFileInputRef = ref<HTMLInputElement>()
-const networkConfigDialogRef = ref<InstanceType<typeof NetworkConfigDialog> | null>(null)
-const configImportLoading = ref(false)
-const configExportLoading = ref(false)
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
 
-const upgradeUploadRef = ref()
-const upgradeFileList = ref<UploadFile[]>([])
-const upgradeUploadLoading = ref(false)
-const upgradeAbortLoading = ref(false)
-const upgradeStatusVisible = ref(false)
-// const upgradeStatusMessage = ref('')
-const upgradeStatusLog = ref('')
-const upgradeStatusBodyRef = ref<HTMLElement | null>(null)
-const upgradeStatusLogRef = ref<HTMLElement | null>(null)
-const upgradeStatusTimer = ref<number | null>(null)
-const upgradeStatusPolling = ref(false)
-const upgradeAbortTriggered = ref(false)
+type SystemConfigTab = 'network' | 'storage' | 'mqtt' | 'tools'
 
-const resetUpgradeSelection = () => {
-  upgradeUploadRef.value?.clearFiles?.()
-  upgradeFileList.value = []
+const route = useRoute()
+const router = useRouter()
+
+const tabPathMap: Record<SystemConfigTab, string> = {
+  network: '/systemConfig/network',
+  storage: '/systemConfig/storage',
+  mqtt: '/systemConfig/mqtt',
+  tools: '/systemConfig/tools',
 }
 
+const isSystemConfigTab = (value: string): value is SystemConfigTab =>
+  ['network', 'storage', 'mqtt', 'tools'].includes(value)
 
-const clearUpgradeStatus = () => {
-  // upgradeStatusMessage.value = ''
-  upgradeStatusLog.value = ''
-}
-
-const clearUpgradeStatusTimer = () => {
-  if (upgradeStatusTimer.value !== null) {
-    clearTimeout(upgradeStatusTimer.value)
-    upgradeStatusTimer.value = null
-  }
-}
-
-const stopUpgradeStatusPolling = () => {
-  upgradeStatusPolling.value = false
-  clearUpgradeStatusTimer()
-}
-
-const startUpgradeStatusPolling = () => {
-  clearUpgradeStatusTimer()
-  upgradeStatusVisible.value = true
-  upgradeStatusPolling.value = true
-  const fetchStatus = async () => {
-    if (!upgradeStatusPolling.value) return
-    try {
-      const res = await getUpgradeStatus()
-      if (res?.success) {
-        const data = res.data || {}
-        const status = String(data.status || '').toLowerCase()
-        upgradeStatusLog.value = String(data.log_preview || '')
-        await nextTick()
-        const scrollEl = upgradeStatusLogRef.value ?? upgradeStatusBodyRef.value
-        if (scrollEl) {
-          scrollEl.scrollTop = scrollEl.scrollHeight
-        }
-        if (status === 'finished') {
-          stopUpgradeStatusPolling()
-          upgradeUploadLoading.value = false
-          ElMessage.success('Upgrade finished')
-          return
-        }
-      }
-    } catch (error: any) {
-      // ignore
+const activeTab = computed<SystemConfigTab>({
+  get() {
+    const maybeTab = String(route.path.split('/').pop() || '').toLowerCase()
+    return isSystemConfigTab(maybeTab) ? maybeTab : 'network'
+  },
+  set(tab) {
+    const targetPath = tabPathMap[tab]
+    if (targetPath && route.path !== targetPath) {
+      router.push(targetPath)
     }
-    if (upgradeStatusPolling.value) {
-      upgradeStatusTimer.value = window.setTimeout(fetchStatus, 2000)
-    }
-  }
-  void fetchStatus()
-}
-
-watch(upgradeStatusLog, async () => {
-  await nextTick()
-  const scrollEl = upgradeStatusLogRef.value ?? upgradeStatusBodyRef.value
-  if (scrollEl) {
-    scrollEl.scrollTop = scrollEl.scrollHeight
-  }
+  },
 })
 
-const handleConfigImport = () => {
-  if (configFileInputRef.value) {
-    configFileInputRef.value.value = ''
-  }
-  configFileInputRef.value?.click()
+const handleTabChange = (name: string | number) => {
+  const tabName = String(name).toLowerCase()
+  if (!isSystemConfigTab(tabName)) return
+  activeTab.value = tabName
 }
-
-const openNetworkConfigDialog = () => {
-  networkConfigDialogRef.value?.open()
-}
-
-const handleConfigFileSelect = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
-
-  if (!file.name.toLowerCase().endsWith('.zip')) {
-    ElMessage.error('Please select a .zip file')
-    return
-  }
-
-  try {
-    configImportLoading.value = true
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await importConfigFile(formData)
-
-    if (response.success) {
-      ElMessage.success('Configuration imported successfully')
-    } else {
-      ElMessage.error(response.message || 'Import failed')
-    }
-  } catch (error: any) {
-    console.error('Import failed:', error)
-    ElMessage.error(error.message || 'Import failed')
-  } finally {
-    configImportLoading.value = false
-    if (configFileInputRef.value) {
-      configFileInputRef.value.value = ''
-    }
-  }
-}
-
-const handleConfigExport = async () => {
-  try {
-    configExportLoading.value = true
-    await downloadConfigExport(`system_config_${Date.now()}.zip`)
-  } catch (error: any) {
-    console.error('Export failed:', error)
-    ElMessage.error(error.message || 'Export failed')
-  } finally {
-    configExportLoading.value = false
-  }
-}
-
-const handleUpgradeFileChange = (file: UploadFile, fileList: UploadFiles) => {
-  if (file.raw && !file.raw.name.toLowerCase().endsWith('.run')) {
-    ElMessage.error('Only .run files are supported')
-    resetUpgradeSelection()
-    return
-  }
-  upgradeFileList.value = fileList.slice(-1)
-  if (upgradeFileList.value.length > 0 && !upgradeUploadLoading.value) {
-    void handleUpgradeUpload()
-  }
-}
-
-const handleUpgradeFileRemove = () => {
-  resetUpgradeSelection()
-}
-
-const handleUpgradeUpload = async () => {
-  if (upgradeFileList.value.length === 0) {
-    ElMessage.warning('Please select an upgrade package file')
-    return
-  }
-
-  const file = upgradeFileList.value[0].raw
-  if (!file) {
-    ElMessage.error('Invalid file')
-    return
-  }
-
-  if (!file.name.toLowerCase().endsWith('.run')) {
-    ElMessage.error('Only .run files are supported')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(
-      `Are you sure you want to upload the upgrade package: ${file.name}?`,
-      'Confirm Upload',
-      {
-        confirmButtonText: 'Upload',
-        cancelButtonText: 'Cancel',
-        type: 'warning',
-      }
-    )
-
-    upgradeUploadLoading.value = true
-    upgradeAbortTriggered.value = false
-    upgradeStatusVisible.value = true
-    clearUpgradeStatus()
-
-    const response = await uploadUpgradePackage(file)
-
-    if (response.success) {
-      startUpgradeStatusPolling()
-      resetUpgradeSelection()
-    } else {
-      ElMessage.error(response.message || 'Upload failed')
-      stopUpgradeStatusPolling()
-      upgradeUploadLoading.value = false
-    }
-  } catch (error: any) {
-    const isCanceled =
-      upgradeAbortTriggered.value ||
-      error?.code === 'ERR_CANCELED' ||
-      error?.message === '请求被取消'
-    if (!isCanceled && error !== 'cancel') {
-      console.error('Upload failed:', error)
-      ElMessage.error(error.message || 'Upload failed')
-    }
-    stopUpgradeStatusPolling()
-    upgradeUploadLoading.value = false
-  } finally {
-    resetUpgradeSelection()
-  }
-}
-
-const handleUpgradeAbort = async () => {
-  if (upgradeAbortLoading.value) return
-  try {
-    upgradeAbortLoading.value = true
-    upgradeAbortTriggered.value = true
-    cancelUpgradeUpload()
-    await abortUpgrade()
-    ElMessage.success('Upgrade aborted')
-    upgradeUploadLoading.value = false
-  } catch (error: any) {
-    console.error('Abort failed:', error)
-    ElMessage.error(error.message || 'Abort failed')
-  } finally {
-    upgradeAbortLoading.value = false
-    upgradeAbortTriggered.value = false
-  }
-}
-
-onUnmounted(() => {
-  stopUpgradeStatusPolling()
-})
 </script>
 
-<style lang="scss" scoped>
-.system-configuration {
+<style scoped lang="scss">
+.system-config-shell {
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.system-configuration__header {
-  margin-bottom: 24px;
+.system-config-shell__header {
+  margin-bottom: 12px;
 }
 
-.system-configuration__title {
+.system-config-shell__title {
+  margin: 0;
   font-size: $font-size-large;
   font-weight: $font-weight-semibold;
   color: $text-color-primary;
-  margin: 0;
 }
 
-.system-configuration__content {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
-}
-
-.system-configuration__card {
-  border-radius: $border-radius-base;
-  box-shadow: $box-shadow-base;
-}
-
-.system-configuration__card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.system-configuration__card-title {
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-base;
-  color: $text-color-primary;
-}
-
-.system-configuration__card-desc {
-  font-size: $font-size-small;
-  color: $text-color-secondary;
-  font-weight: $font-weight-normal;
-}
-
-.system-configuration__card--expand {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.system-configuration__card-body {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.system-configuration__actions {
-  display: flex;
-  gap: 16px;
-}
-
-.system-configuration__upload-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: flex-start;
+.system-config-shell__tabs {
   flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
-.system-configuration__upload-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.system-configuration__upload-hint-container {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-  font-size: $font-size-small;
-  color: $warning-color;
-  // flex-basis: 100%;
-}
-// .system-configuration__upload-hint {
-//   font-size: $font-size-small;
-//   color: $warning-color;
-//   flex-basis: 100%;
-//   // margin-top: 4px;
-//   .system-configuration__upload-hint-icon {
-//     font-size: $font-size-small;
-//     color: $warning-color;
-//     // margin-right: 4px;
-//   }
-// }
-
-.system-configuration__upload {
-  width: auto;
-  align-self: flex-start;
-}
-
-.system-configuration__upgrade-status {
-  margin-top: 16px;
-  border: 1px solid $border-color-base;
-  border-radius: $border-radius-small;
-  background: $bg-color-overlay;
-  display: flex;
-  flex-direction: column;
-  height: calc(100% - 48px);
-}
-
-.system-configuration__upgrade-status-header {
-  padding: 10px 14px;
-  border-bottom: 1px solid $border-color-base;
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-base;
-  color: $text-color-primary;
-}
-
-.system-configuration__upgrade-status-body {
-  padding: 12px 14px;
-  height: calc(100% - 41px);
-  // flex:1;
-  overflow: auto;
-}
-
-// .system-configuration__upgrade-status-message {
-//   color: $text-color-primary;
-//   margin-bottom: 8px;
-//   word-break: break-word;
-// }
-
-.system-configuration__upgrade-status-log {
-  margin: 0;
-  max-height: 100%;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
-}
-
-:deep(.el-upload) {
+.system-config-shell__content {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   width: 100%;
 }
 
-:deep(.el-upload__tip) {
-  margin-top: 8px;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+.system-config-shell__content.is-tools {
+  width: 100%;
 }
-// :deep(.el-card__body){
-//   height: calc(100% - 57px);
-// }
+
+.system-config-shell__content.is-tools :deep(.system-tools) {
+  width: 100%;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__header) {
+  margin: 0;
+  border: none;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-wrap),
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-scroll) {
+  overflow: visible !important;
+}
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav) {
+  border: none !important;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__item) {
+  height: 30px;
+  line-height: 30px;
+  padding: 0 16px;
+  margin-right: 8px;
+  border: 1px solid $border-color-base;
+  border-radius: 6px;
+  color: $text-color-primary;
+  background: #fff;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  // Keep a visible right/bottom "edge" for 3D block feeling.
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    2px 2px 0 rgba(15, 23, 42, 0.18),
+    3px 3px 8px rgba(15, 23, 42, 0.12);
+  transform: translateY(0);
+  transition: box-shadow 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__item:hover) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    3px 3px 0 rgba(15, 23, 42, 0.2),
+    4px 4px 10px rgba(15, 23, 42, 0.16);
+  transform: translateY(-1px);
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__item:last-child) {
+  margin-right: 0;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__item.is-active) {
+  color: #fff;
+  border-color: $primary-color;
+  background: $primary-color;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    2px 2px 0 rgba($primary-color, 0.7),
+    4px 4px 12px rgba($primary-color, 0.32);
+  transform: translateY(0);
+}
+
+.system-config-shell__tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.system-config-shell__tab-icon {
+  font-size: 14px;
+  color: inherit;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__active-bar) {
+  display: none;
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__content) {
+  display: none;
+}
 </style>

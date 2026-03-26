@@ -2434,6 +2434,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "monarch-edge-console"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "ssh2",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-http",
+ "tauri-plugin-log",
+ "tauri-plugin-opener",
+ "tauri-plugin-store",
+ "tauri-plugin-updater",
+ "tokio",
+]
+
+[[package]]
 name = "muda"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2965,25 +2984,6 @@ name = "pathdiff"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
-
-[[package]]
-name = "pcmanagement"
-version = "0.1.0"
-dependencies = [
- "log",
- "serde",
- "serde_json",
- "ssh2",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-http",
- "tauri-plugin-log",
- "tauri-plugin-opener",
- "tauri-plugin-store",
- "tauri-plugin-updater",
- "tokio",
-]
 
 [[package]]
 name = "percent-encoding"

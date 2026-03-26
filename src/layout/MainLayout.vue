@@ -122,7 +122,7 @@ watch(
       margin:5px;
       border-radius: 10px;
       box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-      border: 1px solid $border-color-base;
+      //border: 1px solid $border-color-base;
       overflow-y: auto;
       padding: 10px;
       background: rgba(255, 255, 255, 0.8); // 确保内容区域使用半透明的白色背景

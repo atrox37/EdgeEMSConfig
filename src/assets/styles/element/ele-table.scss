@@ -9,6 +9,22 @@
 .voltage-class {
   .el-table {
     background-color: transparent !important; // 使el-table背景透明，优先级提升
+    // Table loading icon/text use secondary theme color.
+    .el-loading-mask {
+      .el-loading-spinner {
+        .path {
+          stroke: $secondary-color !important;
+        }
+
+        .circular {
+          color: $secondary-color !important;
+        }
+
+        .el-loading-text {
+          color: $secondary-color !important;
+        }
+      }
+    }
     .el-table__inner-wrapper {
       &::before {
         height: $border-width-base;

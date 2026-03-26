@@ -68,9 +68,7 @@
           </el-form>
         </div>
         <div class="first-gateway-setup__hint-block">
-            <el-icon class="first-gateway-setup__hint-icon">
-              <InfoFilled />
-            </el-icon>
+            <AppIcon name="i-tabler-info-circle-filled" className="first-gateway-setup__hint-icon" />
             <p class="first-gateway-setup__hint-text">
               Already configured? Use <span class="first-gateway-setup__hint-em">Skip to login</span> at the bottom-right.
               You can open setup again from <span class="first-gateway-setup__hint-em">Initialize Project</span> on the login page.
@@ -80,11 +78,14 @@
       
     </div>
 
-    <button type="button" class="first-gateway-setup__skip first-gateway-setup__skip-fixed" @click="handleSkip">
+    <button
+      type="button"
+      class="first-gateway-setup__skip first-gateway-setup__skip-fixed"
+      :disabled="isSubmitting"
+      @click="handleSkip"
+    >
       <span>Skip to login</span>
-      <el-icon class="first-gateway-setup__skip-icon">
-        <ArrowRight />
-      </el-icon>
+      <AppIcon name="i-tabler-arrow-right" className="first-gateway-setup__skip-icon" />
     </button>
   </div>
 </template>
@@ -92,8 +93,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, InfoFilled } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import AppIcon from '@/components/AppIcon.vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import type { InitProjectForm } from '@/types/ssh'
 import { runGatewayInitInstall } from '@/utils/gatewayInitInstall'
@@ -120,10 +121,11 @@ const progressMessage = ref('')
 const progressPercentage = ref(0)
 const progressStatus = ref<'success' | 'exception' | 'warning' | ''>('')
 const progressDetail = ref('')
+const IPV4_PATTERN = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/
 
 const isStartInitReady = computed(() => {
   const host = form.host.trim()
-  const isHostValid = /^(\d{1,3}\.){3}\d{1,3}$/.test(host)
+  const isHostValid = IPV4_PATTERN.test(host)
   const isPortValid =
     typeof form.port === 'number' &&
     Number.isInteger(form.port) &&
@@ -137,7 +139,7 @@ const formRules = computed<FormRules<InitProjectForm>>(() => {
     host: [
       { required: true, message: 'Please enter IP address', trigger: 'blur' },
       {
-        pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
+        pattern: IPV4_PATTERN,
         message: 'Please enter a valid IP address',
         trigger: 'blur',
       },
@@ -214,6 +216,7 @@ const goLogin = () => {
 }
 
 const handleSkip = () => {
+  if (isSubmitting.value) return
   markGatewayFirstSetupSeen()
   goLogin()
 }
@@ -297,11 +300,11 @@ const handleStartInit = async () => {
   text-align: left;
 }
 
-.first-gateway-setup__hint-icon {
+.first-gateway-setup__hint-block :deep(.first-gateway-setup__hint-icon) {
   flex-shrink: 0;
   margin-top: 2px;
-  font-size: 16px;
-  // line-height: 20px;
+  width: 16px;
+  height: 16px;
   color: $secondary-color;
 }
 
@@ -331,14 +334,19 @@ const handleStartInit = async () => {
   color: $primary-color;
   cursor: pointer;
   transition: opacity $transition-fast;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
   &:hover {
     opacity: 0.85;
   }
 }
 
-.first-gateway-setup__skip-icon {
-  font-size: $font-size-base;
+.first-gateway-setup__skip :deep(.first-gateway-setup__skip-icon) {
+  width: 1em;
+  height: 1em;
 }
 
 .first-gateway-setup__skip-fixed {

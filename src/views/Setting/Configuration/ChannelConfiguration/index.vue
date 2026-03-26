@@ -77,7 +77,7 @@
           </el-form-item>
         </el-form>
         <div class="rule-management__reload-icon" @click="handleReload">
-          <img :src="tableRefreshIcon" alt="Reload" />
+          <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
         </div>
       </div>
       <div class="rule-management__search-form-second-row">
@@ -120,17 +120,13 @@
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div class="rule-management__operation-item" @click="handleDetail(row)">
-                  <img :src="buttonDetailIcon" />
+                  <AppIcon name="i-tabler-file-text" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Detail</span>
                 </div>
                 <div class="rule-management__operation-item" @click="handlePointsTables(row)">
-                  <img :src="buttonPointsIcon" />
+                  <AppIcon name="i-tabler-transform-point" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Points/Mappings</span>
                 </div>
-                <!-- <div class="rule-management__operation-item" @click="handleMappings(row)">
-                  <img :src="tableEditIcon" />
-                  <span class="rule-management__operation-text">Mappings</span>
-                </div> -->
                 <div class="rule-management__operation-item" @click="
                   deleteRow(
                     row.id,
@@ -138,14 +134,12 @@
                     ruleManagementRef,
                   )
                   ">
-                  <img :src="tableDeleteIcon" />
+                  <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Delete</span>
                 </div>
                 <el-dropdown trigger="click" placement="bottom-end" :teleported="true">
                   <div class="rule-management__operation-item rule-management__operation-item--more">
-                    <el-icon>
-                      <MoreFilled />
-                    </el-icon>
+                    <AppIcon name="i-tabler-dots" className="rule-management__more-icon" />
                   </div>
                   <template #dropdown>
                     <el-dropdown-menu>
@@ -157,28 +151,6 @@
                   </template>
                 </el-dropdown>
 
-                <!-- <el-dropdown
-                  trigger="click"
-                  placement="bottom"
-                  :show-arrow="false"
-                  :teleported="false"
-                >
-                  <div class="rule-management__operation-item">
-                    <img :src="tableDeleteIcon" />
-                    <span class="rule-management__operation-text">control</span>
-                  </div>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item @click="handleControl(row, 'start')"
-                        >Start</el-dropdown-item
-                      >
-                      <el-dropdown-item @click="handleControl(row, 'stop')">Stop</el-dropdown-item>
-                      <el-dropdown-item @click="handleControl(row, 'restart')"
-                        >Restart</el-dropdown-item
-                      >
-                    </el-dropdown-menu>
-                  </template>
-      </el-dropdown> -->
               </div>
             </template>
           </el-table-column>
@@ -202,27 +174,22 @@
 </template>
 
 <script setup lang="ts">
-// 正确引入SVG图标，避免部署后图片加载不出�?
-import tableRefreshIcon from '@/assets/icons/table-refresh.svg'
-import tableSearchIcon from '@/assets/icons/table-search.svg'
-import userAddIcon from '@/assets/icons/user-add.svg'
-import tableDeleteIcon from '@/assets/icons/table-delect.svg'
-import buttonDetailIcon from '@/assets/icons/button-detail.svg'
-import buttonPointsIcon from '@/assets/icons/button-point.svg'
-import sidebarSettingIcon from '@/assets/icons/sidebar-setting.svg'
 import { ChangeChannelEnabled } from '@/api/channelsManagement'
 import { applyTemplateToChannel, createTemplateFromChannel, getTemplates } from '@/api/channelTemplates'
 import type { ChannelListItem } from '@/types/channelConfiguration'
 import type { ChannelTemplateListItem } from '@/types/channelTemplates'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { MoreFilled } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import { useRouter } from 'vue-router'
 import ChannelDetailDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/ChannelDetailDialog.vue'
 import AssignTemplateDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/AssignTemplateDialog.vue'
 import AsTemplateDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/AsTemplateDialog.vue'
 
+const tableSearchIcon = 'i-tabler-filter'
+const userAddIcon = 'i-tabler-plus'
+const sidebarSettingIcon = 'i-tabler-template'
 const router = useRouter()
 const channelDetailDialogRef = ref<InstanceType<typeof ChannelDetailDialog> | null>(null)
 
@@ -607,6 +574,7 @@ const handleChannelDialogCancel = () => {
           opacity: 0.7;
         }
 
+        .rule-management__inline-icon,
         img {
           width: 32px;
           height: 32px;
@@ -728,6 +696,7 @@ const handleChannelDialogCancel = () => {
           display: flex;
           align-items: center;
 
+          .rule-management__inline-icon,
           img {
             width: 14px;
             height: 14px;
@@ -745,8 +714,9 @@ const handleChannelDialogCancel = () => {
             height: 32px;
             justify-content: center;
 
-            .el-icon {
-              font-size: 20px;
+            :deep(.rule-management__more-icon) {
+              width: 20px;
+              height: 20px;
               color: #606266;
             }
           }
@@ -781,6 +751,7 @@ const handleChannelDialogCancel = () => {
         padding: 8px 16px;
         border-radius: 4px;
 
+        .rule-management__inline-icon,
         img {
           width: 14px;
           height: 14px;

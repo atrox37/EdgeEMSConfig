@@ -1,80 +1,96 @@
 <template>
-  <!-- <div v-if="updateInfo && !dismissed" class="update-checker"> -->
-    <!-- Update Alert Banner -->
-    <!-- <el-alert
-      v-if="!updateDialogVisible"
-      :title="`New Version: v${updateInfo?.version}`"
-      type="info"
-      :closable="true"
-      show-icon
-      @close="dismissUpdate"
-      class="update-alert"
-    >
-      <template #default>
-        <div class="update-alert-content">
-          <p>{{ updateInfo?.notes ? truncateNotes(updateInfo?.notes) : 'A new version is available' }}</p>
-          <div class="update-actions">
-            <el-button type="primary" size="small" @click="showUpdateDialog">
-              View Details
-            </el-button>
-            <el-button size="small" @click="dismissUpdate">Remind Later</el-button>
-          </div>
-        </div>
-      </template>
-    </el-alert> -->
-
-    <!-- Update Dialog -->
-    <el-dialog
-    v-if="updateInfo && !dismissed"
-      v-model="updateDialogVisible"
-      title="Application Update"
-      width="600px"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-      :show-close="true"
-      @close="dismissUpdate"
-    >
-      <div v-if="updateInfo" class="update-dialog-content">
+  <FormDialog
+    ref="dialogRef"
+    :title="dialogMode === 'manual' ? 'Check for Updates' : 'Update Available'"
+    width="620px"
+    :append-to-body="true"
+    dialog-class="update-checker-dialog"
+    :close-on-press-escape="false"
+  >
+    <template #dialog-body>
+      <div class="update-dialog-content">
         <div class="update-header">
-          <h3>New Version: v{{ updateInfo?.version }}</h3>
-          <p v-if="updateInfo.date" class="update-date">
-            Release Date: {{ formatDate(updateInfo?.date) }}
+          <h3 v-if="updateInfo">v{{ updateInfo.version }} Available</h3>
+          <h3 v-else-if="dialogMode === 'manual'">No New Version Found</h3>
+          <h3 v-else>Update Available</h3>
+          <p class="update-description">
+            {{
+              dialogMode === 'manual'
+                ? updateInfo
+                  ? `You’re running version ${currentVersion || '-'}. A newer version is available.`
+                  : `You’re running version ${currentVersion || '-'}. This is the latest version.`
+                : 'A new version is available. Update now or remind later.'
+            }}
           </p>
+          <div class="update-row">
+            <span class="update-label">Current Version:</span>
+            <span>{{ currentVersion || '-' }}</span>
+          </div>
+          <div class="update-row">
+            <span class="update-label">Latest Version:</span>
+            <span v-if="isCheckingUpdate">Checking...</span>
+            <span v-else-if="updateInfo" class="update-latest">
+              <span>{{ `v${updateInfo.version}` }}</span>
+              <span class="update-tag-new">NEW</span>
+            </span>
+            <span v-else>Already up to date</span>
+          </div>
+          <div v-if="updateInfo?.date" class="update-row">
+            <span class="update-label">Release Date:</span>
+            <span>{{ formatDate(updateInfo.date) }}</span>
+          </div>
         </div>
 
         <div class="update-notes">
-          <h4>What's New:</h4>
-          <div class="notes-content" v-html="formatNotes(updateInfo?.notes)"></div>
+          <h4>Update Notes:</h4>
+          <div v-if="updateInfo?.notes" class="notes-content">
+            <div
+              v-for="(section, sectionIndex) in parseChangelogSections(updateInfo.notes)"
+              :key="`section-${sectionIndex}-${section.title}`"
+              class="notes-section"
+            >
+              <div class="notes-section__title">{{ section.title }}</div>
+              <ul class="notes-list">
+                <li
+                  v-for="(item, itemIndex) in section.items"
+                  :key="`item-${sectionIndex}-${itemIndex}-${item}`"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div v-else class="notes-content notes-content--empty">No update notes available</div>
         </div>
       </div>
+    </template>
 
-      <template #footer>
-        <el-button @click="dismissUpdate">Remind Later</el-button>
-        <el-button type="primary" :loading="isInstalling" @click="handleInstall">
-          Update Now
-        </el-button>
-      </template>
-    </el-dialog>
-  <!-- </div> -->
+    <template #dialog-footer>
+      <el-button @click="closeDialog">{{ dialogMode === 'manual' ? 'Close' : 'Remind Later' }}</el-button>
+      <el-button type="primary" :loading="isInstalling" :disabled="!updateInfo" @click="handleInstall">
+        Update Now
+      </el-button>
+    </template>
+  </FormDialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { getVersion } from '@tauri-apps/api/app'
 import { useUpdater } from '@/composables/useUpdater'
+import FormDialog from '@/components/dialog/FormDialog.vue'
 
-const {
-  updateInfo,
-  checkUpdate,
-  installUpdate: installUpdateFn,
-} = useUpdater()
+type DialogMode = 'auto' | 'manual'
 
-const updateDialogVisible = ref(false)
+const { updateInfo, checkUpdate, installUpdate: installUpdateFn } = useUpdater()
+
+const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null)
 const isInstalling = ref(false)
-const dismissed = ref(false) // Whether user has dismissed the update notification
+const isCheckingUpdate = ref(false)
+const dismissed = ref(false)
+const currentVersion = ref('')
+const dialogMode = ref<DialogMode>('auto')
 
-/**
- * Format date
- */
 const formatDate = (dateStr?: string): string => {
   if (!dateStr) return ''
   try {
@@ -88,54 +104,69 @@ const formatDate = (dateStr?: string): string => {
   }
 }
 
-/**
- * Format update notes (supports Markdown)
- */
-const formatNotes = (notes?: string): string => {
-  if (!notes) return '<p class="no-notes">No update notes available</p>'
-
-  // Simple Markdown to HTML conversion
-  return notes
-    .replace(/### (.*?)\n/g, '<h4>$1</h4>')
-    .replace(/- (.*?)(\n|$)/g, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-    .replace(/^(.*)$/, '<p>$1</p>')
+interface ChangelogSection {
+  title: string
+  items: string[]
 }
 
-/**
- * Truncate update notes (for banner display)
- */
-const truncateNotes = (notes?: string): string => {
-  if (!notes) return 'A new version is available'
-  const maxLength = 100
-  if (notes.length <= maxLength) return notes
-  return notes.substring(0, maxLength) + '...'
+const parseChangelogSections = (notes?: string): ChangelogSection[] => {
+  if (!notes) return []
+
+  const lines = notes.split('\n')
+  const sections: ChangelogSection[] = []
+  let currentSection: ChangelogSection | null = null
+
+  const ensureDefaultSection = () => {
+    if (!currentSection) {
+      currentSection = { title: 'Updates', items: [] }
+      sections.push(currentSection)
+    }
+  }
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim()
+    if (!line) return
+
+    if (/^###\s+/.test(line)) {
+      const title = line.replace(/^###\s+/, '').trim()
+      currentSection = { title: title || 'Updates', items: [] }
+      sections.push(currentSection)
+      return
+    }
+
+    const cleaned = line
+      .replace(/^[-*]\s+/, '')
+      .replace(/^\d+\.\s+/, '')
+      .trim()
+
+    if (!cleaned) return
+    ensureDefaultSection()
+    currentSection!.items.push(cleaned)
+  })
+
+  return sections.length > 0 ? sections : [{ title: 'Updates', items: ['No update details provided'] }]
 }
 
-/**
- * Show update dialog
- */
-const showUpdateDialog = () => {
-  updateDialogVisible.value = true
+const openDialog = () => {
+  if (dialogRef.value) {
+    dialogRef.value.dialogVisible = true
+  }
 }
 
-/**
- * Dismiss update notification
- */
-const dismissUpdate = () => {
-  updateDialogVisible.value = false
-  dismissed.value = true
+const closeDialog = () => {
+  if (dialogRef.value) {
+    dialogRef.value.dialogVisible = false
+  }
+  if (dialogMode.value === 'auto') {
+    dismissed.value = true
+  }
 }
 
-/**
- * Handle install update
- */
 const handleInstall = async () => {
   try {
     isInstalling.value = true
     await installUpdateFn()
-    updateDialogVisible.value = false
+    closeDialog()
   } catch (error) {
     console.error('Failed to install update:', error)
   } finally {
@@ -143,127 +174,50 @@ const handleInstall = async () => {
   }
 }
 
+const openManualCheckDialog = async () => {
+  dialogMode.value = 'manual'
+  dismissed.value = false
+  openDialog()
+  isCheckingUpdate.value = true
+  try {
+    await checkUpdate(true)
+  } finally {
+    isCheckingUpdate.value = false
+  }
+}
+
+const handleTitlebarOpenUpdatesDialog = async () => {
+  await openManualCheckDialog()
+}
+
 watch(
   () => updateInfo.value,
   (newInfo) => {
-    if (newInfo && !dismissed.value) {
-      // Automatically show dialog when update is available
-      updateDialogVisible.value = true
+    if (newInfo && !dismissed.value && dialogMode.value === 'auto') {
+      openDialog()
     }
   },
   { immediate: true }
 )
 
-// Automatically check for updates when component is mounted
-onMounted(() => {
-  // Delay check to avoid affecting application startup speed
+onMounted(async () => {
+  currentVersion.value = await getVersion()
+  window.addEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
   setTimeout(() => {
-    checkUpdate(true) // Silent check
+    dialogMode.value = 'auto'
+    void checkUpdate(true)
   }, 3000)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
 })
 </script>
 
 <style scoped lang="scss">
-
-// .update-checker {
-//   position: absolute;
-//   top: 50%;
-//   left: 50%;
-//   transform: translate(-50%, -50%);
-//   z-index: 9999;
-//   width: 500px;
-//   height: 400px;
-//   // height: 500px;
-// }
-
-// Alert banner styling
-// :deep(.update-alert) {
-//   background: $bg-color-dark-9 !important;
-//   border: $border-width-base solid $border-color-base;
-//   border-radius: $border-radius-base;
-//   backdrop-filter: $backdrop-blur-base;
-//   box-shadow: $box-shadow-medium;
-
-//   .el-alert__content {
-//     background: transparent !important;
-//   }
-
-//   .el-alert__title {
-//     color: $text-color-primary;
-//     font-size: $font-size-base;
-//     font-weight: $font-weight-semibold;
-//   }
-
-//   .el-alert__icon {
-//     color: $primary-color;
-//   }
-
-//   .el-alert__closebtn {
-//     color: $text-color-white-60;
-
-//     &:hover {
-//       color: $text-color-primary;
-//     }
-//   }
-// }
-
-.update-alert-content {
-  p {
-    margin: $spacing-sm 0;
-    color: $text-color-white-60;
-    font-size: $font-size-base;
-    line-height: $line-height-normal;
-  }
-
-  .update-actions {
-    margin-top: $spacing-md;
-    display: flex;
-    gap: $spacing-sm;
-  }
-}
-
-// Dialog styling
-:deep(.update-dialog) {
-  background: $bg-color-dark-9 !important;
-  border: $border-width-base solid $border-color-base !important;
-
-  .el-dialog__header {
-    background: transparent !important;
-    border-bottom: $border-width-base solid $border-color-white-10;
-    // padding-bottom: $spacing-md;
-  }
-
-  .el-dialog__title {
-    color: $text-color-primary;
-    font-size: $font-size-large;
-    font-weight: $font-weight-semibold;
-  }
-
-  .el-dialog__headerbtn {
-    .el-dialog__close {
-      color: $text-color-white-60;
-
-      &:hover {
-        color: $text-color-primary;
-      }
-    }
-  }
-
-  .el-dialog__body {
-    background: transparent !important;
-    color: $text-color-primary;
-  }
-
-  .el-dialog__footer {
-    background: transparent !important;
-    border-top: $border-width-base solid $border-color-white-10;
-    padding-top: $spacing-md;
-  }
-}
-
 .update-dialog-content {
   .update-header {
-    margin-bottom: $spacing-lg;
+    margin-bottom: $spacing-md;
     padding-bottom: $spacing-md;
     border-bottom: $border-width-base solid $border-color-white-10;
 
@@ -274,76 +228,92 @@ onMounted(() => {
       font-weight: $font-weight-semibold;
     }
 
-    .update-date {
-      margin: 0;
+    .update-description {
+      margin: 0 0 $spacing-md 0;
       color: $text-color-white-60;
-      font-size: $font-size-extra-small;
-      max-width: 300px;
+      font-size: $font-size-base;
+      line-height: $line-height-normal;
     }
   }
+}
 
-  .update-notes {
-    h4 {
-      margin: 0 0 $spacing-md 0;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
-      font-size: $font-size-medium;
+.update-row {
+  display: flex;
+  justify-content: space-between;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xs;
+}
+
+.update-label {
+  font-weight: $font-weight-semibold;
+  color: $text-color-primary;
+}
+
+.update-latest {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.update-tag-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  line-height: 1.6;
+  border-radius: $border-radius-small;
+  background: rgba(255, 138, 0, 0.16);
+  color: $primary-color;
+}
+
+.update-notes {
+  // padding-top: $spacing-md;
+  // border-top: $border-width-base solid $border-color-white-10;
+
+  h4 {
+    margin: 0 0 $spacing-md 0;
+    font-weight: $font-weight-semibold;
+    color: $text-color-primary;
+    font-size: $font-size-medium;
+  }
+
+  .notes-content {
+    max-height: 260px;
+    overflow-y: auto;
+    padding: $spacing-md;
+    background: #f5f6f7;
+    border-radius: $border-radius-small;
+    line-height: $line-height-loose;
+    color: #3f444d;
+
+    &--empty {
+      color: #6b7280;
+      font-style: italic;
     }
 
-    .notes-content {
-      max-height: 300px;
-      overflow-y: auto;
-      padding: $spacing-md;
-      background: $bg-color-dark-5;
-      border: $border-width-base solid $border-color-base;
-      border-radius: $border-radius-small;
-      line-height: $line-height-loose;
-      color: $text-color-white-60;
+    .notes-list {
+      margin: 0;
+      padding-left: $spacing-md;
+      list-style: disc;
 
-      // Custom scrollbar
-      &::-webkit-scrollbar {
-        width: $width-scrollbar;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: $scrollbar-track-bg;
-        border-radius: $border-radius-small;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: $scrollbar-thumb-bg;
-        border-radius: $border-radius-small;
-
-        &:hover {
-          background: $scrollbar-thumb-hover-bg;
-        }
-      }
-
-      :deep(h4) {
-        margin: $spacing-md 0 $spacing-sm 0;
-        font-weight: $font-weight-semibold;
-        color: $primary-color;
-        font-size: $font-size-medium;
-      }
-
-      :deep(li) {
+      li {
         margin: $spacing-xs 0;
-        padding-left: $spacing-md;
-        color: $text-color-white-60;
-        list-style-type: disc;
       }
+    }
 
-      :deep(p) {
-        margin: $spacing-sm 0;
-        color: $text-color-white-60;
-      }
+    .notes-section + .notes-section {
+      margin-top: $spacing-md;
+      padding-top: $spacing-sm;
+      border-top: $border-width-base solid rgba(63, 68, 77, 0.14);
+    }
 
-      :deep(.no-notes) {
-        color: $text-color-white-40;
-        font-style: italic;
-      }
+    .notes-section__title {
+      font-weight: $font-weight-semibold;
+      margin-bottom: $spacing-xs;
+      color: #2f3440;
     }
   }
 }
 </style>
-

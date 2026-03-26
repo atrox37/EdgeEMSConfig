@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pcmanagement",
+  "productName": "Monarch Edge Console",
   "version": "0.1.0",
-  "identifier": "com.zhiyuanwang.pcmanagement",
+  "identifier": "com.zhiyuanwang.monarch-edge-console",
   "build": {
     "beforeDevCommand": "pnpm web:dev",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Norton creek solar energy center",
+        "title": "Monarch Edge Console",
         "width": 1050,
         "height": 630,
         "minWidth": 1050,

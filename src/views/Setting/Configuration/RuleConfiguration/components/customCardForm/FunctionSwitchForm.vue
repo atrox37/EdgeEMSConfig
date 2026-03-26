@@ -30,9 +30,7 @@
               </span>
             </span>
             <el-button class="section__add-btn" type="primary" @click="addVariable">
-              <el-icon>
-                <Plus />
-              </el-icon>
+              <AppIcon name="i-tabler-plus" className="section__add-btn-icon" />
             </el-button>
           </div>
           <div class="section__body variable">
@@ -112,25 +110,19 @@
                     </el-select>
                     <el-button class="combined-row__delete" link
                       @click="removeCombinedRow(v, pairIdx - 1)">
-                      <el-icon style="color: red">
-                        <CircleClose />
-                      </el-icon>
+                      <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" :style="{ color: 'red' }" />
                     </el-button>
                   </div>
 
                   <div class="variable-row__combined-add">
                     <el-button type="primary" link @click="addCombinedRow(v)">
-                      <el-icon style="color: green">
-                        <CirclePlus />
-                      </el-icon>
+                      <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" :style="{ color: 'green' }" />
                     </el-button>
                   </div>
                 </div>
               </el-form-item>
               <el-button class="variable-row__delete" @click="removeVariable(idx)">
-                <el-icon>
-                  <Delete />
-                </el-icon>
+                <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
               </el-button>
             </div>
           </div>
@@ -141,12 +133,12 @@
           'collapse-center--right': collapsedSection === 'variable',
         }">
           <el-button class="collapse-center__btn" type="primary" link @click="toggleCenterCollapse">
-            <el-icon v-if="collapsedSection === 'variable'">
-              <ArrowRightBold />
-            </el-icon>
-            <el-icon v-else>
-              <ArrowLeftBold />
-            </el-icon>
+            <AppIcon
+              v-if="collapsedSection === 'variable'"
+              name="i-tabler-arrow-big-right"
+              className="collapse-center__glyph"
+            />
+            <AppIcon v-else name="i-tabler-arrow-big-left" className="collapse-center__glyph" />
           </el-button>
         </div>
 
@@ -161,9 +153,7 @@
               </span>
             </span>
             <el-button class="section__add-btn" type="primary" @click="addRule">
-              <el-icon>
-                <Plus />
-              </el-icon>
+              <AppIcon name="i-tabler-plus" className="section__add-btn-icon" />
             </el-button>
           </div>
           <div class="section__body rule">
@@ -251,9 +241,7 @@
                           <!-- 从第二个条件开始提供删除按钮（需同时移除其前置 relation） -->
                           <el-button v-if="Number(i) > 0" class="default-cond-row__delete" link
                             @click="removedefaultCondition(r, i)">
-                            <el-icon style="color: red">
-                              <CircleClose />
-                            </el-icon>
+                            <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" :style="{ color: 'red' }" />
                           </el-button>
                           <span v-else class="default-cond-row__delete-spacer" aria-hidden="true"></span>
                         </div>
@@ -261,9 +249,7 @@
                     </div>
                     <div class="rule-row__default-add">
                       <el-button type="primary" link @click="adddefaultCondition(r)">
-                        <el-icon style="color: green">
-                          <CirclePlus />
-                        </el-icon>
+                        <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" :style="{ color: 'green' }" />
                       </el-button>
                     </div>
                   </div>
@@ -274,9 +260,7 @@
                   </div>
                 </el-form-item>
                 <el-button class="rule-row__delete" @click="removeRule(rIdx)">
-                  <el-icon>
-                    <Delete />
-                  </el-icon>
+                  <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
                 </el-button>
               </div>
             </div>
@@ -284,18 +268,12 @@
         </div>
       </div>
       <div class="collapse-hint">
-        <el-icon class="collapse-hint__icon">
-          <InfoFilled />
-        </el-icon>
+        <AppIcon name="i-tabler-info-circle-filled" className="collapse-hint__icon" />
         <span class="collapse-hint__text">
           Tip: Click
-          <el-icon class="collapse-hint__arrow">
-            <ArrowRightBold />
-          </el-icon>
+          <AppIcon name="i-tabler-arrow-big-right" className="collapse-hint__arrow" />
           /
-          <el-icon class="collapse-hint__arrow">
-            <ArrowLeftBold />
-          </el-icon>
+          <AppIcon name="i-tabler-arrow-big-left" className="collapse-hint__arrow" />
           to toggle Variable/Rule.
         </span>
       </div>
@@ -305,15 +283,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import {
-  Plus,
-  Delete,
-  CircleClose,
-  CirclePlus,
-  ArrowLeftBold,
-  ArrowRightBold,
-  InfoFilled,
-} from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import { getInstancePoints, getAllInstances, getInstancesByIds } from '@/api/devicesManagement'
 
 const formRef = ref()
@@ -1085,6 +1055,11 @@ watch(
 
       .section__add-btn {
         width: 32px !important;
+
+        :deep(.section__add-btn-icon) {
+          width: 16px;
+          height: 16px;
+        }
       }
     }
 
@@ -1141,7 +1116,9 @@ watch(
     width: 26px !important;
     color: $primary-color !important;
 
-    .el-icon {
+    :deep(.collapse-center__glyph) {
+      width: 18px;
+      height: 18px;
       color: $primary-color !important;
     }
   }
@@ -1189,6 +1166,11 @@ watch(
 
   .variable-row__delete {
     width: 32px !important;
+
+    :deep(.variable-row__delete-icon) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   .rule-row {
@@ -1302,6 +1284,11 @@ watch(
   .rule-row__delete {
     padding: 0 4px;
     width: 32px;
+
+    :deep(.variable-row__delete-icon) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   .rule-row__body {
@@ -1411,12 +1398,17 @@ watch(
     }
   }
 
-  .collapse-hint__icon,
-  .collapse-hint__arrow {
+  :deep(.collapse-hint__arrow) {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
     color: $primary-color;
   }
 
-  .collapse-hint__icon {
+  :deep(.collapse-hint__icon) {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
     color: $warning-color;
   }
 

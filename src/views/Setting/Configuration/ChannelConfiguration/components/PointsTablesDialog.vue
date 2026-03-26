@@ -209,7 +209,7 @@
         <el-button v-if="!isPublish" @click="handleClose">
           {{ isEditing ? 'Cancel Edit' : 'Cancel' }}
         </el-button>
-        <el-button v-if="!isEditing && !isPublish" type="primary" @click="handleEdit">
+        <el-button v-if="!isEditing && !isPublish" type="primary" @click="() => handleEdit()">
           Edit
         </el-button>
         <!-- <el-button v-if="isEditing && !isPublish" type="primary" @click="handleSubmit">
@@ -244,9 +244,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import PointTablePoints from './PointTablePoints.vue'
 import PointTableMappings from './PointTableMappings.vue'
-import tableSubmitIcon from '@/assets/icons/btn-submit.svg'
-// @ts-ignore - SVG导入类型问题
-const submitIcon: string = tableSubmitIcon
+const submitIcon = 'i-tabler-check'
 import type { PointInfoResponse } from '@/types/channelConfiguration'
 import {
   getPointsTables,
@@ -306,6 +304,7 @@ const mappingTypeToTabName: Record<string, 'T' | 'S' | 'C' | 'A'> = {
   control: 'C',
   adjustment: 'A',
 }
+type TabPaneName = string | number
 // 反向映射：数据类型 -> 表引用
 const dataTypeToRef: Record<DataType, any> = {
   T: null as any,
@@ -558,7 +557,8 @@ const handleSubmit = async () => {
   }
 }
 
-const handleTabChange = (name: string) => {
+const handleTabChange = (name: TabPaneName) => {
+  const tabName = String(name)
   // Tab 切换时重置筛选
   if (showSignalNameFilter.value) {
     showSignalNameFilter.value = false
@@ -566,13 +566,13 @@ const handleTabChange = (name: string) => {
 
   // 切换完成后，根据新的表刷新 publishDirty（保持批量发布模式不变）
   if (isPublish.value) {
-    if (name === 'control') {
+    if (tabName === 'control') {
       publishDirty.value = !!controlTableRef.value?.hasPublishChanges?.()
-    } else if (name === 'adjustment') {
+    } else if (tabName === 'adjustment') {
       publishDirty.value = !!adjustmentTableRef.value?.hasPublishChanges?.()
-    } else if (name === 'telemetry') {
+    } else if (tabName === 'telemetry') {
       publishDirty.value = !!telemetryTableRef.value?.hasPublishChanges?.()
-    } else if (name === 'signal') {
+    } else if (tabName === 'signal') {
       publishDirty.value = !!signalTableRef.value?.hasPublishChanges?.()
     }
   }
@@ -584,7 +584,7 @@ const handleTabChange = (name: string) => {
 }
 
 // Tabs 切换拦截：批量发布中如有修改则提示；确认后切换并退出批量发布，取消则停留
-const handleBeforeLeave = async (newName: string, oldName: string) => {
+const handleBeforeLeave = async (_newName: TabPaneName, _oldName: TabPaneName) => {
   if (!isPublish.value) return true
 
   if (publishDirty.value) {

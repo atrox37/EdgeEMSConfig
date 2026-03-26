@@ -123,17 +123,6 @@ export const staticRoutes: RouteRecordRaw[] = [
         ],
       },
       {
-        path: '/systemConfig',
-        name: 'systemConfig',
-        component: () =>
-          import('@/views/Setting/SystemConfig/index.vue'),
-        meta: {
-          title: 'System Config',
-          activeNav: '/systemConfig',
-          icon: SystemConfigIcon,
-        },
-      },
-      {
         path: '/homeConfiguration',
         name: 'homeConfiguration',
         component: () => import('@/views/Setting/HomeConfiguration/index.vue'),
@@ -142,6 +131,56 @@ export const staticRoutes: RouteRecordRaw[] = [
           activeNav: '/homeConfiguration',
           icon: HomeConfigIcon,
         },
+      },
+      {
+        path: '/systemConfig',
+        name: 'systemConfig',
+        component: () =>
+          import('@/views/Setting/SystemConfig/index.vue'),
+        redirect: '/systemConfig/network',
+        meta: {
+          title: 'System Config',
+          activeNav: '/systemConfig',
+          icon: SystemConfigIcon,
+        },
+        children: [
+          {
+            path: 'network',
+            name: 'systemConfigNetwork',
+            component: () => import('@/views/Setting/SystemConfig/NetworkPanelView.vue'),
+            meta: {
+              title: 'Network & LAN',
+              activeNav: '/systemConfig',
+            },
+          },
+          {
+            path: 'tools',
+            name: 'systemConfigTools',
+            component: () => import('@/views/Setting/SystemConfig/SystemToolsView.vue'),
+            meta: {
+              title: 'Files & Upgrade',
+              activeNav: '/systemConfig',
+            },
+          },
+          {
+            path: 'storage',
+            name: 'systemConfigStorage',
+            component: () => import('@/views/Setting/SystemConfig/StorageView.vue'),
+            meta: {
+              title: 'Storage',
+              activeNav: '/systemConfig',
+            },
+          },
+          {
+            path: 'mqtt',
+            name: 'systemConfigMqtt',
+            component: () => import('@/views/Setting/SystemConfig/MqttView.vue'),
+            meta: {
+              title: 'MQTT',
+              activeNav: '/systemConfig',
+            },
+          },
+        ],
       },
     ],
   },

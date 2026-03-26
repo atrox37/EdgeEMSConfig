@@ -1,3 +1,5 @@
+import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
+
 /** 格式化更新时间戳（毫秒）为可读字符串 */
 export function formatUpdateTime(ts: number | undefined): string {
   if (ts == null || !Number.isFinite(ts)) return '-'
@@ -30,15 +32,11 @@ export function buildChannelCsvFilename(channelName: string, parts: string[]): s
   return `${[safeChannel, ...safeParts].join('_')}.csv`
 }
 
-export function downloadCsv(content: string, filename: string) {
+export async function downloadCsv(
+  content: string,
+  filename: string,
+): Promise<{ mode: 'custom_path' | 'browser_default'; savedPath?: string; displayPath: string }> {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  link.href = url
-  link.download = filename
-  link.style.display = 'none'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  return saveBytesWithPreferredPath(bytes, filename, 'text/csv;charset=utf-8;')
 }

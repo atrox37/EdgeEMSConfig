@@ -17,7 +17,7 @@
           >
             <span class="points-tables-page__dropdown-trigger">
               {{ viewMode === 'points' ? 'Points Table' : 'Routings Table' }}
-              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              <AppIcon name="i-tabler-chevron-down" className="el-icon--right" />
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -37,7 +37,6 @@
         <div class="config-section__tabs-wrapper">
           <el-tabs
             v-model="activeTab"
-            type="card"
             :before-leave="handleBeforeLeave"
             @tab-change="handleTabChange"
             class="config-section__tabs"
@@ -169,13 +168,11 @@
 import { watch, computed, onMounted, onUnmounted, ref, provide, readonly } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import DevicePointTablePoints from './components/DevicePointTablePoints.vue'
 import DevicePointTableRouting from './components/DevicePointTableRouting.vue'
 import IconButton from '@/components/common/IconButton.vue'
-import tableSubmitIcon from '@/assets/icons/btn-submit.svg'
-// @ts-ignore - SVG导入类型问题
-const submitIcon: string = tableSubmitIcon
+const submitIcon = 'i-tabler-check'
 import { getInstancePoints, executeAction, updateInstanceRouting } from '@/api/devicesManagement'
 import { getAllChannels } from '@/api/channelsManagement'
 import type {
@@ -419,20 +416,25 @@ const handleSubmit = async () => {
     activeTab.value = invalidTabs[0]
     return
   }
-  const mappings = [
-    ...(measurementRoutingRef.value?.getEditedData?.() || []),
-    ...(actionRoutingRef.value?.getEditedData?.() || []),
-  ]
+  const measurementMappings = measurementRoutingRef.value?.getEditedData?.() || []
+  const actionMappings = actionRoutingRef.value?.getEditedData?.() || []
+  const mappings = [...measurementMappings, ...actionMappings]
   if (!mappings.length) {
     ElMessage.info('No routing changes to submit')
     return
   }
-  const routingPayload = mappings.map((item: any) => ({
+  const toRoutingItem = (item: any, pointType: 'M' | 'A') => ({
     channel_id: Number(item.routing.channel_id),
     channel_point_id: Number(item.routing.channel_point_id),
     four_remote: String(item.routing.channel_type || '').toUpperCase(),
     point_id: Number(item.point_id),
-  }))
+    point_type: pointType,
+    enabled: !!item.routing.enabled,
+  })
+  const routingPayload = [
+    ...measurementMappings.map((item: any) => toRoutingItem(item, 'M')),
+    ...actionMappings.map((item: any) => toRoutingItem(item, 'A')),
+  ]
   const res = await updateInstanceRouting(instanceId.value, routingPayload)
   if (res.success) {
     ElMessage.success('Routings updated successfully')
@@ -656,8 +658,10 @@ watch(
         color: $text-color-primary;
         cursor: pointer;
 
-        .el-icon--right {
+        :deep(.el-icon--right) {
           margin-left: 4px;
+          width: 1em;
+          height: 1em;
         }
       }
 

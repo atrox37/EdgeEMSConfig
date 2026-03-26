@@ -1,11 +1,15 @@
 <template>
   <el-button :type="type" class="icon-button" :class="customClass" @click="handleClick">
-    <img :src="icon" class="icon-button__icon" :class="iconClass" />
+    <AppIcon v-if="isIconifyName" :name="icon" className="icon-button__icon" :class="iconClass" />
+    <img v-else :src="icon" class="icon-button__icon" :class="iconClass" />
     {{ text }}
   </el-button>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
+
 interface Props {
   icon: string
   text: string
@@ -25,6 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+const isIconifyName = computed(() => String(props.icon || '').startsWith('i-'))
 
 const handleClick = () => {
   emit('click')

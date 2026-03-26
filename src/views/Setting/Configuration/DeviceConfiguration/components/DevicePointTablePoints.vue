@@ -90,7 +90,7 @@
                 v-if="props.category === 'action' || props.category === 'measurement'"
                 @click="handlePublish(row)"
               >
-                <el-icon><Position /></el-icon>
+                <AppIcon name="i-tabler-arrows-move" className="point-table__op-icon" />
                 <span>Execute</span>
               </div>
             </div>
@@ -138,7 +138,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Position } from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import ExecuteDialog from './ExecuteDialog.vue'
 import type {
   InstanceActionItem,
@@ -314,7 +314,7 @@ function handlePublish(item: any) {
   executeDialogRef.value?.open(String(id), props.category as 'action' | 'measurement')
 }
 
-const handleExport = () => {
+const handleExport = async () => {
   const allPoints = Array.isArray(props.points) ? props.points : editPoints.value || []
   if (!allPoints || allPoints.length === 0) {
     ElMessage.warning('No data to export')
@@ -334,8 +334,8 @@ const handleExport = () => {
       .trim()
       .replace(/[^\w-]+/g, '_') || 'device'
   const filename = `${safeName}_${props.category}_points_${getTimestampCompact()}.csv`
-  downloadCsv(csvContent, filename)
-  ElMessage.success(`Exported to ${filename}`)
+  const saveResult = await downloadCsv(csvContent, filename)
+  ElMessage.success(`Exported to ${saveResult.displayPath}`)
 }
 
 defineExpose({
@@ -445,6 +445,12 @@ defineExpose({
     gap: 15px;
     align-items: center;
     justify-content: center;
+
+    :deep(.point-table__op-icon) {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
 
     .point-table__publish-btn {
       cursor: pointer;

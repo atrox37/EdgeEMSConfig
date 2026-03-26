@@ -123,7 +123,7 @@
               class="point-table__add-btn"
               @click="handleAddNewPoint"
             >
-              <el-icon><Plus /></el-icon>
+              <AppIcon name="i-tabler-plus" className="point-table__op-icon" />
               <span>Add</span>
             </div>
             <span v-else>Operation</span>
@@ -133,20 +133,20 @@
               <template v-if="props.isEditing">
                 <template v-if="row.rowStatus === 'deleted'">
                   <div class="point-table__restore-btn" @click="handleRestorePoint(row)">
-                    <el-icon><RefreshLeft /></el-icon>
+                    <AppIcon name="i-tabler-refresh" className="point-table__op-icon" />
                     <span>Restore</span>
                   </div>
                 </template>
                 <template v-else>
                   <div class="point-table__delete-btn" @click="handleDeletePoint(row)">
-                    <el-icon><Delete /></el-icon>
+                    <AppIcon name="i-tabler-trash" className="point-table__op-icon" />
                     <span>Delete</span>
                   </div>
                 </template>
               </template>
               <template v-else>
                 <div class="point-table__publish-btn" @click="handlePublish(row)">
-                  <el-icon><Position /></el-icon>
+                  <AppIcon name="i-tabler-arrows-move" className="point-table__op-icon" />
                   <span>Publish</span>
                 </div>
               </template>
@@ -210,12 +210,7 @@
 import { ref, watch, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import { OriginalPointsKey, ChannelNameKey } from '@/utils/key'
-import {
-  Delete,
-  Plus,
-  Position,
-  RefreshLeft,
-} from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import type { PointInfo } from '@/types/channelConfiguration'
 import ValuePublishDialog from './ValuePublishDialog.vue'
 import { useCsvImportExport } from '@/composables/useCsvImportExport'
@@ -745,7 +740,7 @@ const clearImportedFileName = () => {
 
 // 导出功能（Points）
 // 文件名：{channelName}_{tab}_{timestamp}.csv
-const handleExport = () => {
+const handleExport = async () => {
   if (!editPoints.value || editPoints.value.length === 0) {
     ElMessage.warning('No data to export')
     return
@@ -773,9 +768,8 @@ const handleExport = () => {
     getTimestampCompact(),
   ])
   const csvContent = buildCsv(schema, rows)
-  downloadCsv(csvContent, filename)
-
-  ElMessage.success(`Exported to ${filename}`)
+  const saveResult = await downloadCsv(csvContent, filename)
+  ElMessage.success(`Exported to ${saveResult.displayPath}`)
 }
 
 
@@ -963,6 +957,11 @@ defineExpose({
     cursor: pointer;
     color: #67c23a;
     font-size: 16px;
+    :deep(.point-table__op-icon) {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
     span {
       font-size: 12px;
     }
@@ -983,6 +982,12 @@ defineExpose({
     gap: 15px;
     align-items: center;
     justify-content: center;
+
+    :deep(.point-table__op-icon) {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
 
     .point-table__edit-btn,
     .point-table__delete-btn,

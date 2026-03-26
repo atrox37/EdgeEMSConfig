@@ -31,9 +31,7 @@
               </span>
             </span>
             <el-button class="section__add-btn" type="primary" @click="addVariable">
-              <el-icon>
-                <Plus />
-              </el-icon>
+              <AppIcon name="i-tabler-plus" className="section__add-btn-icon" />
             </el-button>
           </div>
           <div class="section__body variable">
@@ -114,26 +112,20 @@
                     </el-select>
                     <el-button class="combined-row__delete" link
                       @click="removeCombinedRow(v, pairIdx - 1)">
-                      <el-icon class="combined-row__delete-icon">
-                        <CircleClose />
-                      </el-icon>
+                      <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" />
                     </el-button>
                   </div>
 
                   <div class="variable-row__combined-add">
                     <el-button type="primary" link @click="addCombinedRow(v)">
-                      <el-icon class="combined-row__add-icon">
-                        <CirclePlus />
-                      </el-icon>
+                      <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" />
                     </el-button>
                   </div>
                 </div>
               </el-form-item>
               <el-button class="variable-row__delete" style="width: 32px !important"
                 @click="removeVariable(idx)">
-                <el-icon>
-                  <Delete />
-                </el-icon>
+                <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
               </el-button>
             </div>
           </div>
@@ -144,12 +136,12 @@
           'collapse-center--right': collapsedSection === 'variable',
         }">
           <el-button class="collapse-center__btn" type="primary" link @click="toggleCenterCollapse">
-            <el-icon v-if="collapsedSection === 'variable'">
-              <ArrowRightBold />
-            </el-icon>
-            <el-icon v-else>
-              <ArrowLeftBold />
-            </el-icon>
+            <AppIcon
+              v-if="collapsedSection === 'variable'"
+              name="i-tabler-arrow-big-right"
+              className="collapse-center__glyph"
+            />
+            <AppIcon v-else name="i-tabler-arrow-big-left" className="collapse-center__glyph" />
           </el-button>
         </div>
 
@@ -164,9 +156,7 @@
               </span>
             </span>
             <el-button class="section__add-btn" type="primary" @click="addRuleRow">
-              <el-icon>
-                <Plus />
-              </el-icon>
+              <AppIcon name="i-tabler-plus" className="section__add-btn-icon" />
             </el-button>
           </div>
           <div class="section__body rule simple">
@@ -189,27 +179,19 @@
               </el-select>
               <el-button class="rule-row__delete" style="width: 32px !important"
                 @click="removeRuleRow(rIdx)">
-                <el-icon>
-                  <Delete />
-                </el-icon>
+                <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
               </el-button>
             </div>
           </div>
         </div>
       </div>
       <div class="collapse-hint">
-        <el-icon class="collapse-hint__icon">
-          <InfoFilled />
-        </el-icon>
+        <AppIcon name="i-tabler-info-circle-filled" className="collapse-hint__icon" />
         <span class="collapse-hint__text">
           Tip: Click
-          <el-icon class="collapse-hint__arrow">
-            <ArrowRightBold />
-          </el-icon>
+          <AppIcon name="i-tabler-arrow-big-right" className="collapse-hint__arrow" />
           /
-          <el-icon class="collapse-hint__arrow">
-            <ArrowLeftBold />
-          </el-icon>
+          <AppIcon name="i-tabler-arrow-big-left" className="collapse-hint__arrow" />
           to toggle Variable/Rule.
         </span>
       </div>
@@ -219,15 +201,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import {
-  Plus,
-  Delete,
-  CircleClose,
-  CirclePlus,
-  ArrowLeftBold,
-  ArrowRightBold,
-  InfoFilled,
-} from '@element-plus/icons-vue'
+import AppIcon from '@/components/AppIcon.vue'
 import { getInstancePoints, getAllInstances, getInstancesByIds } from '@/api/devicesManagement'
 
 const formRef = ref()
@@ -803,6 +777,11 @@ watch(
 
         .section__add-btn {
           width: 32px !important;
+
+          :deep(.section__add-btn-icon) {
+            width: 16px;
+            height: 16px;
+          }
         }
       }
 
@@ -873,7 +852,9 @@ watch(
       width: 26px !important;
       color: $primary-color !important;
 
-      .el-icon {
+      :deep(.collapse-center__glyph) {
+        width: 18px;
+        height: 18px;
         color: $primary-color !important;
       }
     }
@@ -888,7 +869,6 @@ watch(
 
     .variable-row__combined {
       width: 100%;
-      margin-top: 8px;
     }
 
     .variable-row__combined-add {
@@ -924,13 +904,18 @@ watch(
     .variable-row__delete {
       padding: 0 4px;
       flex: 0 0 auto;
+
+      :deep(.variable-row__delete-icon) {
+        width: 16px;
+        height: 16px;
+      }
     }
 
-    .combined-row__add-icon {
+    :deep(.combined-row__add-icon) {
       color: $success-color !important;
     }
 
-    .combined-row__delete-icon {
+    :deep(.combined-row__delete-icon) {
       color: $danger-color !important;
     }
 
@@ -1088,12 +1073,17 @@ watch(
 
     }
 
-    .collapse-hint__icon,
-    .collapse-hint__arrow {
+    :deep(.collapse-hint__arrow) {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
       color: $primary-color;
     }
 
-    .collapse-hint__icon {
+    :deep(.collapse-hint__icon) {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
       color: $warning-color;
     }
 

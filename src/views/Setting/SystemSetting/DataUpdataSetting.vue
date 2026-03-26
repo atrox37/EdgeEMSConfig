@@ -22,9 +22,6 @@
                   :disabled="isConnecting"
                   :loading="isConnecting"
                 />
-                <!-- <el-icon v-if="isConnecting" class="loading-icon">
-                  <Loading />
-                </el-icon> -->
               </div>
             </el-form-item>
             <el-form-item label="Host:" prop="host">
@@ -77,7 +74,6 @@
 import type { FormInstance, FormRules } from 'element-plus'
 import submitIcon from '@/assets/icons/btn-submit.svg'
 import DataUploadDialog from './components/DataUploadDialog.vue'
-import { Loading } from '@element-plus/icons-vue'
 import detailIcon from '@/assets/icons/button-detail.svg'
 
 import {
@@ -267,7 +263,7 @@ const handleSubmit = async () => {
         },
       })
       const res = await updateMqttConfig({ mqtt_connection: { broker: params } })
-      if (res.status == 'success') {
+      if (res.success) {
         ElMessage.success(res.message || 'Update success')
         checkConnected()
       } else {
@@ -280,40 +276,50 @@ const handleSubmit = async () => {
 }
 const getMqttConfigData = async () => {
   const response = await getMqttConfig()
-  formData.value = response.data.broker
+  const data = response.data || {}
+  formData.value = {
+    ...formData.value,
+    port: Number(data.broker_port ?? formData.value.port),
+    host: String(data.broker_host ?? formData.value.host),
+    client_id: String(data.client_id ?? formData.value.client_id),
+    password: String((data as any).password ?? formData.value.password),
+    reconnect: {
+      ...formData.value.reconnect,
+      delay: Number(data.reconnect_delay_secs ?? formData.value.reconnect.delay),
+      max_attempts: Number(data.reconnect_max_attempts ?? formData.value.reconnect.max_attempts),
+    },
+    ssl: {
+      ...formData.value.ssl,
+      enabled: Boolean(data.ssl_enabled ?? formData.value.ssl.enabled),
+    },
+  }
 }
 const getMqttStatusData = async () => {
   const response = await getMqttStatus()
-  connected.value = response.connected
+  connected.value = Boolean(response.data?.connected)
 }
 onMounted(() => {
   getMqttConfigData()
   getMqttStatusData()
 })
 
-const handleEnableChange = async (value: boolean) => {
+const handleEnableChange = async (value: string | number | boolean) => {
+  const enabled = Boolean(value)
   try {
-    connected.value = !value
+    connected.value = !enabled
     isConnecting.value = true
-    if (value) {
+    if (enabled) {
       const response = await reconnectMqtt()
-      if (response.status == 'failed') {
-        connected.value = false
-        ElMessage.error(response.message)
-      } else {
-        connected.value = true
-        ElMessage.success(response.message)
-      }
+      connected.value = true
+      ElMessage.success(response.message || 'MQTT reconnect triggered')
     } else {
       const response = await disconnectMqtt()
-      if (response.status == 'failed') {
-        connected.value = true
-        ElMessage.error(response.message)
-      } else {
-        connected.value = false
-        ElMessage.success(response.message)
-      }
+      connected.value = false
+      ElMessage.success(response.message || 'MQTT disconnected')
     }
+  } catch (error: any) {
+    connected.value = !enabled
+    ElMessage.error(error?.message || 'MQTT operation failed')
   } finally {
     isConnecting.value = false
   }
@@ -329,13 +335,11 @@ const checkConnected = async () => {
     if (connected.value) {
       isConnecting.value = true
       const response = await reconnectMqtt()
-      if (response.status == 'failed') {
-        connected.value = false
-        ElMessage.error(response.message)
-      } else {
-        ElMessage.success(response.message)
-      }
+      ElMessage.success(response.message || 'MQTT reconnect triggered')
     }
+  } catch (error: any) {
+    connected.value = false
+    ElMessage.error(error?.message || 'MQTT reconnect failed')
   } finally {
     isConnecting.value = false
   }

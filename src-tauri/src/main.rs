@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    pcmanagement_lib::run()
+    monarch_edge_console_lib::run()
 }
