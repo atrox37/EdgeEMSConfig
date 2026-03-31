@@ -334,6 +334,9 @@ watch(
       }
     }
   }
+  :deep(.el-switch) {
+    height: 22px;
+  }
 }
 </style>
 

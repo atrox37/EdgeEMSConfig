@@ -710,8 +710,8 @@ const handleChannelDialogCancel = () => {
           }
 
           &.rule-management__operation-item--more {
-            width: 32px;
-            height: 32px;
+            width: 22px;
+            height: 22px;
             justify-content: center;
 
             :deep(.rule-management__more-icon) {
@@ -760,6 +760,9 @@ const handleChannelDialogCancel = () => {
         }
       }
     }
+  }
+  :deep(.el-switch) {
+    height: 22px;
   }
 }
 
