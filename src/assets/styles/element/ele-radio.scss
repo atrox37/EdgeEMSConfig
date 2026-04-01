@@ -1,5 +1,5 @@
 @use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Radio �?RadioGroup 组件样式 */
+/* Element Plus Radio 与 RadioGroup 组件样式 */
 
 
 .voltage-class {
@@ -67,7 +67,7 @@
       margin-right: 0;
     }
 
-    // 禁用状�?
+    // 禁用状态
     &.is-disabled {
       color: $text-color-disabled;
       cursor: not-allowed;
@@ -82,7 +82,7 @@
       }
     }
 
-    // 选中状�?
+    // 选中状态
     &.is-checked {
       .el-radio__inner {
         background-color: $primary-color;
@@ -97,7 +97,7 @@
         color: $primary-color;
       }
 
-      // 禁用且选中状�?
+      // 禁用且选中状态
       &.is-disabled {
         .el-radio__inner {
           background-color: $text-color-disabled;
@@ -110,7 +110,7 @@
       }
     }
 
-    // 聚焦状�?
+    // 聚焦状态
     &.is-focus {
       .el-radio__inner {
         border-color: $primary-color;
@@ -118,7 +118,7 @@
       }
     }
 
-    // 悬停状�?
+    // 悬停状态
     &:hover:not(.is-disabled) {
       .el-radio__inner {
         border-color: none;
@@ -132,7 +132,7 @@
     }
   }
 
-  // Radio 输入框样�?
+  // Radio 输入框样式
   .el-radio__input {
     white-space: nowrap;
     cursor: pointer;
@@ -222,7 +222,7 @@
       }
     }
 
-    // 按钮样式�?RadioGroup
+    // 按钮样式的 RadioGroup
     &--button {
       display: inline-flex;
       gap: 0;
@@ -259,7 +259,7 @@
           color: $text-color-primary;
         }
 
-        // 悬停状�?
+        // 悬停状态
         &:hover:not(.is-disabled) {
           // background-color: $primary-color-alpha-20;
           border-color: $primary-color;
@@ -267,7 +267,7 @@
           color: $text-color-primary;
         }
 
-        // 选中状�?
+        // 选中状态
         &.is-checked {
           background-color: $primary-color;
           border-color: $primary-color;
@@ -279,7 +279,7 @@
           }
         }
 
-        // 禁用状�?
+        // 禁用状态
         &.is-disabled {
           background-color: $bg-color-dark-11;
           border-color: $border-color-base;

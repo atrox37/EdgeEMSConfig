@@ -11,46 +11,23 @@
         </div>
 
         <div class="initial-config-page__form">
-          <el-form
-            @keyup.enter="handleLogin(formRef)"
-            :model="form"
-            label-position="right"
-            ref="formRef"
-            :rules="formRules"
-            label-width="100px"
-          >
+          <el-form @keyup.enter="handleLogin(formRef)" :model="form" label-position="right" ref="formRef"
+            :rules="formRules" label-width="100px">
             <el-form-item label="Username:" prop="username">
-              <el-input
-                v-model="form.username"
-                placeholder="Enter username..."
-                class="initial-config-page__input"
-              />
+              <el-input v-model="form.username" placeholder="Enter username..." class="initial-config-page__input" />
             </el-form-item>
 
             <el-form-item label="Password:" prop="password">
-              <el-input
-                v-model="form.password"
-                type="password"
-                placeholder="Enter password..."
-                class="initial-config-page__input"
-                show-password
-              />
+              <el-input v-model="form.password" type="password" placeholder="Enter password..."
+                class="initial-config-page__input" show-password />
             </el-form-item>
 
             <el-form-item label="IP Address:" prop="ipAddress">
-              <el-input
-                v-model="form.ipAddress"
-                placeholder="Enter IP address..."
-                class="initial-config-page__input"
-              />
+              <el-input v-model="form.ipAddress" placeholder="Enter IP address..." class="initial-config-page__input" />
             </el-form-item>
 
-            <el-button
-              type="primary"
-              @click="handleLogin(formRef)"
-              :loading="isLoading"
-              class="initial-config-page__login-btn"
-            >
+            <el-button type="primary" @click="handleLogin(formRef)" :loading="isLoading"
+              class="initial-config-page__login-btn">
               Login
             </el-button>
           </el-form>
@@ -84,26 +61,13 @@ const goToSetup = () => {
   router.push({ path: '/setup' })
 }
 
-// 检查是否是404或网络错误
-const isNetworkOr404Error = (error: any): boolean => {
-  // 检查是否是404错误
-  if (error?.response?.status === 404) {
-    return true
-  }
-  
-  // 检查是否是网络错误（有request但没有response）
-  if (error?.request && !error?.response) {
-    return true
-  }
-  
-  // 检查错误消息中是否包含网络相关关键词
-  const errorMessage = error?.message || ''
-  const networkKeywords = ['Network', 'network', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'timeout', '连接', '网络']
-  if (networkKeywords.some(keyword => errorMessage.includes(keyword))) {
-    return true
-  }
-  
-  return false
+const isAdminUser = () => {
+  const role = userStore.userInfo?.role
+  const roleName = String(role?.name_en || '')
+    .trim()
+    .toLowerCase()
+
+  return roleName === 'admin'
 }
 
 // 加载保存的IP地址
@@ -165,73 +129,34 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     })
 
     if (!loginResult.success) {
-      if (loginResult.statusCode === 401) {
-        ElMessage.error(loginResult.message || 'Login failed')
-        return
-      }
-      ElMessage.warning(
-        'The gateway may not be ready yet. Please complete setup on this page, or use Initialize Project on the login page later.',
-      )
-      goToSetup()
+      
       return
     }
 
     // 3. 获取用户信息
     const userInfoResult = await userStore.getUserInfo()
     if (!userInfoResult.success) {
-      const errorMessage = userInfoResult.message || ''
-      const isNetworkError =
-        errorMessage.includes('404') ||
-        errorMessage.includes('Network') ||
-        errorMessage.includes('网络') ||
-        errorMessage.includes('连接') ||
-        errorMessage.includes('timeout') ||
-        errorMessage.includes('ECONNREFUSED') ||
-        errorMessage.includes('ETIMEDOUT') ||
-        errorMessage.includes('ENOTFOUND') ||
-        errorMessage.includes('Request URL not found') ||
-        errorMessage.includes('') ||
-        errorMessage.includes('Network request failed')
-
-      if (isNetworkError) {
-        ElMessage.warning(
-          'Unable to reach the gateway. Please complete setup here, or use Initialize Project on the login page.',
-        )
-        await userStore.clearUserData()
-        goToSetup()
-        return
-      }
-      ElMessage.error(userInfoResult.message || 'Failed to get user info')
-      await userStore.clearUserData()
       return
+    } else {
+      // 4. 管理员权限校验：非管理员禁止登录
+      if (!isAdminUser()) {
+        ElMessage.error('Insufficient permissions')
+        await userStore.clearUserData()
+        return
+      } else {
+        // 5. 登录成功，跳转到首页
+        ElMessage.success('Login successful')
+        await router.push({ name: 'channelConfiguration' })
+      }
     }
-
-    // 4. 登录成功，跳转到首页
-    ElMessage.success('Login successful')
-    await router.push({ name: 'channelConfiguration' })
   } catch (error: any) {
-    console.error('登录失败:', error)
-    const errorMessage = error?.message || String(error) || ''
-    const isNetworkError = 
-      errorMessage.includes('404') || 
-      errorMessage.includes('Network') || 
-      errorMessage.includes('网络') || 
-      errorMessage.includes('连接') ||
-      errorMessage.includes('timeout') ||
-      errorMessage.includes('ECONNREFUSED') ||
-      errorMessage.includes('ETIMEDOUT') ||
-      errorMessage.includes('ENOTFOUND') ||
-      errorMessage.includes('Request URL not found') ||
-      errorMessage.includes('Network connection error') ||
-      errorMessage.includes('Network request failed') ||
-      isNetworkOr404Error(error)
-    
+    const errorMessage = error?.message || ''
+    const isNetworkError =
+      errorMessage.includes('Network request failed')
     if (isNetworkError) {
       ElMessage.warning('Unable to connect to server, please initialize project first')
       goToSetup()
-    } else {
-      ElMessage.error(error.message || 'Login failed')
-    }
+    } 
   } finally {
     isLoading.value = false
   }
@@ -239,7 +164,6 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 </script>
 
 <style lang="scss" scoped>
-
 .voltage-class.initial-config-page {
   width: 100%;
   height: 100%;
@@ -403,10 +327,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 //     color: #fff !important;
 //   }
 // }
-:deep(.el-input){
-    width: 100% !important;
+:deep(.el-input) {
+  width: 100% !important;
 }
 </style>
-
-
-

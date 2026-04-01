@@ -13,7 +13,7 @@
   user-select: none;
 }
 
-/* 为需要文本选择的元素设置例�?*/
+/* 为需要文本选择的元素设置例外 */
 input,
 textarea,
 select,
@@ -99,10 +99,10 @@ ol {
 
 
 
-/* 变量浮层样式（全局�?*/
+/* 变量浮层样式（全局） */
 .node-vars-bubble-fixed {
   background: rgba(255, 255, 255, 0.95); /* 白色背景 */
-  border: 1px solid rgba(200, 200, 200, 0.5); /* 浅灰色边�?*/
+  border: 1px solid rgba(200, 200, 200, 0.5); /* 浅灰色边框 */
   border-radius: 6px;
   padding: 8px 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

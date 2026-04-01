@@ -1,9 +1,9 @@
 @use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Form �����ʽ */
+/* Element Plus Form 组件样式 */
 
 .voltage-class {
 
-  // Form ������ʽ
+  // Form 基础样式
   .el-form {
     .el-form-item {
       margin-bottom: $spacing-lg;
@@ -14,7 +14,7 @@
       // &:last-child {
       //   margin-bottom: 0;
       // }
-      // ��ǩ
+      // 标签
       .el-form-item__label {
         color: $text-color-primary;
         font-size: 14px;
@@ -28,14 +28,14 @@
         line-height: 32px;
         height: 32px;
 
-        // ������
+        // 必填星号
         &::before {
           // display: none !important;
           margin-right: 4px !important;
         }
       }
 
-      // ��������
+      // 表单项内容
       .el-form-item__content {
         flex: 1;
         display: flex;
@@ -43,14 +43,14 @@
         line-height: 32px;
         height: 100%;
 
-        // ��֤������Ϣ
+        // 验证错误信息
         .el-form-item__error {
           color: $danger-color;
           font-size: 10px;
           line-height: 1;
         }
 
-        // �����ı�
+        // 帮助文本
         .el-form-item__help {
           color: $text-color-secondary;
           font-size: $font-size-small;
@@ -60,7 +60,7 @@
         }
       }
 
-      // ��֤״̬�����ı�label��ɫ�������߿�??
+      // 验证状态：错误时 label 与输入框边框
     }
 
     &.is-success {
@@ -93,7 +93,7 @@
       }
     }
 
-    // ����״??
+    // 禁用状态
     &.is-disabled {
       .el-form-item__label {
         color: $text-color-disabled;
@@ -132,7 +132,7 @@
       }
     }
 
-    // ��ǩ��������
+    // 标签在上方
     &.el-form--label-top {
       .el-form-item {
         flex-direction: column;
@@ -150,12 +150,12 @@
     }
   }
 
-  // ��ǩ�Ҷ�??
+  // 标签右对齐
 
-  // Form �ߴ����
+  // Form 尺寸变体
   .el-form {
 
-    // С��??
+    // 小尺寸
     &.el-form--small {
       .el-form-item {
         margin-bottom: $spacing-md;
@@ -175,10 +175,10 @@
       }
     }
 
-    // Form ��֤������ʽ
+    // Form 验证中样式
     .el-form {
 
-      // ��֤��״??
+      // 验证中状态
       .el-form-item.is-validating {
         .el-form-item__content {
           position: relative;
@@ -199,7 +199,7 @@
       }
     }
 
-    // ������������
+    // 表单操作区
     .el-form-actions {
       margin-top: $spacing-xl;
       padding-top: $spacing-lg;
@@ -212,17 +212,17 @@
         min-width: 80px;
       }
 
-      // ������??
+      // 左对齐
       &.el-form-actions--left {
         justify-content: flex-start;
       }
 
-      // ���ж������
+      // 居中
       &.el-form-actions--center {
         justify-content: center;
       }
 
-      // ���˶������
+      // 两端对齐
       &.el-form-actions--space-between {
         justify-content: space-between;
       }

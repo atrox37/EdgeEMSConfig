@@ -27,7 +27,7 @@
           height: 14px;
           font-size: $font-size-medium;
           .el-icon.el-message-box__close {
-            color: #000000 !important; // ��ɫͼ��
+            color: #000000 !important; // 黑色图标
             top: $spacing-md;
             right: $spacing-md;
           }
@@ -122,9 +122,9 @@
       color: $white-alpha-100 !important;
     }
   }
-  // ������һ����Ϣ���붥���ĸ߶�
+  // 调整首条消息距顶高度
   &:first-child {
-    top: 100px !important; // ���Ը�����Ҫ�������ֵ������ 30px??0px ??  }
+    top: 100px !important; // 可按需要改为 30px 或 0px
   }
 }
 

@@ -57,6 +57,16 @@ async function initApp() {
         await userStore.clearUserData()
       }
     }
+    // 4. Auth restore succeeded but route may still stay on /login.
+    // Auto-redirect after boot when user is already logged in.
+    const currentRoute = router.currentRoute.value
+    if (userStore.isLoggedIn && (currentRoute.path === '/login' || currentRoute.path === '/setup')) {
+      const redirect = typeof currentRoute.query?.redirect === 'string' ? currentRoute.query.redirect : ''
+      const target = redirect && redirect !== '/login' && redirect !== '/setup'
+        ? redirect
+        : '/channelConfiguration'
+      await router.replace(target)
+    }
   } catch (error) {
     console.error('App initialization failed:', error)
   }

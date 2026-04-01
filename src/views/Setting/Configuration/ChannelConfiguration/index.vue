@@ -42,7 +42,7 @@
                 </div>
               </el-form>
             </el-popover>
-            <!-- 筛选标�?-->
+            <!-- 筛选标签 -->
             <div class="rule-management__filter-tags">
               <el-tag v-for="tag in activeFilterTags" :key="tag.key" closable @close="removeFilterTag(tag.key)"
                 class="rule-management__filter-tag">
@@ -223,7 +223,7 @@ const mobileFilterSnapshot = ref<{
 } | null>(null)
 const mobileFilterApplied = ref(false)
 
-// 筛选标签管�?
+// 筛选标签管理
 interface FilterTag {
   key: string
   label: string
@@ -232,7 +232,7 @@ interface FilterTag {
 
 const activeFilterTags = ref<FilterTag[]>([])
 
-// 更新筛选标�?
+// 更新筛选标签
 const updateFilterTags = () => {
   activeFilterTags.value = []
   if (filters.protocol !== null && filters.protocol !== undefined && filters.protocol !== '') {
@@ -262,7 +262,7 @@ const updateFilterTags = () => {
 // 防抖定时器
 let debounceTimer: any = null
 
-// 处理筛选变�?（移动端）
+// 处理筛选变化（移动端）
 const handleFilterChange = (_key?: string, _value?: any) => {
   // 移动端筛选仅在点击 Apply 后生效
 }
@@ -285,7 +285,7 @@ const handleReload = () => {
   reloadFilters()
 }
 
-// 移除筛选标�?
+// 移除筛选标签
 const removeFilterTag = (key: string) => {
   if (key === 'protocol') {
     filters.protocol = null
@@ -298,7 +298,7 @@ const removeFilterTag = (key: string) => {
   fetchTableData(true)
 }
 
-// 应用筛�?
+// 应用筛选
 const applyFilters = () => {
   mobileFilterApplied.value = true
   updateFilterTags()
@@ -316,7 +316,7 @@ const handleCloseFilterPopover = () => {
   updateFilterTags()
 }
 
-// 监听筛选变�?
+// 监听筛选变化
 watch([() => filters.protocol, () => filters.enabled, () => filters.connected], () => {
   if (showFilterPopover.value) return
   updateFilterTags()
@@ -344,7 +344,7 @@ watch(
     mobileFilterSnapshot.value = null
   },
 )
-// 展开行控�?
+// 展开行控制
 const expandedRows = ref<number[]>([])
 
 const channelControlLoadings = ref<boolean[][]>([])
@@ -459,7 +459,7 @@ const submitAsTemplate = async (payload: {
   }
 }
 
-// 处理启用状态变�?
+// 处理启用状态变化
 const handleEnabledChange = async (newState: boolean, row: ChannelListItem, index: number) => {
   channelControlLoadings.value[index][0] = true
   const originalState = row.enabled
@@ -470,11 +470,11 @@ const handleEnabledChange = async (newState: boolean, row: ChannelListItem, inde
       // 更新成功后刷新数据，而不是直接修改row
       await fetchTableData()
     } else {
-      // 如果失败，恢复原状�?
+      // 如果失败，恢复原状态
       row.enabled = originalState
     }
   } catch (error) {
-    // 发生错误时恢复原状�?
+    // 发生错误时恢复原状态
     row.enabled = originalState
     ElMessage.error(error as string)
   } finally {
@@ -767,7 +767,7 @@ const handleChannelDialogCancel = () => {
 }
 
 
-// 媒体查询：小�?200px时隐藏桌面端筛选框，显示移动端筛选按�?
+// 媒体查询：小于 1060px 时隐藏桌面端筛选框，显示移动端筛选按钮
 @media (max-width: 1059px) {
   .voltage-class .rule-management {
     .rule-management__content {
@@ -784,7 +784,7 @@ const handleChannelDialogCancel = () => {
   }
 }
 
-// 媒体查询：大于等�?200px时显示桌面端筛选框，隐藏移动端筛选按�?
+// 媒体查询：大于等于 1060px 时显示桌面端筛选框，隐藏移动端筛选按钮
 @media (min-width: 1060px) {
   .voltage-class .rule-management {
     .rule-management__content {

@@ -1,7 +1,7 @@
 @use "@/assets/styles/_variables.scss" as *;
 
 .voltage-class {
-  // 主菜单容�?
+  // 主菜单容器
   .el-menu {
     background: transparent;
     border-right: none;
@@ -9,7 +9,7 @@
     font-family: Arial, sans-serif;
     transition: all 0.3s ease;
 
-    // 菜单图标颜色调整为黑�?
+    // 菜单图标颜色调整为黑色
     .el-icon {
       color: $secondary-color !important;
     }
@@ -102,7 +102,7 @@
         }
       }
     }
-    // 去除菜单分割�?
+    // 去除菜单分割线
     .el-menu-item:not(:last-child) {
       border-bottom: none;
     }

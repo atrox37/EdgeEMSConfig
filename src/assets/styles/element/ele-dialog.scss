@@ -1,8 +1,8 @@
 @use "@/assets/styles/_variables.scss" as *;
-// 弹窗主体样式（包含表单弹窗样式和全屏弹窗样式�?
+// 弹窗主体样式（包含表单弹窗样式和全屏弹窗样式）
 
 // .voltage-class {
-  // 弹窗遮罩�?
+  // 弹窗遮罩层
   .el-overlay {
     // height: calc(100% + 40px);
     // width: calc(100% + 40px);
@@ -104,7 +104,7 @@
             }
           }
         }
-        // 滚动条样�?
+        // 滚动条样式
         &::-webkit-scrollbar {
           width: 6px;
         }
@@ -198,7 +198,7 @@
       padding: 24px 24px 12px;
     }
 
-    // 滚动条样�?
+    // 滚动条样式
     &::-webkit-scrollbar {
       width: $width-scrollbar;
     }
@@ -228,7 +228,7 @@
   // }
 }
 
-// 更新弹框主题色适配（不依赖 .voltage-class�?
+// 更新弹框主题色适配（不依赖 .voltage-class）
 .el-dialog.update-dialog {
   background: $dialog-bg;
   border: $border-width-base solid;

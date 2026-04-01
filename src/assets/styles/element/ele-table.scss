@@ -3,7 +3,7 @@
 
 /**
  * Element Plus Table 组件样式定制
- * 统一表格样式，提供现代化的视觉效�? */
+ * 统一表格样式，提供现代化的视觉效果 */
 
 // 表格主体样式
 .voltage-class {
@@ -145,7 +145,7 @@
             background 0.2s,
             box-shadow 0.2s,
             color 0.2s;
-          // 鼠标悬停时的行样式增�?
+          // 鼠标悬停时的行样式增强
           &:hover {
             background: $table-row-hover-bg !important;
             // cursor: pointer;
@@ -180,7 +180,7 @@
         }
       }
 
-      // 空数据状�?
+      // 空数据状态
       .el-table__empty-block {
         background-color: transparent; // 空数据时背景也透明
 
@@ -190,7 +190,7 @@
         }
       }
 
-      // 固定列样�?
+      // 固定列样式
       .el-table__fixed {
         background-color: transparent; // 固定列背景透明
         // background-color: red !important;

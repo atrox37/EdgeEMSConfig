@@ -1,15 +1,15 @@
 @use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Select �����ʽ */
+/* Element Plus Select 组件样式 */
 
 $field-select-placeholder-color: rgba($text-color-primary, 0.55);
 $field-select-disabled-text-color: rgba($text-color-primary, 0.35);
 
-// ��������
+// 弹层边框与阴影变量
 $popper-border-image: $border-gradient-menu;
 
 $popper-shadow: $box-shadow-medium;
 $popper-backdrop: $backdrop-blur-base;
-$hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
+$hover-bg: rgba(0, 0, 0, 0.05); // 浅色背景 hover 效果
 
 .voltage-class {
   .el-select {
@@ -68,7 +68,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
     .is-hovering:not(.is-focused) {
       box-shadow: none;
     }
-    // �����ť
+    // 清除按钮
     .el-select__close {
       color: $text-color-secondary;
       cursor: pointer;
@@ -80,7 +80,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
       }
     }
 
-    // �ɹ��˺�Զ��������ʽ
+    // 可筛选与远程搜索样式
     &.el-select--filterable,
     &.el-select--remote {
       .el-input__inner,
@@ -90,7 +90,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
     }
   }
 
-  // ��������ʽ
+  // 下拉面板样式
   .el-select-dropdown {
     border-radius: 0;
     &::-webkit-scrollbar {
@@ -112,7 +112,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
   }
 }
 
-// ���������˵�������ʽ
+// 下拉与分组菜单基础样式
 %popper-base {
   border: 1px solid !important;
   border-image: $popper-border-image !important;
@@ -162,7 +162,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
         border-bottom: $border-width-base solid $border-color-base;
 }
 
-// Select �����˵���ʽ
+// Select 下拉菜单样式
 .el-select__popper.el-popper {
   @extend %popper-base;
   width: var(--el-select-popper-width) !important;
@@ -232,7 +232,7 @@ $hover-bg: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
   }
 }
 
-// Dropdown �����˵���ʽ
+// Dropdown 下拉菜单样式
 .el-dropdown__popper.el-popper.is-light {
   @extend %popper-base;
   // background-color: rgba(15, 35, 70, 0.8) !important;

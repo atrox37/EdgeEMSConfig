@@ -340,21 +340,22 @@ const getAvatarName = (name: string): string => {
     }
 
     &:hover {
-      background: rgba(0, 0, 0, 0.05); // ǳɫ����hover����
+      background: rgba(0, 0, 0, 0.05); // 浅色背景 hover 效果
     }
 
     &:active {
-      background: rgba(0, 0, 0, 0.1); // ǳɫ����active����
+      background: rgba(0, 0, 0, 0.1); // 浅色背景 active 效果
     }
 
     &.titlebar__button--close {
       &:hover {
-        background: #e81123; // Windows��׼�رհ�ť��ɫ�����ֲ���
-        color: $text-color-primary;
+        background: #e81123; // Windows 标准关闭按钮红色（悬停）
+        color: #ffffff;
       }
 
       &:active {
-        background: #f1707a; // Windows��׼�رհ�ť��ɫ�����ֲ���
+        background: #f1707a; // Windows 标准关闭按钮红色（按下）
+        color: #ffffff;
       }
     }
   }

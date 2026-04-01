@@ -63,11 +63,12 @@ export const useUserStore = defineStore(
           }
         }
       } catch (error: any) {
-        return {
+        console.error('Login failed:', error)
+        return Promise.reject({
           success: false,
           message: error.message || 'Login failed',
           statusCode: error?.response?.status,
-        }
+        })
       }
     }
 

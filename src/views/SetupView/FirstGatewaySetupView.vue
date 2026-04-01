@@ -99,8 +99,10 @@ import { open } from '@tauri-apps/plugin-dialog'
 import type { InitProjectForm } from '@/types/ssh'
 import { runGatewayInitInstall } from '@/utils/gatewayInitInstall'
 import { markGatewayFirstSetupSeen } from '@/utils/firstGatewaySetup'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 
 const form = reactive<InitProjectForm>({
@@ -215,9 +217,11 @@ const goLogin = () => {
   router.replace({ path: '/login' })
 }
 
-const handleSkip = () => {
+const handleSkip = async () => {
   if (isSubmitting.value) return
   markGatewayFirstSetupSeen()
+  // Strategy A: always force re-login after setup flow.
+  await userStore.clearUserData()
   goLogin()
 }
 
@@ -257,6 +261,8 @@ const handleStartInit = async () => {
 
     if (ok) {
       markGatewayFirstSetupSeen()
+      // Strategy A: after successful initialization, force user to log in again.
+      await userStore.clearUserData()
       goLogin()
     }
   } catch (error: unknown) {

@@ -183,7 +183,7 @@ const uniqueArray = <T,>(arr: T[]): T[] => Array.from(new Set(arr))
 const route = useRoute()
 const router = useRouter()
 
-// 响应式数�?
+// 响应式数据
 const isEditing = ref(false)
 const activeTab = ref('telemetry')
 const channelId = ref(0)
@@ -212,14 +212,14 @@ watch(
     { immediate: true, deep: true },
 )
 const isPublish = ref(false) // 批量发布模式
-const publishDirty = ref(false) // 发布数据是否有修�?
+const publishDirty = ref(false) // 发布数据是否有修改
 const mappingTypeToTabName: Record<string, 'T' | 'S' | 'C' | 'A'> = {
     telemetry: 'T',
     signal: 'S',
     control: 'C',
     adjustment: 'A',
 }
-// 反向映射：数据类�?-> 表引�?
+// 反向映射：数据类型 -> 表索引
 const dataTypeToRef: Record<DataType, any> = {
     T: null as any,
     S: null as any,
@@ -245,7 +245,7 @@ const originalPointsData = ref<PointInfoResponse>({
 // Mappings 数据存储
 type TabPaneName = string | number
 
-// 编辑状态管理方�?
+// 编辑状态管理方法
 const telemetryTableRef = ref()
 const signalTableRef = ref()
 const controlTableRef = ref()
@@ -309,7 +309,7 @@ const handleEdit = (payload?: { fromImport?: boolean } | MouseEvent) => {
     statusCheckboxValue.value = []
     invalidChecked.value = false
     // 用户主动进入编辑时，清除四个表中上一次的导入文件名；
-    // 若由子表导入触发（fromImport），则保留当前导入文件名�?
+    // 若由子表导入触发（fromImport），则保留当前导入文件名称
     if (!fromImport) {
         telemetryTableRef.value?.clearImportedFileName?.()
         signalTableRef.value?.clearImportedFileName?.()
@@ -318,7 +318,7 @@ const handleEdit = (payload?: { fromImport?: boolean } | MouseEvent) => {
     }
 }
 
-// 统一刷新点位数据并设置对比基�?
+// 统一刷新点位数据并设置对比基准
 const refreshPointsBaseline = async () => {
     try {
         const res = await getPointsTables(channelId.value)
@@ -334,11 +334,11 @@ const refreshPointsBaseline = async () => {
 const handleSubmit = async () => {
     // 编辑提交前：检查四个Tab是否存在 invalid
     const ensureInvalidHandled = (targetTab: 'telemetry' | 'signal' | 'control' | 'adjustment') => {
-        // 勾�?invalid 筛�?
+        // 勾选 invalid 筛选
         if (!invalidChecked.value) {
             invalidChecked.value = true
         }
-        // 切换到有问题�?Tab
+        // 切换到有问题的 Tab
         activeTab.value = targetTab
     }
 
@@ -384,7 +384,7 @@ const handleSubmit = async () => {
         if (res.success) {
             ElMessage.success('Point mapping updated successfully')
             isEditing.value = false
-            // 刷新 points 数据，作为新的原始对比基�?
+            // 刷新 points 数据，作为新的原始对比基准
             await refreshPointsBaseline()
             // 提交完成后清空筛选并显示全部
             clearStatusFilters()
@@ -412,7 +412,7 @@ const handleSubmit = async () => {
             return
         }
 
-        // 组装批量增删�?payload
+        // 组装批量增删改 payload
         const toArray = (x: any) => (Array.isArray(x) ? x : [])
         const tRows = toArray(telemetryTableRef.value?.getEditedData?.())
         const sRows = toArray(signalTableRef.value?.getEditedData?.())
@@ -442,7 +442,7 @@ const handleSubmit = async () => {
                     point_id: r.point_id,
                     point_type,
                     data: pickData(r, BASE_FIELDS),
-                    // 文件导入得到的新增行，强制覆�?
+                    // 文件导入得到的新增行，强制覆盖
                     ...(r?.isImported ? { force: true } : {}),
                 }))
         const buildDelete = (rows: any[], point_type: 'T' | 'S' | 'C' | 'A') =>
@@ -507,19 +507,19 @@ const handleSubmit = async () => {
 }
 
 const handleTabChange = (name: TabPaneName) => {
-    // Tab 切换时重置筛�?
-    // 切换完成后，根据新的表刷�?publishDirty（保持批量发布模式不变）
+    // Tab 切换时重置筛选
+    // 切换完成后，根据新的表刷新 publishDirty（保持批量发布模式不变）
     if (isPublish.value) {
         publishDirty.value = !!getTableInstance(String(name) as TabName)?.hasPublishChanges?.()
     }
-    // 切换 Tab 后滚动到�?
+    // 切换 Tab 后滚动到顶
     nextTick(() => {
         const ref = getCurrentTableRef()
         ref?.value?.scrollToTop?.()
     })
 }
 
-// Tabs 切换拦截：批量发布中如有修改则提示；确认后切换并退出批量发布，取消则停�?
+// Tabs 切换拦截：批量发布中如有修改则提示；确认后切换并退出批量发布，取消则停留
 const handleBeforeLeave = async (newName: TabPaneName, oldName: TabPaneName) => {
     void newName
     void oldName
@@ -536,7 +536,7 @@ const handleBeforeLeave = async (newName: TabPaneName, oldName: TabPaneName) => 
                     type: 'warning',
                 },
             )
-            // 用户确认切换：清空当�?tab 的发布值并退出批量发�?
+            // 用户确认切换：清空当前 tab 的发布值并退出批量发布
             resetPublishForTab(activeTab.value as TabName)
             publishDirty.value = false
             isPublish.value = false
@@ -571,7 +571,7 @@ const togglePublishMode = async () => {
                 publishDirty.value = false
                 resetPublishAll()
             } catch {
-                // 用户取消，不做任何操�?
+                // 用户取消，不做任何操作
                 return
             }
         } else {
@@ -580,7 +580,7 @@ const togglePublishMode = async () => {
             resetPublishAll()
         }
     } else {
-        // 开启发布模式：清空当前 tab 的发布�?
+        // 开启发布模式：清空当前 tab 的发布值
         isPublish.value = true
         resetPublishForTab(activeTab.value as TabName)
         publishDirty.value = false
@@ -607,7 +607,7 @@ const handleSubmitPublish = async () => {
     }
 }
 
-// 根据激�?tab 获取对应表格实例
+// 根据激活 tab 获取对应表格实例
 const getCurrentTableRef = () => {
     return tableRefsByTab[activeTab.value as TabName] || null
 }
@@ -687,7 +687,7 @@ const handleCancelEdit = async () => {
     performCancelEdit()
 }
 
-// 统一清理：关闭前清理所有表�?Signal Name 筛�?
+// 统一清理：关闭前清理所有表的 Signal Name 筛选
 const clearAllSignalFilters = () => {
     telemetryTableRef.value?.clearSignalNameFilter?.()
     signalTableRef.value?.clearSignalNameFilter?.()
@@ -703,7 +703,7 @@ const clearStatusFilters = () => {
     clearAllSignalFilters()
 }
 
-// 初始化数�?
+// 初始化数据
 const initData = async () => {
     const id = route.query.id as string
     const name = route.query.name as string
@@ -732,13 +732,13 @@ const initData = async () => {
         }
     }
 
-    // 准备 dataType -> 表引用映�?
+    // 准备 dataType -> 表引用映射
     dataTypeToRef.T = telemetryTableRef
     dataTypeToRef.S = signalTableRef
     dataTypeToRef.C = controlTableRef
     dataTypeToRef.A = adjustmentTableRef
 
-    // 建立WebSocket连接并订阅当前通道的四类数�?
+    // 建立 WebSocket 连接并订阅当前通道的四类数据
     pageId.value = `points-${channelId.value}-${Date.now()}`
     wsManager.subscribe(
         {
@@ -772,7 +772,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    // 关闭时取消页面订�?
+    // 关闭时取消页面订阅
     if (pageId.value) {
         try {
             wsManager.unsubscribe(pageId.value)
@@ -903,7 +903,7 @@ watch(
             align-items: center;
             gap: 12px;
             z-index: 10;
-            // �?tab 标签对齐（tab 标签的高度通常�?40px 左右�?
+            // 与 tab 标签对齐（tab 标签的高度通常在 40px 左右）
             height: 40px;
             line-height: 40px;
 

@@ -1,7 +1,7 @@
 @use "@/assets/styles/_variables.scss" as *;
 /**
- * Element Plus Table-V2 ����������?
- * ������ ele-table.scss��͸����������ɫ����ͷ���� hover���߶Աȱ߿�������
+ * Element Plus Table-V2 ????
+ * ? ele-table.scss ????????????? hover??????
  */
 
 
@@ -25,7 +25,7 @@
       }
     }
 
-    // ������������������/����
+    // ????????
     &::-webkit-scrollbar {
       height: $width-scrollbar;
       width: $width-scrollbar;
@@ -38,7 +38,7 @@
       background: transparent;
     }
 
-    // ͷ������
+    // ????
     .el-table-v2__header {
       background: $table-header-bg;
 
@@ -67,7 +67,7 @@
       }
     }
 
-    // ��������
+    // ????
     .el-table-v2__body {
       background: transparent;
 
@@ -99,7 +99,7 @@
         }
       }
 
-      // ������̬
+      // ????
       .el-table-v2__empty {
         background: transparent;
 
@@ -110,7 +110,7 @@
       }
     }
 
-    // ������͸���������ף�
+    // ??????/????
     .el-table-v2__main,
     .el-table-v2__header,
     .el-table-v2__body,

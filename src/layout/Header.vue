@@ -14,13 +14,13 @@
       <div class="header__right-weather">
         <img :src="sunIcon" alt="sunIcon" class="header__right-weatherIcon" />
         <div class="header__right-weatherStatus">wind</div>
-        <div class="header__right-weatherValue">67�H~79�H</div>
+        <div class="header__right-weatherValue">67°F~79°F</div>
       </div>
 
       <div class="header__right-avatar">
         <el-dropdown @command="handleUserCommand" trigger="click">
           <div class="header__user">
-            <!-- ͷ��ͼƬ�޷���ʾ�ĳ���ԭ���У�·��д�����ԡ�ͼƬδ����ȷ���롢�����·����ʧ�ȡ��Ƽ���import��ʽ����ͼƬ��Դ�� -->
+            <!-- 头像无法显示的常见原因：路径错误、未正确引入、静态资源失效等；建议用 import 引入图片 -->
             <!-- <el-avatar  :src="userStore.userInfo?.avatar" class="header__user-avatar" /> -->
             <!-- <el-avatar :src="headerAvatar" class="header__user-avatar" /> -->
             <div class="header__user-avatar">
@@ -69,12 +69,12 @@ const userStore = useUserStore()
 const globalStore = useGlobalStore()
 
 
-// �л�֪ͨ
+// 切换通知
 const toggleNotifications = () => {
   router.push({ name: 'alarmCurrentRecords' })
 }
 
-// �û�����
+// 用户命令
 const handleUserCommand = async (command: string) => {
   switch (command) {
     case 'logout':

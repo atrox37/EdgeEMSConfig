@@ -12,7 +12,7 @@
     :class="dialogClass"
     @close="handleClose"
   >
-    <!-- dialog-head��ۣ�Ĭ����ʾ���� -->
+    <!-- dialog-head 插槽，默认显示标题区 -->
     <template #header>
       <slot name="dialog-head">
         <div class="dialog-head">
@@ -22,7 +22,7 @@
       </slot>
     </template>
 
-    <!-- dialog-body��ۣ�Ĭ����ʾ�������� -->
+    <!-- dialog-body 插槽，默认显示主体内容 -->
     <template #default>
       <slot name="dialog-body"> </slot>
     </template>

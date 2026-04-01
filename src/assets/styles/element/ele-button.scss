@@ -1,11 +1,11 @@
 @use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Button �����ʽ��д */
+/* Element Plus Button 组件样式重写 */
 
-// �����������
+// 引入颜色工具
 @use "sass:color";
 
 // .voltage-class {
-  // ������ť��ʽ
+  // 基础按钮样式
   .el-button {
     height: 32px !important;
     font-size: 14px !important;
@@ -29,7 +29,7 @@
     }
 
     img {
-      // ��ͼ��תΪ��ɫ
+      // 将图标转为白色
       filter: brightness(0) invert(1);
     }
 
@@ -45,14 +45,14 @@
       box-shadow: none !important;
     }
 
-    // ��Ҫ��ť�����ְ�ɫ���֣�
+    // 主要按钮与日期面板链接按钮
     &.el-button--primary,
     &.el-picker-panel__link-btn {
       background: $primary-color !important;
-      color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
+      color: #ffffff !important; // 主色按钮文字保持白色
       box-shadow: none;
 
-      // ͼ����ɫ��������ɫ��ͬ����ɫ��
+      // 图标颜色与文字同色（白色）
       .el-icon {
         color: #ffffff;
       }
@@ -63,12 +63,12 @@
 
       &:hover {
         background: $primary-color-hover !important;
-        color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
+        color: #ffffff !important; // 主色按钮 hover 时文字保持白色
       }
 
       &:active {
         background: $primary-color-hover !important;
-        color: #ffffff !important; // ����ɫ��ť���ְ�ɫ����
+        color: #ffffff !important; // 主色按钮 active 时文字保持白色
       }
 
       &:focus {
@@ -76,7 +76,7 @@
       }
 
       &.is-disabled {
-        // ����״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+        // 禁用状态：背景为当前色与灰色混合，文字为灰色
         background: color.mix($primary-color, #c0c4cc, 50%) !important;
         color: $text-color-disabled !important;
         box-shadow: none !important;
@@ -98,10 +98,10 @@
       }
     }
 
-    // Warning��ť - ��ɫ����
+    // Warning 按钮 - 黄色主题
     &.el-button--warning {
       background: $warning-color !important; // 使用warning颜色
-      color: #ffffff !important; // ��ɫ����
+      color: #ffffff !important; // 白色文字
 
       .el-icon {
         color: #ffffff;
@@ -186,7 +186,7 @@
       }
     }
 
-    // ��Ϣ��ť - ��ɫ����
+    // 信息按钮 - 渐变背景
     &.el-button--info {
       background: $gradient-info-button;
       color: #ffffff !important; // 白色
@@ -348,15 +348,15 @@
 
       .el-icon {
         animation: rotating 2s linear infinite;
-        color: #ffffff !important; // ����ͼ��Ϊ��ɫ
+        color: #ffffff !important; // 加载图标为白色
       }
     }
 
-    // ͨ�ý���״̬�����û���ض����͵Ľ�����ʽ��
+    // 通用禁用状态（无类型特定样式时）
     &.is-disabled {
       cursor: not-allowed;
       opacity: $opacity-disabled;
-      // Ĭ�Ͻ���״̬������Ϊ��ǰ��ɫ���ɫ�Ļ�ϣ�����Ϊ��ɫ
+      // 默认禁用：背景为当前色与灰色混合，文字为灰色
       background: color.mix($secondary-color, #c0c4cc, 50%) !important;
       color: $text-color-disabled !important;
 
@@ -375,13 +375,13 @@
       }
     }
 
-    // ��ť���
+    // 按钮间距
     &+.el-button {
       margin-left: 8px !important;
     }
   }
 
-  // ��ť����ʽ
+  // 按钮组样式
   .el-button-group {
     display: inline-flex;
 
@@ -414,11 +414,11 @@
 
     .el-icon {
       font-size: 14px !important;
-      color: #ffffff !important; // ��ť��ͼ��Ϊ��ɫ
+      color: #ffffff !important; // 按钮内图标为白色
     }
 
     img {
-      // ��ͼ��תΪ��ɫ
+      // 将图标转为白色
       filter: brightness(0) invert(1);
     }
   }

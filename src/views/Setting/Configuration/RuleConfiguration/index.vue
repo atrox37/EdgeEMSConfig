@@ -117,7 +117,7 @@ const route = useRoute()
 const router = useRouter()
 const isDetailRoute = computed(() => route.name === 'ruleChainEditor')
 const ruleManagementRef = ref<HTMLElement | null>(null)
-// 分页事件�?useTableData 提供�?handlePageSizeChange / handlePageChange 处理
+// 分页事件由 useTableData 提供的 handlePageSizeChange / handlePageChange 处理
 
 const switchLoadings = ref<boolean[]>([])
 const levelSelectRef = ref<HTMLElement | null>(null)
@@ -156,7 +156,7 @@ async function handleEnabledBeforeChange(next: boolean, row: Rule, index: number
         return false
       }
     }
-    // 后端成功后再变更本地状�?
+    // 后端成功后再变更本地状态
     row.enabled = next
     return true
   } catch (e) {

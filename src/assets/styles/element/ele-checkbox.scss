@@ -21,7 +21,7 @@
       }
     }
 
-    // 多选框输入�?
+    // 多选框输入框
     .el-checkbox__input {
       // 隐藏原生input
       .el-checkbox__original {
@@ -50,7 +50,7 @@
           border-color: $primary-color;
         }
 
-        // 勾选图�?
+        // 勾选图标
         &::after {
           content: '';
           position: absolute;
@@ -66,7 +66,7 @@
         }
       }
 
-      // 选中状�?
+      // 选中状态
       &.is-checked {
         .el-checkbox__inner {
           background-color: $primary-color;
@@ -83,7 +83,7 @@
         }
       }
 
-      // 半选状�?
+      // 半选状态
       &.is-indeterminate {
         .el-checkbox__inner {
           background-color: $primary-color;
@@ -103,7 +103,7 @@
         }
       }
 
-      // 禁用状�?
+      // 禁用状态
       &.is-disabled {
         cursor: not-allowed;
 
@@ -138,7 +138,7 @@
         }
       }
 
-      // 焦点状�?
+      // 焦点状态
       &.is-focus {
         .el-checkbox__inner {
           border-color: $primary-color;
@@ -157,7 +157,7 @@
     }
   }
 
-  // 多选框�?
+  // 多选框组
   .el-checkbox-group {
     display: inline-block;
     line-height: 1;
@@ -211,7 +211,7 @@
       }
     }
 
-    // 第一个按�?
+    // 第一个按钮
     &:first-child {
       .el-checkbox-button__inner {
         border-left: 1px solid $border-color-base;
@@ -219,14 +219,14 @@
       }
     }
 
-    // 最后一个按�?
+    // 最后一个按钮
     &:last-child {
       .el-checkbox-button__inner {
         border-radius: 0 $border-radius-small $border-radius-small 0;
       }
     }
 
-    // 选中状�?
+    // 选中状态
     &.is-checked {
       .el-checkbox-button__inner {
         color: $text-color-primary;
@@ -236,7 +236,7 @@
       }
     }
 
-    // 禁用状�?
+    // 禁用状态
     &.is-disabled {
       .el-checkbox-button__inner {
         color: $text-color-disabled;
@@ -266,7 +266,7 @@
     }
   }
 
-  // 按钮�?
+  // 按钮组
   .el-checkbox-button-group {
     display: inline-block;
     border-radius: $border-radius-small;

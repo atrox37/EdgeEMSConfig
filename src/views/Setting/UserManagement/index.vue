@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-// 正确引入SVG图标，避免部署后图片加载不出�?
+// 正确引入 SVG 图标，避免部署后图片加载不出来
 import userAddIcon from '@/assets/icons/user-add.svg'
 import tableEditIcon from '@/assets/icons/table-edit.svg'
 import tableDeleteIcon from '@/assets/icons/table-delect.svg'
@@ -120,7 +120,7 @@ const {
   handlePageChange,
 } = useTableData<UserManagementInfo>(tableConfig)
 
-// 创建可写的分页数�?
+// 创建可写的分页数据
 const pagination = reactive({
   page: 1,
   pageSize: 20,
