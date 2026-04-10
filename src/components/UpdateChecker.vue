@@ -6,6 +6,7 @@
     :append-to-body="true"
     dialog-class="update-checker-dialog"
     :close-on-press-escape="false"
+    :before-close="handleBeforeClose"
   >
     <template #dialog-body>
       <div class="update-dialog-content">
@@ -48,7 +49,7 @@
             </div>
             <div class="update-progress__percent" :class="{ 'is-exception': progressBarStatus === 'exception', 'is-success': progressBarStatus === 'success' }">{{ `${progressPercentDisplay}%` }}</div>
           </div>
-          <el-progress :percentage="progressPercentDisplay" :stroke-width="10" :status="progressBarStatus || undefined" />
+          <el-progress :percentage="progressPercentDisplay" :stroke-width="10" :status="progressBarStatus || undefined" :show-text="false" />
           <div class="update-progress__message">{{ progressMessageDisplay }}</div>
           <div v-if="progressBytesDisplay" class="update-progress__bytes">{{ progressBytesDisplay }}</div>
         </div>
@@ -82,7 +83,7 @@
         {{ dialogMode === 'manual' ? 'Close' : 'Remind Later' }}
       </el-button>
       <el-button type="primary" :loading="isInstalling" :disabled="!updateInfo || isInstalling" @click="handleInstall">
-        {{ installPhase === 'installing' ? 'Installing...' : isInstalling ? 'Downloading...' : 'Update Now' }}
+        {{ !isInstalling ? 'Update Now' : installPhase === 'installing' ? 'Installing...' : 'Downloading...' }}
       </el-button>
     </template>
   </FormDialog>
@@ -91,8 +92,10 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { getVersion } from '@tauri-apps/api/app'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useUpdater } from '@/composables/useUpdater'
 import FormDialog from '@/components/dialog/FormDialog.vue'
+import { ElMessageBox } from 'element-plus'
 
 type DialogMode = 'auto' | 'manual'
 
@@ -198,6 +201,7 @@ const parseChangelogSections = (notes?: string): ChangelogSection[] => {
 }
 
 const openDialog = () => {
+  progressBarStatus.value = ''
   if (dialogRef.value) {
     dialogRef.value.dialogVisible = true
   }
@@ -209,6 +213,15 @@ const closeDialog = () => {
   if (dialogRef.value) {
     dialogRef.value.dialogVisible = false
   }
+  if (dialogMode.value === 'auto') {
+    dismissed.value = true
+  }
+}
+
+// Intercept the × button: block closing while installing
+const handleBeforeClose = (done: () => void) => {
+  if (isInstalling.value) return
+  done()
   if (dialogMode.value === 'auto') {
     dismissed.value = true
   }
@@ -259,6 +272,9 @@ watch(
   { immediate: true }
 )
 
+let unlistenWindowClose: (() => void) | null = null
+let forceClose = false
+
 onMounted(async () => {
   currentVersion.value = await getVersion()
   window.addEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
@@ -266,29 +282,55 @@ onMounted(async () => {
     dialogMode.value = 'auto'
     void checkUpdate(true)
   }, 3000)
+
+  // Intercept window close event while update is downloading/installing
+  const appWindow = getCurrentWindow()
+  unlistenWindowClose = await appWindow.onCloseRequested(async (event) => {
+    // If user already confirmed exit, let the close proceed normally
+    if (!isInstalling.value || forceClose) return
+    event.preventDefault()
+    try {
+      await ElMessageBox.confirm(
+        'An update is currently in progress. Closing the application now may corrupt the update. Are you sure you want to exit?',
+        'Update In Progress',
+        {
+          confirmButtonText: 'Exit Anyway',
+          cancelButtonText: 'Stay',
+          type: 'warning',
+          confirmButtonClass: 'el-button--danger',
+        },
+      )
+      // User confirmed exit — set flag then close normally through Tauri's flow
+      forceClose = true
+      await appWindow.close()
+    } catch {
+      // User chose to stay, do nothing
+    }
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
+  unlistenWindowClose?.()
 })
 </script>
 
 <style scoped lang="scss">
 .update-dialog-content {
   .update-header {
-    margin-bottom: $spacing-md;
-    padding-bottom: $spacing-md;
+    margin-bottom: $spacing-sm;
+    padding-bottom: $spacing-sm;
     border-bottom: $border-width-base solid $border-color-white-10;
 
     h3 {
-      margin: 0 0 $spacing-sm 0;
+      margin: 0 0 $spacing-xs 0;
       color: $primary-color;
       font-size: $font-size-extra-large;
       font-weight: $font-weight-semibold;
     }
 
     .update-description {
-      margin: 0 0 $spacing-md 0;
+      margin: 0 0 $spacing-sm 0;
       color: $text-color-white-60;
       font-size: $font-size-base;
       line-height: $line-height-normal;
@@ -300,7 +342,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   gap: $spacing-md;
-  margin-bottom: $spacing-xs;
+  margin-bottom: 2px;
 }
 
 .update-label {
@@ -328,8 +370,8 @@ onUnmounted(() => {
 }
 
 .update-progress {
-  margin-bottom: $spacing-md;
-  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
   border: $border-width-base solid rgba(255, 138, 0, 0.18);
   border-radius: $border-radius-small;
   background: linear-gradient(180deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 138, 0, 0.03) 100%);
@@ -350,7 +392,7 @@ onUnmounted(() => {
     align-items: center;
     justify-content: space-between;
     gap: $spacing-md;
-    margin-bottom: $spacing-sm;
+    margin-bottom: $spacing-xs;
   }
 
   &__title {
@@ -375,13 +417,13 @@ onUnmounted(() => {
   }
 
   &__message {
-    margin-top: $spacing-sm;
+    margin-top: $spacing-xs;
     color: $text-color-primary;
     font-size: $font-size-small;
   }
 
   &__bytes {
-    margin-top: $spacing-xs;
+    margin-top: 2px;
     color: $text-color-white-60;
     font-size: $font-size-small;
   }
@@ -404,14 +446,14 @@ onUnmounted(() => {
 
 .update-notes {
   h4 {
-    margin: 0 0 $spacing-md 0;
+    margin: 0 0 $spacing-xs 0;
     font-weight: $font-weight-semibold;
     color: $text-color-primary;
     font-size: $font-size-medium;
   }
 
   .notes-content {
-    max-height: 260px;
+    max-height: 130px;
     overflow-y: auto;
     padding: $spacing-md;
     background: #f5f6f7;

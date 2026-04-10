@@ -60,7 +60,7 @@
               </el-upload>
 
               <el-button
-                v-if="upgradeUploadLoading"
+                v-if="upgradeUploadLoading && !isUploadingPhase"
                 type="danger"
                 plain
                 @click="handleUpgradeAbort"
@@ -108,7 +108,6 @@ import { nextTick, onUnmounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox, type UploadFile, type UploadFiles } from 'element-plus'
 import {
   abortUpgrade,
-  cancelUpgradeUpload,
   downloadConfigExport,
   getUpgradeStatus,
   importConfigFile,
@@ -130,6 +129,8 @@ const upgradeStatusLogRef = ref<HTMLElement | null>(null)
 const upgradeStatusTimer = ref<number | null>(null)
 const upgradeStatusPolling = ref(false)
 const upgradeAbortTriggered = ref(false)
+// true = file is still being transferred; false = file uploaded, upgrade is executing
+const isUploadingPhase = ref(false)
 
 const resetUpgradeSelection = () => {
   upgradeUploadRef.value?.clearFiles?.()
@@ -162,17 +163,23 @@ const startUpgradeStatusPolling = () => {
       const res = await getUpgradeStatus()
       if (res?.success) {
         const data = res.data || {}
-        const status = String(data.status || '').toLowerCase()
-        upgradeStatusLog.value = String(data.log_preview || '')
+        upgradeStatusLog.value = String(data.log || '')
         await nextTick()
         const scrollEl = upgradeStatusLogRef.value ?? upgradeStatusBodyRef.value
         if (scrollEl) {
           scrollEl.scrollTop = scrollEl.scrollHeight
         }
-        if (status === 'finished') {
+        const detailStatus = String(data.detail?.status || '').toLowerCase()
+        const isTerminal = detailStatus && detailStatus !== 'running'
+        if (isTerminal) {
           stopUpgradeStatusPolling()
           upgradeUploadLoading.value = false
-          ElMessage.success('Upgrade finished')
+          isUploadingPhase.value = false
+          if (detailStatus === 'completed') {
+            ElMessage.success(data.detail?.message || 'Upgrade completed successfully')
+          } else {
+            ElMessage.error(data.detail?.message || `Upgrade failed (${detailStatus})`)
+          }
           return
         }
       }
@@ -210,6 +217,7 @@ const handleConfigFileSelect = async (event: Event) => {
     ElMessage.error('Please select a .zip file')
     return
   }
+
 
   try {
     configImportLoading.value = true
@@ -275,6 +283,7 @@ const handleUpgradeUpload = async () => {
     return
   }
 
+
   try {
     await ElMessageBox.confirm(
       `Are you sure you want to upload the upgrade package: ${file.name}?`,
@@ -287,16 +296,17 @@ const handleUpgradeUpload = async () => {
     )
 
     upgradeUploadLoading.value = true
+    isUploadingPhase.value = true
     upgradeAbortTriggered.value = false
     clearUpgradeStatus()
 
     const response = await uploadUpgradePackage(file)
 
+    isUploadingPhase.value = false
     if (response.success) {
       startUpgradeStatusPolling()
       resetUpgradeSelection()
     } else {
-      // ElMessage.error(response.message || 'Upload failed')
       stopUpgradeStatusPolling()
       upgradeUploadLoading.value = false
     }
@@ -305,10 +315,10 @@ const handleUpgradeUpload = async () => {
       upgradeAbortTriggered.value || error?.code === 'ERR_CANCELED' || error?.message === '请求被取消'
     if (!isCanceled && error !== 'cancel') {
       console.error('Upload failed:', error)
-      // ElMessage.error(error.message || 'Upload failed')
     }
     stopUpgradeStatusPolling()
     upgradeUploadLoading.value = false
+    isUploadingPhase.value = false
   } finally {
     resetUpgradeSelection()
   }
@@ -319,16 +329,15 @@ const handleUpgradeAbort = async () => {
   try {
     upgradeAbortLoading.value = true
     upgradeAbortTriggered.value = true
-    cancelUpgradeUpload()
     await abortUpgrade()
     ElMessage.success('Upgrade aborted')
     upgradeUploadLoading.value = false
   } catch (error: any) {
     console.error('Abort failed:', error)
-    // ElMessage.error(error.message || 'Abort failed')
   } finally {
     upgradeAbortLoading.value = false
     upgradeAbortTriggered.value = false
+    stopUpgradeStatusPolling()
   }
 }
 

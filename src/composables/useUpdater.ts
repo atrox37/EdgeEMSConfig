@@ -48,6 +48,8 @@ export function useUpdater() {
   }
 
   const checkUpdate = async (silent = false): Promise<boolean> => {
+    // Do not interrupt an in-progress installation
+    if (isInstalling.value) return false
     try {
       isChecking.value = true
       await clearUpdateState()
@@ -108,11 +110,11 @@ export function useUpdater() {
       `
         <div style="max-height: 400px; overflow-y: auto;">
           <div style="margin-bottom: 15px;">
-            <h3 style="margin: 0 0 10px 0; color: #409EFF;">发现新版本 v${version}</h3>
-            ${dateStr ? `<p style="color: #909399; font-size: 12px; margin: 0;">发布日期: ${dateStr}</p>` : ''}
+            <h3 style="margin: 0 0 10px 0; color: #409EFF;">?????°汾 v${version}</h3>
+            ${dateStr ? `<p style="color: #909399; font-size: 12px; margin: 0;">????????: ${dateStr}</p>` : ''}
           </div>
           <div style="margin-top: 15px; padding: 10px; background: #f5f7fa; border-radius: 4px;">
-            <h4 style="margin: 0 0 10px 0; font-weight: 600;">更新内容</h4>
+            <h4 style="margin: 0 0 10px 0; font-weight: 600;">????????</h4>
             <div style="line-height: 1.6; color: #606266;">
               ${notesHtml}
             </div>
@@ -143,20 +145,21 @@ export function useUpdater() {
       return false
     }
 
+    // Capture a local reference to prevent race condition with concurrent checkUpdate calls
+    const update = updateAvailable.value
+
     try {
       resetInstallProgress()
       isInstalling.value = true
       installPhase.value = 'downloading'
       progressMessage.value = 'Downloading update package...'
 
-      await updateAvailable.value.download((event: DownloadEvent) => {
+      await update.download((event: DownloadEvent) => {
         if (event.event === 'Started') {
           totalBytes.value = event.data.contentLength ?? null
           downloadedBytes.value = 0
           downloadPercent.value = 0
-          progressMessage.value = totalBytes.value
-            ? 'Downloading update package...'
-            : 'Downloading update package...'
+          progressMessage.value = 'Downloading update package...'
           return
         }
 
@@ -173,7 +176,7 @@ export function useUpdater() {
 
       installPhase.value = 'installing'
       progressMessage.value = 'Applying update package...'
-      await updateAvailable.value.install()
+      await update.install()
 
       await ElMessageBox.confirm(
         'The update has been downloaded successfully. Please restart the application to apply the update.',
@@ -198,6 +201,7 @@ export function useUpdater() {
       console.error('install update failed:', error)
       ElMessage.error(`install update failed: ${error instanceof Error ? error.message : String(error)}`)
       isInstalling.value = false
+      installPhase.value = 'idle'
       progressMessage.value = 'Update failed. Please try again.'
       return false
     }
