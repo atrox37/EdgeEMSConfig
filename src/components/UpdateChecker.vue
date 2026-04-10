@@ -92,10 +92,9 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { getVersion } from '@tauri-apps/api/app'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useUpdater } from '@/composables/useUpdater'
+import { useAppUpdateState } from '@/composables/useAppUpdateState'
 import FormDialog from '@/components/dialog/FormDialog.vue'
-import { ElMessageBox } from 'element-plus'
 
 type DialogMode = 'auto' | 'manual'
 
@@ -110,6 +109,8 @@ const {
   totalBytes,
   progressMessage,
 } = useUpdater()
+
+const { isAppUpdating } = useAppUpdateState()
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null)
 const isCheckingUpdate = ref(false)
@@ -272,8 +273,9 @@ watch(
   { immediate: true }
 )
 
-let unlistenWindowClose: (() => void) | null = null
-let forceClose = false
+watch(isInstalling, (val) => {
+  isAppUpdating.value = val
+})
 
 onMounted(async () => {
   currentVersion.value = await getVersion()
@@ -282,36 +284,11 @@ onMounted(async () => {
     dialogMode.value = 'auto'
     void checkUpdate(true)
   }, 3000)
-
-  // Intercept window close event while update is downloading/installing
-  const appWindow = getCurrentWindow()
-  unlistenWindowClose = await appWindow.onCloseRequested(async (event) => {
-    // If user already confirmed exit, let the close proceed normally
-    if (!isInstalling.value || forceClose) return
-    event.preventDefault()
-    try {
-      await ElMessageBox.confirm(
-        'An update is currently in progress. Closing the application now may corrupt the update. Are you sure you want to exit?',
-        'Update In Progress',
-        {
-          confirmButtonText: 'Exit Anyway',
-          cancelButtonText: 'Stay',
-          type: 'warning',
-          confirmButtonClass: 'el-button--danger',
-        },
-      )
-      // User confirmed exit — set flag then close normally through Tauri's flow
-      forceClose = true
-      await appWindow.close()
-    } catch {
-      // User chose to stay, do nothing
-    }
-  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
-  unlistenWindowClose?.()
+  isAppUpdating.value = false
 })
 </script>
 

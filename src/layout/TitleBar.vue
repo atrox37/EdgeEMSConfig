@@ -85,9 +85,11 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getApiConfig } from '@/utils/apiConfig'
 import { ensureDefaultDownloadPath } from '@/utils/downloadPath'
+import { useAppUpdateState } from '@/composables/useAppUpdateState'
 
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
@@ -103,6 +105,7 @@ const appWindow = getCurrentWindow()
 const currentIpAddress = ref<string>('')
 const isUserDropdownOpen = ref(false)
 const settingDialogRef = ref<InstanceType<typeof TitlebarSettingDialog> | null>(null)
+const { isAppUpdating } = useAppUpdateState()
 
 const isPublicShellPage = computed(() => route.path === '/login' || route.path === '/setup')
 
@@ -138,6 +141,21 @@ const toggleMaximize = async () => {
 }
 
 const closeWindow = async () => {
+  if (isAppUpdating.value) {
+    try {
+      await ElMessageBox.confirm(
+        'An update is currently in progress. Closing the application now may corrupt the update. Are you sure you want to exit?',
+        'Update In Progress',
+        {
+          confirmButtonText: 'Exit Anyway',
+          cancelButtonText: 'Stay',
+          type: 'warning',
+        },
+      )
+    } catch {
+      return
+    }
+  }
   await appWindow.close()
 }
 
