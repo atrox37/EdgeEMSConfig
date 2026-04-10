@@ -752,7 +752,7 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-top: 12px;
+  // padding-top: 12px;
   padding-right: 6px;
 }
 

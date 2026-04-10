@@ -366,6 +366,9 @@ onUnmounted(() => {
 .system-storage__left {
   flex: 1;
   min-width: 0;
+  :deep(.el-card__body) {
+    padding-top: 20px;
+  }
 }
 
 .system-storage__card {

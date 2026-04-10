@@ -90,7 +90,7 @@
                 v-if="props.category === 'action' || props.category === 'measurement'"
                 @click="handlePublish(row)"
               >
-                <AppIcon name="i-tabler-arrows-move" className="point-table__op-icon" />
+                <AppIcon name="i-tabler-send" className="point-table__op-icon" />
                 <span>Execute</span>
               </div>
             </div>

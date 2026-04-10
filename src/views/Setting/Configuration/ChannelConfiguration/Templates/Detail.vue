@@ -91,7 +91,7 @@
             </template>
           </el-tab-pane>
 
-          <el-tab-pane label="Control" name="control">
+          <el-tab-pane label="Control" name="control" v-if="templateProtocol !== 'di_do' && templateProtocol !== 'can'">
             <template v-if="viewMode === 'points'">
               <div class="template-detail-page__table-panel">
                 <PointTablePoints
@@ -124,7 +124,7 @@
             </template>
           </el-tab-pane>
 
-          <el-tab-pane label="Adjustment" name="adjustment" v-if="templateProtocol !== 'di_do'">
+          <el-tab-pane label="Adjustment" name="adjustment" v-if="templateProtocol !== 'di_do' && templateProtocol !== 'can'">
             <template v-if="viewMode === 'points'">
               <div class="template-detail-page__table-panel">
                 <PointTablePoints
@@ -183,6 +183,11 @@ const router = useRouter()
 
 const loading = ref(false)
 const activeTab = ref<'telemetry' | 'signal' | 'control' | 'adjustment'>('telemetry')
+
+// 根据协议决定默认 tab：di_do 无 telemetry → signal；其余均从 telemetry 开始
+const getDefaultTab = (protocol: string): 'telemetry' | 'signal' => {
+  return protocol === 'di_do' ? 'signal' : 'telemetry'
+}
 const viewModeSwitch = ref(false)
 const viewMode = computed(() => (viewModeSwitch.value ? 'mappings' : 'points'))
 const templateDetail = ref<ChannelTemplateDetail | null>(null)
@@ -222,18 +227,43 @@ const toPointInfo = (
   idx: number,
 ): PointInfo => {
   const protocolData = (item?.protocol_data || {}) as Record<string, any>
-  return {
-    point_id: Number(item.point_id || 0),
-    signal_name: String(item.signal_name || ''),
-    scale: 1,
-    offset: 0,
-    unit: '',
-    data_type: String(protocolData.data_type || ''),
-    reverse: false,
-    description: '',
-    rowStatus: 'normal',
-    modifiedFields: [],
-    protocol_mapping: {
+  const protocol = templateProtocol.value
+
+  // 按协议类型构建对应的 protocol_mapping，避免 CAN/di_do 字段被错误填入 modbus 结构
+  let mappingData: any
+  if (protocol === 'can') {
+    mappingData = {
+      can_id:
+        protocolData.can_id === undefined || protocolData.can_id === null
+          ? undefined
+          : String(protocolData.can_id),
+      byte_offset:
+        protocolData.byte_offset === undefined || protocolData.byte_offset === null
+          ? undefined
+          : Number(protocolData.byte_offset),
+      bit_position:
+        protocolData.bit_position === undefined || protocolData.bit_position === null
+          ? undefined
+          : Number(protocolData.bit_position),
+      bit_length:
+        protocolData.bit_length === undefined || protocolData.bit_length === null
+          ? undefined
+          : Number(protocolData.bit_length),
+      data_type:
+        protocolData.data_type === undefined || protocolData.data_type === null
+          ? undefined
+          : String(protocolData.data_type),
+    }
+  } else if (protocol === 'di_do') {
+    mappingData = {
+      gpio_number:
+        protocolData.gpio_number === undefined || protocolData.gpio_number === null
+          ? undefined
+          : Number(protocolData.gpio_number),
+    }
+  } else {
+    // modbus_tcp / modbus_rtu / virt
+    mappingData = {
       slave_id:
         protocolData.slave_id === undefined || protocolData.slave_id === null
           ? undefined
@@ -262,7 +292,21 @@ const toPointInfo = (
         protocolData.gpio_number === undefined || protocolData.gpio_number === null
           ? undefined
           : Number(protocolData.gpio_number),
-    } as any,
+    }
+  }
+
+  return {
+    point_id: Number(item.point_id || 0),
+    signal_name: String(item.signal_name || ''),
+    scale: 1,
+    offset: 0,
+    unit: '',
+    data_type: String(protocolData.data_type || ''),
+    reverse: false,
+    description: '',
+    rowStatus: 'normal',
+    modifiedFields: [],
+    protocol_mapping: mappingData,
     originalData: {
       rowKey: `${type}_${item.point_id}_${idx}`,
     },
@@ -300,7 +344,7 @@ const loadDetail = async () => {
     const res = await getTemplateDetail(id)
     if (res.success) {
       templateDetail.value = res.data
-      activeTab.value = templateDetail.value.protocol === 'di_do' ? 'signal' : 'telemetry'
+      activeTab.value = getDefaultTab(templateDetail.value.protocol)
     }
   } finally {
     loading.value = false

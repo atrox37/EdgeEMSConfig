@@ -2,12 +2,14 @@ import type { PointInfo } from '@/types/channelConfiguration'
 
 export interface PointValidationContext {
   channelProtocol: string
+  pointType?: string
   points?: PointInfo[]
 }
 
 const isPositiveInt = (n: unknown) => Number.isInteger(n) && (n as number) > 0
 const isNonEmptyString = (s: unknown) => typeof s === 'string' && s.length > 0
 const isBool = (v: unknown) => typeof v === 'boolean'
+const isNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
 
 export function validatePointRow(point: PointInfo, ctx: PointValidationContext): boolean {
   if ((point as any).rowStatus === 'deleted') {
@@ -20,13 +22,20 @@ export function validatePointRow(point: PointInfo, ctx: PointValidationContext):
     valid = false
   } else if (!isNonEmptyString(point.signal_name)) {
     valid = false
-  } else if (!isBool(point.reverse)) {
-    valid = false
   }
 
-  if (valid && ctx.channelProtocol !== 'di_do') {
-    const isNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
-    if (!isNum(point.scale)) {
+  if (valid && ctx.channelProtocol === 'can') {
+    // CAN Telemetry：额外校验 scale 和 offset
+    const isTelemetry = ctx.pointType === 'T'
+    if (isTelemetry) {
+      if (!isNum(point.scale)) valid = false
+      else if (!isNum(point.offset)) valid = false
+    }
+  } else if (valid && ctx.channelProtocol !== 'di_do') {
+    // 非 CAN 非 di_do：校验 reverse / scale / offset
+    if (!isBool(point.reverse)) {
+      valid = false
+    } else if (!isNum(point.scale)) {
       valid = false
     } else if (!isNum(point.offset)) {
       valid = false
@@ -64,23 +73,25 @@ export function validatePointField(
       return ''
     }
     case 'reverse': {
+      if (ctx.channelProtocol === 'can') return ''
       const v = item.reverse
       if (!(v === true || v === false)) return 'required (true/false)'
       return ''
     }
     case 'scale': {
+      if (ctx.channelProtocol === 'can' && ctx.pointType === 'S') return ''
       const v = item.scale
       if (typeof v !== 'number' || !Number.isFinite(v)) return 'must be a number'
       return ''
     }
     case 'offset': {
+      if (ctx.channelProtocol === 'can' && ctx.pointType === 'S') return ''
       const v = item.offset
       if (typeof v !== 'number' || !Number.isFinite(v)) return 'must be a number'
       return ''
     }
-    case 'unit': {
+    case 'unit':
       return ''
-    }
     default:
       return ''
   }

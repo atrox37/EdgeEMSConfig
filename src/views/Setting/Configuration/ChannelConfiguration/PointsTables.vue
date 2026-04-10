@@ -75,7 +75,7 @@
                                     :channelProtocol="channelProtocol" />
                             </template>
                         </el-tab-pane>
-                        <el-tab-pane label="Control" name="control">
+                        <el-tab-pane label="Control" name="control" v-if="channelProtocol !== 'can'">
                             <template v-if="viewMode === 'points'">
                                 <PointTablePoints ref="controlTableRef" pointType="C" :points="pointsData.control"
                                     :original-points="originalPointsData.control" :view-mode="viewMode"
@@ -95,7 +95,7 @@
                                     :channelProtocol="channelProtocol" />
                             </template>
                         </el-tab-pane>
-                        <el-tab-pane label="Adjustment" name="adjustment" v-if="channelProtocol !== 'di_do'">
+                        <el-tab-pane label="Adjustment" name="adjustment" v-if="channelProtocol !== 'di_do' && channelProtocol !== 'can'">
                             <template v-if="viewMode === 'points'">
                                 <PointTablePoints ref="adjustmentTableRef" pointType="A" :points="pointsData.adjustment"
                                     :original-points="originalPointsData.adjustment" :view-mode="viewMode"
@@ -267,6 +267,8 @@ const resetPublishAll = () => {
 
 // 页面订阅ID
 const pageId = ref<string>('')
+// 用于取消过期的 initData 异步调用（防止快速切换时竞态条件）
+let initToken = 0
 
 provide(ChannelIdKey, readonly(channelId))
 provide(ChannelNameKey, readonly(channelName))
@@ -705,6 +707,15 @@ const clearStatusFilters = () => {
 
 // 初始化数据
 const initData = async () => {
+    // 取消上一次未完成的 initData（通过 token 机制防止竞态）
+    const myToken = ++initToken
+
+    // 先清理上一次订阅（无论 await 是否已完成）
+    if (pageId.value) {
+        wsManager.unsubscribe(pageId.value)
+        pageId.value = ''
+    }
+
     const id = route.query.id as string
     const name = route.query.name as string
     const protocol = route.query.protocol as 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
@@ -714,19 +725,25 @@ const initData = async () => {
         return
     }
 
-    channelId.value = Number(id)
+    // 用本地变量保存本次调用的 channelId，防止 await 后被其他 initData 覆盖
+    const localChannelId = Number(id)
+    channelId.value = localChannelId
     if (name) channelName.value = name
     if (protocol) channelProtocol.value = protocol
 
-    // 设置初始 tab
+    // 设置初始 tab（di_do 只有 signal；can 有 telemetry 和 signal；其他协议从 telemetry 开始）
     activeTab.value = protocol === 'di_do' ? 'signal' : 'telemetry'
 
     // 加载 points 数据
     await refreshPointsBaseline()
 
+    // await 返回后检查是否已被新的 initData 调用取代，若是则放弃后续操作
+    if (myToken !== initToken) return
+
     // 如果没有 name，从接口获取
     if (!name) {
-        const detail = await getChannelDetail(channelId.value)
+        const detail = await getChannelDetail(localChannelId)
+        if (myToken !== initToken) return
         if (detail.success) {
             channelName.value = detail.data.name || ''
         }
@@ -738,12 +755,12 @@ const initData = async () => {
     dataTypeToRef.C = controlTableRef
     dataTypeToRef.A = adjustmentTableRef
 
-    // 建立 WebSocket 连接并订阅当前通道的四类数据
-    pageId.value = `points-${channelId.value}-${Date.now()}`
+    // 建立 WebSocket 连接并订阅当前通道的四类数据（用本地 localChannelId 避免竞态）
+    pageId.value = `points-${localChannelId}-${Date.now()}`
     wsManager.subscribe(
         {
             source: 'comsrv',
-            channels: [channelId.value],
+            channels: [localChannelId],
             dataTypes: ['T', 'S', 'C', 'A'],
             interval: 1000,
         },
@@ -751,7 +768,7 @@ const initData = async () => {
             onBatchDataUpdate: (payload: any) => {
                 if (!payload?.updates?.length) return
                 payload.updates.forEach((upd: any) => {
-                    if (upd.channel_id !== channelId.value) return
+                    if (upd.channel_id !== localChannelId) return
                     const refMap = dataTypeToRef[upd.data_type as DataType]
                     refMap?.value?.applyRealtimeValues?.(upd.values, upd.ts)
                 })

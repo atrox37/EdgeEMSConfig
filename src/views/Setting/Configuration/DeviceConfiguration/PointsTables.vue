@@ -202,6 +202,8 @@ const propertyRows = ref<InstancePropertyItem[]>([])
 const channelsForRouting = ref<Array<{ id: number; name: string }>>([])
 // 页面订阅ID
 const pageId = ref<string>('')
+// 用于取消过期的 initData 异步调用（防止快速切换时竞态条件）
+let initToken = 0
 provide(InstanceNameKey, readonly(instanceName))
 provide(InstanceIdKey, readonly(instanceId))
 // 视图模式与筛选
@@ -528,6 +530,17 @@ const handleCancelEdit = async () => {
 
 // 初始化数据
 const initData = async () => {
+  // 取消上一次未完成的 initData（通过 token 机制防止竞态）
+  const myToken = ++initToken
+
+  // 立即清理上一次订阅（用 pageId.value 能命中是因为我们正确地传了 pageId 给 subscribe）
+  if (pageId.value) {
+    try {
+      wsManager.unsubscribe(pageId.value)
+    } catch {}
+    pageId.value = ''
+  }
+
   const id = route.query.id as string
   const name = route.query.name as string
   if (!id) {
@@ -536,7 +549,9 @@ const initData = async () => {
     return
   }
 
-  instanceId.value = Number(id)
+  // 用本地变量保存本次调用的 instanceId，防止 await 后被其他 initData 覆盖
+  const localInstanceId = Number(id)
+  instanceId.value = localInstanceId
   if (name) instanceName.value = name
 
   // 重置状态
@@ -550,22 +565,17 @@ const initData = async () => {
   viewModeSwitch.value = false
   activeTab.value = 'property'
 
-  // 先取消上一个订阅
-  if (pageId.value) {
-    try {
-      wsManager.unsubscribe(pageId.value)
-    } catch {}
-    pageId.value = ''
-  }
-
   await refreshPointsBaseline()
 
-  // 数据加载完成后，建立 WebSocket 订阅
-  pageId.value = `inst-${instanceId.value}-${Date.now()}`
+  // await 返回后检查是否已被新的 initData 调用取代，若是则放弃后续操作
+  if (myToken !== initToken) return
+
+  // 数据加载完成后，建立 WebSocket 订阅（pageId 必须传给 subscribe，确保 unsubscribe 能命中）
+  pageId.value = `inst-${localInstanceId}-${Date.now()}`
   wsManager.subscribe(
     {
       source: 'inst',
-      channels: [instanceId.value] as any,
+      channels: [localInstanceId] as any,
       dataTypes: ['A', 'M', 'P'] as any,
       interval: 1000,
     } as any,
@@ -573,7 +583,7 @@ const initData = async () => {
       onBatchDataUpdate: (payload: any) => {
         if (!payload?.updates?.length) return
         payload.updates.forEach((upd: any) => {
-          if (Number(upd.channel_id) !== Number(instanceId.value)) return
+          if (Number(upd.channel_id) !== localInstanceId) return
           const dt = String(upd.data_type || '').toUpperCase()
           const values = upd.values || {}
           const ts = upd.ts || {}
@@ -589,6 +599,7 @@ const initData = async () => {
         })
       },
     },
+    pageId.value,  // ← 关键：必须传 pageId，否则 wsManager 用自动生成 key，unsubscribe 永远找不到
   )
 }
 

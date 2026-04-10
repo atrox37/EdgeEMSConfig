@@ -34,10 +34,13 @@ export function usePointCsvHandlers(options: UsePointCsvHandlersOptions) {
     }
 
     const importedPoints: PointInfo[] = []
+    const isCan = options.channelProtocol() === 'can'
+    const isCanTelemetry = isCan && options.pointType() === 'T'
     const isSignalOrControl =
-      options.pointType() === 'S' ||
-      options.pointType() === 'C' ||
-      options.channelProtocol() === 'di_do'
+      !isCan &&
+      (options.pointType() === 'S' ||
+        options.pointType() === 'C' ||
+        options.channelProtocol() === 'di_do')
 
     for (const row of parsed.rows) {
       const pointIdStr = String((row as any).point_id || '')
@@ -47,7 +50,12 @@ export function usePointCsvHandlers(options: UsePointCsvHandlersOptions) {
       let offsetStr: string
       let unit: string
 
-      if (isSignalOrControl) {
+      if (isCan) {
+        // CAN Telemetry 有 scale/offset/unit；Signal 无
+        scaleStr = isCanTelemetry ? String((row as any).scale || '') : ''
+        offsetStr = isCanTelemetry ? String((row as any).offset || '') : ''
+        unit = isCanTelemetry ? String((row as any).unit || '') : ''
+      } else if (isSignalOrControl) {
         scaleStr = ''
         offsetStr = ''
         unit = ''
@@ -58,11 +66,12 @@ export function usePointCsvHandlers(options: UsePointCsvHandlersOptions) {
       }
 
       const pointId = Number(pointIdStr) || 0
-      const scale = isSignalOrControl ? 1 : scaleStr ? Number(scaleStr) : 1
-      const offset = isSignalOrControl ? 0 : offsetStr ? Number(offsetStr) : 0
+      const needsScaleOffset = !isSignalOrControl && (!isCan || isCanTelemetry)
+      const scale = needsScaleOffset ? (scaleStr ? Number(scaleStr) : 1) : 1
+      const offset = needsScaleOffset ? (offsetStr ? Number(offsetStr) : 0) : 0
 
       let reverse = false
-      if (reverseStr) {
+      if (!isCan && reverseStr) {
         const lowerReverse = reverseStr.toLowerCase()
         if (lowerReverse === 'true' || lowerReverse === '1') {
           reverse = true

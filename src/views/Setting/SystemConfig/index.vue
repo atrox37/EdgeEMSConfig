@@ -33,7 +33,7 @@
         <template #label>
           <span class="system-config-shell__tab-label">
             <AppIcon name="i-tabler-tool" className="system-config-shell__tab-icon" />
-            <span>Config File & Upgrade</span>
+            <span>Config Files & Upgrade</span>
           </span>
         </template>
       </el-tab-pane>

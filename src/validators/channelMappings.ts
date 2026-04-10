@@ -1,5 +1,5 @@
 import type { PointInfo } from '@/types/channelConfiguration'
-import { BYTE_ORDER_64_OPTIONS, BYTE_ORDER_OPTIONS } from '@/types/channelConfiguration'
+import { BYTE_ORDER_64_OPTIONS, BYTE_ORDER_OPTIONS, CAN_DATA_TYPE_BY_POINT } from '@/types/channelConfiguration'
 
 export type PointType = 'T' | 'S' | 'C' | 'A'
 
@@ -13,6 +13,107 @@ export const DATA_TYPE_BY_POINT: Record<string, string[]> = {
   S: ['int16', 'uint16', 'int32', 'float32', 'uint32', 'int64', 'uint64', 'float64', 'bool'],
   C: ['int16', 'uint16', 'int32', 'float32', 'uint32', 'int64', 'uint64', 'float64', 'bool'],
   A: ['int16', 'uint16', 'int32', 'float32', 'uint32', 'int64', 'uint64', 'float64'],
+}
+
+// ─────────────── CAN 映射校验 ───────────────
+
+function validateCanMappingField(item: any, field: string, ctx: MappingValidationContext): string {
+  const m = item.protocol_mapping || {}
+  const hasCanId = !(m.can_id === undefined || m.can_id === null || m.can_id === '')
+  const hasOffset = !(m.byte_offset === undefined || m.byte_offset === null || m.byte_offset === '')
+  const hasBitPos = !(m.bit_position === undefined || m.bit_position === null || m.bit_position === '')
+  const hasBitLen = !(m.bit_length === undefined || m.bit_length === null || m.bit_length === '')
+  const hasDataType = !(m.data_type === undefined || m.data_type === null || m.data_type === '')
+
+  const filledCount = [hasCanId, hasOffset, hasBitPos, hasBitLen, hasDataType].filter(Boolean).length
+  const isAllEmpty = filledCount === 0
+  const isPartial = filledCount > 0 && filledCount < 5
+
+  switch (field) {
+    case 'can_id': {
+      if (isAllEmpty) return ''
+      if (isPartial && !hasCanId) return 'required'
+      if (!hasCanId) return ''
+      const raw = String(m.can_id).trim()
+      const n = raw.startsWith('0x') || raw.startsWith('0X') ? parseInt(raw, 16) : parseInt(raw, 10)
+      if (isNaN(n) || n < 0) return 'must be valid CAN ID (decimal or 0x hex)'
+      return ''
+    }
+    case 'can_offset': {
+      if (isAllEmpty) return ''
+      if (isPartial && !hasOffset) return 'required'
+      if (!hasOffset) return ''
+      const n = Number(m.byte_offset)
+      if (!Number.isInteger(n) || n < 0 || n > 7) return 'must be 0-7'
+      return ''
+    }
+    case 'can_bit_position': {
+      if (isAllEmpty) return ''
+      if (isPartial && !hasBitPos) return 'required'
+      if (!hasBitPos) return ''
+      const n = Number(m.bit_position)
+      if (!Number.isInteger(n) || n < 0 || n > 7) return 'must be 0-7'
+      return ''
+    }
+    case 'can_bit_length': {
+      if (isAllEmpty) return ''
+      if (isPartial && !hasBitLen) return 'required'
+      if (!hasBitLen) return ''
+      const n = Number(m.bit_length)
+      if (!Number.isInteger(n) || n < 1 || n > 64) return 'must be 1-64'
+      return ''
+    }
+    case 'can_data_type': {
+      if (isAllEmpty) return ''
+      if (isPartial && !hasDataType) return 'required'
+      if (!hasDataType) return ''
+      const allowed = CAN_DATA_TYPE_BY_POINT[ctx.pointType] || []
+      if (!allowed.includes(String(m.data_type))) return 'not allowed'
+      return ''
+    }
+    default:
+      return ''
+  }
+}
+
+function validateCanMappingRow(point: PointInfo, ctx: MappingValidationContext): boolean {
+  if ((point as any).rowStatus === 'deleted') {
+    ;(point as any).isInvalid = false
+    return true
+  }
+  const m = point.protocol_mapping as any
+  if (!m) { ;(point as any).isInvalid = false; return true }
+
+  const hasCanId = !(m.can_id === undefined || m.can_id === null || m.can_id === '')
+  const hasOffset = !(m.byte_offset === undefined || m.byte_offset === null || m.byte_offset === '')
+  const hasBitPos = !(m.bit_position === undefined || m.bit_position === null || m.bit_position === '')
+  const hasBitLen = !(m.bit_length === undefined || m.bit_length === null || m.bit_length === '')
+  const hasDataType = !(m.data_type === undefined || m.data_type === null || m.data_type === '')
+  const filledCount = [hasCanId, hasOffset, hasBitPos, hasBitLen, hasDataType].filter(Boolean).length
+
+  if (filledCount === 0) { ;(point as any).isInvalid = false; return true }
+
+  if (filledCount < 5) { ;(point as any).isInvalid = true; return false }
+
+  // 全部填写后进行值校验
+  const raw = String(m.can_id).trim()
+  const canIdNum = raw.startsWith('0x') || raw.startsWith('0X') ? parseInt(raw, 16) : parseInt(raw, 10)
+  if (isNaN(canIdNum) || canIdNum < 0) { ;(point as any).isInvalid = true; return false }
+
+  const offset = Number(m.byte_offset)
+  if (!Number.isInteger(offset) || offset < 0 || offset > 7) { ;(point as any).isInvalid = true; return false }
+
+  const bitPos = Number(m.bit_position)
+  if (!Number.isInteger(bitPos) || bitPos < 0 || bitPos > 7) { ;(point as any).isInvalid = true; return false }
+
+  const bitLen = Number(m.bit_length)
+  if (!Number.isInteger(bitLen) || bitLen < 1 || bitLen > 64) { ;(point as any).isInvalid = true; return false }
+
+  const allowed = CAN_DATA_TYPE_BY_POINT[ctx.pointType] || []
+  if (!allowed.includes(String(m.data_type))) { ;(point as any).isInvalid = true; return false }
+
+  ;(point as any).isInvalid = false
+  return true
 }
 
 export const FC_BY_POINT: Record<string, number[]> = {
@@ -59,6 +160,7 @@ export function validateMappingField(
   field: string,
   ctx: MappingValidationContext,
 ): string {
+  if (ctx.channelProtocol === 'can') return validateCanMappingField(item, field, ctx)
   if (ctx.channelProtocol === 'di_do' && field !== 'gpio_number') return ''
   const m = item.protocol_mapping || {}
 
@@ -164,6 +266,7 @@ export function validateMappingField(
 }
 
 export function validateMappingRow(point: PointInfo, ctx: MappingValidationContext): boolean {
+  if (ctx.channelProtocol === 'can') return validateCanMappingRow(point, ctx)
   if ((point as any).rowStatus === 'deleted') {
     ;(point as any).isInvalid = false
     return true

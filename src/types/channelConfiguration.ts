@@ -21,13 +21,13 @@ export interface modbusTcpParams {
   poll_interval_ms: number
 }
 export interface canParams {
+  device: string
   bitrate: number
-  data_bitrate: number
-  fd_mode: boolean
-  interface: string
-  listen_only: boolean
-  loopback: boolean
-  timeout_ms: number
+  connect_timeout_ms: number
+  data_read_interval_ms: number
+  read_timeout_ms: number
+  retry_interval_ms: number
+  rx_poll_interval_ms: number
 }
 export interface virtualParams {
   update_interval_ms: number
@@ -126,14 +126,11 @@ export interface virtualPointMapping {
   expression: string
 }
 export interface CanPointMapping {
+  can_id: string | number
+  byte_offset: number
+  bit_position: number
   bit_length: number
-  byte_order: string
-  can_id: number | string
   data_type: string
-  offset: number
-  scale: number
-  signed: boolean
-  start_bit: number
 }
 export interface mappingResponse {
   point_id: number
@@ -170,7 +167,7 @@ export const PROTOCOL_OPTIONS = [
   { label: 'modbus_tcp', value: 'modbus_tcp' },
   { label: 'modbus_rtu', value: 'modbus_rtu' },
   { label: 'di_do', value: 'di_do' },
-  // { label: 'can', value: 'can' },
+  { label: 'can', value: 'can' },
   // { label: 'virt', value: 'virt' },
 ] as const
 // 发布点位值请求
@@ -188,11 +185,19 @@ export const DATA_TYPE_OPTIONS = [
   { label: 'int16', value: 'int16' },
   { label: 'int32', value: 'int32' },
   { label: 'int64', value: 'int64' },
+  { label: 'uint8', value: 'uint8' },
   { label: 'uint16', value: 'uint16' },
   { label: 'uint32', value: 'uint32' },
   { label: 'uint64', value: 'uint64' },
   { label: 'bool', value: 'bool' },
+  { label: 'ascii', value: 'ascii' },
 ] as const
+
+// CAN 协议数据类型选项（按点位类型区分）
+export const CAN_DATA_TYPE_BY_POINT: Record<string, string[]> = {
+  T: ['uint8', 'uint16', 'int16', 'uint32', 'int32', 'float32', 'ascii'],
+  S: ['uint8', 'uint16', 'int16', 'uint32', 'int32'],
+}
 
 // 字节序选项
 export const BYTE_ORDER_OPTIONS = [

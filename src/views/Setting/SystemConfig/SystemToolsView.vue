@@ -220,12 +220,9 @@ const handleConfigFileSelect = async (event: Event) => {
 
     if (response.success) {
       ElMessage.success('Configuration imported successfully')
-    } else {
-      ElMessage.error(response.message || 'Import failed')
-    }
+    } 
   } catch (error: any) {
     console.error('Import failed:', error)
-    ElMessage.error(error.message || 'Import failed')
   } finally {
     configImportLoading.value = false
     if (configFileInputRef.value) {
@@ -240,7 +237,6 @@ const handleConfigExport = async () => {
     await downloadConfigExport(`system_config_${Date.now()}.zip`)
   } catch (error: any) {
     console.error('Export failed:', error)
-    ElMessage.error(error.message || 'Export failed')
   } finally {
     configExportLoading.value = false
   }
@@ -300,7 +296,7 @@ const handleUpgradeUpload = async () => {
       startUpgradeStatusPolling()
       resetUpgradeSelection()
     } else {
-      ElMessage.error(response.message || 'Upload failed')
+      // ElMessage.error(response.message || 'Upload failed')
       stopUpgradeStatusPolling()
       upgradeUploadLoading.value = false
     }
@@ -309,7 +305,7 @@ const handleUpgradeUpload = async () => {
       upgradeAbortTriggered.value || error?.code === 'ERR_CANCELED' || error?.message === '请求被取消'
     if (!isCanceled && error !== 'cancel') {
       console.error('Upload failed:', error)
-      ElMessage.error(error.message || 'Upload failed')
+      // ElMessage.error(error.message || 'Upload failed')
     }
     stopUpgradeStatusPolling()
     upgradeUploadLoading.value = false
@@ -329,7 +325,7 @@ const handleUpgradeAbort = async () => {
     upgradeUploadLoading.value = false
   } catch (error: any) {
     console.error('Abort failed:', error)
-    ElMessage.error(error.message || 'Abort failed')
+    // ElMessage.error(error.message || 'Abort failed')
   } finally {
     upgradeAbortLoading.value = false
     upgradeAbortTriggered.value = false

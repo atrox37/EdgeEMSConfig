@@ -40,6 +40,8 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       return
     }
 
+    const isCan = options.channelProtocol() === 'can'
+
     const byId: Record<
       number,
       {
@@ -50,6 +52,10 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
         byte_order?: string
         bit_position?: number
         gpio_number?: number | string
+        // CAN 映射字段
+        can_id?: string | number
+        byte_offset?: number
+        bit_length?: number
         isInvalid?: boolean
       }
     > = {}
@@ -79,8 +85,27 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       let byte_order: string
       let bit_position: number
       let gpio_number: number | string | undefined
+      let can_id: string | number | undefined
+      let byte_offset: number | undefined
+      let bit_length: number | undefined
 
-      if (options.channelProtocol() === 'di_do') {
+      if (isCan) {
+        const canIdStr = String(row.can_id ?? '').trim()
+        const byteOffsetStr = String(row.byte_offset ?? '').trim()
+        const bitPosStr = String(row.bit_position ?? '').trim()
+        const bitLenStr = String(row.bit_length ?? '').trim()
+        const dtStr = String(row.data_type ?? '').trim()
+
+        can_id = canIdStr || undefined
+        byte_offset = byteOffsetStr !== '' ? Number(byteOffsetStr) : undefined
+        bit_position = bitPosStr !== '' ? Number(bitPosStr) : (undefined as any)
+        bit_length = bitLenStr !== '' ? Number(bitLenStr) : undefined
+        data_type = dtStr || ''
+        slave_id = 0
+        function_code = 0
+        register_address = 0
+        byte_order = ''
+      } else if (options.channelProtocol() === 'di_do') {
         const gpioStr = String(row.gpio_number ?? '')
         if (gpioStr && gpioStr.trim()) {
           const gpioNum = Number(gpioStr.trim())
@@ -111,7 +136,24 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
 
       let isInvalid = false
 
-      if (options.channelProtocol() === 'di_do') {
+      if (isCan) {
+        const hasCanId = can_id !== undefined && can_id !== ''
+        const hasByteOffset = byte_offset !== undefined
+        const hasBitPos = bit_position !== undefined && !isNaN(bit_position as number)
+        const hasBitLen = bit_length !== undefined
+        const hasDataType = !!data_type
+        const filledCount = [hasCanId, hasByteOffset, hasBitPos, hasBitLen, hasDataType].filter(Boolean).length
+        if (filledCount > 0 && filledCount < 5) {
+          isInvalid = true
+        } else if (filledCount === 5) {
+          const raw = String(can_id).trim()
+          const n = raw.startsWith('0x') || raw.startsWith('0X') ? parseInt(raw, 16) : parseInt(raw, 10)
+          if (isNaN(n) || n < 0) isInvalid = true
+          if (!isInvalid && (!Number.isInteger(byte_offset!) || byte_offset! < 0 || byte_offset! > 7)) isInvalid = true
+          if (!isInvalid && (!Number.isInteger(bit_position) || (bit_position as number) < 0 || (bit_position as number) > 63)) isInvalid = true
+          if (!isInvalid && (!Number.isInteger(bit_length!) || bit_length! < 1 || bit_length! > 64)) isInvalid = true
+        }
+      } else if (options.channelProtocol() === 'di_do') {
         if (gpio_number !== undefined && gpio_number !== null) {
           if (
             isNaN(gpio_number as number) ||
@@ -185,6 +227,9 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
         byte_order,
         bit_position,
         gpio_number: options.channelProtocol() === 'di_do' ? gpio_number : undefined,
+        can_id: isCan ? can_id : undefined,
+        byte_offset: isCan ? byte_offset : undefined,
+        bit_length: isCan ? bit_length : undefined,
         isInvalid,
       }
     }
@@ -200,43 +245,50 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       )
       const origMap = orig?.protocol_mapping || {}
 
+      const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
+      const normStr = (v: any) => String(v || '').toUpperCase()
+
       if (!incoming) {
-        item.protocol_mapping =
-          options.channelProtocol() === 'di_do'
-            ? ({} as any)
-            : {
-                slave_id: undefined,
-                function_code: undefined,
-                register_address: undefined,
-                data_type: undefined,
-                byte_order: undefined,
-                bit_position: undefined,
-              }
+        if (isCan) {
+          ;(item as any).protocol_mapping = {
+            can_id: undefined,
+            byte_offset: undefined,
+            bit_position: undefined,
+            bit_length: undefined,
+            data_type: undefined,
+          }
+        } else if (options.channelProtocol() === 'di_do') {
+          item.protocol_mapping = {} as any
+        } else {
+          item.protocol_mapping = {
+            slave_id: undefined,
+            function_code: undefined,
+            register_address: undefined,
+            data_type: undefined,
+            byte_order: undefined,
+            bit_position: undefined,
+          }
+        }
 
         const changes: string[] = []
-        const cur = item.protocol_mapping
-        if (cur || origMap) {
-          const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
-          const normStr = (v: any) => String(v || '').toUpperCase()
-          const normBP = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
-
-          if (options.channelProtocol() === 'di_do') {
-            const curGpio = normInt((cur as any)?.gpio_number)
-            const origGpio = normInt((origMap as any)?.gpio_number)
-            if (curGpio !== origGpio) changes.push('mapping_gpio_number')
-          } else {
-            if (normInt(cur?.slave_id) !== normInt(origMap?.slave_id)) changes.push('mapping_slave_id')
-            if (normInt(cur?.function_code) !== normInt(origMap?.function_code))
-              changes.push('mapping_function_code')
-            if (normInt(cur?.register_address) !== normInt(origMap?.register_address))
-              changes.push('mapping_register_address')
-            if (normStr(cur?.data_type || '') !== normStr(origMap?.data_type || ''))
-              changes.push('mapping_data_type')
-            if (normStr(cur?.byte_order || '') !== normStr(origMap?.byte_order || ''))
-              changes.push('mapping_byte_order')
-            if (normBP(cur?.bit_position) !== normBP(origMap?.bit_position))
-              changes.push('mapping_bit_position')
-          }
+        const cur = item.protocol_mapping as any
+        if (isCan) {
+          if (normInt(cur?.can_id) !== normInt((origMap as any)?.can_id)) changes.push('mapping_can_id')
+          if (normInt(cur?.byte_offset) !== normInt((origMap as any)?.byte_offset)) changes.push('mapping_can_offset')
+          if (normInt(cur?.bit_position) !== normInt((origMap as any)?.bit_position)) changes.push('mapping_can_bit_position')
+          if (normInt(cur?.bit_length) !== normInt((origMap as any)?.bit_length)) changes.push('mapping_can_bit_length')
+          if (normStr(cur?.data_type || '') !== normStr((origMap as any)?.data_type || '')) changes.push('mapping_can_data_type')
+        } else if (options.channelProtocol() === 'di_do') {
+          const curGpio = normInt((cur as any)?.gpio_number)
+          const origGpio = normInt((origMap as any)?.gpio_number)
+          if (curGpio !== origGpio) changes.push('mapping_gpio_number')
+        } else {
+          if (normInt(cur?.slave_id) !== normInt(origMap?.slave_id)) changes.push('mapping_slave_id')
+          if (normInt(cur?.function_code) !== normInt(origMap?.function_code)) changes.push('mapping_function_code')
+          if (normInt(cur?.register_address) !== normInt(origMap?.register_address)) changes.push('mapping_register_address')
+          if (normStr(cur?.data_type || '') !== normStr(origMap?.data_type || '')) changes.push('mapping_data_type')
+          if (normStr(cur?.byte_order || '') !== normStr(origMap?.byte_order || '')) changes.push('mapping_byte_order')
+          if (normInt(cur?.bit_position) !== normInt(origMap?.bit_position)) changes.push('mapping_bit_position')
         }
         if (changes.length > 0) {
           item.rowStatus = item.rowStatus === 'added' ? 'added' : 'modified'
@@ -246,7 +298,18 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
         return item
       }
 
-      if (options.channelProtocol() === 'di_do') {
+      if (isCan) {
+        ;(item as any).protocol_mapping = {
+          can_id: incoming.can_id,
+          byte_offset: incoming.byte_offset,
+          bit_position: incoming.bit_position,
+          bit_length: incoming.bit_length,
+          data_type: incoming.data_type,
+        }
+        if (incoming.isInvalid) {
+          ;(item as any).isInvalid = true
+        }
+      } else if (options.channelProtocol() === 'di_do') {
         item.protocol_mapping = {
           gpio_number: incoming.gpio_number,
         } as any
@@ -265,28 +328,26 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       }
 
       const changes: string[] = []
-      const cur = item.protocol_mapping
+      const cur = item.protocol_mapping as any
       if (cur) {
-        if (options.channelProtocol() === 'di_do') {
+        if (isCan) {
+          if (normInt(cur.can_id) !== normInt((origMap as any)?.can_id)) changes.push('mapping_can_id')
+          if (normInt(cur.byte_offset) !== normInt((origMap as any)?.byte_offset)) changes.push('mapping_can_offset')
+          if (normInt(cur.bit_position) !== normInt((origMap as any)?.bit_position)) changes.push('mapping_can_bit_position')
+          if (normInt(cur.bit_length) !== normInt((origMap as any)?.bit_length)) changes.push('mapping_can_bit_length')
+          if (normStr(cur.data_type || '') !== normStr((origMap as any)?.data_type || '')) changes.push('mapping_can_data_type')
+        } else if (options.channelProtocol() === 'di_do') {
           const normGpio = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
           const curGpio = normGpio((cur as any).gpio_number)
           const origGpio = normGpio((origMap as any)?.gpio_number)
           if (curGpio !== origGpio) changes.push('mapping_gpio_number')
         } else {
-          const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
-          const normStr = (v: any) => String(v || '').toUpperCase()
-          const normBP = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
           if (normInt(cur.slave_id) !== normInt(origMap.slave_id)) changes.push('mapping_slave_id')
-          if (normInt(cur.function_code) !== normInt(origMap.function_code))
-            changes.push('mapping_function_code')
-          if (normInt(cur.register_address) !== normInt(origMap.register_address))
-            changes.push('mapping_register_address')
-          if (normStr(cur.data_type || '') !== normStr(origMap.data_type || ''))
-            changes.push('mapping_data_type')
-          if (normStr(cur.byte_order || '') !== normStr(origMap.byte_order || ''))
-            changes.push('mapping_byte_order')
-          if (normBP(cur.bit_position) !== normBP(origMap.bit_position))
-            changes.push('mapping_bit_position')
+          if (normInt(cur.function_code) !== normInt(origMap.function_code)) changes.push('mapping_function_code')
+          if (normInt(cur.register_address) !== normInt(origMap.register_address)) changes.push('mapping_register_address')
+          if (normStr(cur.data_type || '') !== normStr(origMap.data_type || '')) changes.push('mapping_data_type')
+          if (normStr(cur.byte_order || '') !== normStr(origMap.byte_order || '')) changes.push('mapping_byte_order')
+          if (normInt(cur.bit_position) !== normInt(origMap.bit_position)) changes.push('mapping_bit_position')
         }
       }
       if (changes.length > 0) {

@@ -4,21 +4,14 @@
       <div class="voltage-class value-publish">
         <el-form label-width="100px" inline ref="formRef" :model="form" :rules="rules">
           <el-form-item label="Value" style="margin-right: 0" prop="value">
-            <div
-              class="value-publish__boolean"
-              v-if="form.category === 'C' || form.category === 'S'"
-            >
-              <el-select
-                v-model="form.value"
-                :fit-input-width="true"
-                placeholder="Select"
-                :teleported="false"
-                append-to=".value-publish__boolean"
-              >
+            <template v-if="form.category === 'C' || form.category === 'S'">
+
+
+              <el-select v-model="form.value" :fit-input-width="true" placeholder="Select" :teleported="false">
                 <el-option label="1" :value="1" />
                 <el-option label="0" :value="0" />
               </el-select>
-            </div>
+            </template>
             <template v-else-if="form.category === 'A' || form.category === 'T'">
               <el-input-number align="left" v-model="form.value" :controls="false" />
             </template>
@@ -123,6 +116,7 @@ defineExpose({
 .voltage-class .value-publish {
   // padding: 10px 6px;
 }
+
 .dialog-footer {
   display: flex;
   justify-content: flex-end;

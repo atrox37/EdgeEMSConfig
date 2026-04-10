@@ -146,7 +146,7 @@
               </template>
               <template v-else>
                 <div class="point-table__publish-btn" @click="handlePublish(row)">
-                  <AppIcon name="i-tabler-arrows-move" className="point-table__op-icon" />
+                  <AppIcon name="i-tabler-send" className="point-table__op-icon" />
                   <span>Publish</span>
                 </div>
               </template>
@@ -238,6 +238,7 @@ const pointColumns = computed(() =>
   getPointColumns({
     isEditing: props.isEditing,
     isTA: isTA.value,
+    channelProtocol: props.channelProtocol,
     onFieldInput,
     canEditPointId: (row) =>
       (row as any).rowStatus === 'added' ||
@@ -389,6 +390,7 @@ const { getRowClass, getFieldClass, hasChanges } = useRowStatusHelpers<PointInfo
 const validatePointFieldOnly = (item: PointInfo, field: string) =>
   validatePointField(item, field, {
     channelProtocol: props.channelProtocol,
+    pointType: props.pointType,
     points: editPoints.value,
   })
 
@@ -401,12 +403,20 @@ const {
   listRef: editPoints,
   validateField: validatePointFieldOnly,
   getFieldsForRow: () => {
+    if (props.channelProtocol === 'can') {
+      // CAN Signal：校验 point_id / signal_name
+      // CAN Telemetry：额外校验 scale / offset
+      if (props.pointType === 'T') return ['point_id', 'signal_name', 'scale', 'offset']
+      return ['point_id', 'signal_name']
+    }
     const fields = ['point_id', 'signal_name', 'reverse']
     if (props.channelProtocol !== 'di_do') fields.push('scale', 'offset', 'unit')
     return fields
   },
-  clearFields: () =>
-    props.channelProtocol === 'di_do' ? ['scale', 'offset', 'unit'] : [],
+  clearFields: () => {
+    if (props.channelProtocol === 'can') return ['reverse', 'unit']
+    return props.channelProtocol === 'di_do' ? ['scale', 'offset', 'unit'] : []
+  },
 })
 
 const {
@@ -550,14 +560,18 @@ const getNextPointId = () => {
 }
 const handleAddNewPoint = () => {
   const newId = getNextPointId()
+  const isCan = props.channelProtocol === 'can'
+  const isCanTelemetry = isCan && props.pointType === 'T'
+
   const newPoint: PointInfo = {
     point_id: newId,
     signal_name: '',
-    scale: 1,
-    offset: 0,
-    unit: '',
-    data_type: 'float',
-    reverse: false,
+    // CAN Signal 无 scale/offset/unit/reverse；CAN Telemetry 有 scale/offset/unit 但无 reverse
+    scale: (isCan && !isCanTelemetry) ? undefined as any : 1,
+    offset: (isCan && !isCanTelemetry) ? undefined as any : 0,
+    unit: isCan ? '' : '',
+    data_type: isCan ? '' : 'float',
+    reverse: isCan ? undefined as any : false,
     description: '',
     isNewUnconfirmed: true,
     rowStatus: 'added',
@@ -579,12 +593,8 @@ const scrollToTop = () => {
 
 
 // 校验当前行是否有效；返回 true 表示有效，false 表示无效
-// 规则：
-// - 公共：point_id 为正整数；signal_name 非空；reverse 为布尔
-// - modbus 协议：scale/offset 必须为数字；unit 无限制
-// - di_do 协议：无需校验 scale/offset/unit
 function validateRowValidity(point: PointInfo): boolean {
-  return validatePointRow(point, { channelProtocol: props.channelProtocol })
+  return validatePointRow(point, { channelProtocol: props.channelProtocol, pointType: props.pointType })
 }
 
 // 检查并标记重复的 point_id（正整数）
@@ -750,7 +760,7 @@ const handleExport = async () => {
   const rows = (editPoints.value || []).map((point) => ({
     point_id: String(point.point_id ?? ''),
     point_name: String(point.signal_name ?? ''),
-    value: String(point.value ?? ''),
+    value: String((point as any).value ?? ''),
     update_time: formatUpdateTimeForCsv((point as any).update_ts),
     scale: String(point.scale ?? ''),
     offset: String(point.offset ?? ''),

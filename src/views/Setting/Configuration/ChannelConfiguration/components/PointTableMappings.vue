@@ -145,7 +145,7 @@ import { ref, watch, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import { OriginalPointsKey, ChannelNameKey } from '@/utils/key'
 import type { PointInfo, UpdateMappingPoint } from '@/types/channelConfiguration'
-import { DATA_TYPE_OPTIONS } from '@/types/channelConfiguration'
+import { DATA_TYPE_OPTIONS, CAN_DATA_TYPE_BY_POINT } from '@/types/channelConfiguration'
 import { getMappingCsvSchema } from '@/schemas/channelProtocols'
 import { getMappingColumns } from '@/schemas/channelTableColumns'
 import { buildCsv } from '@/utils/csvSchema'
@@ -279,21 +279,20 @@ const {
 } = useFieldErrors<PointInfo>({
   listRef: editPoints,
   validateField: validateMappingFieldOnly,
-  getFieldsForRow: () =>
-    props.channelProtocol === 'di_do'
-      ? ['gpio_number']
-      : [
-          'slave_id',
-          'function_code',
-          'register_address',
-          'data_type',
-          'byte_order',
-          'bit_position',
-        ],
-  clearFields: () =>
-    props.channelProtocol === 'di_do'
-      ? ['slave_id', 'function_code', 'register_address', 'data_type', 'byte_order', 'bit_position']
-      : ['gpio_number'],
+  getFieldsForRow: () => {
+    if (props.channelProtocol === 'can')
+      return ['can_id', 'can_offset', 'can_bit_position', 'can_bit_length', 'can_data_type']
+    if (props.channelProtocol === 'di_do')
+      return ['gpio_number']
+    return ['slave_id', 'function_code', 'register_address', 'data_type', 'byte_order', 'bit_position']
+  },
+  clearFields: () => {
+    if (props.channelProtocol === 'can')
+      return ['gpio_number', 'slave_id', 'function_code', 'register_address', 'data_type', 'byte_order', 'bit_position']
+    if (props.channelProtocol === 'di_do')
+      return ['slave_id', 'function_code', 'register_address', 'data_type', 'byte_order', 'bit_position']
+    return ['gpio_number']
+  },
 })
 
 const {
@@ -372,7 +371,15 @@ watch(
 // 进入编辑状态时，为缺少 protocol_mapping 的行初始化，并执行有效性检测
 function ensureProtocolMappingForEdit(p: PointInfo) {
   if (!p.protocol_mapping) {
-    if (props.channelProtocol === 'di_do') {
+    if (props.channelProtocol === 'can') {
+      ;(p as any).protocol_mapping = {
+        can_id: undefined,
+        byte_offset: undefined,
+        bit_position: undefined,
+        bit_length: undefined,
+        data_type: undefined,
+      }
+    } else if (props.channelProtocol === 'di_do') {
       ;(p as any).protocol_mapping = {}
     } else {
       p.protocol_mapping = {
@@ -417,6 +424,10 @@ watch(
 // }
 const getMappingFunctionCodeLabel = (fc: number | undefined) => (fc == null ? '' : String(fc))
 const getMappingDataTypeOptions = () => {
+  if (props.channelProtocol === 'can') {
+    const allow = CAN_DATA_TYPE_BY_POINT[props.pointType] || []
+    return DATA_TYPE_OPTIONS.filter((opt) => allow.includes(String(opt.value)))
+  }
   const allow = DATA_TYPE_BY_POINT[props.pointType] || []
   return DATA_TYPE_OPTIONS.filter((opt) => allow.includes(String(opt.value)))
 }
@@ -514,7 +525,14 @@ const getEditedData = () => {
     // 归一化：将“清空/未填”的值转成 null，确保请求中携带清空操作
     const normIntOrNull = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
     const normStrOrNull = (v: any) => (v === '' || v === null || v === undefined ? null : String(v))
-    if (props.channelProtocol === 'di_do') {
+    if (props.channelProtocol === 'can') {
+      const m = item.protocol_mapping as any
+      if (changed.includes('mapping_can_id')) data.can_id = normStrOrNull(m.can_id)
+      if (changed.includes('mapping_can_offset')) data.byte_offset = normIntOrNull(m.byte_offset)
+      if (changed.includes('mapping_can_bit_position')) data.bit_position = normIntOrNull(m.bit_position)
+      if (changed.includes('mapping_can_bit_length')) data.bit_length = normIntOrNull(m.bit_length)
+      if (changed.includes('mapping_can_data_type')) data.data_type = normStrOrNull(m.data_type)
+    } else if (props.channelProtocol === 'di_do') {
       if (changed.includes('mapping_gpio_number')) {
         const v = (item.protocol_mapping as any).gpio_number
         data.gpio_number = normIntOrNull(v)
@@ -567,6 +585,17 @@ const handleExport = async () => {
   const schema = getMappingCsvSchema(props.channelProtocol)
   const rows = (editPoints.value || []).map((point) => {
     const m = point.protocol_mapping || ({} as any)
+    if (props.channelProtocol === 'can') {
+      return {
+        point_id: String(point.point_id ?? ''),
+        point_name: String(point.signal_name ?? ''),
+        can_id: String(m.can_id ?? ''),
+        byte_offset: String(m.byte_offset ?? ''),
+        bit_position: String(m.bit_position ?? ''),
+        bit_length: String(m.bit_length ?? ''),
+        data_type: String(m.data_type ?? ''),
+      }
+    }
     return {
       point_id: String(point.point_id ?? ''),
       point_name: String(point.signal_name ?? ''),
@@ -901,7 +930,7 @@ defineExpose({
     :deep(.el-input-number .el-input__wrapper),
     :deep(.el-select .el-select__placeholder),
     :deep(.el-select .el-select__wrapper) {
-      color: #409eff;
+      color: #409eff !important;
     }
     :deep(.el-input__wrapper),
     :deep(.el-select .el-select__wrapper) {
@@ -916,7 +945,7 @@ defineExpose({
     :deep(.el-input-number .el-input__wrapper),
     :deep(.el-select .el-select__placeholder),
     :deep(.el-select .el-select__wrapper) {
-      color: #67c23a;
+      color: #67c23a !important;
     }
     :deep(.el-input__wrapper),
     :deep(.el-select .el-select__wrapper) {

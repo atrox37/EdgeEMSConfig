@@ -19,6 +19,18 @@ Each version should follow this structure:
 - Improvement description
 ```
 
+## [0.1.15] - 2026-04-10
+
+### Added
+- Added a dedicated CAN parameter form and default channel settings to improve CAN channel setup consistency.
+- Added full CAN point and mapping support across table columns, validation, and CSV import/export workflows.
+
+### Fixed
+- Fixed device point table subscription reuse and cleanup issues to prevent stale realtime updates during fast view switching.
+
+### Optimized
+- Unified request error handling and update/install progress feedback for clearer user-facing status messages.
+
 ## [0.1.13] - 2026-02-09
 
 ### Optimized
@@ -64,4 +76,3 @@ Each version should follow this structure:
 ### Added
 - Initial release.
 - Basic PC management features.
-

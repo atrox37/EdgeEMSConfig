@@ -49,10 +49,13 @@ export interface MappingColumn {
 export function getPointColumns(options: {
   isEditing: boolean
   isTA: boolean
+  channelProtocol?: string
   onFieldInput: (row: PointInfo, field: string) => void
   canEditPointId: (row: PointInfo) => boolean
   showRealtimeColumns?: boolean
 }): PointColumn[] {
+  const isCan = options.channelProtocol === 'can'
+
   const base: PointColumn[] = [
     {
       key: 'point_id',
@@ -118,41 +121,43 @@ export function getPointColumns(options: {
     )
   }
 
+  // CAN Telemetry：scale / offset / unit（无 reverse）
+  // 其他协议 TA 类型：scale / offset / unit
   if (options.isTA) {
     base.push(
-    {
-      key: 'scale',
-      prop: 'scale',
-      label: 'Scale',
-      minWidth: 80,
-      className: 'scale-column',
-      editor: 'input',
-      isEditable: true,
-      fieldClassKey: 'scale',
-      errorKey: 'scale',
-      min: 0,
-      precision: 6,
-      onChange: (row) => options.onFieldInput(row, 'scale'),
-      onInput: (row) => options.onFieldInput(row, 'scale'),
-      placeholder: 'Scale',
-      display: (row) => String(row.scale ?? ''),
-    },
-    {
-      key: 'offset',
-      prop: 'offset',
-      label: 'Offset',
-      minWidth: 80,
-      className: 'offset-column',
-      editor: 'input',
-      isEditable: true,
-      fieldClassKey: 'offset',
-      errorKey: 'offset',
-      precision: 6,
-      onChange: (row) => options.onFieldInput(row, 'offset'),
-      onInput: (row) => options.onFieldInput(row, 'offset'),
-      placeholder: 'Offset',
-      display: (row) => String(row.offset ?? ''),
-    },
+      {
+        key: 'scale',
+        prop: 'scale',
+        label: 'Scale',
+        minWidth: 80,
+        className: 'scale-column',
+        editor: 'input',
+        isEditable: true,
+        fieldClassKey: 'scale',
+        errorKey: 'scale',
+        min: 0,
+        precision: 6,
+        onChange: (row) => options.onFieldInput(row, 'scale'),
+        onInput: (row) => options.onFieldInput(row, 'scale'),
+        placeholder: 'Scale',
+        display: (row) => String(row.scale ?? ''),
+      },
+      {
+        key: 'offset',
+        prop: 'offset',
+        label: 'Offset',
+        minWidth: 80,
+        className: 'offset-column',
+        editor: 'input',
+        isEditable: true,
+        fieldClassKey: 'offset',
+        errorKey: 'offset',
+        precision: 6,
+        onChange: (row) => options.onFieldInput(row, 'offset'),
+        onInput: (row) => options.onFieldInput(row, 'offset'),
+        placeholder: 'Offset',
+        display: (row) => String(row.offset ?? ''),
+      },
       {
         key: 'unit',
         prop: 'unit',
@@ -170,23 +175,26 @@ export function getPointColumns(options: {
     )
   }
 
-  base.push({
-    key: 'reverse',
-    prop: 'reverse',
-    label: 'Reverse',
-    minWidth: 80,
-    className: 'reverse-column',
-    editor: 'select',
-    isEditable: true,
-    fieldClassKey: 'reverse',
-    errorKey: 'reverse',
-    getOptions: () => [
-      { label: 'true', value: true },
-      { label: 'false', value: false },
-    ],
-    onChange: (row) => options.onFieldInput(row, 'reverse'),
-    display: (row) => String(row.reverse ?? ''),
-  })
+  // 非 CAN 协议保留 Reverse 列
+  if (!isCan) {
+    base.push({
+      key: 'reverse',
+      prop: 'reverse',
+      label: 'Reverse',
+      minWidth: 80,
+      className: 'reverse-column',
+      editor: 'select',
+      isEditable: true,
+      fieldClassKey: 'reverse',
+      errorKey: 'reverse',
+      getOptions: () => [
+        { label: 'true', value: true },
+        { label: 'false', value: false },
+      ],
+      onChange: (row) => options.onFieldInput(row, 'reverse'),
+      display: (row) => String(row.reverse ?? ''),
+    })
+  }
 
   return base
 }
@@ -204,6 +212,114 @@ export function getMappingColumns(options: {
   canEditMappingBitPosition: (row: PointInfo) => boolean
   getMappingFunctionCodeLabel: (fc: number | undefined) => string
 }): MappingColumn[] {
+  // CAN 协议映射列：can_id / offset(帧内字节偏移) / bit_position / bit_length / data_type
+  if (options.channelProtocol === 'can') {
+    return [
+      {
+        key: 'can_id',
+        prop: 'protocol_mapping.can_id',
+        label: 'CAN ID',
+        minWidth: 120,
+        className: 'can-id-column',
+        editor: 'input',
+        fieldClassKey: 'mapping_can_id',
+        errorKey: 'can_id',
+        placeholder: 'e.g. 0x35A',
+        onInput: (row, val: string) => {
+          const trimmed = String(val ?? '').trim()
+          ;(row.protocol_mapping as any).can_id = trimmed === '' ? undefined : trimmed
+          options.onMappingFieldChange(row, 'can_id')
+        },
+        display: (row) => String((row.protocol_mapping as any)?.can_id ?? ''),
+      },
+      {
+        key: 'byte_offset',
+        prop: 'protocol_mapping.byte_offset',
+        label: 'Byte Offset',
+        minWidth: 120,
+        className: 'can-offset-column',
+        editor: 'input',
+        fieldClassKey: 'mapping_can_offset',
+        errorKey: 'can_offset',
+        placeholder: '0-7',
+        onInput: (row, val: string) => {
+          const trimmed = String(val ?? '').trim()
+          if (trimmed === '') {
+            ;(row.protocol_mapping as any).byte_offset = undefined
+          } else {
+            const digits = trimmed.replace(/\D+/g, '')
+            if (digits !== '') {
+              const n = Math.min(7, Math.max(0, parseInt(digits, 10)))
+              ;(row.protocol_mapping as any).byte_offset = n
+            }
+          }
+          options.onMappingFieldChange(row, 'can_offset')
+        },
+        display: (row) => String((row.protocol_mapping as any)?.byte_offset ?? ''),
+      },
+      {
+        key: 'bit_position',
+        prop: 'protocol_mapping.bit_position',
+        label: 'Bit Position',
+        minWidth: 120,
+        className: 'can-bit-position-column',
+        editor: 'input',
+        fieldClassKey: 'mapping_can_bit_position',
+        errorKey: 'can_bit_position',
+        placeholder: '0-7',
+        onInput: (row, val: string) => {
+          const trimmed = String(val ?? '').trim()
+          if (trimmed === '') {
+            ;(row.protocol_mapping as any).bit_position = undefined
+          } else {
+            const digits = trimmed.replace(/\D+/g, '')
+            if (digits !== '') {
+              const n = Math.min(7, Math.max(0, parseInt(digits, 10)))
+              ;(row.protocol_mapping as any).bit_position = n
+            }
+          }
+          options.onMappingFieldChange(row, 'can_bit_position')
+        },
+        display: (row) => String((row.protocol_mapping as any)?.bit_position ?? ''),
+      },
+      {
+        key: 'bit_length',
+        prop: 'protocol_mapping.bit_length',
+        label: 'Bit Length',
+        minWidth: 120,
+        className: 'can-bit-length-column',
+        editor: 'input',
+        fieldClassKey: 'mapping_can_bit_length',
+        errorKey: 'can_bit_length',
+        placeholder: '1-64',
+        onInput: (row, val: string) => {
+          const trimmed = String(val ?? '').trim()
+          if (trimmed === '') {
+            ;(row.protocol_mapping as any).bit_length = undefined
+          } else {
+            const n = parseInt(trimmed, 10)
+            if (!isNaN(n)) { (row.protocol_mapping as any).bit_length = n }
+          }
+          options.onMappingFieldChange(row, 'can_bit_length')
+        },
+        display: (row) => String((row.protocol_mapping as any)?.bit_length ?? ''),
+      },
+      {
+        key: 'data_type',
+        prop: 'protocol_mapping.data_type',
+        label: 'Data Type',
+        minWidth: 140,
+        className: 'can-data-type-column',
+        editor: 'select',
+        fieldClassKey: 'mapping_can_data_type',
+        errorKey: 'can_data_type',
+        getOptions: () => options.getMappingDataTypeOptions(),
+        onChange: (row) => options.onMappingDataTypeChange(row),
+        display: (row) => String((row.protocol_mapping as any)?.data_type ?? ''),
+      },
+    ]
+  }
+
   if (options.channelProtocol === 'di_do') {
     return [
       {

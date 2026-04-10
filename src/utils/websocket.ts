@@ -240,7 +240,7 @@ class WebSocketManager {
       subscriptionId = this.generateMessageId()
     }
     // 检查是否已存在相同的订阅
-    for (const [, record] of this.subscriptions) {
+    for (const [existingKey, record] of this.subscriptions) {
       if (
         record.config.source === normalizedConfig.source &&
         record.config.interval === normalizedConfig.interval &&
@@ -250,7 +250,18 @@ class WebSocketManager {
           JSON.stringify([...(record.config.dataTypes || [])].sort()) ===
             JSON.stringify([...(normalizedConfig.dataTypes || [])].sort()))
       ) {
-        // 合并 listeners
+        // 若调用方传入了新的 pageId，将订阅 key 更新为新 pageId，确保后续 unsubscribe 能命中
+        if (pageId && existingKey !== subscriptionId) {
+          this.subscriptions.delete(existingKey)
+          record.id = subscriptionId
+          this.subscriptions.set(subscriptionId, record)
+          // 同步更新 pendingSubscriptionsMap 中对应的 subscriptionId
+          for (const [, pending] of this.pendingSubscriptionsMap) {
+            if (pending.subscriptionId === existingKey) {
+              pending.subscriptionId = subscriptionId
+            }
+          }
+        }
         record.listeners = { ...record.listeners, ...listeners }
         return record.id
       }
@@ -267,7 +278,10 @@ class WebSocketManager {
           JSON.stringify([...(subInfo.config.dataTypes || [])].sort()) ===
             JSON.stringify([...(normalizedConfig.dataTypes || [])].sort()))
       ) {
-        // 合并 listeners
+        // 同样更新 subscriptionId 为新 pageId
+        if (pageId && subInfo.subscriptionId !== subscriptionId) {
+          subInfo.subscriptionId = subscriptionId
+        }
         subInfo.listeners = { ...subInfo.listeners, ...listeners }
         return subInfo.subscriptionId
       }

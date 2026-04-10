@@ -258,12 +258,12 @@ async function open(id: number, name: string) {
     console.error('Failed to load points data')
   }
 
-  // 数据加载完成后，建立 WebSocket 订阅
+  // 数据加载完成后，建立 WebSocket 订阅（用本地 id 参数，避免 await 后 instanceId.value 被覆盖）
   pageId.value = `inst-${id}-${Date.now()}`
   wsManager.subscribe(
     {
       source: 'inst',
-      channels: [instanceId.value] as any,
+      channels: [id] as any,
       dataTypes: ['A', 'M', 'P'] as any,
       interval: 1000,
     } as any,
@@ -271,7 +271,7 @@ async function open(id: number, name: string) {
       onBatchDataUpdate: (payload: any) => {
         if (!payload?.updates?.length) return
         payload.updates.forEach((upd: any) => {
-          if (Number(upd.channel_id) !== Number(instanceId.value)) return
+          if (Number(upd.channel_id) !== id) return
           const dt = String(upd.data_type || '').toUpperCase()
           const values = upd.values || {}
           const ts = upd.ts || {}
@@ -287,6 +287,7 @@ async function open(id: number, name: string) {
         })
       },
     },
+    pageId.value,  // ← 关键：必须传 pageId，否则 wsManager 用自动生成 key，unsubscribe 永远找不到
   )
 }
 

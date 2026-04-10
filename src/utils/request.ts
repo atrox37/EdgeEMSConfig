@@ -44,10 +44,10 @@ const normalizeForKey = (value: any): any => {
     // 处理 FormData
     if (typeof FormData !== 'undefined' && value instanceof FormData) {
       const obj: Record<string, any> = {}
-      ;(value as FormData).forEach((v, k) => {
-        // 文件对象不参与去重，只记录占位，避免巨大的序列化
-        obj[k] = typeof v === 'string' ? v : '[binary]'
-      })
+        ; (value as FormData).forEach((v, k) => {
+          // 文件对象不参与去重，只记录占位，避免巨大的序列化
+          obj[k] = typeof v === 'string' ? v : '[binary]'
+        })
       return normalizeForKey(obj)
     }
     // 普通对象：去除 _t 并按 key 排序
@@ -199,6 +199,103 @@ const parseResponseData = async (response: Response, responseType?: RequestConfi
   }
 }
 
+/**
+ * 将 ArrayBuffer 尝试解码为 UTF-8 文本并解析 JSON 错误体。
+ * 典型场景：
+ * - 下载接口失败时后端返回 JSON，但客户端按二进制读取；
+ * - 某些网关/代理层返回二进制包装的错误响应。
+ */
+const decodeArrayBufferToJsonMessage = (buffer: ArrayBuffer): string | undefined => {
+  try {
+    const text = new TextDecoder('utf-8').decode(buffer)
+    const parsed = JSON.parse(text)
+    return parsed?.detail?.message || parsed?.message || (text || undefined)
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * 从后端响应体中提取“可直接展示给用户”的错误信息。
+ * 支持三类输入：
+ * 1) string：优先按 JSON 字符串解析，失败则原样返回；
+ * 2) ArrayBuffer：先解码再尝试 JSON 提取；
+ * 3) object：读取 detail.message 或 message。
+ */
+const extractServerMessage = (responseData: any): string | undefined => {
+  if (!responseData) return undefined
+  if (typeof responseData === 'string') {
+    try {
+      const parsed = JSON.parse(responseData)
+      return parsed?.detail?.message || parsed?.message || responseData
+    } catch {
+      return responseData
+    }
+  }
+  if (responseData instanceof ArrayBuffer) {
+    return decodeArrayBufferToJsonMessage(responseData)
+  }
+  return responseData?.detail?.message || responseData?.message || responseData?.error?.message
+}
+
+/**
+ * HTTP 状态码到默认错误文案的映射。
+ * 仅在“后端未返回明确 message”时作为兜底显示。
+ */
+const getHttpStatusErrorMessage = (status: number, statusText?: string): string => {
+  switch (status) {
+    case 400:
+      return 'Bad request'
+    case 403:
+      return 'Access denied'
+    case 404:
+      return 'Request URL not found'
+    case 408:
+      return 'Request timeout'
+    case 409:
+      return 'Resource conflict'
+    case 500:
+      return 'Internal server error'
+    case 502:
+      return 'Bad gateway'
+    case 503:
+      return 'Service unavailable'
+    case 504:
+      return 'Gateway timeout'
+    default:
+      return `Connection error ${status}: ${statusText || ''}`.trim()
+  }
+}
+
+/**
+ * 统一错误文案提取入口（全局使用）。
+ *
+ * 优先级（从高到低）：
+ * 1. 后端明确返回的错误文本（response.data）
+ * 2. HTTP 状态码默认文案
+ * 3. 网络层文案（超时/连接异常）
+ * 4. error.message 或 fallback
+ *
+ * 这样做的目的：
+ * - 尽可能展示后端真实报错，减少“Network request failed”这种无信息提示；
+ * - 保证所有请求的错误展示口径一致，避免页面层重复解析。
+ */
+const getUnifiedErrorMessage = (error: any, fallback: string = 'Network request failed'): string => {
+  const serverMessage = extractServerMessage(error?.response?.data)
+  if (serverMessage) return serverMessage
+
+  if (error?.response?.status) {
+    return getHttpStatusErrorMessage(error.response.status, error.response.statusText)
+  }
+
+  if (error?.request) {
+    if (error?.code === 'ECONNABORTED') return 'Request timeout'
+    return 'Network connection error'
+  }
+
+  return error?.message || fallback
+}
+
 const isRequestCanceled = (error: any) =>
   error?.name === 'AbortError' ||
   error?.message === 'request canceled' ||
@@ -295,6 +392,8 @@ const performRequestWithNativeFetch = async (
   config: RequestConfig,
   body: BodyInit | undefined,
 ): Promise<HttpResponse> => {
+  // fallback 场景下使用浏览器原生 fetch：
+  // 主要用于兜底 tauri plugin-http 在 FormData 特定情况下的兼容性问题。
   const method = (config.method || 'get').toUpperCase()
   const headers = new Headers()
   if (config.headers) {
@@ -341,6 +440,7 @@ const performRequestWithNativeFetch = async (
   }
 
   if (normalizedResponse.status < 200 || normalizedResponse.status >= 300) {
+    // 保持与主请求路径一致：非 2xx 统一抛出带 response 的错误对象。
     const error: any = new Error(`HTTP error ${normalizedResponse.status}`)
     error.response = normalizedResponse
     error.config = config
@@ -410,11 +510,22 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
       body instanceof FormData &&
       ['POST', 'PUT', 'PATCH'].includes(method)
     ) {
+      // tauri plugin-http + FormData 在个别环境会抛 Invalid array length。
+      // 这里自动切到 native fetch 重试，避免上传类接口直接失败。
       console.warn('[request] Tauri httpFetch failed with Invalid array length, retrying with native fetch')
       try {
         return await performRequestWithNativeFetch(fullUrl, config, body)
       } catch (fallbackError: any) {
         if (isRequestCanceled(fallbackError)) {
+          fallbackError.config = config
+          fallbackError.request = { responseType: config.responseType }
+          throw fallbackError
+        }
+        // Preserve HTTP error response from native fetch fallback (e.g. 400/422),
+        // otherwise it will be misclassified as a generic network error.
+        if (fallbackError?.response) {
+          // 关键：保留 fallback 的 HTTP 错误响应。
+          // 否则会被误判为纯网络错误，导致丢失后端 message。
           fallbackError.config = config
           fallbackError.request = { responseType: config.responseType }
           throw fallbackError
@@ -450,6 +561,13 @@ const requestInterceptor = (config: any) => {
   // 使用同步方式获取配置（通过引用）
   const apiConfig = currentApiConfigRef
 
+  /**
+   * 多后端路由策略说明：
+   * - /comApi /modApi /ruleApi：移除前缀后，按对应 baseURL 转发；
+   * - /hisApi /netApi：保留前缀（业务要求），仅切换 baseURL 到 6004/6006。
+   *
+   * 这样可以在调用层保持统一路径风格，同时支持不同服务端口。
+   */
   // 检查并处理特殊 API 路径
   if (originalUrl.startsWith('/comApi')) {
     processedUrl = originalUrl.replace(/^\/comApi/, '')
@@ -520,6 +638,7 @@ const requestInterceptor = (config: any) => {
   const skipGlobalLoading = requestConfig.skipGlobalLoading === true
 
   // 如果存在相同的pending请求，取消它（但需要检查是否跳过全局loading）
+  // 这是“同 key 仅保留最后一次请求”的去抖策略，避免重复点击触发并发请求。
   if (!skipGlobalLoading && pendingRequests.value.has(requestKey)) {
     const cancelController = pendingRequests.value.get(requestKey)
     cancelController?.abort('request canceled')
@@ -714,12 +833,16 @@ const createResponseInterceptor = (
       pendingRequests.value.delete(requestKey)
       updateGlobalLoading()
     }
-
     console.error(`${logPrefix}[响应错误]`, error)
 
     const originalRequest = error.config
     const requestConfig = originalRequest as any
 
+    /**
+     * 401 处理分两类：
+     * 1) 刷新 token 请求本身 401：直接清状态并跳登录，不再重试；
+     * 2) 普通业务请求 401：尝试刷新 token，成功后重放原请求。
+     */
     // 如果是刷新token请求返回401，直接跳转登录页，不再尝试刷新
     if (error.response?.status === 401 && requestConfig?._isRefreshTokenRequest) {
       console.log('[请求拦截器] 刷新token请求返回401，直接跳转登录页')
@@ -745,6 +868,7 @@ const createResponseInterceptor = (
     // 处理401错误 - 自动刷新token
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
+        // 已有刷新流程时，后续 401 请求进入队列等待，避免并发刷新风暴。
         // 如果正在刷新token，将请求加入队列
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -794,62 +918,15 @@ const createResponseInterceptor = (
         })
         return Promise.reject(refreshError)
       } finally {
+        // 无论刷新成功还是失败，都要复位刷新标记。
         isRefreshing = false
       }
     }
 
-    // 处理其他错误
-    if (isRequestCanceled(error)) {
-      return Promise.reject(error)
-    }
-
-    let errorMessage = 'Network request failed'
-
-    if (error.response) {
-      // 服务器返回错误状态码
-      const { status, statusText } = error.response
-
-      switch (status) {
-        case 400:
-          errorMessage = 'Bad request'
-          break
-        case 403:
-          errorMessage = 'Access denied'
-          break
-        case 404:
-          errorMessage = 'Request URL not found'
-          break
-        case 408:
-          errorMessage = 'Request timeout'
-          break
-        case 500:
-          errorMessage = 'Internal server error'
-          break
-        case 502:
-          errorMessage = 'Bad gateway'
-          break
-        case 503:
-          errorMessage = 'Service unavailable'
-          break
-        case 504:
-          errorMessage = 'Gateway timeout'
-          break
-        default:
-          errorMessage = `Connection error ${status}: ${statusText}`
-      }
-    } else if (error.request) {
-      // 请求已发出但没有收到响应
-      if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout'
-      } else {
-        errorMessage = 'Network connection error'
-      }
-    } else {
-      // 请求配置出错
-      errorMessage = error.message || 'Request configuration error'
-    }
+    // 处理其他错误：统一走 getUnifiedErrorMessage，确保各页面提示口径一致。
+    const errorMessage = getUnifiedErrorMessage(error)
     if (requestConfig?.showErrorMessage !== false) {
-      ElMessage.error(error.response?.data?.message || errorMessage)
+      ElMessage.error(errorMessage)
     }
     return Promise.reject(error)
   }
@@ -958,12 +1035,7 @@ class Request {
       })
     }
 
-    const response = await service.post(url, formData, {
-      ...config,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await service.post(url, formData, config)
     return response.data
   }
 
@@ -997,31 +1069,9 @@ class Request {
 
       ElMessage.success(`File downloaded: ${result.displayPath}`)
     } catch (error) {
-      const errorMessage = (() => {
-        if ((error as any)?.response?.status === 404) {
-          return 'File not found'
-        }
-        const responseData = (error as any)?.response?.data
-        if (!responseData) return undefined
-        if (typeof responseData === 'string') {
-          try {
-            const parsed = JSON.parse(responseData)
-            return parsed?.detail?.message || parsed?.message
-          } catch {
-            return responseData
-          }
-        }
-        if (responseData instanceof ArrayBuffer) {
-          try {
-            const text = new TextDecoder('utf-8').decode(responseData)
-            const parsed = JSON.parse(text)
-            return parsed?.detail?.message || parsed?.message
-          } catch {
-            return undefined
-          }
-        }
-        return responseData?.detail?.message || responseData?.message
-      })()
+      const status = (error as any)?.response?.status
+      const errorMessage =
+        status === 404 ? 'File not found' : getUnifiedErrorMessage(error as any, 'File download failed')
 
       console.error('File download failed:', error)
       ElMessage.error(errorMessage || 'File download failed')

@@ -24,11 +24,62 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
     const origMap = original?.protocol_mapping
     const cur = item.protocol_mapping
     const changes: string[] = []
+
     if (options.channelProtocol() === 'di_do') {
       const normGpio = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
       const curGpio = normGpio((cur as any)?.gpio_number)
       const origGpio = normGpio((origMap as any)?.gpio_number)
       if (curGpio !== origGpio) changes.push('mapping_gpio_number')
+      if (item.rowStatus === 'added') {
+        item.modifiedFields = changes
+        return
+      }
+      if (changes.length > 0) {
+        item.rowStatus = 'modified'
+        item.modifiedFields = changes
+      } else {
+        item.rowStatus = 'normal'
+        item.modifiedFields = []
+      }
+      return
+    }
+
+    if (options.channelProtocol() === 'can') {
+      const m = (cur as any) || {}
+      const orig = origMap ? (origMap as any) : null
+      const normCanId = (v: any) => (v === '' || v === null || v === undefined ? null : String(v).trim())
+      const normInt = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
+      const normStr = (v: any) => (v === '' || v === null || v === undefined ? null : String(v))
+
+      if (orig) {
+        const origHasAnyValue =
+          !(orig.can_id === undefined || orig.can_id === null || orig.can_id === '') ||
+          !(orig.byte_offset === undefined || orig.byte_offset === null) ||
+          !(orig.bit_position === undefined || orig.bit_position === null) ||
+          !(orig.bit_length === undefined || orig.bit_length === null) ||
+          !(orig.data_type === undefined || orig.data_type === null || orig.data_type === '')
+
+        if (!origHasAnyValue) {
+          if (m.can_id !== undefined && m.can_id !== null && m.can_id !== '') changes.push('mapping_can_id')
+          if (m.byte_offset !== undefined && m.byte_offset !== null) changes.push('mapping_can_offset')
+          if (m.bit_position !== undefined && m.bit_position !== null) changes.push('mapping_can_bit_position')
+          if (m.bit_length !== undefined && m.bit_length !== null) changes.push('mapping_can_bit_length')
+          if (m.data_type !== undefined && m.data_type !== null && m.data_type !== '') changes.push('mapping_can_data_type')
+        } else {
+          if (normCanId(m.can_id) !== normCanId(orig.can_id)) changes.push('mapping_can_id')
+          if (normInt(m.byte_offset) !== normInt(orig.byte_offset)) changes.push('mapping_can_offset')
+          if (normInt(m.bit_position) !== normInt(orig.bit_position)) changes.push('mapping_can_bit_position')
+          if (normInt(m.bit_length) !== normInt(orig.bit_length)) changes.push('mapping_can_bit_length')
+          if (normStr(m.data_type) !== normStr(orig.data_type)) changes.push('mapping_can_data_type')
+        }
+      } else {
+        if (m.can_id !== undefined && m.can_id !== null && m.can_id !== '') changes.push('mapping_can_id')
+        if (m.byte_offset !== undefined && m.byte_offset !== null) changes.push('mapping_can_offset')
+        if (m.bit_position !== undefined && m.bit_position !== null) changes.push('mapping_can_bit_position')
+        if (m.bit_length !== undefined && m.bit_length !== null) changes.push('mapping_can_bit_length')
+        if (m.data_type !== undefined && m.data_type !== null && m.data_type !== '') changes.push('mapping_can_data_type')
+      }
+
       if (item.rowStatus === 'added') {
         item.modifiedFields = changes
         return

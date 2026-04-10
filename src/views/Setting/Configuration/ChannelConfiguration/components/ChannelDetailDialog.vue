@@ -12,7 +12,7 @@
           ref="formRef"
           class="channel-detail-form"
         >
-          <LightCollapseCard v-model="isBasicOpen" title="Basic Information">
+          <LightCollapseCard v-model="isBasicOpen" title="Basic Information" :collapsible="false">
             <div class="channel-detail__section">
               <el-form-item label="ID:" v-if="!isAdd">
                 <span class="channel-detail__text">{{ form.id }}</span>
@@ -94,7 +94,7 @@
             </div>
           </LightCollapseCard>
 
-          <LightCollapseCard v-model="isParamsOpen" title="Parameters">
+          <LightCollapseCard v-model="isParamsOpen" title="Parameters" :collapsible="false">
             <div class="channel-detail__section">
               <div class="channel-detail__parameters">
                 <ModbusTcpParams
@@ -103,88 +103,11 @@
                   :is-editing="isEditing"
                 />
 
-                <template v-else-if="form.protocol === 'can'">
-                  <el-form-item label="Bitrate:" class="channel-detail__parameter-item">
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).bitrate
-                    }}</span>
-                    <el-input-number
-                      v-else
-                      v-model="(form.parameters as any).bitrate"
-                      :controls="false"
-                      align="left"
-                      placeholder="please enter bitrate"
-                    />
-                  </el-form-item>
-                  <el-form-item
-                    label="Data Bitrate:"
-                    class="channel-detail__parameter-item"
-                    style="margin-right: 0"
-                  >
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).data_bitrate
-                    }}</span>
-                    <el-input-number
-                      v-else
-                      v-model="(form.parameters as any).data_bitrate"
-                      :controls="false"
-                      align="left"
-                      placeholder="please enter data bitrate"
-                    />
-                  </el-form-item>
-                  <el-form-item label="FD Mode:" class="channel-detail__parameter-item">
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).fd_mode ? 'Yes' : 'No'
-                    }}</span>
-                    <el-switch v-else v-model="(form.parameters as any).fd_mode" />
-                  </el-form-item>
-                  <el-form-item
-                    label="Interface:"
-                    class="channel-detail__parameter-item"
-                    style="margin-right: 0"
-                  >
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).interface || '-'
-                    }}</span>
-                    <el-input
-                      v-else
-                      v-model="(form.parameters as any).interface"
-                      placeholder="please enter interface"
-                    />
-                  </el-form-item>
-                  <el-form-item label="Listen Only:" class="channel-detail__parameter-item">
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).listen_only ? 'Yes' : 'No'
-                    }}</span>
-                    <el-switch v-else v-model="(form.parameters as any).listen_only" />
-                  </el-form-item>
-                  <el-form-item
-                    label="Loopback:"
-                    class="channel-detail__parameter-item"
-                    style="margin-right: 0"
-                  >
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).loopback ? 'Yes' : 'No'
-                    }}</span>
-                    <el-switch v-else v-model="(form.parameters as any).loopback" />
-                  </el-form-item>
-                  <el-form-item
-                    label="Timeout (ms):"
-                    class="channel-detail__parameter-item"
-                    style="margin-right: 0"
-                  >
-                    <span v-if="!isEditing" class="channel-detail__text">{{
-                      (form.parameters as any).timeout_ms
-                    }}</span>
-                    <el-input-number
-                      v-else
-                      v-model="(form.parameters as any).timeout_ms"
-                      :controls="false"
-                      align="left"
-                      placeholder="please enter timeout (ms)"
-                    />
-                  </el-form-item>
-                </template>
+                <CanParams
+                  v-else-if="form.protocol === 'can'"
+                  :form="form"
+                  :is-editing="isEditing"
+                />
 
                 <template v-else-if="form.protocol === 'virt'">
                   <el-form-item label="Update Interval (ms):" class="channel-detail__parameter-item">
@@ -220,6 +143,7 @@
             v-if="!isEditing && form.runtime_status"
             v-model="isRuntimeOpen"
             title="Runtime Status"
+            :collapsible="false"
           >
             <div class="channel-detail__section">
               <el-form-item label="Connected:">
@@ -260,7 +184,7 @@
             </div>
           </LightCollapseCard>
 
-          <LightCollapseCard v-model="isLoggingOpen" title="Logging">
+          <LightCollapseCard v-model="isLoggingOpen" title="Logging" :collapsible="false">
             <div class="channel-detail__section" v-if="!isEditing">
               <el-form-item label="Enabled:">
                 <span
@@ -294,7 +218,7 @@
             </div>
           </LightCollapseCard>
 
-          <LightCollapseCard v-if="!isEditing" v-model="isPointsOpen" title="Point Counts">
+          <LightCollapseCard v-if="!isEditing" v-model="isPointsOpen" title="Point Counts" :collapsible="false">
             <div class="channel-detail__section">
               <el-form-item label="Telemetry:">
                 <span class="channel-detail__text">{{ form.point_counts?.telemetry }}</span>
@@ -348,7 +272,17 @@ export const PROTOCOL_DEFAULTS = {
     gpio_base_path: '/sys/class/gpio',
     di_poll_interval_ms: 200,
   },
+  can: {
+    device: 'can0',
+    bitrate: 250000,
+    connect_timeout_ms: 3000,
+    data_read_interval_ms: 1000,
+    read_timeout_ms: 3000,
+    retry_interval_ms: 2000,
+    rx_poll_interval_ms: 50,
+  },
 }
+
 </script>
 
 <script setup lang="ts">
@@ -365,6 +299,9 @@ import ModbusRtuParams, {
 import DiDoParams, {
   validationRules as diDoRules,
 } from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/DiDoParams.vue'
+import CanParams, {
+  validationRules as canRules,
+} from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/CanParams.vue'
 import type { ChannelDetail } from '@/types/channelConfiguration'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import dayjs from 'dayjs'
@@ -432,9 +369,9 @@ const isAdd = ref(false)
 const formRef = ref<FormInstance>()
 const isBasicOpen = ref(true)
 const isParamsOpen = ref(true)
-const isRuntimeOpen = ref(false)
-const isLoggingOpen = ref(false)
-const isPointsOpen = ref(false)
+const isRuntimeOpen = ref(true)
+const isLoggingOpen = ref(true)
+const isPointsOpen = ref(true)
 const channelIdMode = ref<'auto' | 'manual'>('auto')
 const channelIdInput = ref<number | null>(null)
 const didUpdate = ref(false)
@@ -499,6 +436,8 @@ const formRules = computed<Record<string, any[]>>(() => {
     protocolRules = modbusRtuRules
   } else if (form.value.protocol === 'di_do') {
     protocolRules = diDoRules
+  } else if (form.value.protocol === 'can') {
+    protocolRules = canRules
   }
   const idRules: Record<string, any[]> =
     isAdd.value && channelIdMode.value === 'manual'
@@ -592,6 +531,8 @@ watch(
         Object.assign(form.value.parameters, PROTOCOL_DEFAULTS.modbus_rtu)
       } else if (protocol === 'di_do') {
         Object.assign(form.value.parameters, PROTOCOL_DEFAULTS.di_do)
+      } else if (protocol === 'can') {
+        Object.assign(form.value.parameters, PROTOCOL_DEFAULTS.can)
       }
     }
     nextTick(() => {
@@ -707,9 +648,9 @@ const open = async (id: number | undefined) => {
   didUpdate.value = false
   isBasicOpen.value = true
   isParamsOpen.value = true
-  isRuntimeOpen.value = false
-  isLoggingOpen.value = false
-  isPointsOpen.value = false
+  isRuntimeOpen.value = true
+  isLoggingOpen.value = true
+  isPointsOpen.value = true
   channelIdMode.value = 'auto'
   channelIdInput.value = null
   form.value.id = id

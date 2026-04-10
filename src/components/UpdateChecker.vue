@@ -41,14 +41,14 @@
           </div>
         </div>
 
-        <div v-if="isInstalling" class="update-progress">
+        <div v-if="isInstalling || progressBarStatus !== ''" class="update-progress" :class="{ 'is-success-state': progressBarStatus === 'success', 'is-exception-state': progressBarStatus === 'exception' }">
           <div class="update-progress__header">
             <div class="update-progress__title">
               {{ installPhase === 'installing' ? 'Installing Update' : 'Downloading Update' }}
             </div>
-            <div class="update-progress__percent">{{ `${progressPercentDisplay}%` }}</div>
+            <div class="update-progress__percent" :class="{ 'is-exception': progressBarStatus === 'exception', 'is-success': progressBarStatus === 'success' }">{{ `${progressPercentDisplay}%` }}</div>
           </div>
-          <el-progress :percentage="progressPercentDisplay" :stroke-width="10" />
+          <el-progress :percentage="progressPercentDisplay" :stroke-width="10" :status="progressBarStatus || undefined" />
           <div class="update-progress__message">{{ progressMessageDisplay }}</div>
           <div v-if="progressBytesDisplay" class="update-progress__bytes">{{ progressBytesDisplay }}</div>
         </div>
@@ -113,6 +113,7 @@ const isCheckingUpdate = ref(false)
 const dismissed = ref(false)
 const currentVersion = ref('')
 const dialogMode = ref<DialogMode>('auto')
+const progressBarStatus = ref<'success' | 'exception' | ''>('')
 
 const formatDate = (dateStr?: string): string => {
   if (!dateStr) return ''
@@ -214,13 +215,21 @@ const closeDialog = () => {
 }
 
 const handleInstall = async () => {
+  progressBarStatus.value = ''
   try {
     const installed = await installUpdateFn()
     if (installed) {
-      closeDialog()
+      progressBarStatus.value = 'success'
+      setTimeout(() => {
+        progressBarStatus.value = ''
+        closeDialog()
+      }, 800)
+    } else {
+      progressBarStatus.value = 'exception'
     }
   } catch (error) {
     console.error('Failed to install update:', error)
+    progressBarStatus.value = 'exception'
   }
 }
 
@@ -324,6 +333,17 @@ onUnmounted(() => {
   border: $border-width-base solid rgba(255, 138, 0, 0.18);
   border-radius: $border-radius-small;
   background: linear-gradient(180deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 138, 0, 0.03) 100%);
+  transition: border-color $transition-base, background $transition-base;
+
+  &.is-success-state {
+    border-color: rgba(103, 194, 58, 0.3);
+    background: linear-gradient(180deg, rgba(103, 194, 58, 0.08) 0%, rgba(103, 194, 58, 0.03) 100%);
+  }
+
+  &.is-exception-state {
+    border-color: rgba(245, 108, 108, 0.3);
+    background: linear-gradient(180deg, rgba(245, 108, 108, 0.08) 0%, rgba(245, 108, 108, 0.03) 100%);
+  }
 
   &__header {
     display: flex;
@@ -343,6 +363,15 @@ onUnmounted(() => {
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     color: $primary-color;
+    transition: color $transition-base;
+
+    &.is-success {
+      color: $success-color;
+    }
+
+    &.is-exception {
+      color: $danger-color;
+    }
   }
 
   &__message {
@@ -355,6 +384,21 @@ onUnmounted(() => {
     margin-top: $spacing-xs;
     color: $text-color-white-60;
     font-size: $font-size-small;
+  }
+}
+
+:deep(.el-progress) {
+  .el-progress-bar__inner {
+    background-color: $primary-color;
+    transition: background-color $transition-base;
+  }
+
+  &.is-success .el-progress-bar__inner {
+    background-color: $success-color;
+  }
+
+  &.is-exception .el-progress-bar__inner {
+    background-color: $danger-color;
   }
 }
 
