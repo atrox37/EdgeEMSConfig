@@ -167,7 +167,7 @@ $field-disabled-text-color: rgba($text-color-primary, 0.35);
 
   .el-input-number {
     line-height: 32px;
-    // width: 240px !important;
+    width: 100% !important;
     .el-input {
       width: 100% !important;
     }

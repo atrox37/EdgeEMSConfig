@@ -812,9 +812,11 @@ watch(
 @use '@/assets/styles/variables' as *;
 
 .voltage-class.points-tables-page {
+    position: relative;
     height: 100%;
     display: flex;
     flex-direction: column;
+
 
     .points-tables-page__header {
         margin-bottom: 20px;
@@ -878,7 +880,7 @@ watch(
     height: 100%;
 
     .config-section__tabs-wrapper {
-        position: relative;
+        // position: relative;
         height: 100%;
         display: flex;
         flex-direction: column;

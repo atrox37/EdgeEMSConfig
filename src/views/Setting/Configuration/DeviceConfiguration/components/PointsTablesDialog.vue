@@ -135,7 +135,7 @@
           :disabled="!publishDirty"
           @click="handleSubmitPublish"
         >
-          Submit Execute
+          Submit Publish
         </el-button>
       </div>
     </template>

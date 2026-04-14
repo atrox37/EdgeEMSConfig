@@ -1,5 +1,5 @@
 <template>
-  <FormDialog ref="formDialogRef" title="Execute" width="480px" @close="close">
+  <FormDialog ref="formDialogRef" title="Value Publish" width="400px" @close="close">
     <template #dialog-body>
       <div class="voltage-class execute-dialog">
         <el-form label-width="90px" ref="formRef" :model="form" :rules="rules">
@@ -61,7 +61,7 @@ function submit() {
             ? await executeMeasurement(Number(instanceId?.value) as number, payload)
             : await executeAction(Number(instanceId?.value) as number, payload)
         if (res.success) {
-          ElMessage.success('Execute success!')
+          ElMessage.success('Publish success!')
           close()
         }
       }

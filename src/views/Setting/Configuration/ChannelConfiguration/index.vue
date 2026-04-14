@@ -54,21 +54,21 @@
         <!-- 桌面端：显示筛选框 -->
         <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
           <el-form-item label="Protocol:">
-            <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="select protocol" :teleported="false" clearable
+            <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="Select protocol" :teleported="false" clearable
               @change="handleDesktopFilterChange('protocol', filters.protocol)">
               <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                 :value="option.value" />
             </el-select>
           </el-form-item>
           <el-form-item label="Enabled:">
-            <el-select v-model="filters.enabled" placeholder="select enabled status" clearable :teleported="false"
+            <el-select v-model="filters.enabled" placeholder="Select enabled status" clearable :teleported="false"
               :fit-input-width="true" @change="handleDesktopFilterChange('enabled', filters.enabled)">
               <el-option label="Enabled" :value="true" />
               <el-option label="Disabled" :value="false" />
             </el-select>
           </el-form-item>
           <el-form-item label="Connected:">
-            <el-select v-model="filters.connected" placeholder="select connected status" clearable
+            <el-select v-model="filters.connected" placeholder="Select connected status" clearable
               :fit-input-width="true" :teleported="false"
               @change="handleDesktopFilterChange('connected', filters.connected)">
               <el-option label="Connected" :value="true" />
@@ -525,7 +525,7 @@ const handleChannelDialogCancel = () => {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       padding-bottom: 10px;
       border-bottom: 1px solid #dcdfe6;
 

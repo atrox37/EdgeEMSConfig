@@ -344,7 +344,7 @@ defineExpose({ open, close })
     display: flex;
     flex-wrap: wrap;
     column-gap: 12px;
-    row-gap: 10px;
+    row-gap: 16px;
   }
 
   .instance-detail__section--full {

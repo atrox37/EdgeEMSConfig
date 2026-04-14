@@ -722,7 +722,7 @@ defineExpose({
     display: flex;
     flex-wrap: wrap;
     column-gap: 12px;
-    row-gap: 10px;
+    row-gap: 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
     &:last-child {

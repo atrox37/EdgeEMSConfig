@@ -91,7 +91,7 @@
                 @click="handlePublish(row)"
               >
                 <AppIcon name="i-tabler-send" className="point-table__op-icon" />
-                <span>Execute</span>
+                <span>Publish</span>
               </div>
             </div>
           </template>

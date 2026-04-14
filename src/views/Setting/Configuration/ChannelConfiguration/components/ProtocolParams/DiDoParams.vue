@@ -90,7 +90,7 @@ defineProps<Props>()
   display: flex;
   flex-wrap: wrap;
   column-gap: 12px;
-  row-gap: 10px;
+  row-gap: 16px;
 
   &__item {
     width: calc(50% - 6px) !important;

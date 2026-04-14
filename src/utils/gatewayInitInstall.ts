@@ -1,6 +1,13 @@
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { ElMessage } from 'element-plus'
 import type { AuthMode } from '@/types/ssh'
+
+interface ScpUploadProgressPayload {
+  bytes_sent: number
+  total_bytes: number
+  percentage: number
+}
 
 export interface GatewayInitProgress {
   message?: string
@@ -99,16 +106,34 @@ export async function runGatewayInitInstall(
       detail: 'Establishing SCP connection...',
     })
     const remotePath = `~/${packageFileName}`
-    await invoke<string>('upload_file_via_scp', {
-      localPath: localPackagePath,
-      host: hostTrim,
-      port,
-      username: userTrim,
-      password: pwd,
-      privateKeyPath: keyPath,
-      authMode,
-      remotePath,
+
+    // 监听 Rust 后端实时上报的上传进度，将 0~100% 映射到进度条 20%~70% 区间
+    const unlisten = await listen<ScpUploadProgressPayload>('scp-upload-progress', (event) => {
+      const { percentage, bytes_sent, total_bytes } = event.payload
+      const mappedPct = 20 + Math.round(percentage * 0.5) // 0%→20%, 100%→70%
+      const sentMB = (bytes_sent / 1024 / 1024).toFixed(1)
+      const totalMB = (total_bytes / 1024 / 1024).toFixed(1)
+      setProgress({
+        percentage: mappedPct,
+        detail: `Uploading... ${sentMB} MB / ${totalMB} MB (${percentage}%)`,
+      })
     })
+
+    try {
+      await invoke<string>('upload_file_via_scp', {
+        localPath: localPackagePath,
+        host: hostTrim,
+        port,
+        username: userTrim,
+        password: pwd,
+        privateKeyPath: keyPath,
+        authMode,
+        remotePath,
+      })
+    } finally {
+      unlisten()
+    }
+
     setProgress({ percentage: 70, detail: 'File uploaded successfully via SCP' })
   } catch (error: unknown) {
     const detail = normalizeErrorMessage(error)

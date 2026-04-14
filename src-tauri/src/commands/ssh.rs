@@ -3,6 +3,14 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 use std::path::Path;
 use std::time::Duration;
+use tauri::{AppHandle, Emitter};
+
+#[derive(Clone, serde::Serialize)]
+struct ScpUploadProgress {
+    bytes_sent: u64,
+    total_bytes: u64,
+    percentage: u8,
+}
 
 fn resolve_remote_path(sess: &Session, remote_path: &str, username: &str) -> Result<String, String> {
     if remote_path == "~" || remote_path.starts_with("~/") {
@@ -41,9 +49,10 @@ fn resolve_remote_path(sess: &Session, remote_path: &str, username: &str) -> Res
     Ok(remote_path.to_string())
 }
 
-/// 通过SCP上传文件（直接使用文件路径）
+/// 通过SCP上传文件（直接使用文件路径），并通过 Tauri 事件实时上报上传进度
 #[tauri::command]
 pub async fn upload_file_via_scp(
+    app: AppHandle,
     local_path: String,
     host: String,
     port: u16,
@@ -54,8 +63,6 @@ pub async fn upload_file_via_scp(
     remote_path: String,
 ) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
-        
-        // 2. 建立SSH连接并上传
         let address = format!("{}:{}", host, port);
         use std::net::ToSocketAddrs;
         let addr = address.to_socket_addrs()
@@ -107,7 +114,6 @@ pub async fn upload_file_via_scp(
                 )
             })?;
 
-        // 使用SCP上传文件
         let metadata = std::fs::metadata(&local_path)
             .map_err(|e| format!("Failed to get file metadata: {}", e))?;
         let file_size = metadata.len();
@@ -123,9 +129,39 @@ pub async fn upload_file_via_scp(
         
         let mut local_file = std::fs::File::open(&local_path)
             .map_err(|e| format!("Failed to open local file: {}", e))?;
-        
-        std::io::copy(&mut local_file, &mut remote_file)
-            .map_err(|e| format!("Failed to copy file via SCP: {}", e))?;
+
+        // 分块读取并上传，每块发送一次进度事件
+        const CHUNK_SIZE: usize = 128 * 1024; // 128KB 每块
+        let mut buf = vec![0u8; CHUNK_SIZE];
+        let mut bytes_sent: u64 = 0;
+        let mut last_pct: u8 = 255; // 初始值设为不可能的值，确保第一次必然触发
+
+        loop {
+            let n = local_file.read(&mut buf)
+                .map_err(|e| format!("Failed to read local file: {}", e))?;
+            if n == 0 {
+                break;
+            }
+            remote_file.write_all(&buf[..n])
+                .map_err(|e| format!("Failed to write to remote file: {}", e))?;
+            bytes_sent += n as u64;
+
+            let pct = if file_size > 0 {
+                ((bytes_sent * 100) / file_size).min(100) as u8
+            } else {
+                100
+            };
+
+            // 只在百分比变化时发送事件，减少不必要的 IPC 通信
+            if pct != last_pct {
+                last_pct = pct;
+                let _ = app.emit("scp-upload-progress", ScpUploadProgress {
+                    bytes_sent,
+                    total_bytes: file_size,
+                    percentage: pct,
+                });
+            }
+        }
         
         remote_file.send_eof()
             .map_err(|e| format!("Failed to send EOF: {}", e))?;

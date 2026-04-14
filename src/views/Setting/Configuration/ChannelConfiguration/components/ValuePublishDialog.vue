@@ -1,5 +1,5 @@
 <template>
-  <FormDialog ref="dialogRef" title="Value Publish" width="500px" @close="handleClose">
+  <FormDialog ref="dialogRef" title="Value Publish" width="400px" @close="handleClose">
     <template #dialog-body>
       <div class="voltage-class value-publish">
         <el-form label-width="100px" inline ref="formRef" :model="form" :rules="rules">
@@ -121,5 +121,8 @@ defineExpose({
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+:deep(.el-form-item){
+  width: 100%;
 }
 </style>
