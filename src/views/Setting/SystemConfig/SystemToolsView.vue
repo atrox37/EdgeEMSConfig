@@ -1,5 +1,5 @@
 <template>
-  <div class="system-tools">
+  <div class="system-tools" ref="systemToolsRef">
     <div class="system-tools__header">
       <h2 class="system-tools__title">System Tools</h2>
       <p class="system-tools__desc">
@@ -170,6 +170,7 @@ import {
 } from '@/api/systemConfig'
 import AppIcon from '@/components/AppIcon.vue'
 
+const systemToolsRef = ref<HTMLElement | null>(null)
 const configFileInputRef = ref<HTMLInputElement>()
 const configImportLoading = ref(false)
 const configExportLoading = ref(false)
@@ -416,6 +417,7 @@ const handleUpgradeUpload = async () => {
       `Are you sure you want to upload the upgrade package: ${file.name}?`,
       'Confirm Upload',
       {
+        appendTo: systemToolsRef.value ?? undefined,
         confirmButtonText: 'Upload',
         cancelButtonText: 'Cancel',
         type: 'warning',
@@ -496,6 +498,7 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .system-tools {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;

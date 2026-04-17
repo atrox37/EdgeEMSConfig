@@ -3,7 +3,7 @@
     <template #dialog-body>
       <div class="voltage-class value-publish">
         <el-form label-width="100px" inline ref="formRef" :model="form" :rules="rules">
-          <el-form-item label="Value" style="margin-right: 0" prop="value">
+          <el-form-item label="Value:" style="margin-right: 0" prop="value">
             <template v-if="form.category === 'C' || form.category === 'S'">
 
 

@@ -87,10 +87,12 @@ const handleTabChange = (name: string | number) => {
 
 <style scoped lang="scss">
 .system-config-shell {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
   min-width: 0;
+
 }
 
 .system-config-shell__header {
