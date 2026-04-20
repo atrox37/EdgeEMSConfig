@@ -19,6 +19,18 @@ Each version should follow this structure:
 - Improvement description
 ```
 
+## [0.2.0] - 2026-04-20
+
+### Added
+- Released the first internal beta version, providing a more complete and stable closed-test experience.
+
+### Fixed
+- Systematically fixed historical issues reported in previous versions and resolved known blockers that affected daily usage.
+- Addressed accumulated defects across core workflows to improve overall reliability and consistency.
+
+### Optimized
+- Refined overall interaction details and upgrade experience to make the product easier to use during internal testing.
+
 ## [0.1.15] - 2026-04-10
 
 ### Added
