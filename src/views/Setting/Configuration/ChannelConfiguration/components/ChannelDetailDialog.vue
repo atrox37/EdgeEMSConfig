@@ -243,7 +243,7 @@
           isAdd ? 'Cancel Add' : isEditing ? 'Cancel Edit' : 'Cancel'
         }}</el-button>
         <el-button v-if="!isEditing" type="primary" @click="handleEdit">Edit</el-button>
-        <el-button v-else type="primary" @click="handleSubmit">Submit</el-button>
+        <el-button v-else type="primary" :loading="submitLoading" @click="handleSubmit">Submit</el-button>
       </div>
     </template>
   </FormDialog>
@@ -375,6 +375,7 @@ const isPointsOpen = ref(true)
 const channelIdMode = ref<'auto' | 'manual'>('auto')
 const channelIdInput = ref<number | null>(null)
 const didUpdate = ref(false)
+const submitLoading = ref(false)
 // 表单数据
 const form = ref<ChannelDetail>({
   id: 0,
@@ -612,32 +613,37 @@ const handleCancel = () => {
 const handleSubmit = () => {
   formRef.value?.validate(async (valid, fields) => {
     if (valid) {
-      if (isAdd.value) {
-        const payload: any = JSON.parse(JSON.stringify(form.value))
-        delete payload.channel_id_mode
-        if (channelIdMode.value === 'manual' && channelIdInput.value) {
-          payload.channel_id = channelIdInput.value
+      submitLoading.value = true
+      try {
+        if (isAdd.value) {
+          const payload: any = JSON.parse(JSON.stringify(form.value))
+          delete payload.channel_id_mode
+          if (channelIdMode.value === 'manual' && channelIdInput.value) {
+            payload.channel_id = channelIdInput.value
+          } else {
+            delete payload.channel_id
+          }
+          const res = await createChannel(payload)
+          if (res.success) {
+            ElMessage.success('Channel created successfully')
+            formDialogRef.value.dialogVisible = false
+            isEditing.value = false
+            isAdd.value = false
+            emit('submit')
+          }
         } else {
-          delete payload.channel_id
+          if (!form.value.id) return
+          const payload: any = JSON.parse(JSON.stringify(form.value))
+          const res = await updateChannel(form.value.id, payload)
+          if (res.success) {
+            ElMessage.success('Channel updated successfully')
+            isEditing.value = false
+            didUpdate.value = true
+            await fetchDetail(form.value.id)
+          }
         }
-        const res = await createChannel(payload)
-        if (res.success) {
-          ElMessage.success('Channel created successfully')
-          formDialogRef.value.dialogVisible = false
-          isEditing.value = false
-          isAdd.value = false
-          emit('submit')
-        }
-      } else {
-        if (!form.value.id) return
-        const payload: any = JSON.parse(JSON.stringify(form.value))
-        const res = await updateChannel(form.value.id, payload)
-        if (res.success) {
-          ElMessage.success('Channel updated successfully')
-          isEditing.value = false
-          didUpdate.value = true
-          await fetchDetail(form.value.id)
-        }
+      } finally {
+        submitLoading.value = false
       }
     } else {
       openPanelsForErrors(fields)

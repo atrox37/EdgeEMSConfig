@@ -65,7 +65,7 @@
 
     <template #dialog-footer>
       <el-button @click="onCancel">Cancel</el-button>
-      <el-button type="primary" @click="onSubmit">Submit</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="onSubmit">Submit</el-button>
     </template>
   </FormDialog>
 </template>
@@ -167,6 +167,7 @@ const rules = computed(() => {
 
 const mode = ref<'create' | 'edit'>('create')
 const dialogTitle = computed(() => (mode.value === 'edit' ? 'Edit User' : 'Add User'))
+const submitLoading = ref(false)
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj))
 }
@@ -209,32 +210,37 @@ function onCancel() {
 async function onSubmit() {
   formRef.value?.validate(async (valid) => {
     if (!valid) return
-    if (mode.value === 'create') {
-      const res = await userApi.addUser({
-        username: form.value.username,
-        password: form.value.password,
-        role_id: form.value.role_id,
-      })
-      if (res.success) {
-        ElMessage.success('User added successfully')
-        emit('submit', form.value)
-      }
-      close()
-    } else if (mode.value === 'edit') {
-      const updateData: any = {
-        role_id: form.value.role_id,
-        is_active: form.value.is_active,
-      }
-      // 如果填写了新密码，则添加到更新数据中
-      if (form.value.password) {
-        updateData.password = form.value.password
-      }
-      const res = await userApi.updateUser(roleId.value, updateData)
-      if (res.success) {
-        ElMessage.success('User updated successfully')
-        emit('submit', form.value)
+    submitLoading.value = true
+    try {
+      if (mode.value === 'create') {
+        const res = await userApi.addUser({
+          username: form.value.username,
+          password: form.value.password,
+          role_id: form.value.role_id,
+        })
+        if (res.success) {
+          ElMessage.success('User added successfully')
+          emit('submit', form.value)
+        }
         close()
+      } else if (mode.value === 'edit') {
+        const updateData: any = {
+          role_id: form.value.role_id,
+          is_active: form.value.is_active,
+        }
+        // 如果填写了新密码，则添加到更新数据中
+        if (form.value.password) {
+          updateData.password = form.value.password
+        }
+        const res = await userApi.updateUser(roleId.value, updateData)
+        if (res.success) {
+          ElMessage.success('User updated successfully')
+          emit('submit', form.value)
+          close()
+        }
       }
+    } finally {
+      submitLoading.value = false
     }
   })
 }

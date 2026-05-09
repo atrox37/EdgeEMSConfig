@@ -2,6 +2,9 @@ import { Request, cancelPendingRequestsByUrl } from '@/utils/request'
 import type {
   CertificateInfoResponse,
   CertificateType,
+  HisConfigResponse,
+  HisServiceConfig,
+  InstSyncResponse,
   LanValue,
   NetworkConfigRequest,
   NetworkConfigResponse,
@@ -158,4 +161,30 @@ export const cancelCertificateUploadRequests = () => {
 
 export const cancelCertificateDeleteRequests = () => {
   cancelPendingRequestsByUrl('/netApi/certificate/', 'delete')
+}
+
+// ─── netsrv: 触发设备列表同步 ────────────────────────────────
+export const triggerInstSync = () => {
+  return Request.post<InstSyncResponse>('/netApi/inst-sync', {})
+}
+
+export const cancelInstSyncRequests = () => {
+  cancelPendingRequestsByUrl('/netApi/inst-sync', 'post')
+}
+
+// ─── hissrv: 历史服务配置 ─────────────────────────────────────
+export const getHisConfig = () => {
+  return Request.get<HisConfigResponse>('/hisApi/config')
+}
+
+export const updateHisConfig = (payload: HisServiceConfig) => {
+  return Request.put('/hisApi/config', payload)
+}
+
+export const cancelHisConfigGetRequests = () => {
+  cancelPendingRequestsByUrl('/hisApi/config', 'get')
+}
+
+export const cancelHisConfigUpdateRequests = () => {
+  cancelPendingRequestsByUrl('/hisApi/config', 'put')
 }

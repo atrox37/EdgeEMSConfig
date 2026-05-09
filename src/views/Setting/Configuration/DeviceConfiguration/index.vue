@@ -49,9 +49,16 @@
         <div class="rule-management__reload-icon" @click="handleReload">
           <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
         </div>
-
-
-
+      </div>
+      <div class="rule-management__search-form-second-row">
+        <IconButton
+          type="primary"
+          icon="i-tabler-refresh-dot"
+          text="Sync Instances"
+          :loading="syncing"
+          custom-class="rule-management__btn"
+          @click="handleSyncInstances"
+        />
       </div>
       <div class="rule-management__table">
         <el-table v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
@@ -101,8 +108,12 @@
 
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue'
+import IconButton from '@/components/common/IconButton.vue'
+import { ElMessage } from 'element-plus'
+import { triggerInstSync } from '@/api/systemConfig'
 
 const userAddIcon = 'i-tabler-plus'
+const syncing = ref(false)
 
 import InstanceDetailDialog from './components/InstanceDetailDialog.vue'
 import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
@@ -180,6 +191,24 @@ const handleDesktopFilterChange = (_key?: string, _value?: any) => {
 // 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
 const handleReload = () => {
   reloadFilters()
+}
+
+// 触发设备实例同步
+const handleSyncInstances = async () => {
+  syncing.value = true
+  try {
+    const res = await triggerInstSync()
+    if (res && (res as any).success) {
+      ElMessage.success('Instance sync triggered successfully')
+      await fetchTableData(true)
+    } else {
+      ElMessage.warning((res as any).message || 'Sync failed, please check MQTT connection')
+    }
+  } catch (err: any) {
+    ElMessage.error(err?.message || 'Sync request failed')
+  } finally {
+    syncing.value = false
+  }
 }
 
 // 移除筛选标签
@@ -383,10 +412,15 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
       }
     }
 
+    .rule-management__search-form-second-row {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
     .rule-management__table-operations {
       width: 100%;
-      //   padding-top: 20px;
-      //   border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .rule-management__btn {

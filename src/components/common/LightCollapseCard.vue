@@ -26,6 +26,9 @@
     <div class="light-collapse-card__body" :style="bodyStyle">
       <div ref="bodyRef" class="light-collapse-card__body-inner">
         <slot />
+        <div v-if="$slots.footer" class="light-collapse-card__footer">
+          <slot name="footer" />
+        </div>
       </div>
     </div>
   </section>
@@ -203,6 +206,15 @@ watch(
     height: 100%;
     padding: 6px 16px 16px;
     overflow: auto;
+  }
+
+  .light-collapse-card__footer {
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid $white-alpha-10;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
   }
 
   &.is-open {

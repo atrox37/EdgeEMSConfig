@@ -1,5 +1,5 @@
 <template>
-  <el-button :type="type" class="icon-button" :class="customClass" @click="handleClick">
+  <el-button :type="type" class="icon-button" :class="customClass" :loading="loading" @click="handleClick">
     <AppIcon v-if="isIconifyName" :name="icon" className="icon-button__icon" :class="iconClass" />
     <img v-else :src="icon" class="icon-button__icon" :class="iconClass" />
     {{ text }}
@@ -16,6 +16,7 @@ interface Props {
   type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
   customClass?: string
   iconClass?: string
+  loading?: boolean
 }
 
 interface Emits {
@@ -26,6 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'primary',
   customClass: '',
   iconClass: 'icon-button__icon',
+  loading: false,
 })
 
 const emit = defineEmits<Emits>()

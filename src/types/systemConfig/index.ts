@@ -62,6 +62,7 @@ export interface MqttConfigPayload {
   client_id: string
   device_sn: string
   exclude_patterns: string[]
+  modsrv_url: string
   product_sn: string
   reconnect_delay_secs: number
   reconnect_max_attempts: number
@@ -111,4 +112,31 @@ export interface CertificateInfoResponse {
   data?: CertificateInfoSnapshot
   status?: string
   [key: string]: any
+}
+
+// ─── hissrv 配置 ─────────────────────────────────────────────
+export interface HisServiceConfig {
+  batch_size: number
+  cleanup_enabled: boolean
+  cleanup_older_than_days: number
+  collection_interval_secs: number
+  default_page_size: number
+  exclude_patterns: string[]
+  flush_interval_secs: number
+  max_page_size: number
+  max_time_range_days: number
+  /** 新格式：key = pattern, value = null (使用全局间隔) 或 正整数秒 */
+  subscribe_patterns: Record<string, number | null>
+}
+
+export interface HisConfigResponse {
+  data?: HisServiceConfig
+  success?: boolean
+  [key: string]: any
+}
+
+export interface InstSyncResponse {
+  success: boolean
+  message: string
+  data?: { msgId: string }
 }

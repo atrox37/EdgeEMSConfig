@@ -11,7 +11,7 @@
     </template>
     <template #dialog-footer>
       <el-button @click="close">Cancel</el-button>
-      <el-button type="primary" @click="submit">Submit</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="submit">Submit</el-button>
     </template>
   </FormDialog>
 </template>
@@ -24,6 +24,7 @@ import { executeAction, executeMeasurement } from '@/api/devicesManagement'
 import { InstanceIdKey } from '@/utils/key'
 const formDialogRef = ref<{ dialogVisible: boolean } | null>(null)
 const formRef = ref()
+const submitLoading = ref(false)
 const form = ref<{
   value: number | undefined
   point_id: string
@@ -52,17 +53,22 @@ function submit() {
   formRef.value.validate(async (valid: boolean) => {
     if (valid) {
       if (instanceId?.value) {
-        const payload = {
-          value: form.value.value as number,
-          point_id: form.value.point_id,
-        }
-        const res =
-          form.value.category === 'measurement'
-            ? await executeMeasurement(Number(instanceId?.value) as number, payload)
-            : await executeAction(Number(instanceId?.value) as number, payload)
-        if (res.success) {
-          ElMessage.success('Publish success!')
-          close()
+        submitLoading.value = true
+        try {
+          const payload = {
+            value: form.value.value as number,
+            point_id: form.value.point_id,
+          }
+          const res =
+            form.value.category === 'measurement'
+              ? await executeMeasurement(Number(instanceId?.value) as number, payload)
+              : await executeAction(Number(instanceId?.value) as number, payload)
+          if (res.success) {
+            ElMessage.success('Publish success!')
+            close()
+          }
+        } finally {
+          submitLoading.value = false
         }
       }
     }

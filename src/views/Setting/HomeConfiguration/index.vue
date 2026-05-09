@@ -4,7 +4,7 @@
       <h2 class="home-configuration__title">Home Configuration</h2>
       <div class="home-configuration__actions">
         <!-- <div class="home-configuration__actions-left"> -->
-          <el-button type="primary" plain @click="handleRestore">Restore Default</el-button>
+          <el-button type="primary" plain :loading="resetLoading" @click="handleRestore">Restore Default</el-button>
         <!-- </div> -->
       </div>
     </div>

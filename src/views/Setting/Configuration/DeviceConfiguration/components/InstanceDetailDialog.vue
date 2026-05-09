@@ -110,7 +110,7 @@
         isCreateMode ? 'Cancel' : isEditing ? 'Cancel Edit' : 'Cancel'
         }}</el-button>
       <el-button v-if="!isEditing" type="primary" @click="handleEdit"> Edit </el-button>
-      <el-button v-else type="primary" @click="handleSubmit"> Submit </el-button>
+      <el-button v-else type="primary" :loading="submitLoading" @click="handleSubmit"> Submit </el-button>
     </template>
   </FormDialog>
 </template>
@@ -135,6 +135,7 @@ const isBasicOpen = ref(true)
 const isPropertiesOpen = ref(true)
 const isCreateMode = computed(() => isEditing.value && form.value.instance_id === null)
 const didUpdate = ref(false)
+const submitLoading = ref(false)
 
 // 表单数据
 const form = ref<DeviceInstanceDetail>({
@@ -270,35 +271,35 @@ const handleSubmit = () => {
         if (item.key !== '') newProps[item.key] = item.value
       }
       form.value.properties = newProps
-      if (isCreateMode.value) {
-        const data: AddDeviceInstanceDetail = {
-          instance_name: form.value.instance_name,
-          product_name: form.value.product_name,
-          properties: form.value.properties,
+      submitLoading.value = true
+      try {
+        if (isCreateMode.value) {
+          const data: AddDeviceInstanceDetail = {
+            instance_name: form.value.instance_name,
+            product_name: form.value.product_name,
+            properties: form.value.properties,
+          }
+          const res = await createInstance(data)
+          if (res.success) {
+            ElMessage.success('Device instance created successfully')
+            isEditing.value = false
+            emit('submit')
+            close()
+          }
+        } else {
+          const res = await updateInstance(form.value)
+          if (res.success) {
+            ElMessage.success('Device instance updated successfully')
+            isEditing.value = false
+            didUpdate.value = true
+            const detailData = await getInstanceDetail(form.value.instance_id as number)
+            applyDetail(detailData.data.instance)
+            editProperties.value = []
+          }
         }
-        const res = await createInstance(data)
-        if (res.success) {
-          ElMessage.success('Device instance created successfully')
-          isEditing.value = false
-          emit('submit')
-          close()
-        }
-      } else {
-        const res = await updateInstance(form.value)
-        if (res.success) {
-          ElMessage.success('Device instance updated successfully')
-          isEditing.value = false
-          didUpdate.value = true
-          const detailData = await getInstanceDetail(form.value.instance_id as number)
-          applyDetail(detailData.data.instance)
-          editProperties.value = []
-        }
+      } finally {
+        submitLoading.value = false
       }
-
-      // ElMessage.success('Device instance updated successfully')
-      // // 更新原始快照
-      // originalFormSnapshot.value = JSON.parse(JSON.stringify(form.value))
-      // close()
     }
   })
 }

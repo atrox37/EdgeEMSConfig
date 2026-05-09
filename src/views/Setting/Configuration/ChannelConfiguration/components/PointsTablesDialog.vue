@@ -221,6 +221,7 @@
           type="primary"
           :icon="submitIcon"
           text="Submit"
+          :loading="submitLoading"
           @click="handleSubmit"
         />
         <!-- <el-button v-if="!isEditing && isPublish" type="primary" @click="handleSubmitPublish">
@@ -231,6 +232,7 @@
           type="primary"
           :icon="submitIcon"
           text="Submit Publish"
+          :loading="publishLoading"
           @click="handleSubmitPublish"
         />
       </div>
@@ -276,6 +278,8 @@ const channelProtocol = ref<'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_d
 const viewModeSwitch = ref(false) // false = points, true = mappings
 const viewMode = computed(() => (viewModeSwitch.value ? 'mappings' : 'points'))
 const editFilters = ref<string[]>([])
+const submitLoading = ref(false)
+const publishLoading = ref(false)
 // Status 筛选器：modified/added/deleted 多选框互斥，invalid 独立复选
 const statusCheckboxValue = ref<string[]>([])
 const invalidChecked = ref(false)
@@ -387,6 +391,8 @@ const refreshPointsBaseline = async () => {
 }
 
 const handleSubmit = async () => {
+  submitLoading.value = true
+  try {
   // 编辑提交前：检查四个Tab是否存在 invalid
   const ensureInvalidHandled = (targetTab: 'telemetry' | 'signal' | 'control' | 'adjustment') => {
     // 勾选 invalid 筛选
@@ -554,6 +560,9 @@ const handleSubmit = async () => {
       // 提交完成后清空筛选并显示全部
       clearStatusFilters()
     }
+  }
+  } finally {
+    submitLoading.value = false
   }
 }
 
@@ -770,15 +779,20 @@ const handleSubmitPublish = async () => {
   commands = activeInstance?.getPublishCommands?.()
 
   if (!Array.isArray(commands) || commands.length === 0) return
-  const res = await publishPointValue(channelId.value, {
-    type: mappingTypeToTabName[activeTab.value],
-    points: commands,
-  })
-  if (res.success) {
-    publishDirty.value = false
-    isPublish.value = false
-    activeInstance?.resetPublish?.()
-    ElMessage.success('Batch publish successful')
+  publishLoading.value = true
+  try {
+    const res = await publishPointValue(channelId.value, {
+      type: mappingTypeToTabName[activeTab.value],
+      points: commands,
+    })
+    if (res.success) {
+      publishDirty.value = false
+      isPublish.value = false
+      activeInstance?.resetPublish?.()
+      ElMessage.success('Batch publish successful')
+    }
+  } finally {
+    publishLoading.value = false
   }
 
   // if (activeTab.value === 'control' || activeTab.value === 'signal') {

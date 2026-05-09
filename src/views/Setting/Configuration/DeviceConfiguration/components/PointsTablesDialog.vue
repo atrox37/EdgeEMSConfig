@@ -127,12 +127,13 @@
           >Edit</el-button
         >
 
-        <el-button v-if="isEditing" type="primary" @click="handleSubmit">Submit</el-button>
+        <el-button v-if="isEditing" type="primary" :loading="submitLoading" @click="handleSubmit">Submit</el-button>
 
         <el-button
           v-if="!isEditing && isPublish && (activeTab === 'action' || activeTab === 'measurement')"
           type="primary"
           :disabled="!publishDirty"
+          :loading="publishLoading"
           @click="handleSubmitPublish"
         >
           Submit Publish
@@ -172,6 +173,8 @@ const measurementRows = ref<InstanceMeasurementItem[]>([])
 const actionRows = ref<InstanceActionItem[]>([])
 const propertyRows = ref<InstancePropertyItem[]>([])
 const loading = computed(() => globalStore.loading)
+const submitLoading = ref(false)
+const publishLoading = ref(false)
 // 通道列表（用于编辑模式）
 const channelsForRouting = ref<Array<{ id: number; name: string }>>([])
 // 页面订阅ID
@@ -442,7 +445,6 @@ const handleSubmit = async () => {
   if (actionRoutingRef.value?.hasInvalid?.()) invalidTabs.push('action')
   if (invalidTabs.length > 0) {
     ElMessage.warning('Routing has invalid data, please correct and submit again')
-    // 自动切换状态筛选为 invalid，并跳转到首个有问题的 Tab
     invalidChecked.value = true
     activeTab.value = invalidTabs[0]
     return
@@ -466,30 +468,34 @@ const handleSubmit = async () => {
     ...measurementMappings.map((item: any) => toRoutingItem(item, 'M')),
     ...actionMappings.map((item: any) => toRoutingItem(item, 'A')),
   ]
-  const res = await updateInstanceRouting(instanceId.value, routingPayload)
-  if (res.success) {
-    ElMessage.success('Routing updated successfully')
-    isEditing.value = false
-    // 刷新基线
-    editFilters.value = []
-    statusCheckboxValue.value = []
-    invalidChecked.value = false
-    try {
-      const resp = await getInstancePoints(instanceId.value)
-      if (resp.success) {
-        const data = resp.data as InstancePointList
-        measurementRows.value = data.measurements ? Object.values(data.measurements) : []
-        actionRows.value = data.actions ? Object.values(data.actions) : []
-        propertyRows.value = data.properties ? Object.values(data.properties) : []
-        originalPointsData.value = {
-          measurement: JSON.parse(JSON.stringify(measurementRows.value)),
-          action: JSON.parse(JSON.stringify(actionRows.value)),
-          property: JSON.parse(JSON.stringify(propertyRows.value)),
+  submitLoading.value = true
+  try {
+    const res = await updateInstanceRouting(instanceId.value, routingPayload)
+    if (res.success) {
+      ElMessage.success('Routing updated successfully')
+      isEditing.value = false
+      editFilters.value = []
+      statusCheckboxValue.value = []
+      invalidChecked.value = false
+      try {
+        const resp = await getInstancePoints(instanceId.value)
+        if (resp.success) {
+          const data = resp.data as InstancePointList
+          measurementRows.value = data.measurements ? Object.values(data.measurements) : []
+          actionRows.value = data.actions ? Object.values(data.actions) : []
+          propertyRows.value = data.properties ? Object.values(data.properties) : []
+          originalPointsData.value = {
+            measurement: JSON.parse(JSON.stringify(measurementRows.value)),
+            action: JSON.parse(JSON.stringify(actionRows.value)),
+            property: JSON.parse(JSON.stringify(propertyRows.value)),
+          }
         }
+      } catch {
+        console.error('Failed to refresh points data')
       }
-    } catch {
-      console.error('Failed to refresh points data')
     }
+  } finally {
+    submitLoading.value = false
   }
 }
 const togglePublishMode = async () => {
@@ -541,15 +547,20 @@ const handleSubmitPublish = async () => {
         : null
   const cmds = sourceRef?.value?.getPublishCommands?.() || []
   if (!Array.isArray(cmds) || cmds.length === 0) return
-  for (const { id, value } of cmds) {
-    await executeAction(instanceId.value, { point_id: String(id), value })
-  }
-  publishDirty.value = false
-  isPublish.value = false
-  if (activeTab.value === 'action') {
-    actionPointsRef.value?.resetPublish?.()
-  } else if (activeTab.value === 'measurement') {
-    measurementPointsRef.value?.resetPublish?.()
+  publishLoading.value = true
+  try {
+    for (const { id, value } of cmds) {
+      await executeAction(instanceId.value, { point_id: String(id), value })
+    }
+    publishDirty.value = false
+    isPublish.value = false
+    if (activeTab.value === 'action') {
+      actionPointsRef.value?.resetPublish?.()
+    } else if (activeTab.value === 'measurement') {
+      measurementPointsRef.value?.resetPublish?.()
+    }
+  } finally {
+    publishLoading.value = false
   }
 }
 

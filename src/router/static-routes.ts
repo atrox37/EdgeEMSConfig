@@ -4,6 +4,7 @@ import InstanceIcon from '@/components/icons/InstanceIcon.vue'
 import RuleIcon from '@/components/icons/RuleIcon.vue'
 import SystemConfigIcon from '@/components/icons/SystemConfigIcon.vue'
 import HomeConfigIcon from '@/components/icons/HomeConfigIcon.vue'
+// import ModelingIcon from '@/components/icons/ModelingIcon.vue'
 
 export const staticRoutes: RouteRecordRaw[] = [
   {
@@ -132,6 +133,26 @@ export const staticRoutes: RouteRecordRaw[] = [
           icon: HomeConfigIcon,
         },
       },
+      // {
+      //   path: '/visualModeling',
+      //   name: 'visualModeling',
+      //   component: () => import('@/views/VisualModeling/index.vue'),
+      //   meta: {
+      //     title: 'Visual Modeling',
+      //     activeNav: '/visualModeling',
+      //     icon: ModelingIcon,
+      //   },
+      // },
+      // {
+      //   path: '/visualModeling/editor/:id',
+      //   name: 'visualModelingEditor',
+      //   component: () => import('@/views/VisualModeling/ModelingEditorView.vue'),
+      //   meta: {
+      //     title: 'Model Editor',
+      //     activeNav: '/visualModeling',
+      //     hidden: true,
+      //   },
+      // },
       {
         path: '/systemConfig',
         name: 'systemConfig',

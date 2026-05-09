@@ -22,7 +22,7 @@
     <template #dialog-footer>
       <div class="dialog-footer">
         <el-button @click="close">Cancel</el-button>
-        <el-button type="primary" @click="submit">Submit</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="submit">Submit</el-button>
       </div>
     </template>
   </FormDialog>
@@ -44,6 +44,7 @@ const channelName = inject(ChannelNameKey)
 const channelId = inject(ChannelIdKey)
 const dialogRef = ref()
 const formRef = ref()
+const submitLoading = ref(false)
 const form = ref<{
   pointId: number
   dataType: string
@@ -84,24 +85,19 @@ const submit = async () => {
   formRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     let outValue: any = form.value.value
-    // 如果是'A'或'T'类型，需要将输入转为浮点数，且如果整数要强制变成带小数点的数（如1变为1.0）
-    // if (form.value.category === 'A' || form.value.category === 'T') {
-    //   let n = Number(outValue)
-    //   if (Number.isInteger(n)) {
-    //     // 转成带小数点的数据
-    //     outValue = n.toFixed(1) // 1 => "1.0"
-    //   } else if (!isNaN(n)) {
-    //     outValue = n
-    //   }
-    // }
-    const res = await publishPointValue(channelId!.value, {
-      type: form.value.category as 'C' | 'A' | 'T' | 'S',
-      id: form.value.pointId.toString(),
-      value: outValue,
-    })
-    if (res.success) {
-      ElMessage.success('Published successfully')
-      close()
+    submitLoading.value = true
+    try {
+      const res = await publishPointValue(channelId!.value, {
+        type: form.value.category as 'C' | 'A' | 'T' | 'S',
+        id: form.value.pointId.toString(),
+        value: outValue,
+      })
+      if (res.success) {
+        ElMessage.success('Published successfully')
+        close()
+      }
+    } finally {
+      submitLoading.value = false
     }
   })
 }
