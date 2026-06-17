@@ -275,7 +275,7 @@ const getAvatarName = (name: string): string => {
       cursor: pointer;
       transition: all $transition-base;
 
-      &:hover {
+      .titlebar__user-info:hover {
         background: rgba(0, 0, 0, 0.05);
       }
     }
@@ -310,7 +310,7 @@ const getAvatarName = (name: string): string => {
       height: 12px;
       opacity: 0.6;
       transition: transform 0.2s ease;
-      &.is-open {
+      .titlebar__user-arrow.is-open {
         transform: rotate(180deg);
       }
     }
@@ -357,21 +357,21 @@ const getAvatarName = (name: string): string => {
       height: 12px;
     }
 
-    &:hover {
+    .titlebar__button:hover {
       background: rgba(0, 0, 0, 0.05); // 浅色背景 hover 效果
     }
 
-    &:active {
+    .titlebar__button:active {
       background: rgba(0, 0, 0, 0.1); // 浅色背景 active 效果
     }
 
-    &.titlebar__button--close {
-      &:hover {
+    .titlebar__button.titlebar__button--close {
+      .titlebar__button.titlebar__button--close:hover {
         background: #e81123; // Windows 标准关闭按钮红色（悬停）
         color: #ffffff;
       }
 
-      &:active {
+      .titlebar__button.titlebar__button--close:active {
         background: #f1707a; // Windows 标准关闭按钮红色（按下）
         color: #ffffff;
       }

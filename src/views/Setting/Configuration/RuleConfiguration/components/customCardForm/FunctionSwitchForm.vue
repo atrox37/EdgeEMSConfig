@@ -1015,7 +1015,7 @@ watch(
   .section {
     margin-bottom: 24px;
 
-    &.variable-section {
+    .section.variable-section {
       padding-right: 10px;
       flex: 1 1 0;
       min-width: 0;
@@ -1023,7 +1023,7 @@ watch(
       border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    &.rule-section {
+    .section.rule-section {
       flex: 1 1 0;
       min-width: 0;
       height: 100%;
@@ -1068,8 +1068,8 @@ watch(
       flex-direction: column;
       gap: 8px;
 
-      &.variable,
-      &.rule {
+      .section__body.variable,
+      .section__body.rule {
         height: calc(100% - 44px);
         overflow-y: auto;
         scrollbar-gutter: stable;
@@ -1180,7 +1180,7 @@ watch(
     // padding-bottom: 20px;
     // border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-    &:last-child {
+    .rule-row:last-child {
       padding-bottom: 0;
       border-bottom: none;
     }

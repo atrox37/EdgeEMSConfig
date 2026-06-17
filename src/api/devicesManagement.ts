@@ -1,4 +1,4 @@
-import { Request } from '@/utils/request'
+import { Request, type RequestConfig } from '@/utils/request'
 import type { ApiResponse } from '@/types/user'
 import type {
   DeviceInstanceDetailResponse,
@@ -48,6 +48,15 @@ export const executeMeasurement = (
   return Request.post(`/modApi/api/instances/${instanceId}/measurement`, data)
 }
 
+/** 更新/写入单个属性值 */
+export const upsertInstanceProperty = (
+  instanceId: number,
+  propertyId: number,
+  data: { value: unknown },
+): Promise<ApiResponse<any>> => {
+  return Request.put(`/modApi/api/instances/${instanceId}/properties/${propertyId}`, data)
+}
+
 /** 获取设备实例点位映射 */
 export const getInstanceMappings = (
   instanceId: number,
@@ -78,8 +87,8 @@ export const updateInstanceRouting = (
   return Request.put(`/ruleApi/api/instances/${instanceId}/routing`, data)
 }
 
-export const getAllInstances = () => {
-  return Request.get('/modApi/api/instances/list')
+export const getAllInstances = (config?: RequestConfig) => {
+  return Request.get('/modApi/api/instances/list', undefined, config)
 }
 
 /** 批量获取实例信息（用于回显优化） */
@@ -89,4 +98,11 @@ export const getInstancesByIds = (ids: number[]) => {
   }
   const idsParam = ids.join(',')
   return Request.get(`/modApi/api/instances/search`, { ids: idsParam })
+}
+
+/** 获取实例关联的通道ID汇总（用于拓扑节点自动回填 channelIds） */
+export const getInstanceChannelSummary = (
+  instanceId: number,
+): Promise<ApiResponse<{ instanceId: number; channelIds: number[]; channelNames?: string[]; routingCount?: number }>> => {
+  return Request.get(`/modApi/api/instances/${instanceId}/channel-summary`)
 }

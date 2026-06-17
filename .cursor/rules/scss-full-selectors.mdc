@@ -1,0 +1,38 @@
+---
+description: SCSS 样式书写规范——使用完整类名，禁止 & 简写
+globs:
+  - "**/*.vue"
+  - "**/*.scss"
+---
+
+# SCSS 选择器规范
+
+编写或修改 `<style lang="scss">` 与 `.scss` 文件时：
+
+## 必须
+
+- 使用**完整类名**书写 BEM 与状态选择器，便于 Code Review。
+- 示例：
+  - `&__body` → `.block__body`
+  - `&--modifier` → `.block--modifier`
+  - `&.is-active` → `.block.is-active`
+  - `&:hover` → `.block:hover`
+
+## 禁止
+
+- 不要使用 `&__xxx`、`&--xxx`、`&.xxx`、`&:hover` 等 `&` 父选择器简写（新代码与改动均适用）。
+
+## 例外
+
+- `src/assets/styles/element/` 下 Element Plus 全局覆盖可保留 `&`（结构复杂，由专人维护）。
+- `:deep()`、`@media`、`@include` 等 at-rule 不受此限。
+
+## 批量检查
+
+```bash
+# 检查业务代码中残留的 & 简写（排除 element）
+rg "^\s+&" src/views src/components src/layout --glob "*.{vue,scss}"
+
+# 批量展开（排除 element 目录）
+node script/flatten-scss-ampersand.mjs
+```

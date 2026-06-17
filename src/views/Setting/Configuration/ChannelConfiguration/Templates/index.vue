@@ -439,7 +439,7 @@ onMounted(async () => {
     flex-shrink: 0;
     transition: opacity 0.2s;
 
-    &:hover {
+    .rule-management__reload-icon:hover {
       opacity: 0.7;
     }
 

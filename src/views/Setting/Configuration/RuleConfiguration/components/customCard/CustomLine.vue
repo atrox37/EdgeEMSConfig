@@ -147,9 +147,10 @@ const handleClick = (event) => {
   pointer-events: none;
   stroke:v-bind(color);
   stroke-width:v-bind(strokeWidth);
-  &:hover {
-    stroke:v-bind(hoverColor);
-    stroke-width:v-bind(hoverStrokeWidth);
-  }
+}
+
+.vue-flow__edge-path:hover {
+  stroke:v-bind(hoverColor);
+  stroke-width:v-bind(hoverStrokeWidth);
 }
 </style>

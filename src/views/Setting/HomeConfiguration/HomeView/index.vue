@@ -472,7 +472,7 @@ const handleNext = () => {
   justify-content: space-between;
   z-index: 2;
 
-  &::before {
+  .home::before {
     content: '';
     position: absolute;
     top: -20px;
@@ -576,7 +576,7 @@ const handleNext = () => {
           padding-bottom: 13px;
           border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
 
-          &:last-child {
+          .home-stationItem:last-child {
             border-bottom: none;
             // padding-bottom: 0;
             margin-bottom: 0;
@@ -671,24 +671,24 @@ const handleNext = () => {
         /* IE and Edge */
 
         // Webkit浏览器隐藏滚动条
-        &::-webkit-scrollbar {
+        .home-altersList::-webkit-scrollbar {
           width: 0;
           height: 0;
         }
 
         // 鼠标悬停时显示滚动条
-        &:hover {
+        .home-altersList:hover {
           scrollbar-width: auto;
           /* Firefox */
           -ms-overflow-style: auto;
           /* IE and Edge */
 
-          &::-webkit-scrollbar {
+          .home-altersList:hover::-webkit-scrollbar {
             width: 4px;
             height: 4px;
           }
 
-          &::-webkit-scrollbar-thumb {
+          .home-altersList:hover::-webkit-scrollbar-thumb {
             border-radius: 2px;
           }
         }
@@ -719,12 +719,12 @@ const handleNext = () => {
             line-height: 16px;
             font-weight: 400;
 
-            &:last-child {
+            .alters__item-msg:last-child {
               border-bottom: none;
             }
           }
 
-          &:last-child {
+          .home-altersItem:last-child {
             border-bottom: none;
           }
         }
@@ -816,6 +816,38 @@ const handleNext = () => {
 
 .custom-arrow-right {
   right: 10px;
+}
+
+/* 修复被错误嵌套导致失效的首页样式选择器 */
+.home::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  background: url('@/assets/images/home-bg.png') no-repeat center center;
+  background-size: 100% 100%;
+  z-index: 1;
+}
+
+.home .home-right .home-station .home-stationList .home-stationItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.home .home-right .home-alters .home-altersList::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.home .home-right .home-alters .home-altersList:hover::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.home .home-right .home-alters .home-altersList:hover::-webkit-scrollbar-thumb {
+  border-radius: 2px;
 }
 
 </style>

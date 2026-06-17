@@ -15,6 +15,27 @@
 // 导入 Vue Flow 样式
 @use './vueflow.scss' as vueflow;
 
+// 模块页标题（各配置页共用）
+@use './_module-page-header.scss';
+
+// 可视化建模页：占满主内容区并显示画布
+.main-layout__content:has(.modeling-editor) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .modeling-editor {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+}
+
+// Visual Modeling 下拉/弹出层需高于全屏编辑器 (z-index: 10000)
+.visual-modeling-popper.el-popper {
+  z-index: 10051 !important;
+}
+
 // 导入设备监控滚动条样式
 // @use './device-monitoring-scroller.scss';
 

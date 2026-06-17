@@ -1,111 +1,101 @@
 <template>
-  <div class="voltage-class modeling-editor" :class="{ 'is-fullscreen': isFullscreen }">
-    <!-- 顶部工具栏 -->
-    <div class="modeling-editor__topbar">
-      <el-button size="small" text @click="goBack">
-        <AppIcon name="i-tabler-arrow-left" style="margin-right:4px" />
-        返回
-      </el-button>
-      <div class="modeling-editor__topbar-title">
-        <AppIcon name="i-tabler-topology-star" style="margin-right:6px;opacity:0.7" />
-        {{ modelTitle }}
-      </div>
-
-      <div class="modeling-editor__topbar-actions">
-        <!-- 撤销/重做 -->
-        <el-tooltip content="撤销 (Ctrl+Z)" placement="bottom">
-          <el-button size="small" :disabled="!canUndo" @click="undo">
-            <AppIcon name="i-tabler-arrow-back-up" />
-          </el-button>
-        </el-tooltip>
-        <el-tooltip content="重做 (Ctrl+Y)" placement="bottom">
-          <el-button size="small" :disabled="!canRedo" @click="redo">
-            <AppIcon name="i-tabler-arrow-forward-up" />
-          </el-button>
-        </el-tooltip>
-
-        <div class="modeling-editor__sep" />
-
-        <el-button size="small" @click="handleAutoLayout">
-          <AppIcon name="i-tabler-layout-distribute-vertical" style="margin-right:4px" />
-          自动布局
+  <div class="voltage-class rule-management modeling-editor" :class="{ 'is-fullscreen': isFullscreen }">
+    <ModulePageHeader title="Visual Modeling">
+      <template #toolbar>
+        <el-button size="small" type="primary" class="custom-button" @click="toggleFullscreen">
+          <AppIcon
+            :name="isFullscreen ? 'i-tabler-arrows-minimize' : 'i-tabler-arrows-maximize'"
+            class="modeling-editor__toolbar-icon"
+          />
+          {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
         </el-button>
 
-        <!-- 导出下拉 -->
-        <el-dropdown trigger="click" @command="handleExportCommand">
-          <el-button size="small">
-            <AppIcon name="i-tabler-download" style="margin-right:4px" />
-            导出
-            <AppIcon name="i-tabler-chevron-down" style="margin-left:2px;width:11px;height:11px" />
+        <el-dropdown
+          v-if="isViewMode"
+          trigger="click"
+          :teleported="true"
+          popper-class="visual-modeling-popper"
+          :disabled="exportLoading"
+          @command="handleExportCommand"
+        >
+          <el-button size="small" type="primary" class="custom-button" :loading="exportLoading">
+            <AppIcon name="i-tabler-file-export" class="modeling-editor__toolbar-icon" />
+            Export
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="json">
-                <AppIcon name="i-tabler-file-type-js" style="margin-right:6px" />
-                导出 JSON
-              </el-dropdown-item>
-              <el-dropdown-item command="png">
-                <AppIcon name="i-tabler-photo" style="margin-right:6px" />
-                导出 PNG 图片
-              </el-dropdown-item>
+              <el-dropdown-item command="json">Export JSON</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
 
-        <el-button size="small" @click="handleImportClick">
-          <AppIcon name="i-tabler-upload" style="margin-right:4px" />
-          导入
-        </el-button>
-        <el-button size="small" @click="toggleFullscreen">
-          <AppIcon
-            :name="isFullscreen ? 'i-tabler-arrows-minimize' : 'i-tabler-arrows-maximize'"
-            style="margin-right:4px"
-          />
-          {{ isFullscreen ? '退出全屏' : '全屏' }}
-        </el-button>
         <el-button
+          v-if="isViewMode"
           size="small"
           type="primary"
-          :disabled="!hasUnsavedChanges"
-          @click="handleSave"
+          class="custom-button"
+          @click="enterEditMode"
         >
-          <AppIcon name="i-tabler-device-floppy" style="margin-right:4px" />
-          保存
+          <AppIcon name="i-tabler-pencil" class="modeling-editor__toolbar-icon" />
+          Edit
         </el-button>
-      </div>
-    </div>
 
-    <!-- 主体区域 -->
+        <template v-if="!isViewMode">
+          <el-button size="small" class="custom-button" @click="handleAutoLayout">
+            <AppIcon name="i-tabler-layout-distribute-vertical" style="margin-right:4px" />
+            Auto Layout
+          </el-button>
+          <el-button size="small" type="primary" class="custom-button" @click="handleImportClick">
+            <AppIcon name="i-tabler-upload" class="modeling-editor__toolbar-icon" />
+            Import
+          </el-button>
+          <el-button
+            size="small"
+            type="primary"
+            class="custom-button"
+            @click="handleExitEdit"
+          >
+            <AppIcon name="i-tabler-arrow-left" class="modeling-editor__toolbar-icon" />
+            Exit Edit
+          </el-button>
+        </template>
+      </template>
+    </ModulePageHeader>
+
     <div class="modeling-editor__body">
-      <!-- 左侧节点面板 -->
-      <LeftPanel />
+      <LeftPanel v-if="!isViewMode" v-model:collapsed="leftPanelCollapsed" />
 
-      <!-- 画布 -->
       <div ref="canvasRef" class="modeling-editor__canvas">
         <VueFlow
-          v-model:nodes="nodes"
-          v-model:edges="edges"
-          fit-view-on-init
+          :nodes="nodes"
+          :edges="edges"
           :node-types="nodeTypes"
-          :default-edge-options="defaultEdgeOptions"
           :connection-mode="ConnectionMode.Loose"
+          :connection-radius="48"
+          :connect-on-click="false"
           :connection-line-style="{ stroke: '#ff8a00', strokeWidth: 2.5 }"
           :min-zoom="0.1"
           :max-zoom="4"
           :snap-to-grid="true"
           :snap-grid="[10, 10]"
-          :nodes-draggable="true"
-          :nodes-connectable="true"
-          :elements-selectable="true"
-          class="modeling-editor__flow"
-          @drop.prevent="handleDrop"
-          @dragover.prevent="onDragOver"
-          @dragleave="onDragLeave"
-          @connect="handleConnect"
+          :nodes-draggable="!isViewMode"
+          :nodes-connectable="!isViewMode"
+          :nodes-deletable="!isViewMode"
+          :edges-deletable="!isViewMode"
+          :delete-key-code="isViewMode ? null : true"
+          :elements-selectable="!isViewMode"
+          :edges-focusable="!isViewMode"
+          :elevate-edges-on-select="!isViewMode"
+          :elevate-nodes-on-select="!isViewMode"
+          :class="['modeling-editor__flow', { 'modeling-editor__flow--view': isViewMode }]"
+          @drop.prevent="handleDropGuard"
+          @dragover.prevent="handleDragOverGuard"
+          @dragleave="handleDragLeaveGuard"
+          @connect="handleConnectGuard"
           @node-click="handleNodeClick"
-          @edge-click="handleEdgeClick"
+          @edge-click="handleEdgeClickGuard"
           @pane-click="handlePaneClick"
-          @edge-double-click="handleEdgeDoubleClick"
+          @edge-double-click="handleEdgeDoubleClickGuard"
         >
           <Background variant="lines" :gap="20" color="rgba(180,180,180,0.35)" />
           <MiniMap
@@ -118,38 +108,47 @@
           <Controls position="bottom-right" />
         </VueFlow>
 
-        <!-- 选中边的浮动工具栏 -->
         <Transition name="edge-toolbar">
-          <div v-if="selectedEdgeId" class="modeling-editor__edge-toolbar">
-            <span class="edge-toolbar__label">连线类型：</span>
-            <button
-              v-for="t in EDGE_VARIANTS"
-              :key="t.value"
-              class="edge-toolbar__btn"
-              :class="{ active: currentEdgeVariant === t.value }"
-              :style="{ '--ec': t.color }"
-              :title="t.label"
-              @click="setEdgeVariant(t.value)"
-            >
-              <AppIcon :name="t.icon" />
-              <span>{{ t.label }}</span>
-            </button>
-            <div class="edge-toolbar__sep" />
-            <button class="edge-toolbar__btn edge-toolbar__btn--label" :title="'编辑标签'" @click="openEdgeLabelEdit">
+          <div v-if="!isViewMode && selectedEdgeId" class="modeling-editor__edge-toolbar">
+            <button class="edge-toolbar__btn edge-toolbar__btn--label" title="Edit label" @click="openEdgeLabelEdit">
               <AppIcon name="i-tabler-tag" />
-              <span>标签</span>
+              <span>Label</span>
             </button>
-            <button class="edge-toolbar__btn edge-toolbar__btn--del" title="删除连线" @click="deleteSelectedEdge">
+            <button class="edge-toolbar__btn edge-toolbar__btn--del" title="Delete edge" @click="deleteSelectedEdge">
               <AppIcon name="i-tabler-trash" />
-              <span>删除</span>
+              <span>Delete</span>
             </button>
           </div>
         </Transition>
+
+        <div v-if="!isViewMode" class="modeling-editor__floating-actions">
+          <el-button
+            circle
+            class="floating-btn floating-btn--cancel"
+            title="Restore to last saved"
+            :disabled="!hasUnsavedChanges"
+            @click="handleRestoreToSaved"
+          >
+            ×
+          </el-button>
+          <el-button
+            circle
+            type="primary"
+            class="floating-btn floating-btn--submit"
+            :class="{ 'is-dirty': hasUnsavedChanges }"
+            :disabled="!hasUnsavedChanges"
+            title="Save"
+            @click="handleSave"
+          >
+            √
+          </el-button>
+        </div>
       </div>
 
-      <!-- 右侧属性面板 -->
       <RightPanel
+        v-if="selectedNode"
         :selected-node="selectedNode"
+        :readonly="isViewMode"
         @update-node="handleUpdateNode"
         @delete-node="handleDeleteNode"
       />
@@ -158,14 +157,14 @@
     <!-- 边标签编辑对话框 -->
     <el-dialog
       v-model="edgeLabelDialogVisible"
-      title="编辑连线标签"
+      title="Edit Edge Label"
       width="340px"
       destroy-on-close
     >
-      <el-input v-model="editingEdgeLabel" placeholder="连线标签（如：分类、包含、关联）" clearable />
+      <el-input v-model="editingEdgeLabel" placeholder="Edge label (e.g. contains, relates)" clearable />
       <template #footer>
-        <el-button @click="edgeLabelDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmEdgeLabel">确定</el-button>
+        <el-button @click="edgeLabelDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="confirmEdgeLabel">OK</el-button>
       </template>
     </el-dialog>
 
@@ -181,60 +180,86 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, markRaw, computed, onMounted, onUnmounted, nextTick, provide } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   VueFlow,
   ConnectionMode,
   useVueFlow,
+  MarkerType,
   type Connection,
   type Node as FlowNode,
   type Edge as FlowEdge,
+  type NodeChange,
+  type EdgeChange,
+  type NodeTypesObject,
 } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
 import '@vue-flow/node-resizer/dist/style.css'
-import { toPng } from 'html-to-image'
 
 import AppIcon from '@/components/AppIcon.vue'
+import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 import LeftPanel from './components/LeftPanel.vue'
 import RightPanel from './components/RightPanel.vue'
 import StationNode from './components/customNodes/StationNode.vue'
 import ProductNode from './components/customNodes/ProductNode.vue'
 import GroupNode from './components/customNodes/GroupNode.vue'
 
-import { useVisualModelingStore } from '@/stores/visualModeling'
-import useModelDnd from './useModelDnd'
+import { useVisualModelingStore, STATION_EDITOR_ID } from '@/stores/visualModeling'
+import useModelDnd, { findContainerForNode } from './useModelDnd'
+import { layoutModelGraph } from './useModelLayout'
+import {
+  createDefaultModelFlow,
+  createFlowEdgeId,
+  isEmptyFlow,
+  repairMissingFlowEdges,
+} from '@/utils/defaultModelFlow'
+import type { ModelFlowData } from '@/types/visualModeling'
+import {
+  getConnectionRuleHint,
+  hasEdgeBetweenNodesEitherDirection,
+  resolveConnectionEndpoints,
+  correctEdgeDirection,
+  toSourceHandle,
+  toTargetHandle,
+} from '@/utils/modelFlowRules'
+import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 import type { ModelFlowNode } from '@/types/visualModeling'
+import { MODELING_EDITOR_KEY } from './modelingEditorContext'
 
-const route = useRoute()
-const router = useRouter()
 const store = useVisualModelingStore()
+const modelId = STATION_EDITOR_ID
 
 const { onDragOver, onDragLeave, onDrop: dndOnDrop } = useModelDnd()
 const {
-  addEdges,
   setNodes,
   setEdges,
-  toObject,
-  removeNodes,
+  addEdges,
   removeEdges,
+  applyEdgeChanges,
+  onNodesChange,
+  onEdgesChange,
+  onNodeDragStop,
+  toObject,
   fitView,
   getNodes,
+  updateNode,
+  findNode,
 } = useVueFlow()
 
-// ---- 节点类型注册 ----
-const nodeTypes: any = {
-  station: StationNode,
-  product: ProductNode,
-  group: GroupNode,
-}
+// ---- 节点类型注册（markRaw 避免 Vue Flow 节点被深度响应式包装）----
+const nodeTypes = {
+  station: markRaw(StationNode),
+  product: markRaw(ProductNode),
+  group: markRaw(GroupNode),
+} as unknown as NodeTypesObject
 
 // ---- 连线类型定义 ----
-type EdgeVariantKey = 'hierarchy' | 'association' | 'dataflow' | 'classification'
+type EdgeVariantKey = 'hierarchy' | 'association' | 'dataflow'
 
 interface EdgeVariantDef {
   value: EdgeVariantKey
@@ -249,7 +274,7 @@ interface EdgeVariantDef {
 const EDGE_VARIANTS: EdgeVariantDef[] = [
   {
     value: 'hierarchy',
-    label: '层级',
+    label: 'Hierarchy',
     icon: 'i-tabler-git-branch',
     color: '#6F3381',
     animated: false,
@@ -257,7 +282,7 @@ const EDGE_VARIANTS: EdgeVariantDef[] = [
   },
   {
     value: 'association',
-    label: '关联',
+    label: 'Association',
     icon: 'i-tabler-arrows-exchange',
     color: '#4a90d9',
     strokeDasharray: '6 4',
@@ -266,63 +291,63 @@ const EDGE_VARIANTS: EdgeVariantDef[] = [
   },
   {
     value: 'dataflow',
-    label: '数据流',
+    label: 'Data Flow',
     icon: 'i-tabler-wave-sine',
     color: '#43a047',
-    strokeDasharray: '8 4',
+    strokeDasharray: '16 10',
     animated: true,
-    bidirectional: false,
-  },
-  {
-    value: 'classification',
-    label: '分类',
-    icon: 'i-tabler-sitemap',
-    color: '#ef6c00',
-    strokeDasharray: '4 4',
-    animated: false,
     bidirectional: false,
   },
 ]
 
-function buildEdgeStyle(variant: EdgeVariantKey): Partial<FlowEdge> {
+function buildEdgeStyle(
+  variant: EdgeVariantKey,
+  options?: { dataFlowActive?: boolean },
+): Partial<FlowEdge> {
   const def = EDGE_VARIANTS.find((v) => v.value === variant) ?? EDGE_VARIANTS[0]
+  const animated =
+    variant === 'dataflow' ? (options?.dataFlowActive ?? true) : def.animated
+  const marker = { type: MarkerType.ArrowClosed, color: def.color, width: 10, height: 10 }
   return {
     type: 'smoothstep',
-    animated: def.animated,
+    animated,
+    zIndex: 1001,
     style: {
       stroke: def.color,
       strokeWidth: 2.5,
       ...(def.strokeDasharray ? { strokeDasharray: def.strokeDasharray } : {}),
     },
-    markerEnd: { type: 'arrowclosed', color: def.color },
-    ...(def.bidirectional ? { markerStart: { type: 'arrowclosed', color: def.color } } : {}),
-    data: { edgeVariant: variant },
+    markerEnd: marker,
+    ...(def.bidirectional ? { markerStart: { ...marker } } : {}),
+    data: { edgeVariant: variant, dataFlowActive: variant === 'dataflow' ? animated : undefined },
   }
 }
 
 // ---- 基础状态 ----
 const nodes = ref<FlowNode[]>([])
 const edges = ref<FlowEdge[]>([])
+const isViewMode = ref(true)
 const isFullscreen = ref(false)
+const leftPanelCollapsed = ref(false)
 const hasUnsavedChanges = ref(false)
 const selectedNode = ref<ModelFlowNode | null>(null)
 const selectedEdgeId = ref<string | null>(null)
 const edgeLabelDialogVisible = ref(false)
 const editingEdgeLabel = ref('')
-const canvasRef = ref<HTMLElement | null>(null)
 const importInput = ref<HTMLInputElement | null>(null)
+const exportLoading = ref(false)
 
-const modelId = computed(() => route.params.id as string)
-const modelTitle = computed(() => store.getModelById(modelId.value)?.name ?? '可视化建模')
-
-const currentEdgeVariant = computed<EdgeVariantKey>(() => {
-  if (!selectedEdgeId.value) return 'hierarchy'
-  const edge = edges.value.find((e) => e.id === selectedEdgeId.value)
-  return (edge?.data?.edgeVariant as EdgeVariantKey) ?? 'hierarchy'
+provide(MODELING_EDITOR_KEY, {
+  isViewMode,
+  notifyFlowChanged: () => {
+    if (isViewMode.value || isRestoringHistory) return
+    void nextTick().then(() => {
+      nodes.value = getFlowNodes()
+      markDirty()
+      saveSnapshot()
+    })
+  },
 })
-
-// ---- 默认边样式 ----
-const defaultEdgeOptions = computed(() => buildEdgeStyle('hierarchy'))
 
 // ---- 撤销/重做 ----
 type Snapshot = { nodes: any[]; edges: any[] }
@@ -330,100 +355,475 @@ const MAX_HISTORY = 50
 const snapshots = ref<Snapshot[]>([])
 const snapIdx = ref(-1)
 let isRestoringHistory = false
+/** 上次已保存/加载时的画布基线（× 恢复目标） */
+const savedSnapshot = ref<Snapshot | null>(null)
 
-const canUndo = computed(() => snapIdx.value > 0)
-const canRedo = computed(() => snapIdx.value < snapshots.value.length - 1)
-
-function saveSnapshot() {
-  if (isRestoringHistory) return
-  const s: Snapshot = {
-    nodes: JSON.parse(JSON.stringify(nodes.value)),
-    edges: JSON.parse(JSON.stringify(edges.value)),
-  }
-  snapshots.value = snapshots.value.slice(0, snapIdx.value + 1)
-  snapshots.value.push(s)
-  if (snapshots.value.length > MAX_HISTORY) snapshots.value.shift()
-  else snapIdx.value++
+function markDirty() {
+  if (isViewMode.value) return
+  const dirty = !isSameAsSavedSnapshot()
+  hasUnsavedChanges.value = dirty
+  store.hasUnsavedChanges = dirty
 }
 
-function undo() {
+function getFlowNodes(): FlowNode[] {
+  const fromRef = nodes.value
+  const fromFlow = getNodes.value as FlowNode[]
+  return (fromRef.length >= fromFlow.length ? fromRef : fromFlow) as FlowNode[]
+}
+
+function getFlowEdges(): FlowEdge[] {
+  const fromRef = edges.value
+  const fromFlow = toObject().edges as FlowEdge[]
+  const pick = fromRef.length >= fromFlow.length ? fromRef : fromFlow
+  return JSON.parse(JSON.stringify(pick)) as FlowEdge[]
+}
+
+/** 将 Vue Flow 内部边同步到本地 ref（单向绑定时以内部状态为准） */
+async function syncEdgesFromFlow() {
+  await nextTick()
+  const latest = (toObject().edges ?? []) as FlowEdge[]
+  const normalized = normalizeFlowEdges(JSON.parse(JSON.stringify(latest)))
+  edges.value = normalized
+  setEdges(normalized)
+}
+
+/** 导出当前画布（保存/持久化必须用此函数，避免 toObject 丢边） */
+function exportCurrentFlow(): ModelFlowData {
+  const flowObj = toObject()
+  const flowNodes = JSON.parse(JSON.stringify(getFlowNodes())) as FlowNode[]
+  let flowEdges = getFlowEdges()
+  const objectEdges = (flowObj.edges ?? []) as FlowEdge[]
+  if (objectEdges.length > flowEdges.length) {
+    flowEdges = JSON.parse(JSON.stringify(objectEdges)) as FlowEdge[]
+  }
+  return {
+    nodes: flowNodes as unknown as ModelFlowData['nodes'],
+    edges: flowEdges as unknown as ModelFlowData['edges'],
+  }
+}
+
+async function captureSavedSnapshot(): Promise<boolean> {
+  await nextTick()
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  const flowNodes = getFlowNodes()
+  const flowEdges = getFlowEdges()
+  if (!flowNodes.length) return false
+  savedSnapshot.value = {
+    nodes: JSON.parse(JSON.stringify(flowNodes)),
+    edges: JSON.parse(JSON.stringify(flowEdges)),
+  }
+  return true
+}
+
+function isSameAsSavedSnapshot(): boolean {
+  if (!savedSnapshot.value?.nodes?.length) return true
+  const current = {
+    nodes: getFlowNodes(),
+    edges: getFlowEdges(),
+  }
+  return (
+    JSON.stringify(current.nodes) === JSON.stringify(savedSnapshot.value.nodes)
+    && JSON.stringify(current.edges) === JSON.stringify(savedSnapshot.value.edges)
+  )
+}
+
+function pushUndoSnapshot() {
+  if (isRestoringHistory || isViewMode.value) return
+  const s: Snapshot = {
+    nodes: JSON.parse(JSON.stringify(getFlowNodes())),
+    edges: JSON.parse(JSON.stringify(getFlowEdges())),
+  }
+  const next = snapshots.value.slice(0, snapIdx.value + 1)
+  next.push(s)
+  while (next.length > MAX_HISTORY) {
+    next.shift()
+    snapIdx.value = Math.max(0, snapIdx.value - 1)
+  }
+  snapshots.value = next
+  snapIdx.value = next.length - 1
+}
+
+function saveSnapshot() {
+  pushUndoSnapshot()
+  markDirty()
+}
+
+async function undo() {
   if (!canUndo.value) return
   snapIdx.value--
   const s = snapshots.value[snapIdx.value]
-  isRestoringHistory = true
-  setNodes(JSON.parse(JSON.stringify(s.nodes)))
-  setEdges(JSON.parse(JSON.stringify(s.edges)))
+  await applyFlowState(
+    JSON.parse(JSON.stringify(s.nodes)) as FlowNode[],
+    JSON.parse(JSON.stringify(s.edges)) as FlowEdge[],
+  )
   selectedNode.value = null
   selectedEdgeId.value = null
-  hasUnsavedChanges.value = true
-  nextTick(() => { isRestoringHistory = false })
+  markDirty()
 }
 
-function redo() {
+async function redo() {
   if (!canRedo.value) return
   snapIdx.value++
   const s = snapshots.value[snapIdx.value]
-  isRestoringHistory = true
-  setNodes(JSON.parse(JSON.stringify(s.nodes)))
-  setEdges(JSON.parse(JSON.stringify(s.edges)))
+  await applyFlowState(
+    JSON.parse(JSON.stringify(s.nodes)) as FlowNode[],
+    JSON.parse(JSON.stringify(s.edges)) as FlowEdge[],
+  )
   selectedNode.value = null
   selectedEdgeId.value = null
-  hasUnsavedChanges.value = true
-  nextTick(() => { isRestoringHistory = false })
+  markDirty()
+}
+
+function onNodesChangeHandler(changes: NodeChange[]) {
+  if (isViewMode.value || isRestoringHistory) return
+  const meaningful = changes.some(
+    (c) =>
+      c.type === 'position'
+      || c.type === 'add'
+      || c.type === 'remove'
+      || c.type === 'dimensions',
+  )
+  if (!meaningful) return
+  void nextTick().then(() => {
+    nodes.value = (toObject().nodes ?? nodes.value) as FlowNode[]
+  })
+  markDirty()
+  saveSnapshot()
+}
+
+function purgeInvalidFlowEdges() {
+  const current = (toObject().edges ?? []) as FlowEdge[]
+  const valid = current.filter((e) => e?.id && e.source && e.target)
+  if (valid.length === current.length) return
+  const normalized = normalizeFlowEdges(valid)
+  setEdges(normalized)
+  edges.value = normalized
+}
+
+function onEdgesChangeHandler(changes: EdgeChange[]) {
+  const list = changes || []
+  const safe = list.filter((change) => {
+    if (change.type !== 'add') return true
+    const item = (change as { item?: FlowEdge }).item
+    return !!(item?.source && item?.target)
+  })
+
+  if (safe.length) {
+    applyEdgeChanges(safe)
+  }
+
+  if (safe.length !== list.length) {
+    purgeInvalidFlowEdges()
+  }
+
+  if (isViewMode.value || isRestoringHistory) return
+  const meaningful = safe.filter((c) => c.type !== 'select')
+  if (!meaningful.some((c) => c.type === 'add' || c.type === 'remove')) return
+
+  void nextTick().then(() => {
+    purgeInvalidFlowEdges()
+    edges.value = normalizeFlowEdges((toObject().edges ?? []) as FlowEdge[])
+    markDirty()
+    saveSnapshot()
+  })
+}
+
+onNodesChange(onNodesChangeHandler)
+onEdgesChange(onEdgesChangeHandler)
+
+function enrichNodesWithImages(flowNodes: FlowNode[]): FlowNode[] {
+  return flowNodes.map((node) => {
+    if (node.type !== 'product') return node
+    const data = node.data as { productName?: string; imageUrl?: string }
+    if (data.imageUrl) return node
+    const imageUrl = getProductInstanceImageUrl(data.productName)
+    if (!imageUrl) return node
+    return { ...node, data: { ...node.data, imageUrl } }
+  })
+}
+
+async function hydrateCanvasFromFlow(
+  rawFlow: ModelFlowData,
+  options?: { autoLayout?: boolean },
+) {
+  const flow = repairMissingFlowEdges(rawFlow)
+  const nodesWithImages = enrichNodesWithImages(flow.nodes as FlowNode[])
+  const flowEdges = normalizeFlowEdges((flow.edges ?? []) as FlowEdge[], nodesWithImages)
+  await applyFlowState(nodesWithImages, flowEdges)
+  if (options?.autoLayout) {
+    const preservedEdges = JSON.parse(JSON.stringify(getFlowEdges())) as FlowEdge[]
+    await runAutoLayout({ silent: true, fitView: false, markDirty: false })
+    const nodeIds = new Set(getFlowNodes().map((n) => n.id))
+    const safe = normalizeFlowEdges(preservedEdges).filter(
+      (e) => nodeIds.has(e.source) && nodeIds.has(e.target),
+    )
+    isRestoringHistory = true
+    setEdges(safe)
+    await nextTick()
+    edges.value = normalizeFlowEdges((toObject().edges ?? safe) as FlowEdge[])
+    isRestoringHistory = false
+  }
+}
+
+// ---- 查看 / 编辑模式：× 恢复到最近一次已持久化的拓扑 ----
+async function restoreToSavedSnapshot() {
+  try {
+    await store.loadStationTopology(true)
+  } catch {
+    ElMessage.error('Failed to reload saved topology')
+    return false
+  }
+  const model = store.getModelById(modelId)
+  if (!model?.flowJson?.nodes?.length) {
+    ElMessage.warning('No saved baseline to restore')
+    hasUnsavedChanges.value = false
+    return false
+  }
+  await hydrateCanvasFromFlow(model.flowJson, { autoLayout: false })
+  if (!getFlowNodes().length) {
+    ElMessage.error('Restore failed')
+    hasUnsavedChanges.value = false
+    return false
+  }
+  selectedNode.value = null
+  selectedEdgeId.value = null
+  snapshots.value = []
+  snapIdx.value = -1
+  hasUnsavedChanges.value = false
+  store.hasUnsavedChanges = false
+  await captureSavedSnapshot()
+  return true
+}
+
+async function enterEditMode() {
+  if (!savedSnapshot.value?.nodes?.length) {
+    await captureSavedSnapshot()
+  }
+  isViewMode.value = false
+  selectedNode.value = null
+  selectedEdgeId.value = null
+  snapshots.value = []
+  snapIdx.value = -1
+  hasUnsavedChanges.value = false
+  store.hasUnsavedChanges = false
+  nextTick(() => pushUndoSnapshot())
+}
+
+function exitEditMode() {
+  isViewMode.value = true
+  selectedNode.value = null
+  selectedEdgeId.value = null
+  nextTick(() => fitFlowToViewport(true))
+}
+
+async function handleExitEdit() {
+  if (!hasUnsavedChanges.value) {
+    exitEditMode()
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      'You have unsaved changes. Discard them and exit edit mode?',
+      'Unsaved Changes',
+      {
+        confirmButtonText: 'Discard',
+        cancelButtonText: 'Keep Editing',
+        type: 'warning',
+        appendTo: document.body,
+        customClass: 'visual-modeling-confirm-box',
+      },
+    )
+    await restoreToSavedSnapshot()
+    exitEditMode()
+  } catch {
+    // keep editing
+  }
+}
+
+async function handleRestoreToSaved() {
+  if (!hasUnsavedChanges.value) {
+    ElMessage.info('Already matches the last saved state')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      'Restore canvas to the last saved state? Unsaved edits will be lost.',
+      'Restore',
+      {
+        confirmButtonText: 'Restore',
+        cancelButtonText: 'Cancel',
+        type: 'warning',
+        appendTo: document.body,
+        customClass: 'visual-modeling-confirm-box',
+      },
+    )
+    const ok = await restoreToSavedSnapshot()
+    if (ok) ElMessage.success('Restored to last saved state')
+  } catch {
+    // cancelled
+  }
+}
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
+  nextTick(() => fitFlowToViewport(true))
 }
 
 // ---- 键盘快捷键 ----
 function onKeydown(e: KeyboardEvent) {
+  if (isViewMode.value) {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    return
+  }
   const mod = e.ctrlKey || e.metaKey
   if (!mod) return
-  if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
-  if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo() }
   if (e.key === 's') { e.preventDefault(); handleSave() }
 }
+
+function handleDropGuard(e: DragEvent) {
+  if (isViewMode.value) return
+  handleDrop(e)
+}
+
+function handleDragOverGuard(e: DragEvent) {
+  if (isViewMode.value) return
+  onDragOver(e)
+}
+
+function handleDragLeaveGuard() {
+  if (isViewMode.value) return
+  onDragLeave()
+}
+
+function handleConnectGuard(connection: Connection) {
+  if (isViewMode.value) return
+  handleConnect(connection)
+}
+
+function handleEdgeClickGuard(event: any) {
+  if (isViewMode.value) return
+  handleEdgeClick(event)
+}
+
+function handleEdgeDoubleClickGuard(event: any) {
+  if (isViewMode.value) return
+  handleEdgeDoubleClick(event)
+}
+
+// ---- 节点拖拽结束：检测是否拖入了容器，若是则自动归入（re-parent） ----
+onNodeDragStop(({ node }) => {
+  if (isViewMode.value) return
+  if (node.type !== 'product') return  // 只处理设备节点
+
+  const productName = (node.data as { productName?: string }).productName || ''
+  if (!productName) return
+
+  // 已有父容器的节点受 extent='parent' 约束，无法拖出，无需处理
+  if (node.parentNode) return
+
+  // 节点当前无父容器，检查落点是否在合法容器内
+  const absPos = node.position  // 无父节点时 position 即为 flow 绝对坐标
+  const hit = findContainerForNode(productName, absPos, getNodes.value)
+  if (!hit) return
+
+  // 归入容器：更新 parentNode + 转换为相对坐标
+  updateNode(node.id, {
+    parentNode: hit.parentNodeId,
+    extent: 'parent' as const,
+    position: hit.relativePosition,
+  })
+  void nextTick().then(() => {
+    markDirty()
+    saveSnapshot()
+  })
+})
 
 // ---- 拖放 ----
 function handleDrop(e: DragEvent) {
   e.preventDefault()
   e.stopPropagation()
   dndOnDrop(e)
-  hasUnsavedChanges.value = true
-  nextTick(() => saveSnapshot())
+  void nextTick().then(() => {
+    nodes.value = getFlowNodes()
+    markDirty()
+    saveSnapshot()
+  })
 }
 
-// ---- 连线 ----
+// ---- 连线（父→子；允许从任意方向拖线并自动纠正）----
 function handleConnect(connection: Connection) {
-  const base = buildEdgeStyle('hierarchy')
-  const newEdge: FlowEdge = {
-    id: `edge-${Date.now()}`,
-    source: connection.source!,
-    target: connection.target!,
-    sourceHandle: connection.sourceHandle ?? undefined,
-    targetHandle: connection.targetHandle ?? undefined,
-    ...base,
+  if (!connection.source || !connection.target) return
+
+  const flowNodes = getFlowNodes()
+  const flowEdges = getFlowEdges()
+  const resolved = resolveConnectionEndpoints(connection, flowNodes)
+
+  if (!resolved) {
+    const source = flowNodes.find((n) => n.id === connection.source)
+    const target = flowNodes.find((n) => n.id === connection.target)
+    ElMessage.warning(getConnectionRuleHint(source, target, flowEdges))
+    void nextTick().then(() => purgeInvalidFlowEdges())
+    return
+  }
+
+  if (hasEdgeBetweenNodesEitherDirection(flowEdges, resolved.source.id, resolved.target.id)) {
+    ElMessage.info('这两个节点之间已有连线')
+    void nextTick().then(() => purgeInvalidFlowEdges())
+    return
+  }
+
+  const newEdge = normalizeFlowEdges([{
+    id: createFlowEdgeId(),
+    source: resolved.source.id,
+    target: resolved.target.id,
+    sourceHandle: resolved.sourceHandle,
+    targetHandle: resolved.targetHandle,
     labelStyle: { fontSize: '11px', fontWeight: 600, fill: '#4a5568' },
     labelBgStyle: { fill: '#ffffff', fillOpacity: 0.85 },
     labelBgPadding: [4, 6],
     labelBgBorderRadius: 4,
-  } as FlowEdge
+  } as FlowEdge], flowNodes)[0]
+
   addEdges(newEdge)
-  hasUnsavedChanges.value = true
-  nextTick(() => saveSnapshot())
+  void nextTick().then(() => {
+    edges.value = normalizeFlowEdges((toObject().edges ?? []) as FlowEdge[], getFlowNodes())
+    markDirty()
+    saveSnapshot()
+  })
 }
 
-// ---- 节点点击 ----
+// ---- 节点点击：选中并居中到画布 ----
+async function centerNodeInView(nodeId: string) {
+  await nextTick()
+  const flowNode = findNode(nodeId)
+  if (!flowNode) return
+  fitView({
+    nodes: [nodeId],
+    padding: 0.45,
+    duration: 280,
+    maxZoom: 1.2,
+    minZoom: 0.35,
+  })
+}
+
 function handleNodeClick(event: any) {
   selectedEdgeId.value = null
   const node = event.node ?? event
-  if (node?.data) {
+  const fresh = getFlowNodes().find((n) => n.id === node.id) ?? node
+  if (fresh?.data) {
     selectedNode.value = {
-      id: node.id,
-      type: node.type,
-      position: node.position,
-      data: node.data,
-      parentNode: node.parentNode,
-      extent: node.extent,
-      style: node.style,
+      id: fresh.id,
+      type: fresh.type,
+      position: fresh.position,
+      data: JSON.parse(JSON.stringify(fresh.data)),
+      parentNode: fresh.parentNode,
+      extent: fresh.extent,
+      style: fresh.style,
     } as ModelFlowNode
+    void centerNodeInView(fresh.id)
   }
 }
 
@@ -458,193 +858,220 @@ function openEdgeLabelEdit() {
 
 function confirmEdgeLabel() {
   if (!selectedEdgeId.value) return
-  const edge = edges.value.find((e) => e.id === selectedEdgeId.value)
-  if (edge) edge.label = editingEdgeLabel.value || undefined
+  const edgeId = selectedEdgeId.value
+  const label = editingEdgeLabel.value.trim() || undefined
+  const nextEdges = getFlowEdges().map((e) => (e.id === edgeId ? { ...e, label } : e))
+  const normalized = normalizeFlowEdges(nextEdges, getFlowNodes())
+  setEdges(normalized)
+  edges.value = normalized
   edgeLabelDialogVisible.value = false
-  hasUnsavedChanges.value = true
-  saveSnapshot()
-}
-
-// ---- 设置边类型 ----
-function setEdgeVariant(variant: EdgeVariantKey) {
-  if (!selectedEdgeId.value) return
-  const idx = edges.value.findIndex((e) => e.id === selectedEdgeId.value)
-  if (idx === -1) return
-  const base = buildEdgeStyle(variant)
-  edges.value[idx] = {
-    ...edges.value[idx],
-    ...base,
-    id: edges.value[idx].id,
-    source: edges.value[idx].source,
-    target: edges.value[idx].target,
-    label: edges.value[idx].label,
-  } as FlowEdge
-  hasUnsavedChanges.value = true
+  markDirty()
   saveSnapshot()
 }
 
 // ---- 删除选中边 ----
 function deleteSelectedEdge() {
   if (!selectedEdgeId.value) return
-  removeEdges([selectedEdgeId.value])
+  const edgeId = selectedEdgeId.value
+  removeEdges([edgeId])
+  edges.value = edges.value.filter((e) => e.id !== edgeId)
   selectedEdgeId.value = null
-  hasUnsavedChanges.value = true
+  markDirty()
   nextTick(() => saveSnapshot())
 }
 
 // ---- 右侧面板：更新节点 ----
 function handleUpdateNode(updated: ModelFlowNode) {
-  const idx = nodes.value.findIndex((n) => n.id === updated.id)
-  if (idx === -1) return
-  nodes.value[idx] = {
-    ...nodes.value[idx],
-    data: updated.data,
-    style: updated.style ?? nodes.value[idx].style,
-  }
-  selectedNode.value = updated
-  hasUnsavedChanges.value = true
+  updateNode(updated.id, {
+    data: JSON.parse(JSON.stringify(updated.data)),
+  })
+  selectedNode.value = JSON.parse(JSON.stringify(updated))
+  markDirty()
   saveSnapshot()
+}
+
+async function persistFlowJson() {
+  await syncEdgesFromFlow()
+  const flow = exportCurrentFlow()
+  await store.saveFlowJson(modelId, flow)
 }
 
 // ---- 右侧面板：删除节点 ----
 function handleDeleteNode(id: string) {
-  ElMessageBox.confirm('确认删除该节点？相关连线也会被删除。', '删除确认', {
+  if (isViewMode.value) return
+  ElMessageBox.confirm('Delete this node? Related edges will also be removed.', 'Delete Node', {
     type: 'warning',
-    confirmButtonText: '删除',
-    cancelButtonText: '取消',
+    confirmButtonText: 'Delete',
+    cancelButtonText: 'Cancel',
   })
     .then(() => {
-      removeNodes([id])
-      selectedNode.value = null
-      hasUnsavedChanges.value = true
-      nextTick(() => saveSnapshot())
+      const nextNodes = nodes.value.filter((n) => n.id !== id)
+      const nextEdges = edges.value.filter((e) => e.source !== id && e.target !== id)
+      isRestoringHistory = true
+      setNodes(nextNodes)
+      setEdges(nextEdges)
+      void nextTick().then(() => {
+        nodes.value = (toObject().nodes ?? nextNodes) as FlowNode[]
+        edges.value = normalizeFlowEdges((toObject().edges ?? nextEdges) as FlowEdge[])
+        isRestoringHistory = false
+        selectedNode.value = null
+        markDirty()
+        saveSnapshot()
+      })
     })
     .catch(() => {})
+}
+
+function normalizeFlowEdges(raw: FlowEdge[], flowNodes?: FlowNode[]): FlowEdge[] {
+  const nodes = flowNodes ?? getFlowNodes()
+  return raw
+    .filter((edge) => Boolean(edge?.id && edge?.source && edge?.target))
+    .map((edge) => {
+      const corrected = nodes.length
+        ? correctEdgeDirection({ ...edge }, nodes)
+        : edge
+      let variant = corrected.data?.edgeVariant as EdgeVariantKey | 'classification' | undefined
+      if (variant === 'classification' || !variant) variant = 'hierarchy'
+      const isDataflow = variant === 'dataflow'
+      const flowActive = isDataflow ? corrected.animated !== false : undefined
+      const styled = buildEdgeStyle(
+        variant,
+        isDataflow ? { dataFlowActive: flowActive } : undefined,
+      )
+      const hasLabel = corrected.label != null && String(corrected.label).trim() !== ''
+      const defaultLabelStyle = { fontSize: '11px', fontWeight: 600, fill: '#4a5568' }
+      const defaultLabelBgStyle = { fill: '#ffffff', fillOpacity: 0.92 }
+      return {
+        id: corrected.id,
+        source: corrected.source,
+        target: corrected.target,
+        sourceHandle: toSourceHandle(corrected.sourceHandle),
+        targetHandle: toTargetHandle(corrected.targetHandle),
+        type: corrected.type ?? styled.type,
+        animated: isDataflow ? flowActive : (corrected.animated ?? styled.animated),
+        zIndex: corrected.zIndex ?? styled.zIndex,
+        label: hasLabel ? String(corrected.label).trim() : corrected.label,
+        labelStyle: hasLabel
+          ? { ...defaultLabelStyle, ...(corrected.labelStyle ?? {}) }
+          : corrected.labelStyle,
+        labelBgStyle: hasLabel
+          ? { ...defaultLabelBgStyle, ...(corrected.labelBgStyle ?? {}) }
+          : corrected.labelBgStyle,
+        labelBgPadding: corrected.labelBgPadding ?? (hasLabel ? [4, 6] : undefined),
+        labelBgBorderRadius: corrected.labelBgBorderRadius ?? (hasLabel ? 4 : undefined),
+        style: { ...styled.style, ...(corrected.style ?? {}) },
+        markerEnd: corrected.markerEnd ?? styled.markerEnd,
+        markerStart: corrected.markerStart ?? styled.markerStart,
+        data: { ...styled.data, ...corrected.data, edgeVariant: variant },
+      } as FlowEdge
+    })
+}
+
+async function applyFlowState(
+  nextNodes: FlowNode[],
+  nextEdges: FlowEdge[],
+  options?: { resetDirty?: boolean },
+) {
+  const clonedNodes = JSON.parse(JSON.stringify(nextNodes)) as FlowNode[]
+  const clonedEdges = normalizeFlowEdges(
+    JSON.parse(JSON.stringify(nextEdges)) as FlowEdge[],
+    clonedNodes,
+  )
+  const nodeIds = new Set(clonedNodes.map((n) => n.id))
+  const safeEdges = clonedEdges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
+
+  isRestoringHistory = true
+  setNodes(clonedNodes)
+  setEdges(safeEdges)
+  await nextTick()
+  nodes.value = (toObject().nodes ?? clonedNodes) as FlowNode[]
+  edges.value = normalizeFlowEdges((toObject().edges ?? safeEdges) as FlowEdge[])
+  isRestoringHistory = false
+  if (options?.resetDirty) {
+    hasUnsavedChanges.value = false
+  }
+}
+
+async function runAutoLayout(options?: {
+  markDirty?: boolean
+  fitView?: boolean
+  silent?: boolean
+}): Promise<boolean> {
+  await nextTick()
+  const currentNodes = getFlowNodes()
+  const currentEdges = getFlowEdges()
+
+  if (!currentNodes.length) {
+    if (!options?.silent) ElMessage.warning('No nodes on canvas')
+    return false
+  }
+
+  const laidOut = layoutModelGraph(currentNodes, currentEdges, 'TB')
+  const clonedNodes = JSON.parse(JSON.stringify(laidOut)) as FlowNode[]
+  isRestoringHistory = true
+  setNodes(clonedNodes)
+  await nextTick()
+  nodes.value = (toObject().nodes ?? clonedNodes) as FlowNode[]
+  isRestoringHistory = false
+
+  if (options?.markDirty) {
+    markDirty()
+    saveSnapshot()
+  }
+  if (options?.fitView !== false) {
+    // Wait for node dimensions to be computed before fitting
+    await nextTick()
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    fitFlowToViewport(!!options?.fitView)
+  }
+  return true
 }
 
 // ---- 自动布局 ----
 async function handleAutoLayout() {
   try {
-    const dagre = await import('@dagrejs/dagre')
-    const g = new dagre.graphlib.Graph()
-    g.setDefaultEdgeLabel(() => ({}))
-    g.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 60, marginx: 40, marginy: 40 })
-
-    const currentNodes = toObject().nodes as FlowNode[]
-    const currentEdges = toObject().edges as FlowEdge[]
-    const topNodes = currentNodes.filter((n) => !n.parentNode)
-
-    topNodes.forEach((n) => {
-      g.setNode(n.id, {
-        width:  (n.style?.width  as number) || n.dimensions?.width  || 160,
-        height: (n.style?.height as number) || n.dimensions?.height || 70,
-      })
-    })
-    currentEdges.forEach((e) => {
-      if (topNodes.find((n) => n.id === e.source) && topNodes.find((n) => n.id === e.target)) {
-        g.setEdge(e.source, e.target)
-      }
-    })
-
-    dagre.layout(g)
-
-    const newNodes = currentNodes.map((n) => {
-      if (n.parentNode) return n
-      const pos = g.node(n.id)
-      if (!pos) return n
-      const w = (n.style?.width  as number) || n.dimensions?.width  || 160
-      const h = (n.style?.height as number) || n.dimensions?.height || 70
-      return { ...n, position: { x: pos.x - w / 2, y: pos.y - h / 2 } }
-    })
-
-    setNodes(newNodes)
-    setEdges(currentEdges)
-    hasUnsavedChanges.value = true
-    saveSnapshot()
-    setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 100)
-    ElMessage.success('自动布局完成')
+    const ok = await runAutoLayout({ markDirty: true, fitView: true })
+    if (ok) ElMessage.success('Auto layout completed')
   } catch (err) {
     console.error(err)
-    ElMessage.error('自动布局失败')
+    ElMessage.error('Auto layout failed')
   }
 }
 
-// ---- 全屏 ----
-function toggleFullscreen() {
-  isFullscreen.value = !isFullscreen.value
-  setTimeout(() => fitView({ padding: 0.1, duration: 300 }), 100)
-}
-
-// ---- 捕获画布截图 ----
-async function captureCanvas(width = 640, height = 400): Promise<string | undefined> {
-  const flowEl = canvasRef.value?.querySelector('.vue-flow') as HTMLElement | null
-  if (!flowEl) return undefined
-  try {
-    return await toPng(flowEl, {
-      width,
-      height,
-      style: { borderRadius: '0' },
-      filter: (el) => {
-        // 排除控制器和小地图，截图更干净
-        if (el instanceof Element) {
-          const cls = el.className || ''
-          if (typeof cls === 'string' && (cls.includes('vue-flow__controls') || cls.includes('vue-flow__minimap'))) {
-            return false
-          }
-        }
-        return true
-      },
-    })
-  } catch {
-    return undefined
-  }
-}
-
-// ---- 保存（含缩略图） ----
+// ---- 保存 ----
 async function handleSave() {
-  const flowObj = toObject()
-  const thumbnail = await captureCanvas(480, 300)
-  store.saveFlowJson(
-    modelId.value,
-    { nodes: flowObj.nodes as any, edges: flowObj.edges as any },
-    thumbnail,
-  )
+  await syncEdgesFromFlow()
+  const flow = exportCurrentFlow()
+  const ok = await store.saveFlowJson(modelId, flow)
+  if (!ok) {
+    ElMessage.error('Failed to save topology')
+    return
+  }
   hasUnsavedChanges.value = false
-  ElMessage.success('保存成功')
+  store.hasUnsavedChanges = false
+  await captureSavedSnapshot()
+  ElMessage.success('Saved successfully')
 }
 
-// ---- 导出命令 ----
 async function handleExportCommand(cmd: string) {
-  if (cmd === 'json') await handleExportJson()
-  if (cmd === 'png')  await handleExportPng()
+  if (exportLoading.value) return
+  exportLoading.value = true
+  try {
+    if (cmd === 'json') await handleExportJson()
+  } finally {
+    exportLoading.value = false
+  }
 }
 
 async function handleExportJson() {
-  const model = store.getModelById(modelId.value)
+  const model = store.getModelById(modelId)
   if (!model) return
-  const flowObj = toObject()
-  const exportData = { ...model, flowJson: { nodes: flowObj.nodes, edges: flowObj.edges } }
+  await syncEdgesFromFlow()
+  const exportData = { ...model, flowJson: exportCurrentFlow() }
   const bytes = new TextEncoder().encode(JSON.stringify(exportData, null, 2))
-  await saveBytesWithPreferredPath(bytes, `${model.name}.json`, 'application/json')
-  ElMessage.success('JSON 导出成功')
-}
-
-async function handleExportPng() {
-  const model = store.getModelById(modelId.value)
-  if (!model) return
-  ElMessage.info('正在生成图片...')
-  const dataUrl = await captureCanvas(1920, 1080)
-  if (!dataUrl) {
-    ElMessage.error('图片生成失败')
-    return
-  }
-  // dataUrl → Uint8Array
-  const base64 = dataUrl.split(',')[1]
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  await saveBytesWithPreferredPath(bytes, `${model.name}.png`, 'image/png')
-  ElMessage.success('PNG 导出成功')
+  const saveResult = await saveBytesWithPreferredPath(bytes, `${model.name}.json`, 'application/json')
+  ElMessage.success(`JSON exported: ${saveResult.displayPath}`)
 }
 
 // ---- 导入 ----
@@ -661,16 +1088,16 @@ function handleImportChange(e: Event) {
       const nextNodes = Array.isArray(flow.nodes) ? flow.nodes : []
       const nextEdges = Array.isArray(flow.edges) ? flow.edges : []
       if (!nextNodes.length && !nextEdges.length) {
-        ElMessage.error('导入失败：未找到节点数据')
+        ElMessage.error('Import failed: no node data found')
         return
       }
-      setNodes(nextNodes)
-      setEdges(nextEdges)
-      hasUnsavedChanges.value = true
-      nextTick(() => saveSnapshot())
-      ElMessage.success('导入成功')
+      void hydrateCanvasFromFlow({ nodes: nextNodes, edges: nextEdges }).then(() => {
+        markDirty()
+        saveSnapshot()
+      })
+      ElMessage.success('Imported successfully')
     } catch {
-      ElMessage.error('导入失败：JSON 格式错误')
+      ElMessage.error('Import failed: invalid JSON')
     } finally {
       ;(e.target as HTMLInputElement).value = ''
     }
@@ -678,146 +1105,311 @@ function handleImportChange(e: Event) {
   reader.readAsText(file)
 }
 
-// ---- 返回列表 ----
-async function goBack() {
-  if (hasUnsavedChanges.value) {
-    try {
-      await ElMessageBox.confirm('有未保存的更改，是否放弃并返回？', '提示', {
-        confirmButtonText: '放弃更改',
-        cancelButtonText: '继续编辑',
-        type: 'warning',
-      })
-    } catch {
-      return
-    }
-  }
-  router.push({ name: 'visualModeling' })
+// ---- 视口适配（避免 fit-view-on-init + 多次 fitView 导致首次打开画面缩放跳动）----
+function fitFlowToViewport(animated = false) {
+  if (!getNodes.value.length) return
+  fitView({
+    includeHiddenNodes: true,
+    padding: 0.15,
+    duration: animated ? 300 : 0,
+  })
 }
 
 // ---- 窗口 resize ----
 let resizeTimer: number | null = null
 function onWindowResize() {
   if (resizeTimer) clearTimeout(resizeTimer)
-  resizeTimer = window.setTimeout(() => fitView({ padding: 0.1, duration: 200 }), 150)
+  resizeTimer = window.setTimeout(() => fitFlowToViewport(true), 150)
 }
 
-onMounted(() => {
-  const model = store.getModelById(modelId.value)
-  if (model) {
-    const { nodes: savedNodes, edges: savedEdges } = model.flowJson
-    if (savedNodes.length || savedEdges.length) {
-      setNodes(savedNodes as unknown as FlowNode[])
-      setEdges(savedEdges as unknown as FlowEdge[])
-    }
-    store.setCurrentModel(modelId.value)
+async function initEditorCanvas() {
+  try {
+    await Promise.all([
+      store.loadStationTopology(true),
+      store.loadInstances(true),
+    ])
+  } catch (err) {
+    console.error('[VisualModeling] load topology failed', err)
+    ElMessage.error('Failed to load station topology')
+    return
   }
+
+  const model = store.getModelById(modelId)
+  if (!model) {
+    ElMessage.warning('Station topology not loaded')
+    return
+  }
+
+  let flow = model.flowJson
+  const isNewFlow = isEmptyFlow(flow)
+  const edgeCountBefore = flow.edges?.length ?? 0
+  const hadLegacyEdgeIds = (flow.edges ?? []).some((e) => !/^edge-\d+$/.test(e.id))
+
+  if (isNewFlow) {
+    const instanceInputs = store.instances.map((item) => ({
+      instance_id: item.instance_id,
+      instance_name: item.instance_name,
+      product_name: item.product_name,
+    }))
+    flow = createDefaultModelFlow(instanceInputs)
+  }
+
+  flow = repairMissingFlowEdges(flow)
+  const edgesRepaired = (flow.edges?.length ?? 0) !== edgeCountBefore
+
+  store.setCurrentModel(modelId)
+  await hydrateCanvasFromFlow(flow, { autoLayout: true })
+
+  if (isNewFlow || edgesRepaired || hadLegacyEdgeIds) {
+    await persistFlowJson()
+  }
+
+  await captureSavedSnapshot()
+  hasUnsavedChanges.value = false
+  isViewMode.value = true
+
+  await nextTick()
+  requestAnimationFrame(() => {
+    fitFlowToViewport(false)
+  })
+}
+
+onBeforeRouteLeave(async () => {
+  if (!hasUnsavedChanges.value) return true
+  try {
+    await ElMessageBox.confirm(
+      'The canvas has unsaved changes. Leave this page without saving?',
+      'Unsaved Changes',
+      {
+        confirmButtonText: 'Leave',
+        cancelButtonText: 'Stay',
+        type: 'warning',
+        appendTo: document.body,
+        customClass: 'visual-modeling-confirm-box',
+      },
+    )
+    hasUnsavedChanges.value = false
+    store.hasUnsavedChanges = false
+    return true
+  } catch {
+    return false
+  }
+})
+
+onMounted(async () => {
   window.addEventListener('resize', onWindowResize)
   window.addEventListener('keydown', onKeydown)
-  setTimeout(() => {
-    fitView({ padding: 0.15, duration: 300 })
-    saveSnapshot()
-  }, 200)
-  hasUnsavedChanges.value = false
+  await initEditorCanvas()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', onWindowResize)
   window.removeEventListener('keydown', onKeydown)
   store.setCurrentModel(null)
+  store.hasUnsavedChanges = false
 })
 </script>
 
 <style lang="scss" scoped>
 .voltage-class {
-  .modeling-editor {
+  .modeling-editor.rule-management {
     display: flex;
     flex-direction: column;
     height: 100%;
     width: 100%;
     position: relative;
     box-sizing: border-box;
+    padding: 0;
 
     &.is-fullscreen {
       position: fixed;
-      top: 32px;
+      top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 9999;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10000;
       background: #ffffff;
     }
 
-    // ---- 顶部工具栏 ----
-    &__topbar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      border-bottom: 1px solid rgba(15, 31, 61, 0.08);
-      background: rgba(255, 255, 255, 0.96);
-      flex-shrink: 0;
-
-      &-title {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-        font-weight: 700;
-        color: #0f1f3d;
-        :deep(svg) { width: 16px; height: 16px; color: #4a90d9 !important; }
-      }
-
-      &-actions {
-        display: flex;
-        align-items: center;
-        gap: 5px;
+    :deep(.module-page-header__toolbar) {
+      .el-button,
+      .el-dropdown {
+        margin-left: 0 !important;
       }
     }
 
-    &__sep {
-      width: 1px;
-      height: 18px;
-      background: rgba(15, 31, 61, 0.12);
-      margin: 0 2px;
+    .modeling-editor__save-btn.is-dirty:not(:disabled) {
+      box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.55);
+    }
+
+    .modeling-editor__toolbar-icon {
+      margin-right: 6px;
+      :deep(svg) {
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    .modeling-editor__canvas .modeling-editor__floating-actions {
+      position: absolute;
+      right: 100px;
+      bottom: 24px;
+      display: flex;
+      gap: 16px;
+      z-index: 10;
+      pointer-events: none;
+
+      .floating-btn {
+        pointer-events: auto;
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 18px !important;
+        border-radius: 50% !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+        .floating-btn--submit.is-dirty:not(:disabled) {
+          box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
+        }
+      }
     }
 
     // ---- 主体 ----
-    &__body {
+    .modeling-editor__body {
       display: flex;
       flex: 1;
       min-height: 0;
       overflow: hidden;
+      width: 100%;
     }
 
     // ---- 画布 ----
-    &__canvas {
+    .modeling-editor__canvas {
       flex: 1;
-      height: 100%;
+      min-height: 0;
+      min-width: 0;
       position: relative;
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     }
 
-    &__flow { width: 100%; height: 100%; }
+    .modeling-editor__flow {
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+    }
 
     // ---- 边工具栏 ----
-    &__edge-toolbar {
+    .modeling-editor__edge-toolbar {
       position: absolute;
       bottom: 52px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       background: rgba(15, 20, 40, 0.92);
       backdrop-filter: blur(8px);
       border-radius: 10px;
-      padding: 6px 10px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      padding: 8px 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       z-index: 50;
       pointer-events: all;
     }
 
+    .modeling-editor__edge-toolbar .edge-toolbar__label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.55);
+      margin-right: 2px;
+      white-space: nowrap;
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__sep {
+      width: 1px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.18);
+      margin: 0 2px;
+      flex-shrink: 0;
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      padding: 5px 10px;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 11px;
+      line-height: 1.2;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn :deep(svg) {
+      width: 14px;
+      height: 14px;
+      color: inherit !important;
+      flex-shrink: 0;
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn.active {
+      background: var(--ec, #6f3381);
+      border-color: var(--ec, #6f3381);
+      color: #ffffff;
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn--del:hover {
+      background: rgba(229, 57, 53, 0.28);
+      color: #ffcdd2;
+      border-color: rgba(229, 57, 53, 0.45);
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn--label:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    :deep(.vue-flow__handle) {
+      z-index: 50 !important;
+    }
+
+    .modeling-editor__flow:not(.modeling-editor__flow--view) :deep(.vue-flow__handle.connecting) {
+      opacity: 1 !important;
+    }
+
+    .modeling-editor__flow--view :deep(.vue-flow__handle) {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .modeling-editor__flow--view :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
+      stroke-width: 2.5 !important;
+      stroke: inherit !important;
+      filter: none !important;
+    }
+
+    .modeling-editor__edge-toolbar .edge-toolbar__btn--dim {
+      background: rgba(67, 160, 71, 0.18);
+      border-color: rgba(67, 160, 71, 0.35);
+      color: rgba(255, 255, 255, 0.65);
+    }
+
     // VueFlow 样式覆盖
+    :deep(.vue-flow__edge-path) {
+      fill: none !important;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
     :deep(.vue-flow__edge) {
       backface-visibility: hidden;
       transform: translateZ(0);
@@ -836,66 +1428,24 @@ onUnmounted(() => {
         2px 2px 8px rgba(0, 0, 0, 0.15) !important;
     }
 
-    :deep(.vue-flow__edge-label) { font-size: 11px !important; }
+    :deep(.vue-flow__edge-label),
+    :deep(.vue-flow__edge-text) {
+      font-size: 11px !important;
+      fill: #4a5568 !important;
+      font-weight: 600;
+    }
+
+    :deep(.vue-flow__edge-textwrapper),
+    :deep(.vue-flow__edge-textbg) {
+      fill: #ffffff !important;
+      fill-opacity: 0.92 !important;
+    }
 
     :deep(.rf-minimap-custom) {
       background: rgba(255,255,255,0.92);
       border: 1px solid rgba(15,31,61,0.1);
       border-radius: 6px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-  }
-}
-
-// ---- 边工具栏按钮 ----
-.edge-toolbar {
-  &__label {
-    font-size: 11px;
-    color: rgba(255,255,255,0.5);
-    margin-right: 2px;
-    white-space: nowrap;
-  }
-
-  &__sep {
-    width: 1px;
-    height: 20px;
-    background: rgba(255,255,255,0.15);
-    margin: 0 4px;
-  }
-
-  &__btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 6px;
-    padding: 4px 8px;
-    color: rgba(255,255,255,0.7);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-
-    :deep(svg) { width: 13px; height: 13px; color: inherit !important; }
-
-    &:hover {
-      background: rgba(255,255,255,0.12);
-      color: #ffffff;
-    }
-
-    &.active {
-      background: var(--ec, #6F3381);
-      border-color: var(--ec, #6F3381);
-      color: #ffffff;
-    }
-
-    &--del {
-      &:hover { background: rgba(229,57,53,0.25); color: #ef9a9a; border-color: rgba(229,57,53,0.4); }
-    }
-
-    &--label {
-      &:hover { background: rgba(255,255,255,0.12); }
     }
   }
 }
@@ -907,5 +1457,16 @@ onUnmounted(() => {
 .edge-toolbar-enter-from, .edge-toolbar-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(6px);
+}
+</style>
+
+<style lang="scss">
+/* 全屏编辑器的确认框需高于编辑器层 */
+.visual-modeling-confirm-box {
+  z-index: 10050 !important;
+}
+.el-overlay:has(+ .visual-modeling-confirm-box),
+.el-overlay.is-message-box {
+  z-index: 10049 !important;
 }
 </style>

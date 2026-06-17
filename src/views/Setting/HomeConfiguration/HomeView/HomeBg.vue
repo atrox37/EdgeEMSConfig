@@ -823,8 +823,8 @@ const { pv, ess, load, diesel } = toRefs(props.data)
 .edit-ring {
   cursor: pointer;
   position: relative;
-  &:first-child{
-    &::after{
+  .edit-ring:first-child {
+    .edit-ring:first-child::after {
       border-top-width: 1px;
     }
   }
@@ -961,6 +961,11 @@ const { pv, ess, load, diesel } = toRefs(props.data)
 .arrow1,
 .arrow2 {
   animation: none !important;
+}
+
+/* 修复错误嵌套导致首项边框不生效 */
+.edit-ring:first-child::after {
+  border-top-width: 1px;
 }
 
 @keyframes moveRight {

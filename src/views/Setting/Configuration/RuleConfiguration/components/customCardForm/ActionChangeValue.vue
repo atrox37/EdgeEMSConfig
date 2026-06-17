@@ -731,7 +731,7 @@ watch(
 
 <style lang="scss" scoped>
 .voltage-class {
-  &.action-change-value-form {
+  .voltage-class.action-change-value-form {
     width: 100%;
     height: 100%;
 
@@ -790,8 +790,8 @@ watch(
         flex-direction: column;
         gap: 8px;
 
-        &.variable,
-        &.rule {
+        .section__body.variable,
+        .section__body.rule {
           height: calc(100% - 44px);
           overflow-y: auto;
           scrollbar-gutter: stable;
@@ -926,7 +926,7 @@ watch(
       padding-bottom: 20px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-      &:last-child {
+      .rule-row:last-child {
         padding-bottom: 0;
         border-bottom: none;
       }

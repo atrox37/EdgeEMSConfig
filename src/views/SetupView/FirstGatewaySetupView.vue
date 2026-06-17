@@ -340,12 +340,12 @@ const handleStartInit = async () => {
   color: $primary-color;
   cursor: pointer;
   transition: opacity $transition-fast;
-  &:disabled {
+  .first-gateway-setup__skip:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  &:hover {
+  .first-gateway-setup__skip:hover {
     opacity: 0.85;
   }
 }
@@ -480,11 +480,11 @@ const handleStartInit = async () => {
     border-radius: $border-radius-base;
     box-shadow: none;
 
-    &:hover {
+    :deep(.el-input__wrapper):hover {
       border-color: $primary-color;
     }
 
-    &.is-focus {
+    :deep(.el-input__wrapper).is-focus {
       border-color: $primary-color;
     }
   }
@@ -545,11 +545,11 @@ const handleStartInit = async () => {
     background-color: $primary-color;
   }
 
-  &.is-success .el-progress-bar__inner {
+  :deep(.el-progress).is-success .el-progress-bar__inner {
     background-color: $success-color;
   }
 
-  &.is-exception .el-progress-bar__inner {
+  :deep(.el-progress).is-exception .el-progress-bar__inner {
     background-color: $danger-color;
   }
 }

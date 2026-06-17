@@ -9,10 +9,13 @@
         <el-button
           size="small"
           type="primary"
-          @click="toggleFullscreen"
           class="custom-button"
+          @click="toggleFullscreen"
         >
-          <AppIcon name="i-tabler-arrows-maximize" className="rule-chain-editor__toolbar-icon" />
+          <AppIcon
+            :name="isFullscreen ? 'i-tabler-arrows-minimize' : 'i-tabler-arrows-maximize'"
+            className="rule-chain-editor__toolbar-icon"
+          />
           {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
         </el-button>
         <el-button
@@ -35,24 +38,30 @@
           <AppIcon name="i-tabler-pencil" className="rule-chain-editor__toolbar-icon" />
           Edit
         </el-button>
-        <el-button
-          v-if="!isMonitorMode"
-          size="small"
-          type="primary"
-          @click="handleImportClick"
-          class="custom-button"
-        >
-          <AppIcon name="i-tabler-download" className="rule-chain-editor__toolbar-icon" />
-          Import
-        </el-button>
-        <el-button
-          v-if="!isMonitorMode"
-          size="small"
-          @click="handleExitEdit"
-          class="custom-button"
-        >
-          Cancel
-        </el-button>
+        <template v-if="!isMonitorMode">
+          <el-button size="small" class="custom-button" @click="handleAutoLayout">
+            <AppIcon name="i-tabler-layout-distribute-vertical" style="margin-right:4px" />
+            Auto Layout
+          </el-button>
+          <el-button
+            size="small"
+            type="primary"
+            class="custom-button"
+            @click="handleImportClick"
+          >
+            <AppIcon name="i-tabler-upload" className="rule-chain-editor__toolbar-icon" />
+            Import
+          </el-button>
+          <el-button
+            size="small"
+            type="primary"
+            class="custom-button"
+            @click="handleExitEdit"
+          >
+            <AppIcon name="i-tabler-arrow-left" className="rule-chain-editor__toolbar-icon" />
+            Exit Edit
+          </el-button>
+        </template>
       </template>
     </el-page-header>
 
@@ -66,7 +75,7 @@
               :key="category.type"
               :name="category.type"
               :title="category.title"
-              style="margin-bottom: 20px"
+              style="margin-bottom: 8px"
             >
               <template #title>
                 <div class="rule-chain-editor__category-title">
@@ -180,9 +189,8 @@
       <el-button
         circle
         class="floating-btn floating-btn--cancel"
-        @click="handleCancel"
-        :disabled="!hasUnsavedChanges"
-        title="Discard"
+        title="Restore to last saved"
+        @click="handleRestoreToSaved"
       >
         ×
       </el-button>
@@ -190,6 +198,7 @@
         circle
         type="primary"
         class="floating-btn floating-btn--submit"
+        :class="{ 'is-dirty': hasUnsavedChanges }"
         @click="handleSave"
         :disabled="!hasUnsavedChanges"
         title="Submit"
@@ -215,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, nextTick, markRaw } from 'vue'
 import { getCurrentFontSize } from '@/utils/responsive'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -231,6 +240,7 @@ import {
   type Edge as FlowEdge,
   type Connection,
   type NodeChange,
+  type NodeTypesObject,
 } from '@vue-flow/core'
 import CustomNode from './components/customCard/CustomNode.vue'
 import StartNode from './components/customCard/StartNode.vue'
@@ -251,6 +261,7 @@ import CardEditDialog from './components/CardEditDialog.vue'
 import { updateRule } from '@/api/rulesManagement'
 import wsManager from '@/utils/websocket'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
+import { layoutRuleChain } from '@/utils/ruleChainLayout'
 const {
   updateNode,
   toObject,
@@ -288,11 +299,11 @@ const nodeVarsPositions = ref<Map<string, { top: number; left: number }>>(new Ma
 const centerPanelRef = ref<HTMLElement | null>(null)
 const nodeVariablesData = ref<Map<string, Record<string, number>>>(new Map())
 
-const nodeTypes: any = {
-  custom: CustomNode,
-  start: StartNode,
-  end: EndNode,
-}
+const nodeTypes = {
+  custom: markRaw(CustomNode),
+  start: markRaw(StartNode),
+  end: markRaw(EndNode),
+} as unknown as NodeTypesObject
 
 const nodes = computed(() => {
   return isMonitorMode.value ? ruleChainStore.monitorNodes : ruleChainStore.nodes
@@ -302,6 +313,68 @@ const edges = computed(() => {
 })
 const isFullscreen = computed(() => ruleChainStore.isFullscreen)
 const hasUnsavedChanges = computed(() => ruleChainStore.hasUnsavedChanges)
+
+type FlowSnapshot = { nodes: FlowNode[]; edges: FlowEdge[] }
+const editSnapshots = ref<FlowSnapshot[]>([])
+const editSnapIdx = ref(-1)
+let isRestoringEditHistory = false
+const canUndoEdit = computed(() => editSnapIdx.value > 0)
+const canRedoEdit = computed(() => editSnapIdx.value < editSnapshots.value.length - 1)
+
+function saveEditSnapshot() {
+  if (isRestoringEditHistory || isMonitorMode.value) return
+  const flowObj = toObject()
+  const s: FlowSnapshot = {
+    nodes: JSON.parse(JSON.stringify(flowObj.nodes)),
+    edges: JSON.parse(JSON.stringify(flowObj.edges)),
+  }
+  const next = editSnapshots.value.slice(0, editSnapIdx.value + 1)
+  next.push(s)
+  while (next.length > 50) {
+    next.shift()
+    editSnapIdx.value = Math.max(0, editSnapIdx.value - 1)
+  }
+  editSnapshots.value = next
+  editSnapIdx.value = next.length - 1
+}
+
+function applyEditSnapshot(snapshot: FlowSnapshot) {
+  isRestoringEditHistory = true
+  const protectedNodes = ensureStartEndNodesUndeletable(snapshot.nodes)
+  setNodes(protectedNodes)
+  setEdges(snapshot.edges)
+  ruleChainStore.hasUnsavedChanges = true
+  nextTick(() => {
+    isRestoringEditHistory = false
+  })
+}
+
+function undoEdit() {
+  if (!canUndoEdit.value) return
+  editSnapIdx.value--
+  applyEditSnapshot(editSnapshots.value[editSnapIdx.value])
+}
+
+function redoEdit() {
+  if (!canRedoEdit.value) return
+  editSnapIdx.value++
+  applyEditSnapshot(editSnapshots.value[editSnapIdx.value])
+}
+
+async function handleAutoLayout() {
+  if (isMonitorMode.value) return
+  const flowObj = toObject()
+  const laidOut = layoutRuleChain(
+    flowObj.nodes as FlowNode[],
+    flowObj.edges as FlowEdge[],
+  )
+  setNodes(ensureStartEndNodesUndeletable(laidOut))
+  ruleChainStore.hasUnsavedChanges = true
+  saveEditSnapshot()
+  await nextTick()
+  fitFlowToViewport()
+  ElMessage.success('Auto layout completed')
+}
 
 // 规则卡片分类
 const cardCategories = ref([
@@ -434,15 +507,18 @@ onNodesChange((changes: NodeChange[]) => {
       }
     } else {
       ruleChainStore.hasUnsavedChanges = true
+      saveEditSnapshot()
     }
   }
 })
 
 onConnect(() => {
   ruleChainStore.hasUnsavedChanges = true
+  saveEditSnapshot()
 })
 onEdgeUpdate(() => {
   ruleChainStore.hasUnsavedChanges = true
+  saveEditSnapshot()
 })
 onNodeDragStop(() => {
   if (isMonitorMode.value) {
@@ -515,6 +591,11 @@ const handleWindowResize = () => {
   }, 160)
 }
 
+function exitMonitorMode() {
+  isMonitorMode.value = true
+  nextTick(() => fitFlowToViewport())
+}
+
 const toggleFullscreen = () => {
   ruleChainStore.toggleFullscreen()
   nextTick(() => fitFlowToViewport())
@@ -522,27 +603,46 @@ const toggleFullscreen = () => {
 
 const handleExitEdit = async () => {
   if (!hasUnsavedChanges.value) {
-    isMonitorMode.value = true
-    fitFlowToViewport()
+    exitMonitorMode()
     return
   }
   try {
     await ElMessageBox.confirm(
-      'You have unsaced changes,Do you want to discard them?',
+      'You have unsaved changes. Discard them and exit edit mode?',
       'Unsaved Changes',
       {
         confirmButtonText: 'Discard',
+        cancelButtonText: 'Keep Editing',
+        type: 'warning',
+      },
+    )
+    handleCancel()
+    exitMonitorMode()
+  } catch {
+    // keep editing
+  }
+}
+
+async function handleRestoreToSaved() {
+  if (!hasUnsavedChanges.value) {
+    ElMessage.info('Already matches the last saved state')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      'Restore rule chain to the last saved state? Unsaved edits will be lost.',
+      'Restore',
+      {
+        confirmButtonText: 'Restore',
         cancelButtonText: 'Cancel',
         type: 'warning',
       },
     )
     handleCancel()
-    isMonitorMode.value = true
+    ElMessage.success('Restored to last saved state')
   } catch {
-    // Cancel: keep editing
-    return
+    // cancelled
   }
-  nextTick(() => fitFlowToViewport())
 }
 
 const handleConnectGuard = (connection: Connection) => {
@@ -647,6 +747,7 @@ const handleConnect = (connection: Connection) => {
   }
   ruleChainStore.hasUnsavedChanges = true
   addEdges(newEdge)
+  saveEditSnapshot()
 }
 
 const handleSave = async () => {
@@ -662,6 +763,10 @@ const handleSave = async () => {
   try {
     await updateRule(payload)
     ruleChainStore.saveChanges(newNodes, newEdges)
+    ruleChainStore.hasUnsavedChanges = false
+    editSnapshots.value = []
+    editSnapIdx.value = -1
+    nextTick(() => saveEditSnapshot())
     ElMessage.success('Submitted successfully')
     nextTick(() => {
       fitFlowToViewport()
@@ -816,6 +921,9 @@ function enterEditMode() {
   clearSimulation()
   resetRuntimeVisuals()
   visibleVarsNodes.value.clear()
+  editSnapshots.value = []
+  editSnapIdx.value = -1
+  nextTick(() => saveEditSnapshot())
 }
 
 function isCompositeVariable(varDef: any): boolean {
@@ -1080,6 +1188,7 @@ const handleImportChange = (event: Event) => {
       setNodes(protectedNodes)
       setEdges(nextEdges as unknown as FlowEdge[])
       ruleChainStore.hasUnsavedChanges = true
+      saveEditSnapshot()
       ElMessage.success('Imported successfully')
     } catch (error) {
       ElMessage.error('Import failed: invalid JSON structure')
@@ -1247,10 +1356,10 @@ watch(
 
     &.is-fullscreen {
       position: fixed;
-      top: 32px;
+      top: 0;
       left: 0;
-      z-index: 9999;
-      height: calc(100vh - 32px);
+      z-index: 10000;
+      height: 100vh;
       width: 100vw;
       background-color: #ffffff;
       background-image: none;
@@ -1272,6 +1381,11 @@ watch(
         display: flex;
         align-items: center;
         gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .rule-chain-editor__save-btn.is-dirty:not(:disabled) {
+        box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.55);
       }
       :deep(.el-button) {
         height: 24px;
@@ -1332,8 +1446,9 @@ watch(
             border-bottom-right-radius: 8px;
           }
           :deep(.el-collapse-item__header) {
-            // height: 28px;
-            // line-height: 28px;
+            height: auto;
+            min-height: 36px;
+            line-height: 1.4;
             padding: 0 4px;
             font-size: 14px;
             font-weight: 600;
@@ -1391,93 +1506,103 @@ watch(
             border-radius: 8px;
             cursor: grab;
             transition: all 0.2s ease;
-            // min-width: 200px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
 
-            &:hover {
-              transform: translateZ(0);
-            }
+          .rule-chain-editor__card:hover {
+            transform: translateZ(0);
+          }
 
-            &:active {
-              cursor: grabbing;
-            }
+          .rule-chain-editor__card:active {
+            cursor: grabbing;
+          }
 
-            &[data-type='function-switch'] {
-              background-color: #81c784; // soft green
-              box-shadow: 0 4px 12px rgba(129, 199, 132, 0.35);
-            }
-            &[data-type='action-changeValue'] {
-              background-color: #4fc3f7; // soft sky blue
-              box-shadow: 0 4px 12px rgba(79, 195, 247, 0.35);
-            }
-            &[data-type='action-periodDelta'] {
-              background-color: #9c27b0; // purple
-              box-shadow: 0 4px 12px rgba(156, 39, 176, 0.35);
-            }
-            &[data-type='function-switch'] .rule-chain-editor__card-name,
-            &[data-type='function-switch'] .rule-chain-editor__card-description,
-            &[data-type='action-changeValue'] .rule-chain-editor__card-name,
-            &[data-type='action-changeValue'] .rule-chain-editor__card-description,
-            &[data-type='action-periodDelta'] .rule-chain-editor__card-name,
-            &[data-type='action-periodDelta'] .rule-chain-editor__card-description {
-              color: #ffffff;
-            }
+          .rule-chain-editor__card[data-type='function-switch'] {
+            background-color: #81c784;
+            box-shadow: 0 4px 12px rgba(129, 199, 132, 0.35);
+          }
 
-            .rule-chain-editor__card-icon {
-              width: 36px;
-              height: 36px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: linear-gradient(135deg, #e8f4fd 0%, #d1e7f5 100%);
-              border-radius: 6px;
-              margin-right: 12px;
-              font-size: 20px;
-              :deep(svg) {
-                width: 20px;
-                height: 20px;
-              }
-              img {
-                width: 20px;
-                height: 20px;
-                object-fit: contain;
-              }
-              &.icon--function-switch {
-                background: #66bb6a;
-                :deep(svg) {
-                  color: #ffffff;
-                }
-              }
-              &.icon--action-changeValue {
-                background: #29b6f6;
-                :deep(svg) {
-                  color: #ffffff;
-                }
-              }
-              &.icon--action-periodDelta {
-                background: #7b1fa2;
-                :deep(svg) {
-                  color: #ffffff;
-                }
-              }
-            }
+          .rule-chain-editor__card[data-type='action-changeValue'] {
+            background-color: #4fc3f7;
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.35);
+          }
 
-            .rule-chain-editor__card-content {
-              flex: 1;
-            }
+          .rule-chain-editor__card[data-type='action-periodDelta'] {
+            background-color: #9c27b0;
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.35);
+          }
 
-            .rule-chain-editor__card-name {
-              font-weight: 600;
-              color: #2c3e50;
-              margin-bottom: 4px;
-              font-size: 12px;
-            }
+          .rule-chain-editor__card[data-type='function-switch'] .rule-chain-editor__card-name,
+          .rule-chain-editor__card[data-type='function-switch'] .rule-chain-editor__card-description,
+          .rule-chain-editor__card[data-type='action-changeValue'] .rule-chain-editor__card-name,
+          .rule-chain-editor__card[data-type='action-changeValue'] .rule-chain-editor__card-description,
+          .rule-chain-editor__card[data-type='action-periodDelta'] .rule-chain-editor__card-name,
+          .rule-chain-editor__card[data-type='action-periodDelta'] .rule-chain-editor__card-description {
+            color: #ffffff;
+          }
 
-            .rule-chain-editor__card-description {
-              font-size: 10px;
-              color: #909399;
-              line-height: 1.4;
-            }
+          .rule-chain-editor__card-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8f4fd 0%, #d1e7f5 100%);
+            border-radius: 6px;
+            margin-right: 12px;
+            font-size: 20px;
+          }
+
+          .rule-chain-editor__card-icon :deep(svg) {
+            width: 20px;
+            height: 20px;
+          }
+
+          .rule-chain-editor__card-icon img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+          }
+
+          .rule-chain-editor__card-icon.icon--function-switch {
+            background: #66bb6a;
+          }
+
+          .rule-chain-editor__card-icon.icon--function-switch :deep(svg) {
+            color: #ffffff;
+          }
+
+          .rule-chain-editor__card-icon.icon--action-changeValue {
+            background: #29b6f6;
+          }
+
+          .rule-chain-editor__card-icon.icon--action-changeValue :deep(svg) {
+            color: #ffffff;
+          }
+
+          .rule-chain-editor__card-icon.icon--action-periodDelta {
+            background: #7b1fa2;
+          }
+
+          .rule-chain-editor__card-icon.icon--action-periodDelta :deep(svg) {
+            color: #ffffff;
+          }
+
+          .rule-chain-editor__card-content {
+            flex: 1;
+          }
+
+          .rule-chain-editor__card-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 12px;
+          }
+
+          .rule-chain-editor__card-description {
+            font-size: 10px;
+            color: #909399;
+            line-height: 1.4;
           }
         }
       }
@@ -1605,6 +1730,10 @@ watch(
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+        .floating-btn--submit.is-dirty:not(:disabled) {
+          box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
+        }
       }
     }
   }

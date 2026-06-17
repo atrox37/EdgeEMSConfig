@@ -731,7 +731,7 @@ defineExpose({
     row-gap: 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-    &:last-child {
+    .channel-detail__section:last-child {
       border-bottom: none;
     }
 

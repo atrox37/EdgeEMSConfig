@@ -324,9 +324,9 @@ const debounceDirective = {
 
     let handler = fn
     if (modifiers.debounce) {
-      let timer: number | null = null
+      let timer: ReturnType<typeof setTimeout> | null = null
       handler = (...args: any[]) => {
-        clearTimeout(timer as number)
+        if (timer) clearTimeout(timer)
         timer = setTimeout(() => fn(...args), delay)
       }
     }

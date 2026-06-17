@@ -144,7 +144,7 @@
         Cancel Edit
       </el-button>
       <el-button
-        v-if="!isEditing && !isPublish"
+        v-if="!isEditing && !isPublish && !topologyReadOnly"
         type="primary"
         :disabled="viewMode === 'points'"
         @click="handleEdit"
@@ -189,6 +189,7 @@ const globalStore = useGlobalStore()
 const route = useRoute()
 const router = useRouter()
 
+const topologyReadOnly = computed(() => route.query.topologyView === '1')
 const isEditing = ref(false)
 const isPublish = ref(false)
 const publishDirty = ref(false)
@@ -485,7 +486,7 @@ const performCancelEdit = () => {
   actionRoutingRef.value?.clearImportedFileName?.()
 }
 
-// 返回：编辑模式且有修改时弹出确认（与 Cancel Edit 类似），否则直接返回
+// Back: return to caller page when opened from visual modeling editor
 const handleBack = async () => {
   if (isEditing.value && getHasChanges()) {
     try {
@@ -504,6 +505,11 @@ const handleBack = async () => {
   }
   if (isEditing.value) {
     performCancelEdit()
+  }
+  const returnTo = typeof route.query.returnTo === 'string' ? route.query.returnTo : ''
+  if (returnTo) {
+    router.push(returnTo)
+    return
   }
   router.push('/modelConfiguration')
 }

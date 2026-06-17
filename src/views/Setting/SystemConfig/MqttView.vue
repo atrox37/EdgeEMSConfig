@@ -657,7 +657,7 @@ onUnmounted(() => {
 :deep(.light-collapse-card) {
   .el-form-item {
     margin-bottom: 14px;
-    &:last-child { margin-bottom: 0; }
+    .el-form-item:last-child { margin-bottom: 0; }
   }
 }
 
@@ -708,9 +708,9 @@ onUnmounted(() => {
 
   .el-icon {
     font-size: 16px;
-    &.is-connected { color: $success-color; }
-    &.is-disconnected { color: $danger-color; }
-    &.is-unknown { color: $text-color-secondary; }
+    .el-icon.is-connected { color: $success-color; }
+    .el-icon.is-disconnected { color: $danger-color; }
+    .el-icon.is-unknown { color: $text-color-secondary; }
   }
 }
 
@@ -822,18 +822,18 @@ onUnmounted(() => {
   cursor: pointer;
   transition: opacity 0.2s ease, background-color 0.2s ease;
 
-  &.is-danger {
+  .system-mqtt__icon-btn.is-danger {
     color: $danger-color;
-    &:hover { background-color: rgba($danger-color, 0.14); }
+    .system-mqtt__icon-btn.is-danger:hover { background-color: rgba($danger-color, 0.14); }
   }
-  &.is-disabled {
+  .system-mqtt__icon-btn.is-disabled {
     opacity: 0.45;
     cursor: not-allowed;
-    &:hover { background-color: transparent; }
+    .system-mqtt__icon-btn.is-disabled:hover { background-color: transparent; }
   }
-  &.is-update {
+  .system-mqtt__icon-btn.is-update {
     color: #409eff;
-    &:hover { background-color: rgba(64, 158, 255, 0.14); }
+    .system-mqtt__icon-btn.is-update:hover { background-color: rgba(64, 158, 255, 0.14); }
   }
 }
 

@@ -18,22 +18,22 @@
       overflow: auto;
 
       // 增强滚动条可见性
-      &::-webkit-scrollbar {
+      .vtable__body::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
 
-      &::-webkit-scrollbar-track {
+      .vtable__body::-webkit-scrollbar-track {
         background: rgba(58, 82, 121, 0.3);
         border-radius: 4px;
       }
 
-      &::-webkit-scrollbar-thumb {
+      .vtable__body::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.4);
         border-radius: 4px;
         transition: background 0.3s;
 
-        &:hover {
+        .vtable__body::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.6);
         }
       }
@@ -48,7 +48,7 @@
         // height: 40px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
-        &:hover {
+        .vtable__row:hover {
           background: rgba(64, 158, 255, 0.1);
         }
       }
@@ -62,7 +62,7 @@
         // 通过 nth-child 实现递减 z-index
         z-index: 100;
         @for $i from 1 through 40 {
-          &:nth-child(#{$i}) {
+          .vue-recycle-scroller__item-view:nth-child(#{$i}) {
             z-index: #{100 - $i};
           }
         }
@@ -84,20 +84,20 @@
       // align-items: center;
       // justify-content: center;
       // transition: all 0.3s ease-in-out;
-      &:last-child {
+      .vtable__cell:last-child {
         flex: 1 !important;
         width: unset !important;
       }
-      &.vtable__cell--name {
+      .vtable__cell.vtable__cell--name {
         width: 50%;
       }
-      &.vtable__cell--value {
+      .vtable__cell.vtable__cell--value {
         width: 25%;
       }
-      &.vtable__cell--unit {
+      .vtable__cell.vtable__cell--unit {
         width: 25%;
       }
-      &.vtable__cell--status {
+      .vtable__cell.vtable__cell--status {
         width: 50%;
       }
     }

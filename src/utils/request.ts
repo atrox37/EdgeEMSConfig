@@ -107,6 +107,7 @@ export interface RequestConfig {
   _requestKey?: string
   _abortController?: AbortController
   signal?: AbortSignal
+  onUploadProgress?: (event: { loaded?: number; total?: number; percent?: number }) => void
 }
 
 interface HttpResponse<T = any> {

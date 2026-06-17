@@ -1,6 +1,7 @@
 import Request from '@/utils/request'
-import type { Rule, CreateRulePayload, UpdateRulePayload } from '@/types/ruleConfiguration'
+import type { Rule, CreateRulePayload, UpdateRulePayload, TriggerConfig } from '@/types/ruleConfiguration'
 import type { RuleChainPayload } from '@/types/ruleConfiguration'
+import type { RequestConfig } from '@/utils/request'
 
 export const listRules = async () => {
   return await Request.get<{ list: Rule[] }>('/ruleApi/api/rules')
@@ -15,9 +16,12 @@ export const createRule = async (payload: CreateRulePayload) => {
 }
 
 export const updateRule = async (
-  payload: RuleChainPayload | { name: string; description: string; id: string },
+  payload: (RuleChainPayload | UpdateRulePayload & { id: string }) & {
+    trigger_config?: TriggerConfig
+  },
+  config?: RequestConfig,
 ) => {
-  return await Request.put<Rule>(`/ruleApi/api/rules/${payload.id}`, payload)
+  return await Request.put<Rule>(`/ruleApi/api/rules/${payload.id}`, payload, config)
 }
 
 export const deleteRule = async (id: string) => {

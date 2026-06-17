@@ -93,25 +93,9 @@ watch(
   display: flex;
   flex-direction: column;
   width: 180px;
+  min-width: 180px;
+  flex-shrink: 0;
   transition: width $transition-base;
-  &.collapse {
-    width: 48px;
-
-    .sidebar__nav {
-      padding: 2px 2px 0 2px;
-    }
-
-    :deep(.el-menu-item),
-    :deep(.el-sub-menu__title) {
-      justify-content: center;
-      padding-left: 0 !important;
-    }
-
-    :deep(.el-menu-item .sidebar__icon),
-    :deep(.el-sub-menu__title .sidebar__icon) {
-      margin-right: 0;
-    }
-  }
 
   // Monarch Logo
   .sidebar__logo-container {
@@ -129,12 +113,13 @@ watch(
       transition: opacity $transition-base;
     }
 
-    &.collapse {
-      padding: $spacing-sm;
-      
-      .sidebar__monarch-logo {
-        max-width: 32px;
-      }
+  }
+
+  .sidebar__logo-container.collapse {
+    padding: $spacing-sm;
+
+    .sidebar__monarch-logo {
+      max-width: 32px;
     }
   }
 
@@ -173,14 +158,16 @@ watch(
   .sidebar__icon {
     width: 16px;
     height: 16px;
+    min-width: 16px;
+    min-height: 16px;
     margin-right: $spacing-xs;
     color: $secondary-color;
     display: inline-flex;
     flex-shrink: 0;
+  }
 
-    &.collapse {
-      margin-right: 0;
-    }
+  .sidebar__icon.collapse {
+    margin-right: 0;
   }
 
   .sidebar__menu-text {
@@ -208,6 +195,26 @@ watch(
   :deep(.el-menu-item.is-active .sidebar__icon),
   :deep(.el-sub-menu.is-active > .el-sub-menu__title .sidebar__icon) {
     color: #ffffff;
+  }
+}
+
+.voltage-class.sidebar.collapse {
+  width: 48px;
+  min-width: 48px;
+
+  .sidebar__nav {
+    padding: 2px 2px 0 2px;
+  }
+
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title) {
+    justify-content: center;
+    padding-left: 0 !important;
+  }
+
+  :deep(.el-menu-item .sidebar__icon),
+  :deep(.el-sub-menu__title .sidebar__icon) {
+    margin-right: 0;
   }
 }
 </style>

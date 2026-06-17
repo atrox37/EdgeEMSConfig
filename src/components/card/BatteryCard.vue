@@ -39,7 +39,7 @@ const propNumber = computed(() => {
       #94a6c5 97.67%
     )
     1;
-  &.isOnly {
+  .battery-card.isOnly {
     justify-content: center;
     align-items: center;
   }
@@ -48,7 +48,7 @@ const propNumber = computed(() => {
     font-style: regular;
     font-size: 0.2rem;
     color: rgba(255, 255, 255, 0.6);
-    &.isOnly {
+    .battery-card__title.isOnly {
       font-family: Arimo;
       font-weight: 700;
       font-style: bold;

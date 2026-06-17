@@ -1,8 +1,6 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef" v-if="!isDetailRoute">
-    <div class="rule-management__header">
-      <h2 class="rule-management__title">Rule Config</h2>
-    </div>
+    <ModulePageHeader title="Rule Config" />
       <div class="rule-management__content">
         <div class="rule-management__search-form" ref="levelSelectRef">
           <div></div>
@@ -90,6 +88,7 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
+import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 import RuleEditDialog from './components/RuleEditDialog.vue'
 import { enableRule, disableRule } from '@/api/rulesManagement'
 import { useRoute, useRouter } from 'vue-router'
@@ -228,7 +227,7 @@ watch(
         flex-shrink: 0;
         transition: opacity 0.2s;
 
-        &:hover {
+        .rule-management__reload-icon:hover {
           opacity: 0.7;
         }
 

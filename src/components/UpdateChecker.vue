@@ -354,17 +354,17 @@ onUnmounted(() => {
   background: linear-gradient(180deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 138, 0, 0.03) 100%);
   transition: border-color $transition-base, background $transition-base;
 
-  &.is-success-state {
+  .update-progress.is-success-state {
     border-color: rgba(103, 194, 58, 0.3);
     background: linear-gradient(180deg, rgba(103, 194, 58, 0.08) 0%, rgba(103, 194, 58, 0.03) 100%);
   }
 
-  &.is-exception-state {
+  .update-progress.is-exception-state {
     border-color: rgba(245, 108, 108, 0.3);
     background: linear-gradient(180deg, rgba(245, 108, 108, 0.08) 0%, rgba(245, 108, 108, 0.03) 100%);
   }
 
-  &__header {
+  .update-progress__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -372,34 +372,34 @@ onUnmounted(() => {
     margin-bottom: $spacing-xs;
   }
 
-  &__title {
+  .update-progress__title {
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     color: $text-color-primary;
   }
 
-  &__percent {
+  .update-progress__percent {
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     color: $primary-color;
     transition: color $transition-base;
 
-    &.is-success {
+    .update-progress__percent.is-success {
       color: $success-color;
     }
 
-    &.is-exception {
+    .update-progress__percent.is-exception {
       color: $danger-color;
     }
   }
 
-  &__message {
+  .update-progress__message {
     margin-top: $spacing-xs;
     color: $text-color-primary;
     font-size: $font-size-small;
   }
 
-  &__bytes {
+  .update-progress__bytes {
     margin-top: 2px;
     color: $text-color-white-60;
     font-size: $font-size-small;
@@ -412,11 +412,11 @@ onUnmounted(() => {
     transition: background-color $transition-base;
   }
 
-  &.is-success .el-progress-bar__inner {
+  :deep(.el-progress).is-success .el-progress-bar__inner {
     background-color: $success-color;
   }
 
-  &.is-exception .el-progress-bar__inner {
+  :deep(.el-progress).is-exception .el-progress-bar__inner {
     background-color: $danger-color;
   }
 }
@@ -438,7 +438,7 @@ onUnmounted(() => {
     line-height: $line-height-loose;
     color: #3f444d;
 
-    &--empty {
+    .notes-content--empty {
       color: #6b7280;
       font-style: italic;
     }

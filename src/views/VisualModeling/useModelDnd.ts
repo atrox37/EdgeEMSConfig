@@ -1,13 +1,16 @@
-import { useVueFlow } from '@vue-flow/core'
+import { useVueFlow, type Node as FlowNode } from '@vue-flow/core'
 import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { ModelNodeTemplate } from '@/types/visualModeling'
+import { isContainerProduct } from '@/constants/deviceProducts'
+import { canPlaceInContainer } from '@/utils/modelFlowRules'
+import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
 
 let nodeCounter = 0
 function genId() {
   return `vm_node_${Date.now()}_${nodeCounter++}`
 }
 
-// 解析 style.width / style.height（可能是 '280px' 或 280）
 function parsePx(val: string | number | undefined, fallback: number): number {
   if (val === undefined || val === null) return fallback
   if (typeof val === 'number') return val
@@ -18,6 +21,41 @@ const state = {
   draggedTemplate: ref<ModelNodeTemplate | null>(null),
   isDragOver: ref(false),
   isDragging: ref(false),
+}
+
+/**
+ * 在已有节点中查找落点在其内部的合法容器（供 onDrop 和 nodeDragStop 复用）。
+ * position 必须是 flow 绝对坐标。
+ */
+export function findContainerForNode(
+  productName: string,
+  position: { x: number; y: number },
+  nodes: FlowNode[],
+): { parentNodeId: string; relativePosition: { x: number; y: number } } | null {
+  const margin = 8
+  const headerH = 44
+  for (const node of nodes) {
+    if (node.type !== 'group') continue
+    const containerProduct = (node.data as { productName?: string })?.productName
+    if (!containerProduct || !canPlaceInContainer(productName, containerProduct)) continue
+    const style = node.style as Record<string, string | number> | undefined
+    const gw = parsePx(style?.width, (node.data as { width?: number })?.width || 280)
+    const gh = parsePx(style?.height, (node.data as { height?: number })?.height || 180)
+    const nx = node.position.x
+    const ny = node.position.y
+    if (
+      position.x > nx + margin &&
+      position.x < nx + gw - margin &&
+      position.y > ny + headerH &&
+      position.y < ny + gh - margin
+    ) {
+      return {
+        parentNodeId: node.id,
+        relativePosition: { x: position.x - nx, y: position.y - ny },
+      }
+    }
+  }
+  return null
 }
 
 export default function useModelDnd() {
@@ -58,82 +96,99 @@ export default function useModelDnd() {
     document.removeEventListener('drop', onDragEnd)
   }
 
+  function findValidContainerParent(productName: string, position: { x: number; y: number }) {
+    return findContainerForNode(productName, position, getNodes.value)
+  }
+
   function onDrop(event: DragEvent) {
     const template = draggedTemplate.value
     if (!template) return
 
-    // 将屏幕坐标转为画布坐标
     const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
-    const isGroup = template.type === 'group'
+    const productName = template.productName || ''
 
-    // 如果拖入的不是 group，检测是否落在某个已有 group 节点内
+    let templateType = template.type
+    if (productName === 'Station') templateType = 'station'
+    else if (template.type === 'group' || isContainerProduct(productName)) templateType = 'group'
+
+    const isGroup = templateType === 'group'
+    const isStation = templateType === 'station'
+
+    if (isStation || isGroup) {
+      const insideGroup = getNodes.value.some((node) => {
+        if (node.type !== 'group') return false
+        const style = node.style as Record<string, string | number> | undefined
+        const gw = parsePx(style?.width, (node.data as { width?: number })?.width || 280)
+        const gh = parsePx(style?.height, (node.data as { height?: number })?.height || 180)
+        const nx = node.position.x
+        const ny = node.position.y
+        return (
+          position.x > nx &&
+          position.x < nx + gw &&
+          position.y > ny &&
+          position.y < ny + gh
+        )
+      })
+      if (insideGroup) {
+        ElMessage.warning('Station and container nodes must be placed on the top level')
+        onDragEnd()
+        return
+      }
+    }
+
     let parentNodeId: string | undefined
     let relativePosition = { ...position }
 
-    if (!isGroup) {
-      for (const node of getNodes.value) {
-        if (node.type !== 'group') continue
-
-        // 取 group 的实际显示宽高
-        const gw = parsePx(node.style?.width as any, node.data?.width as number || 280)
-        const gh = parsePx(node.style?.height as any, node.data?.height as number || 180)
-        const nx = node.position.x
-        const ny = node.position.y
-
-        // 留出 header 高度（约 32px）和 8px 边距
-        const headerH = 34
-        const margin = 8
-        if (
-          position.x > nx + margin &&
-          position.x < nx + gw - margin &&
-          position.y > ny + headerH &&
-          position.y < ny + gh - margin
-        ) {
-          parentNodeId = node.id
-          // 子节点位置相对于父节点
-          relativePosition = {
-            x: position.x - nx,
-            y: position.y - ny,
-          }
-          break
-        }
+    // 任何设备节点均可自由放置到画布上（容器为可选，非强制）
+    // 若拖放位置恰好落在合适容器内，则自动归入该容器
+    if (!isGroup && !isStation) {
+      const containerHit = findValidContainerParent(productName, position)
+      if (containerHit) {
+        parentNodeId = containerHit.parentNodeId
+        relativePosition = containerHit.relativePosition
       }
     }
 
     const id = genId()
     const defaultW = 380
     const defaultH = 260
+    const imageUrl =
+      template.imageUrl || getProductInstanceImageUrl(productName) || undefined
 
     const newNode: any = {
       id,
-      type: template.type,
+      type: templateType,
       position: relativePosition,
       data: {
         label: template.label,
         description: template.description || '',
-        productName: template.productName || '',
-        instanceId: template.instanceId,
-        instanceName: template.instanceName || '',
-        color: template.color || 'default',
-        icon: template.icon || 'i-tabler-device-desktop-analytics',
+        productName,
+        parentName: template.parentName || '',
+        imageUrl,
+        isContainer: isGroup && isContainerProduct(productName),
+        instances: template.instances?.length
+          ? template.instances.map((item) => ({ ...item }))
+          : template.instanceId
+            ? [{
+                instanceId: template.instanceId,
+                instanceName: template.instanceName || '',
+                productName,
+              }]
+            : [],
         ...(isGroup ? { width: defaultW, height: defaultH } : {}),
       },
-      // group 节点需要设置 style.width/height，VueFlow 才能正确计算子节点布局
-      // zIndex 不设为 -1（会导致无法点击），由 VueFlow 自动处理父子层叠
       ...(isGroup
         ? {
             style: { width: `${defaultW}px`, height: `${defaultH}px` },
             zIndex: 0,
           }
         : {}),
-      // 子节点绑定到 group
       ...(parentNodeId
         ? { parentNode: parentNodeId, extent: 'parent' as const }
         : {}),
     }
 
-    // 节点渲染完成后，将其居中对齐到鼠标位置（group 节点不做此处理）
-    if (!isGroup) {
+    if (!isGroup && !isStation) {
       const { off } = onNodesInitialized(() => {
         updateNode(id, (node) => ({
           position: {
@@ -156,5 +211,6 @@ export default function useModelDnd() {
     onDragLeave,
     onDragOver,
     onDrop,
+    findValidContainerParent,
   }
 }

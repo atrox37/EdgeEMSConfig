@@ -15,7 +15,7 @@
               v-model="formData.timeZone"
               :fit-input-width="true"
               placeholder="Please select"
-              :append-to="timeSettingFormItemRef"
+              :append-to="timeSettingFormItemRef || undefined"
             >
               <el-option label="GMT+8" value="GMT+8" />
               <el-option label="UTC-0" value="UTC-0" />
@@ -99,10 +99,10 @@ const rules = ref({
       border: none;
       background: transparent;
 
-      & > div {
+      .config-collapse > div {
         margin-bottom: 20px;
 
-        &:last-child {
+        .config-collapse > div:last-child {
           margin-bottom: 0;
         }
       }
@@ -170,7 +170,7 @@ const rules = ref({
       .el-form-item {
         margin-bottom: 20px;
 
-        &:last-child {
+        .el-form-item:last-child {
           margin-bottom: 0;
         }
       }

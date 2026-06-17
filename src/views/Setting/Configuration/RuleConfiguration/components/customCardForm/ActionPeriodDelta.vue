@@ -541,7 +541,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .voltage-class {
-  &.action-period-delta-form {
+  .voltage-class.action-period-delta-form {
     width: 100%;
     height: 100%;
     .scroll-section {
@@ -570,9 +570,9 @@ onMounted(() => {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        &.input,
-        &.output,
-        &.period {
+        .section__body.input,
+        .section__body.output,
+        .section__body.period {
           align-items: center;
         }
       }
@@ -599,7 +599,7 @@ onMounted(() => {
     }
     :deep(.el-input),
     :deep(.el-select),
-    :deep(.el-input-number){
+    :deep(.el-input-number) {
         width: 100% !important;
     }
   }

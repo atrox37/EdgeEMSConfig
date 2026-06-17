@@ -193,11 +193,11 @@ defineProps<Props>()
   column-gap: 12px;
   row-gap: 16px;
 
-  &__item {
+  .protocol-params__item {
     width: calc(50% - 6px) !important;
   }
 
-  &__text {
+  .protocol-params__text {
     color: $text-color-primary;
     font-size: 14px;
     line-height: 32px;

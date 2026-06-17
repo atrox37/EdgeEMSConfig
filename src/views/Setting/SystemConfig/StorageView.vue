@@ -718,9 +718,9 @@ onUnmounted(() => {
 
 .system-storage__status-icon {
   font-size: 16px;
-  &.is-connected { color: $success-color; }
-  &.is-disconnected { color: $danger-color; }
-  &.is-unknown { color: $text-color-secondary; }
+  .system-storage__status-icon.is-connected { color: $success-color; }
+  .system-storage__status-icon.is-disconnected { color: $danger-color; }
+  .system-storage__status-icon.is-unknown { color: $text-color-secondary; }
 }
 
 .system-storage__status-text {

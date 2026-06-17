@@ -52,7 +52,7 @@ const handleCommand = (command: string) => {
       height: 18px;
     }
 
-    &:hover {
+    .operation-more-btn:hover {
       background: $white-alpha-10;
     }
   }
@@ -73,7 +73,7 @@ const handleCommand = (command: string) => {
       object-fit: contain;
     }
 
-    &:hover {
+    .el-dropdown-menu__item:hover {
       background: $white-alpha-10;
     }
   }

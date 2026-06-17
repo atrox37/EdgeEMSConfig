@@ -1,8 +1,6 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
-    <div class="rule-management__header">
-      <h2 class="rule-management__title">Model Config</h2>
-    </div>
+    <ModulePageHeader title="Model Config" />
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 桌面端：显示筛选框 -->
@@ -108,6 +106,7 @@
 
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue'
+import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 import IconButton from '@/components/common/IconButton.vue'
 import { ElMessage } from 'element-plus'
 import { triggerInstSync } from '@/api/systemConfig'
@@ -316,7 +315,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
       margin-bottom: 10px;
       padding-bottom: 10px;
       border-bottom: 1px solid #dcdfe6;
-      :deep(.el-select){
+      :deep(.el-select) {
     width:180px;
   }
       //   padding-bottom: 20px;
@@ -330,7 +329,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
         align-items: flex-start;
         gap: 10px;
 
-        &__row {
+        .form-oprations__row {
           display: flex;
           align-items: flex-start;
           gap: 10px;
@@ -360,7 +359,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
         flex-shrink: 0;
         transition: opacity 0.2s;
 
-        &:hover {
+        .rule-management__reload-icon:hover {
           opacity: 0.7;
         }
 
@@ -405,7 +404,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
         :deep(.el-tag__close) {
           color: #ffffff;
 
-          &:hover {
+          :deep(.el-tag__close):hover {
             background-color: rgba(255, 255, 255, 0.2);
           }
         }

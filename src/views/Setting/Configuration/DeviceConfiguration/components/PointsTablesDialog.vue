@@ -2,7 +2,9 @@
   <FormDialog
     ref="dialogRef"
     :title="viewMode === 'points' ? 'Points Table' : 'Routings Table'"
-    width="1400px"
+    :width="width"
+    :dialog-class="dialogClass"
+    :append-to-body="true"
     :before-close="handleDialogBeforeClose"
     @close="handleClose"
   >
@@ -145,6 +147,18 @@
 
 <script setup lang="ts">
 import { ref, computed, readonly, provide, watch } from 'vue'
+
+const props = withDefaults(
+  defineProps<{
+    /** 弹框宽度，支持百分比 */
+    width?: string
+    dialogClass?: string
+  }>(),
+  {
+    width: '1400px',
+    dialogClass: '',
+  },
+)
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import LoadingBg from '@/components/common/LoadingBg.vue'
@@ -623,7 +637,7 @@ watch(
 
       .config-section__tabs-wrapper {
         position: relative;
-        min-height: 500px;
+        min-height: 0;
 
         .config-section__tabs {
           width: 100%;
@@ -661,5 +675,111 @@ watch(
       }
     }
   }
+}
+</style>
+
+<style lang="scss">
+.dc-points-dialog--responsive.el-dialog {
+  width: 92% !important;
+  max-width: 92vw;
+  height: 82vh;
+  max-height: 82vh;
+  margin-top: 4vh !important;
+  margin-bottom: 4vh !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .el-dialog__header,
+.dc-points-dialog--responsive .el-dialog__footer {
+  flex-shrink: 0;
+}
+
+.dc-points-dialog--responsive .el-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  height: calc(82vh - 132px);
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.dc-points-dialog--responsive .dc-points-dialog {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .rule-management__config-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .config-section__header {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .config-section__controls {
+  flex-shrink: 0;
+}
+
+.dc-points-dialog--responsive .config-section__tabs-wrapper {
+  flex: 1;
+  min-height: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .config-section__tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .config-section__tabs .el-tabs__header {
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.dc-points-dialog--responsive .config-section__tabs .el-tabs__content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .config-section__tabs .el-tab-pane {
+  height: 100%;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .device-point-table {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-points-dialog--responsive .device-point-table .table-action-controls {
+  flex-shrink: 0;
+}
+
+.dc-points-dialog--responsive .device-point-table .point-table__wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.dc-points-dialog--responsive .device-point-table .point-table__pagination {
+  flex-shrink: 0;
 }
 </style>

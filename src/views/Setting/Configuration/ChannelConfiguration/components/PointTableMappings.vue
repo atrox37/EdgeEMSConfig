@@ -728,7 +728,7 @@ defineExpose({
     :deep(.row-status-deleted td.point-id-column) {
       position: relative;
       padding-left: 14px;
-      &::before {
+      :deep(.row-status-deleted td.point-id-column)::before {
         content: '';
         position: absolute;
         left: 0;
@@ -835,19 +835,19 @@ defineExpose({
 
     .point-table__edit-btn {
       color: #409eff;
-      &:hover {
+      .point-table__edit-btn:hover {
         color: #66b1ff;
       }
     }
     .point-table__delete-btn {
       color: #f56c6c;
-      &:hover {
+      .point-table__delete-btn:hover {
         color: #f78989;
       }
     }
     .point-table__restore-btn {
       color: #67c23a;
-      &:hover {
+      .point-table__restore-btn:hover {
         color: #85ce61;
       }
     }
@@ -859,7 +859,7 @@ defineExpose({
       font-size: 18px;
       color: #f56c6c;
       transition: color 0.3s;
-      &:hover {
+      .point-table__cancel-btn:hover {
         color: #f78989;
       }
     }
@@ -870,20 +870,20 @@ defineExpose({
       font-size: 18px;
       color: #67c23a;
       transition: color 0.3s;
-      &:hover {
+      .point-table__confirm-btn:hover {
         color: #85ce61;
       }
     }
 
     .point-table__setting-btn {
       color: #000;
-      &:hover {
+      .point-table__setting-btn:hover {
         color: #ff6900;
       }
     }
     .point-table__publish-btn {
       color: #000;
-      &:hover {
+      .point-table__publish-btn:hover {
         color: #000;
       }
     }
@@ -907,8 +907,8 @@ defineExpose({
     }
 
     // 编辑状态时提升层级
-    &:has(.el-select.is-focus),
-    &:has(.el-select:hover) {
+    .inline-edit-container:has(.el-select.is-focus),
+    .inline-edit-container:has(.el-select:hover) {
       z-index: 100;
     }
   }

@@ -1,8 +1,6 @@
 <template>
   <div class="system-config-shell">
-    <div class="system-config-shell__header">
-      <h2 class="system-config-shell__title">System Config</h2>
-    </div>
+    <ModulePageHeader title="System Config" />
 
     <el-tabs v-model="activeTab" class="system-config-shell__tabs" @tab-change="handleTabChange">
       <el-tab-pane name="network">
@@ -49,6 +47,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 
 type SystemConfigTab = 'network' | 'storage' | 'mqtt' | 'tools'
 

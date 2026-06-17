@@ -1,22 +1,22 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="isEdit ? '编辑方案' : '新建建模方案'"
+    :title="isEdit ? 'Edit Plan' : 'New Modeling Plan'"
     width="420px"
     :close-on-click-modal="false"
     destroy-on-close
     @closed="resetForm"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="70px" label-position="left">
-      <el-form-item label="方案名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入方案名称" maxlength="50" show-word-limit />
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" label-position="left">
+      <el-form-item label="Plan Name" prop="name">
+        <el-input v-model="form.name" placeholder="Enter plan name" maxlength="50" show-word-limit />
       </el-form-item>
-      <el-form-item label="描述">
+      <el-form-item label="Description">
         <el-input
           v-model="form.description"
           type="textarea"
           :rows="3"
-          placeholder="方案描述（可选）"
+          placeholder="Optional description"
           maxlength="200"
           show-word-limit
         />
@@ -24,16 +24,16 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
+      <el-button @click="visible = false">Cancel</el-button>
       <el-button type="primary" @click="handleConfirm" :loading="submitting">
-        {{ isEdit ? '保存' : '创建' }}
+        {{ isEdit ? 'Save' : 'Create' }}
       </el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { VisualModel } from '@/types/visualModeling'
 
@@ -56,7 +56,7 @@ const form = reactive({
 })
 
 const rules: FormRules = {
-  name: [{ required: true, message: '请输入方案名称', trigger: 'blur' }],
+  name: [{ required: true, message: 'Please enter a plan name', trigger: 'blur' }],
 }
 
 watch(

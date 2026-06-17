@@ -109,7 +109,7 @@
       <el-button @click="handleCancel">{{
         isCreateMode ? 'Cancel' : isEditing ? 'Cancel Edit' : 'Cancel'
         }}</el-button>
-      <el-button v-if="!isEditing" type="primary" @click="handleEdit"> Edit </el-button>
+      <el-button v-if="!isEditing && !forceReadOnly" type="primary" @click="handleEdit"> Edit </el-button>
       <el-button v-else type="primary" :loading="submitLoading" @click="handleSubmit"> Submit </el-button>
     </template>
   </FormDialog>
@@ -131,6 +131,7 @@ const dialogRef = ref<any>()
 
 // 响应式数据
 const isEditing = ref(false)
+const forceReadOnly = ref(false)
 const isBasicOpen = ref(true)
 const isPropertiesOpen = ref(true)
 const isCreateMode = computed(() => isEditing.value && form.value.instance_id === null)
@@ -185,8 +186,12 @@ const removePropertyByIndex = (index: number) => {
 }
 
 // 打开对话框
-const open = async (instanceIdOrNull: number | null) => {
-  // 新建：传入空字符串时，清空表单并进入编辑状态
+const open = async (
+  instanceIdOrNull: number | null,
+  options?: { productName?: string; readOnly?: boolean },
+) => {
+  forceReadOnly.value = !!options?.readOnly
+  // 新建：传入 null 时，清空表单并进入编辑状态
   try {
     if (!instanceIdOrNull) {
       isEditing.value = true
@@ -196,7 +201,7 @@ const open = async (instanceIdOrNull: number | null) => {
       form.value = {
         instance_id: null,
         instance_name: '',
-        product_name: '',
+        product_name: options?.productName ?? '',
         properties: {},
       } as any
       editProperties.value = []
@@ -249,6 +254,7 @@ const handleCancel = () => {
 
 // 编辑
 const handleEdit = () => {
+  if (forceReadOnly.value) return
   // 创建编辑数据副本
   editProperties.value = Object.entries(form.value.properties).map(([k, v]) => ({
     key: k,
@@ -284,6 +290,11 @@ const handleSubmit = () => {
             ElMessage.success('Device instance created successfully')
             isEditing.value = false
             emit('submit')
+            emit('created', {
+              instance_id: res.data?.instance?.instance_id ?? res.data?.instance_id,
+              instance_name: form.value.instance_name,
+              product_name: form.value.product_name,
+            })
             close()
           }
         } else {
@@ -321,6 +332,7 @@ const handleClose = () => {
 // 定义事件
 const emit = defineEmits<{
   (e: 'submit'): void
+  (e: 'created', payload: { instance_id?: number; instance_name: string; product_name: string }): void
 }>()
 
 // 暴露方法
@@ -414,7 +426,7 @@ defineExpose({ open, close })
       // padding: 6px 8px;
       border-bottom: 1px dashed $white-alpha-10;
 
-      &:last-child {
+      .instance-detail__property-item:last-child {
         border-bottom: none;
       }
     }

@@ -244,7 +244,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         padding: 0;
         line-height: $height-base;
 
-        &::before {
+        .el-form-item__label::before {
           display: none !important;
         }
       }
@@ -265,11 +265,11 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
         padding: 0 $spacing-md;
         box-shadow: none;
 
-        &:hover {
+        :deep(.el-input__wrapper):hover {
           border-color: $primary-color;
         }
 
-        &.is-focus {
+        :deep(.el-input__wrapper).is-focus {
           border-color: $primary-color;
         }
 
@@ -278,13 +278,13 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
           font-size: $font-size-base;
           height: $height-base;
 
-          &::placeholder {
+          .el-input__inner::placeholder {
             color: $text-color-placeholder;
           }
         }
 
         // Readonly input style
-        &.is-disabled {
+        :deep(.el-input__wrapper).is-disabled {
           .el-input__inner {
             color: $text-color-primary;
             cursor: default;

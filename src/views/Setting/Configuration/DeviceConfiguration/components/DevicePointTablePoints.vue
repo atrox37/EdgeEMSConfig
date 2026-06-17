@@ -54,8 +54,13 @@
           </template>
         </el-table-column>
 
-        <!-- Update Time -->
-        <el-table-column label="Update Time" min-width="160" class-name="update-time-column">
+        <!-- Update Time (property 不展示) -->
+        <el-table-column
+          v-if="props.category !== 'property'"
+          label="Update Time"
+          min-width="160"
+          class-name="update-time-column"
+        >
           <template #default="{ row }">
             <span>{{ formatUpdateTime((row as any).update_ts) }}</span>
           </template>
@@ -87,11 +92,15 @@
             <div class="point-table__operation-cell">
               <div
                 class="point-table__publish-btn point-table__execute-btn"
-                v-if="props.category === 'action' || props.category === 'measurement'"
-                @click="handlePublish(row)"
+                v-if="
+                  props.category === 'action' ||
+                  props.category === 'measurement' ||
+                  props.category === 'property'
+                "
+                @click="handleExecute(row)"
               >
                 <AppIcon name="i-tabler-send" className="point-table__op-icon" />
-                <span>Publish</span>
+                <span>{{ props.category === 'property' ? 'Execute' : 'Publish' }}</span>
               </div>
             </div>
           </template>
@@ -181,7 +190,7 @@ const editPoints = ref<any[]>([])
 const publishValues = ref<Record<number | string, any>>({})
 const injectedInstanceName = inject(InstanceNameKey, ref(''))
 const executeDialogRef = ref<{
-  open: (point_id: string, category: 'action' | 'measurement') => void
+  open: (point_id: string, category: 'action' | 'measurement' | 'property') => void
 } | null>(null)
 
 const { signalNameFilterRaw, signalNameFilter, signalNameOptions, currentPage, pageSize, paginatedData } =
@@ -309,9 +318,9 @@ function applyRealtimeValues(
   })
 }
 
-function handlePublish(item: any) {
+function handleExecute(item: any) {
   const id = getPointId(item)
-  executeDialogRef.value?.open(String(id), props.category as 'action' | 'measurement')
+  executeDialogRef.value?.open(String(id), props.category)
 }
 
 const handleExport = async () => {
@@ -324,7 +333,8 @@ const handleExport = async () => {
     point_id: getPointId(item),
     point_name: String(item.name || ''),
     value: item.value ?? '',
-    update_time: formatUpdateTimeForCsv(item.update_ts),
+    update_time:
+      props.category === 'property' ? '' : formatUpdateTimeForCsv(item.update_ts),
     unit: String(item.unit || ''),
     description: String(item.description || ''),
   }))
@@ -401,7 +411,7 @@ defineExpose({
     :deep(.row-status-deleted td.point-id-column) {
       position: relative;
       padding-left: 14px;
-      &::before {
+      :deep(.row-status-deleted td.point-id-column)::before {
         content: '';
         position: absolute;
         left: 0;
@@ -469,7 +479,7 @@ defineExpose({
     .point-table__execute-btn {
       color: #000;
       cursor: pointer;
-      &:hover {
+      .point-table__execute-btn:hover {
         color: #000;
       }
     }

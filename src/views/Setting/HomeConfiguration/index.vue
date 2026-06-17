@@ -1,13 +1,12 @@
 <template>
   <div class="home-configuration">
-    <div class="home-configuration__header">
-      <h2 class="home-configuration__title">Home Configuration</h2>
-      <div class="home-configuration__actions">
-        <!-- <div class="home-configuration__actions-left"> -->
-          <el-button type="primary" plain :loading="resetLoading" @click="handleRestore">Restore Default</el-button>
-        <!-- </div> -->
-      </div>
-    </div>
+    <ModulePageHeader title="Home Configuration">
+      <template #toolbar>
+        <el-button type="primary" plain :loading="resetLoading" @click="handleRestore">
+          Restore Default
+        </el-button>
+      </template>
+    </ModulePageHeader>
 
     <div class="home-configuration__content">
       <div class="home-configuration__preview">
@@ -43,6 +42,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 import HomeView from './HomeView/index.vue'
 import PointConfigDialog from './components/PointConfigDialog.vue'
 import type { PointConfigPayload } from './components/PointConfigDialog.vue'

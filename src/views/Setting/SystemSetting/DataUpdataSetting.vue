@@ -366,10 +366,10 @@ const handleUpdate = async () => {
       border: none;
       background: transparent;
 
-      & > div {
+      .config-collapse > div {
         margin-bottom: 20px;
 
-        &:last-child {
+        .config-collapse > div:last-child {
           margin-bottom: 0;
         }
       }
@@ -437,7 +437,7 @@ const handleUpdate = async () => {
       .el-form-item {
         margin-bottom: 20px;
 
-        &:last-child {
+        .el-form-item:last-child {
           margin-bottom: 0;
         }
       }

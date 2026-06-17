@@ -66,7 +66,6 @@ const updateHeight = () => {
 }
 
 const bodyStyle = computed(() => {
-  // 不可折叠时：直接展开，不依赖 bodyHeight，避免初始挂载时的展开动画
   if (!props.collapsible) {
     return { maxHeight: 'none', opacity: '1' }
   }
@@ -119,136 +118,132 @@ watch(
 </script>
 
 <style scoped lang="scss">
-
 .light-collapse-card {
-  //height: 100%;
   border: 1px solid $white-alpha-10;
   border-radius: 10px;
   background: linear-gradient(180deg, $white-alpha-05, transparent);
   overflow: hidden;
   width: 100%;
+}
 
-  .light-collapse-card__header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    color: $text-color-primary;
-    position: relative;
-    transition: color 0.2s ease, background-color 0.2s ease;
+.light-collapse-card__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: $text-color-primary;
+  position: relative;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
 
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 10px;
-      bottom: 10px;
-      width: 3px;
-      border-radius: 2px;
-      background: $secondary-color;
-      opacity: 0.6;
-      transition: opacity 0.2s ease, background-color 0.2s ease;
-    }
+.light-collapse-card__header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 2px;
+  background: $secondary-color;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
 
-    &:hover:not(:disabled):not([data-collapsible='false']) {
-      background: $orange-color-hover-bg;
-      color: $primary-color;
-    }
+.light-collapse-card__header:hover:not(:disabled):not([data-collapsible='false']) {
+  background: $orange-color-hover-bg;
+  color: $primary-color;
+}
 
-    &[data-collapsible='false'] {
-      cursor: default;
-    }
+.light-collapse-card__header[data-collapsible='false'] {
+  cursor: default;
+}
 
-    &:focus-visible {
-      outline: 2px solid $primary-color-alpha-40;
-      outline-offset: 2px;
-    }
-  }
+.light-collapse-card__header:focus-visible {
+  outline: 2px solid $primary-color-alpha-40;
+  outline-offset: 2px;
+}
 
-  .light-collapse-card__title {
-    font-size: 16px;
-    font-weight: 600;
-  }
+.light-collapse-card__title {
+  font-size: 16px;
+  font-weight: 600;
+}
 
-  .light-collapse-card__header-actions {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
+.light-collapse-card__header-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  .light-collapse-card__icon {
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid $secondary-color;
-    border-bottom: 2px solid $secondary-color;
-    transform: rotate(-45deg);
-    transition: transform 0.25s ease, border-color 0.2s ease;
-  }
+.light-collapse-card__icon {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid $secondary-color;
+  border-bottom: 2px solid $secondary-color;
+  transform: rotate(-45deg);
+  transition: transform 0.25s ease, border-color 0.2s ease;
+}
 
-  .light-collapse-card__header[data-collapsible='false'] .light-collapse-card__icon {
-    display: none;
-  }
+.light-collapse-card__header[data-collapsible='false'] .light-collapse-card__icon {
+  display: none;
+}
 
-  .light-collapse-card__body {
-    height: calc(100% - 42.5px);
-    overflow: hidden;
-    transition: max-height 0.28s ease, opacity 0.2s ease;
-    will-change: max-height, opacity;
-  }
+.light-collapse-card__body {
+  height: calc(100% - 42.5px);
+  overflow: hidden;
+  transition: max-height 0.28s ease, opacity 0.2s ease;
+  will-change: max-height, opacity;
+}
 
-  .light-collapse-card__body-inner {
-    height: 100%;
-    padding: 6px 16px 16px;
-    overflow: auto;
-  }
+.light-collapse-card__body-inner {
+  height: 100%;
+  padding: 6px 16px 16px;
+  overflow: auto;
+}
 
-  .light-collapse-card__footer {
-    padding-top: 12px;
-    margin-top: 8px;
-    border-top: 1px solid $white-alpha-10;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
+.light-collapse-card__footer {
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid $white-alpha-10;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
 
-  &.is-open {
-    border-color: $primary-color-alpha-20;
-    box-shadow: 0 0 0 1px $primary-color-alpha-20 inset;
-    .light-collapse-card__icon {
-      transform: rotate(45deg);
-      border-right-color: $primary-color;
-      border-bottom-color: $primary-color;
-    }
-    .light-collapse-card__header::before {
-      opacity: 1;
-      background: $primary-color;
-    }
-  }
+.light-collapse-card.is-open {
+  border-color: $primary-color-alpha-20;
+  box-shadow: 0 0 0 1px $primary-color-alpha-20 inset;
+}
 
-  &.is-disabled {
-    opacity: 0.6;
-    .light-collapse-card__header {
-      cursor: not-allowed;
-    }
-  }
+.light-collapse-card.is-open .light-collapse-card__icon {
+  transform: rotate(45deg);
+  border-right-color: $primary-color;
+  border-bottom-color: $primary-color;
+}
 
-  &.is-initial {
-    .light-collapse-card__body {
-      transition: none;
-    }
-  }
+.light-collapse-card.is-open .light-collapse-card__header::before {
+  opacity: 1;
+  background: $primary-color;
+}
 
-  // 不可折叠时：禁用展开/收起动画，始终直接展示
-  &.is-non-collapsible {
-    .light-collapse-card__body {
-      transition: none;
-    }
-  }
+.light-collapse-card.is-disabled {
+  opacity: 0.6;
+}
+
+.light-collapse-card.is-disabled .light-collapse-card__header {
+  cursor: not-allowed;
+}
+
+.light-collapse-card.is-initial .light-collapse-card__body {
+  transition: none;
+}
+
+.light-collapse-card.is-non-collapsible .light-collapse-card__body {
+  transition: none;
 }
 </style>

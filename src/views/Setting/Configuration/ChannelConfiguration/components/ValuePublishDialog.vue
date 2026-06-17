@@ -118,7 +118,7 @@ defineExpose({
   justify-content: flex-end;
   gap: 10px;
 }
-:deep(.el-form-item){
+:deep(.el-form-item) {
   width: 100%;
 }
 </style>

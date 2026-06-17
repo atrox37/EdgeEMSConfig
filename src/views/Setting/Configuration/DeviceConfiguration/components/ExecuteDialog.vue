@@ -3,8 +3,18 @@
     <template #dialog-body>
       <div class="voltage-class execute-dialog">
         <el-form label-width="90px" ref="formRef" :model="form" :rules="rules">
-          <el-form-item label="Value:" required>
-            <el-input-number v-model="form.value" :controls="false" align="left" />
+          <el-form-item
+            label="Value:"
+            :prop="form.category === 'property' ? 'valueText' : 'value'"
+            required
+          >
+            <el-input
+              v-if="form.category === 'property'"
+              v-model="form.valueText"
+              placeholder="Enter value"
+              clearable
+            />
+            <el-input-number v-else v-model="form.value" :controls="false" align="left" />
           </el-form-item>
         </el-form>
       </div>
@@ -20,26 +30,45 @@
 import { ref, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
-import { executeAction, executeMeasurement } from '@/api/devicesManagement'
+import {
+  executeAction,
+  executeMeasurement,
+  upsertInstanceProperty,
+} from '@/api/devicesManagement'
 import { InstanceIdKey } from '@/utils/key'
 const formDialogRef = ref<{ dialogVisible: boolean } | null>(null)
 const formRef = ref()
 const submitLoading = ref(false)
 const form = ref<{
   value: number | undefined
+  valueText: string
   point_id: string
-  category: 'action' | 'measurement'
+  category: 'action' | 'measurement' | 'property'
 }>({
   value: undefined,
+  valueText: '',
   point_id: '',
   category: 'action',
 })
 const instanceId = inject(InstanceIdKey)
 const rules = {
   value: [{ required: true, message: 'Please enter value', trigger: 'blur' }],
+  valueText: [{ required: true, message: 'Please enter value', trigger: 'blur' }],
 }
-function open(point_id: string, category: 'action' | 'measurement' = 'action') {
+
+function parsePropertyValue(raw: string): unknown {
+  const trimmed = raw.trim()
+  if (trimmed === '') return ''
+  try {
+    return JSON.parse(trimmed)
+  } catch {
+    return raw
+  }
+}
+
+function open(point_id: string, category: 'action' | 'measurement' | 'property' = 'action') {
   form.value.value = undefined
+  form.value.valueText = ''
   form.value.point_id = point_id
   form.value.category = category
   if (formDialogRef.value) formDialogRef.value.dialogVisible = true
@@ -51,26 +80,35 @@ function close() {
 
 function submit() {
   formRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      if (instanceId?.value) {
-        submitLoading.value = true
-        try {
-          const payload = {
-            value: form.value.value as number,
-            point_id: form.value.point_id,
-          }
-          const res =
-            form.value.category === 'measurement'
-              ? await executeMeasurement(Number(instanceId?.value) as number, payload)
-              : await executeAction(Number(instanceId?.value) as number, payload)
-          if (res.success) {
-            ElMessage.success('Publish success!')
-            close()
-          }
-        } finally {
-          submitLoading.value = false
+    if (!valid) return
+    if (!instanceId?.value) return
+    submitLoading.value = true
+    try {
+      const id = Number(instanceId.value)
+      let res
+      if (form.value.category === 'property') {
+        const propertyId = Number(form.value.point_id)
+        res = await upsertInstanceProperty(id, propertyId, {
+          value: parsePropertyValue(form.value.valueText),
+        })
+      } else {
+        const payload = {
+          value: form.value.value as number,
+          point_id: form.value.point_id,
         }
+        res =
+          form.value.category === 'measurement'
+            ? await executeMeasurement(id, payload)
+            : await executeAction(id, payload)
       }
+      if (res.success) {
+        ElMessage.success(
+          form.value.category === 'property' ? 'Execute success!' : 'Publish success!',
+        )
+        close()
+      }
+    } finally {
+      submitLoading.value = false
     }
   })
 }

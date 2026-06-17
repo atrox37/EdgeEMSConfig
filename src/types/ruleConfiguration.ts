@@ -32,6 +32,7 @@ export interface RuleChainPayload {
   id?: string
   name?: string
   priority?: number
+  trigger_config?: TriggerConfig
 }
 export interface Rule {
   id: string
@@ -39,6 +40,56 @@ export interface Rule {
   description?: string
   priority?: number
   enabled?: boolean
+  trigger_config?: TriggerConfig
+}
+
+export type TriggerPointType = 'measurement' | 'action'
+
+export interface TriggerPointRef {
+  instance: number
+  point_type: TriggerPointType
+  point: number
+}
+
+export interface ValueDeadbandAbsolute {
+  type: 'absolute'
+  threshold: number
+}
+
+export interface ValueDeadbandPercent {
+  type: 'percent'
+  threshold: number
+}
+
+export type ValueDeadband = ValueDeadbandAbsolute | ValueDeadbandPercent
+
+export interface IntervalTriggerConfig {
+  type: 'interval'
+  interval_ms: number
+}
+
+export interface OnChangeTriggerConfig {
+  type: 'on_change'
+  point_refs: TriggerPointRef[]
+  time_deadband_ms?: number | null
+  value_deadband?: ValueDeadband | null
+}
+
+export type TriggerConfig = IntervalTriggerConfig | OnChangeTriggerConfig
+
+export type ValueDeadbandMode = 'none' | 'absolute' | 'percent'
+
+export interface TriggerConfigFormState {
+  type: 'interval' | 'on_change'
+  interval_ms: number
+  point_refs: Array<{
+    instance: number | undefined
+    point_type: TriggerPointType | ''
+    point: number | undefined
+  }>
+  time_deadband_ms: number | null
+  value_deadband_mode: ValueDeadbandMode
+  value_deadband_threshold: number | null
 }
 
 // 创建仅要求名称与可选描述，其它由后端填充
@@ -52,6 +103,7 @@ export type UpdateRulePayload = Partial<{
   description: string
   priority: number
   enabled: boolean
+  trigger_config: TriggerConfig
 }>
 // 规则链相关类型定义
 

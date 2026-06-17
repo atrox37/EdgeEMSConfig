@@ -1,8 +1,6 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
-    <div class="rule-management__header">
-      <h2 class="rule-management__title">Channel Config</h2>
-    </div>
+    <ModulePageHeader title="Channel Config" />
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 移动端：筛选按钮和筛选标?-->
@@ -181,6 +179,7 @@ import type { ChannelTemplateListItem } from '@/types/channelTemplates'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
+import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import { useRouter } from 'vue-router'
 import ChannelDetailDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/ChannelDetailDialog.vue'
@@ -540,7 +539,7 @@ const handleChannelDialogCancel = () => {
         align-items: flex-start;
         gap: 10px;
 
-        &__row {
+        .form-oprations__row {
           display: flex;
           align-items: flex-start;
           gap: 10px;
@@ -570,7 +569,7 @@ const handleChannelDialogCancel = () => {
         flex-shrink: 0;
         transition: opacity 0.2s;
 
-        &:hover {
+        .rule-management__reload-icon:hover {
           opacity: 0.7;
         }
 
@@ -615,7 +614,7 @@ const handleChannelDialogCancel = () => {
         :deep(.el-tag__close) {
           color: #ffffff;
 
-          &:hover {
+          :deep(.el-tag__close):hover {
             background-color: rgba(255, 255, 255, 0.2);
           }
         }
@@ -709,7 +708,7 @@ const handleChannelDialogCancel = () => {
             color: #000000;
           }
 
-          &.rule-management__operation-item--more {
+          .rule-management__operation-item.rule-management__operation-item--more {
             width: 22px;
             height: 22px;
             justify-content: center;

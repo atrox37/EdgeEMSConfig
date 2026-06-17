@@ -1,3 +1,4 @@
+// DEPRECATED: Use RightPanel for node configuration instead
 <template>
   <el-dialog
     v-model="visible"
@@ -301,13 +302,13 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .node-config {
-  &__colors {
+  .node-config__colors {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
   }
 
-  &__color-dot {
+  .node-config__color-dot {
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -315,14 +316,14 @@ onMounted(() => {
     border: 2px solid transparent;
     transition: all 0.15s;
 
-    &:hover,
-    &.active {
+    .node-config__color-dot:hover,
+    .node-config__color-dot.active {
       border-color: #0f1f3d;
       transform: scale(1.2);
     }
   }
 
-  &__props-box {
+  .node-config__props-box {
     width: 100%;
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 6px;
@@ -332,7 +333,7 @@ onMounted(() => {
     overflow-y: auto;
   }
 
-  &__props-status {
+  .node-config__props-status {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -341,11 +342,11 @@ onMounted(() => {
     color: #909399;
   }
 
-  &__props-list {
+  .node-config__props-list {
     padding: 6px 10px;
   }
 
-  &__prop-row {
+  .node-config__prop-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -353,10 +354,10 @@ onMounted(() => {
     border-bottom: 1px dashed rgba(0,0,0,0.07);
     font-size: 12px;
 
-    &:last-child { border-bottom: none; }
+    .node-config__prop-row:last-child { border-bottom: none; }
   }
 
-  &__prop-key {
+  .node-config__prop-key {
     color: #607080;
     font-weight: 500;
     max-width: 50%;
@@ -365,7 +366,7 @@ onMounted(() => {
     white-space: nowrap;
   }
 
-  &__prop-val {
+  .node-config__prop-val {
     color: #1a2438;
     font-weight: 600;
     max-width: 50%;
