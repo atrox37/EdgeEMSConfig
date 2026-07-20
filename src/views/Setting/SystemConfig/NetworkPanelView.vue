@@ -80,7 +80,7 @@
               </div>
             </el-form>
 
-            <div class="system-network__actions">
+            <div v-permission="'engineer'" class="system-network__actions">
               <el-button type="primary" :loading="saving" :disabled="loading || applying" @click="handleSave">
                 Save
               </el-button>

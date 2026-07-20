@@ -44,6 +44,7 @@ import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { createApiConfig, saveApiConfig, setAxiosBaseURL, getApiConfig } from '@/utils/apiConfig'
+import { assertValidUserRole } from '@/utils/roleGuard'
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -59,15 +60,6 @@ const isLoading = ref(false)
 
 const goToSetup = () => {
   router.push({ path: '/setup' })
-}
-
-const isAdminUser = () => {
-  const role = userStore.userInfo?.role
-  const roleName = String(role?.name_en || '')
-    .trim()
-    .toLowerCase()
-
-  return roleName === 'admin'
 }
 
 // 加载保存的IP地址
@@ -137,18 +129,15 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     const userInfoResult = await userStore.getUserInfo()
     if (!userInfoResult.success) {
       return
-    } else {
-      // 4. 管理员权限校验：非管理员禁止登录
-      if (!isAdminUser()) {
-        ElMessage.error('Insufficient permissions')
-        await userStore.clearUserData()
-        return
-      } else {
-        // 5. 登录成功，跳转到首页
-        ElMessage.success('Login successful')
-        await router.push({ name: 'channelConfiguration' })
-      }
     }
+
+    if (!assertValidUserRole(userStore.userInfo, { configTool: true })) {
+      await userStore.clearUserData()
+      return
+    }
+
+    ElMessage.success('Login successful')
+    await router.push({ name: 'channelConfiguration' })
   } catch (error: any) {
     const errorMessage = error?.message || ''
     const isNetworkError =

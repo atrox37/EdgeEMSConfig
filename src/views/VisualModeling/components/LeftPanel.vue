@@ -49,11 +49,11 @@
 
             <div v-else>
               <div class="left-panel__device-filter">
-                <span class="left-panel__device-filter-label">所属容器</span>
+                <span class="left-panel__device-filter-label">Parent Container:</span>
                 <el-select
                   v-model="deviceParentFilter"
                   clearable
-                  placeholder="全部"
+                  placeholder="All"
                   size="small"
                   :teleported="true"
                   :fit-input-width="true"

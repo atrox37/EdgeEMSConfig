@@ -2,12 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Request } from '@/utils/request'
 import { getAllInstances, getProducts } from '@/api/devicesManagement'
-import { getStationTopology, saveStationTopology } from '@/api/stationTopology'
+import { getStationTopology, saveStationTopology, getChannelBindings } from '@/api/stationTopology'
 import { STATION_TOPOLOGY_ID } from '@/mock/stationTopologyMock'
 import type { VisualModel, ModelFlowData } from '@/types/visualModeling'
-import type { StationTopology } from '@/types/stationTopology'
+import type { NodeChannelBinding, StationTopology } from '@/types/stationTopology'
 import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
 import { DEFAULT_DEVICE_PRODUCTS } from '@/constants/deviceProducts'
+import { setModelFlowProductRules } from '@/utils/modelFlowRules'
 import { createDefaultModelFlow, isEmptyFlow } from '@/utils/defaultModelFlow'
 
 /** 编辑器路由使用的固定站点 ID */
@@ -62,6 +63,10 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   const products = ref<ProductListItem[]>([...DEFAULT_DEVICE_PRODUCTS])
   const productsLoaded = ref(false)
   const productsLoading = ref(false)
+
+  const channelBindings = ref<NodeChannelBinding[]>([])
+  const channelBindingsLoaded = ref(false)
+  const channelBindingsLoading = ref(false)
 
   /** 兼容列表页：单站点包装为数组 */
   const models = computed<VisualModel[]>(() =>
@@ -133,6 +138,7 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
       products.value = [...DEFAULT_DEVICE_PRODUCTS]
       productsLoaded.value = true
     } finally {
+      setModelFlowProductRules(products.value)
       productsLoading.value = false
     }
   }
@@ -188,6 +194,30 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     } finally {
       instancesLoading.value = false
     }
+  }
+
+  async function loadChannelBindings(force = false) {
+    if (channelBindingsLoaded.value && !force) return
+    channelBindingsLoading.value = true
+    try {
+      const res = await getChannelBindings({
+        skipGlobalLoading: true,
+        showErrorMessage: false,
+      })
+      channelBindings.value = Array.isArray(res?.data?.bindings) ? res.data.bindings : []
+      channelBindingsLoaded.value = true
+    } catch {
+      channelBindings.value = []
+      channelBindingsLoaded.value = true
+    } finally {
+      channelBindingsLoading.value = false
+    }
+  }
+
+  function getLiveChannelIds(nodeId: string, instanceId: number): number[] {
+    const binding = channelBindings.value.find((item) => item.nodeId === nodeId)
+    const inst = binding?.instances.find((item) => item.instanceId === instanceId)
+    return inst?.channelIds ? [...inst.channelIds] : []
   }
 
   function getModels(): VisualModel[] {
@@ -320,9 +350,14 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     products,
     productsLoaded,
     productsLoading,
+    channelBindings,
+    channelBindingsLoaded,
+    channelBindingsLoading,
     loadStationTopology,
     loadProducts,
     loadInstances,
+    loadChannelBindings,
+    getLiveChannelIds,
     getModels,
     getModelById,
     createModel,

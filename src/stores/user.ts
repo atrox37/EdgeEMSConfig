@@ -5,6 +5,7 @@ import wsManager from '@/utils/websocket'
 import { setItem, getItem, removeItem } from '@/utils/secureStore'
 import { clearApiConfig } from '@/utils/apiConfig'
 import MD5 from 'crypto-js/md5'
+import { isValidRole, normalizeRoleName } from '@/utils/rolePermission'
 // 用户状态管理
 export const useUserStore = defineStore(
   'user',
@@ -20,9 +21,10 @@ export const useUserStore = defineStore(
     const isLoggedIn = computed(() => !!token.value && !!userInfo.value)
     const displayName = computed(() => userInfo.value?.username || '')
 
-    const roles = computed(() =>
-      userInfo.value?.role.name_en ? [userInfo.value.role.name_en] : ['Admin'],
-    )
+    const roles = computed(() => {
+      const name = normalizeRoleName(userInfo.value?.role?.name_en)
+      return isValidRole(name) ? [name] : []
+    })
 
     const KEY_REFRESH = 'refresh_token'
     const KEY_USER = 'user_info'

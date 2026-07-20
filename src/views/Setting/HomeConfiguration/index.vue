@@ -2,7 +2,7 @@
   <div class="home-configuration">
     <ModulePageHeader title="Home Configuration">
       <template #toolbar>
-        <el-button type="primary" plain :loading="resetLoading" @click="handleRestore">
+        <el-button v-permission="'engineer'" type="primary" plain :loading="resetLoading" @click="handleRestore">
           Restore Default
         </el-button>
       </template>

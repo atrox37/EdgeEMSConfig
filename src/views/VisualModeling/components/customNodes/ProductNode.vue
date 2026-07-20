@@ -5,6 +5,7 @@
       'product-node--selected': selected,
       'product-node--image': hasImage,
       'product-node--has-instance': boundInstances.length > 0,
+      'product-node--unbound': !boundInstances.length,
       'product-node--view-mode': hideConnectionHandles,
     }"
   >
@@ -114,6 +115,21 @@ const imageFallback = computed(() => {
 .product-node.product-node--selected:not(.product-node--image) {
   border-color: #4a90d9;
   box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.25), 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.product-node.product-node--unbound:not(.product-node--image) {
+  border-style: dashed;
+  border-color: rgba(239, 108, 0, 0.55);
+  background: rgba(255, 243, 224, 0.35);
+}
+
+.product-node.product-node--image.product-node--unbound {
+  filter: drop-shadow(0 0 4px rgba(239, 108, 0, 0.45));
+  opacity: 0.92;
+}
+
+.product-node.product-node--image.product-node--unbound .product-node__caption {
+  color: #e65100;
 }
 
 .product-node__body {

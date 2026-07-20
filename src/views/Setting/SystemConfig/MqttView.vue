@@ -89,7 +89,7 @@
               </el-form>
 
               <!-- Apply 按钮 -->
-              <div class="system-mqtt__actions">
+              <div v-permission="'engineer'" class="system-mqtt__actions">
                 <el-button type="primary" :loading="saving" :disabled="isBusy" @click="handleApply">Apply</el-button>
               </div>
             </div><!-- /.system-mqtt__left-panel -->
@@ -132,7 +132,7 @@
               <span>SSL Enabled</span>
               <span class="system-mqtt__status-value">{{ sslStatusText }}</span>
             </div>
-            <div class="system-mqtt__status-actions">
+            <div v-permission="'engineer'" class="system-mqtt__status-actions">
               <el-button v-if="mqttStatus.connected === true" size="small"
                 :loading="disconnecting" :disabled="isBusy" @click="handleDisconnect">
                 Disconnect
@@ -160,7 +160,7 @@
                     {{ getCertFileName(item.type) }}
                   </div>
                 </div>
-                <div class="system-mqtt__tls-actions">
+                <div v-permission="'engineer'" class="system-mqtt__tls-actions">
                   <el-icon class="system-mqtt__icon-btn is-update"
                     :class="{ 'is-disabled': isBusy || certDeletingType === item.type }"
                     @click="!(isBusy || certDeletingType === item.type) && triggerCertificateUpload(item.type)">

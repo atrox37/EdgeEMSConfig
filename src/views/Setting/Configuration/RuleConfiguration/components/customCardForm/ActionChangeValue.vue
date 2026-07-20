@@ -730,8 +730,7 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.voltage-class {
-  .voltage-class.action-change-value-form {
+.voltage-class.action-change-value-form {
     width: 100%;
     height: 100%;
 
@@ -764,6 +763,9 @@ watch(
         }
         .section__title-text {
           display: inline;
+          font-weight: inherit;
+          font-size: inherit;
+          color: inherit;
         }
         .section__title-lines {
           display: none;
@@ -777,6 +779,8 @@ watch(
 
         .section__add-btn {
           width: 32px !important;
+          min-width: 32px !important;
+          flex: 0 0 32px;
 
           :deep(.section__add-btn-icon) {
             width: 16px;
@@ -814,17 +818,17 @@ watch(
       flex: 2 1 0;
     }
 
-    .variable-section .section__header,
-    .rule-section .section__header {
-      padding-right: $width-scrollbar;
-    }
+    // .variable-section .section__header,
+    // .rule-section .section__header {
+    //   padding-right: $width-scrollbar;
+    // }
 
     .variable-section {
       padding-right: 10px;
       flex: 1 1 0;
       min-width: 0;
       height: 100%;
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: 1px solid #dcdfe6;
     }
 
     .rule-section {
@@ -903,12 +907,20 @@ watch(
 
     .variable-row__delete {
       padding: 0 4px;
-      flex: 0 0 auto;
+      flex: 0 0 32px;
+      min-width: 32px !important;
 
       :deep(.variable-row__delete-icon) {
         width: 16px;
         height: 16px;
       }
+    }
+
+    .combined-row__delete {
+      flex: 0 0 32px;
+      width: 32px !important;
+      min-width: 32px !important;
+      padding: 4px !important;
     }
 
     :deep(.combined-row__add-icon) {
@@ -924,7 +936,7 @@ watch(
       flex-direction: column;
       gap: 12px;
       padding-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid #dcdfe6;
 
       .rule-row:last-child {
         padding-bottom: 0;
@@ -1054,10 +1066,11 @@ watch(
         flex: 1 1 0;
       }
 
-      // .rule-row__eq {
-      //   color: #fff;
-      //   opacity: 0.9;
-      // }
+      .rule-row__delete {
+        flex: 0 0 32px;
+        min-width: 32px !important;
+        padding: 0 4px;
+      }
     }
 
     .collapse-hint {
@@ -1106,6 +1119,5 @@ watch(
         display: flex;
       }
     }
-  }
 }
 </style>

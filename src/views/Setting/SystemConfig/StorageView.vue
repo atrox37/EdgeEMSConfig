@@ -48,6 +48,7 @@
             </el-form>
 
             <template #footer>
+              <div v-permission="'engineer'">
               <el-button :loading="testing" :disabled="loading || saving || applying" @click="handleTest">
                 Test Connection
               </el-button>
@@ -58,6 +59,7 @@
                 @click="handleApply">
                 Apply
               </el-button>
+              </div>
             </template>
           </LightCollapseCard>
 
@@ -149,7 +151,7 @@
             </div>
 
             <template #footer>
-              <el-button type="primary" :loading="hisSaving" :disabled="hisLoading" @click="handleHisSave">
+              <el-button v-permission="'engineer'" type="primary" :loading="hisSaving" :disabled="hisLoading" @click="handleHisSave">
                 Apply
               </el-button>
             </template>

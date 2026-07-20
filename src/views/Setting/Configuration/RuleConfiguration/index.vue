@@ -3,7 +3,17 @@
     <ModulePageHeader title="Rule Config" />
       <div class="rule-management__content">
         <div class="rule-management__search-form" ref="levelSelectRef">
-          <div></div>
+          <el-form :model="filters" :inline="true" class="rule-management__filters-desktop">
+            <el-form-item label="Name:">
+              <el-input
+                v-model="filters.name"
+                placeholder="Please enter name"
+                clearable
+                @input="handleNameSearch"
+                @clear="handleNameSearch"
+              />
+            </el-form-item>
+          </el-form>
           <div class="rule-management__reload-icon" @click="handleReload">
             <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
           </div>
@@ -32,15 +42,17 @@
             <el-table-column prop="enabled" label="Enabled" min-width="60">
               <template #default="{ row, $index }">
                 <el-switch
+                  v-permission="'engineer'"
                   :model-value="row.enabled"
                   :loading="switchLoadings[$index]"
                   :before-change="() => handleEnabledBeforeChange(!row.enabled, row, $index)"
                 />
               </template>
             </el-table-column>
-            <el-table-column min-width="200" fixed="right">
+            <el-table-column min-width="280" fixed="right">
               <template #header>
                 <IconButton
+                  v-permission="'engineer'"
                   type="primary"
                   :icon="userAddIcon"
                   text="New"
@@ -54,11 +66,15 @@
                     <AppIcon name="i-tabler-file-text" className="rule-management__inline-icon" />
                     <span class="rule-management__operation-text">Detail</span>
                   </div>
-                  <div class="rule-management__operation-item" @click="openEditDialog(row)">
+                  <div class="rule-management__operation-item" @click="openHistoryDialog(row)">
+                    <AppIcon name="i-tabler-history" className="rule-management__inline-icon" />
+                    <span class="rule-management__operation-text">Trigger Records</span>
+                  </div>
+                  <div v-permission="'engineer'" class="rule-management__operation-item" @click="openEditDialog(row)">
                     <AppIcon name="i-tabler-edit" className="rule-management__inline-icon" />
                     <span class="rule-management__operation-text">Edit</span>
                   </div>
-                  <div class="rule-management__operation-item" @click="deleteRow(row.id, `Are you sure you want to delete rule '${row.name}'?`, ruleManagementRef)">
+                  <div v-permission="'engineer'" class="rule-management__operation-item" @click="deleteRow(row.id, `Are you sure you want to delete rule '${row.name}'?`, ruleManagementRef)">
                     <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                     <span class="rule-management__operation-text">Delete</span>
                   </div>
@@ -81,6 +97,7 @@
         </div>
       </div>                        
 <RuleEditDialog ref="ruleEditDialogRef" @submitted="fetchTableData(true)" />
+<RuleHistoryDialog ref="ruleHistoryDialogRef" />
   </div>
   <router-view v-else />
 </template>
@@ -88,8 +105,10 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
+import IconButton from '@/components/common/IconButton.vue'
 import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
 import RuleEditDialog from './components/RuleEditDialog.vue'
+import RuleHistoryDialog from './components/RuleHistoryDialog.vue'
 import { enableRule, disableRule } from '@/api/rulesManagement'
 import { useRoute, useRouter } from 'vue-router'
 import type { Rule } from '@/types/ruleConfiguration'
@@ -106,12 +125,24 @@ const {
   loading,
   tableData,
   pagination,
+  filters,
   handlePageSizeChange,
   fetchTableData,
   handlePageChange,
   deleteRow,
   reloadFilters,
 } = useTableData<Rule>(tableConfig)
+
+filters.name = ''
+
+let nameSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const handleNameSearch = () => {
+  if (nameSearchTimer) clearTimeout(nameSearchTimer)
+  nameSearchTimer = setTimeout(() => {
+    void fetchTableData(true)
+  }, 400)
+}
 const route = useRoute()
 const router = useRouter()
 const isDetailRoute = computed(() => route.name === 'ruleChainEditor')
@@ -121,6 +152,7 @@ const ruleManagementRef = ref<HTMLElement | null>(null)
 const switchLoadings = ref<boolean[]>([])
 const levelSelectRef = ref<HTMLElement | null>(null)
 const ruleEditDialogRef = ref()
+const ruleHistoryDialogRef = ref<InstanceType<typeof RuleHistoryDialog> | null>(null)
 const userAddIcon = 'i-tabler-plus'
 
 // 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
@@ -134,6 +166,10 @@ function openCreateDialog() {
 
 function openEditDialog(row: Rule) {
   ruleEditDialogRef.value?.open(row)
+}
+
+function openHistoryDialog(row: Rule) {
+  ruleHistoryDialogRef.value?.open({ id: row.id, name: row.name })
 }
 
 function openDetail(row: { id: string }) {
@@ -271,7 +307,8 @@ watch(
         .rule-management__operation {
           display: flex;
           align-items: center;
-          gap: 20px;
+          flex-wrap: wrap;
+          gap: 12px 20px;
           .position-relative {
             position: relative;
           }

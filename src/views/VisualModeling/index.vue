@@ -66,7 +66,7 @@
 
         <div class="visual-modeling-list__card-actions">
           <el-tooltip content="Edit plan" placement="top">
-            <el-button size="small" @click.stop="openEditDialog(model)">
+            <el-button v-permission="'engineer'" size="small" @click.stop="openEditDialog(model)">
               <AppIcon name="i-tabler-pencil" />
               <span>Edit</span>
             </el-button>
@@ -83,7 +83,7 @@
             </template>
           </el-dropdown>
           <el-tooltip content="Delete" placement="top">
-            <el-button size="small" type="danger" plain @click.stop="confirmDelete(model)">
+            <el-button v-permission="'engineer'" size="small" type="danger" plain @click.stop="confirmDelete(model)">
               <AppIcon name="i-tabler-trash" />
               <span>Delete</span>
             </el-button>

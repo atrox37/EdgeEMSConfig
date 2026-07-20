@@ -31,6 +31,7 @@
 
         <el-button
           v-if="isViewMode"
+          v-permission="'engineer'"
           size="small"
           type="primary"
           class="custom-button"
@@ -41,15 +42,27 @@
         </el-button>
 
         <template v-if="!isViewMode">
-          <el-button size="small" class="custom-button" @click="handleAutoLayout">
-            <AppIcon name="i-tabler-layout-distribute-vertical" style="margin-right:4px" />
+          <el-button
+            v-permission="'engineer'"
+            size="small"
+            class="custom-button"
+            @click="handleAutoLayout"
+          >
+            <AppIcon name="i-tabler-layout-distribute-vertical" class="modeling-editor__toolbar-icon" />
             Auto Layout
           </el-button>
-          <el-button size="small" type="primary" class="custom-button" @click="handleImportClick">
+          <el-button
+            v-permission="'engineer'"
+            size="small"
+            type="primary"
+            class="custom-button"
+            @click="handleImportClick"
+          >
             <AppIcon name="i-tabler-upload" class="modeling-editor__toolbar-icon" />
             Import
           </el-button>
           <el-button
+            v-permission="'engineer'"
             size="small"
             type="primary"
             class="custom-button"
@@ -65,7 +78,11 @@
     <div class="modeling-editor__body">
       <LeftPanel v-if="!isViewMode" v-model:collapsed="leftPanelCollapsed" />
 
-      <div ref="canvasRef" class="modeling-editor__canvas">
+      <div
+        ref="canvasRef"
+        class="modeling-editor__canvas"
+        :class="{ 'modeling-editor__canvas--drag-over': isDragOver }"
+      >
         <VueFlow
           :nodes="nodes"
           :edges="edges"
@@ -109,6 +126,17 @@
         </VueFlow>
 
         <Transition name="edge-toolbar">
+          <div
+            v-if="!isViewMode && dropTargetStatus"
+            class="modeling-editor__drop-hint"
+            :class="`modeling-editor__drop-hint--${dropTargetStatus}`"
+          >
+            <AppIcon :name="dropTargetStatus === 'valid' ? 'i-tabler-check' : 'i-tabler-x'" />
+            <span>{{ dropTargetStatus === 'valid' ? 'Release to place inside container' : 'Invalid container for this device' }}</span>
+          </div>
+        </Transition>
+
+        <Transition name="edge-toolbar">
           <div v-if="!isViewMode && selectedEdgeId" class="modeling-editor__edge-toolbar">
             <button class="edge-toolbar__btn edge-toolbar__btn--label" title="Edit label" @click="openEdgeLabelEdit">
               <AppIcon name="i-tabler-tag" />
@@ -121,7 +149,7 @@
           </div>
         </Transition>
 
-        <div v-if="!isViewMode" class="modeling-editor__floating-actions">
+        <div v-if="!isViewMode" v-permission="'engineer'" class="modeling-editor__floating-actions">
           <el-button
             circle
             class="floating-btn floating-btn--cancel"
@@ -151,6 +179,7 @@
         :readonly="isViewMode"
         @update-node="handleUpdateNode"
         @delete-node="handleDeleteNode"
+        @detach-from-container="handleDetachFromContainer"
       />
     </div>
 
@@ -176,6 +205,8 @@
       style="display:none"
       @change="handleImportChange"
     />
+
+    <TopologyIssuesDialog ref="topologyIssuesDialogRef" />
   </div>
 </template>
 
@@ -230,11 +261,35 @@ import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 import type { ModelFlowNode } from '@/types/visualModeling'
 import { MODELING_EDITOR_KEY } from './modelingEditorContext'
+import { collectBoundInstanceIds, collectNodesToDelete } from '@/utils/visualModeling'
+import { normalizeTopology, validateTopology } from '@/utils/topologyNormalize'
+import {
+  buildAttachPatch,
+  buildConnectReparentPatch,
+  buildDetachPatch,
+  buildMissingContainerEdgePatches,
+  getNodeAbsolutePosition,
+  type TopologySyncPatch,
+} from '@/utils/topologySync'
+import { isContainerNode, setModelFlowProductRules } from '@/utils/modelFlowRules'
+import TopologyIssuesDialog from './components/dialogs/TopologyIssuesDialog.vue'
+import { isFlowSnapshotEqual } from '@/utils/flowSnapshot'
+import { enrichFlowWithLiveChannelBindings } from '@/utils/topologyChannelBindings'
 
 const store = useVisualModelingStore()
 const modelId = STATION_EDITOR_ID
 
-const { onDragOver, onDragLeave, onDrop: dndOnDrop } = useModelDnd()
+const {
+  onDragOver,
+  onDragLeave,
+  onDrop: dndOnDrop,
+  isDragOver,
+  isDragging,
+  dropTargetContainerId,
+  dropTargetStatus,
+  clearDropTargetHighlight,
+  updateDropTargetForProduct,
+} = useModelDnd()
 const {
   setNodes,
   setEdges,
@@ -243,6 +298,7 @@ const {
   applyEdgeChanges,
   onNodesChange,
   onEdgesChange,
+  onNodeDrag,
   onNodeDragStop,
   toObject,
   fitView,
@@ -336,9 +392,12 @@ const edgeLabelDialogVisible = ref(false)
 const editingEdgeLabel = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
 const exportLoading = ref(false)
+const topologyIssuesDialogRef = ref<InstanceType<typeof TopologyIssuesDialog> | null>(null)
 
 provide(MODELING_EDITOR_KEY, {
   isViewMode,
+  dropTargetContainerId,
+  dropTargetStatus,
   notifyFlowChanged: () => {
     if (isViewMode.value || isRestoringHistory) return
     void nextTick().then(() => {
@@ -347,7 +406,16 @@ provide(MODELING_EDITOR_KEY, {
       saveSnapshot()
     })
   },
+  getBoundInstanceIdsExcluding: (nodeId: string) =>
+    collectBoundInstanceIds(getFlowNodes(), nodeId),
 })
+
+function topologyValidationOptions() {
+  return {
+    resolveChannelIds: (nodeId: string, instanceId: number) =>
+      store.getLiveChannelIds(nodeId, instanceId),
+  }
+}
 
 // ---- 撤销/重做 ----
 type Snapshot = { nodes: any[]; edges: any[] }
@@ -376,6 +444,58 @@ function getFlowEdges(): FlowEdge[] {
   const fromFlow = toObject().edges as FlowEdge[]
   const pick = fromRef.length >= fromFlow.length ? fromRef : fromFlow
   return JSON.parse(JSON.stringify(pick)) as FlowEdge[]
+}
+
+function applyTopologySyncPatch(patch: TopologySyncPatch, options?: { silent?: boolean }) {
+  if (isViewMode.value) return
+  if (isRestoringHistory && !options?.silent) return
+  if (
+    !patch.nodeUpdates.length
+    && !patch.edgesToAdd.length
+    && !patch.edgesToRemove.length
+  ) {
+    return
+  }
+
+  for (const { id, patch: nodePatch } of patch.nodeUpdates) {
+    updateNode(id, nodePatch as Partial<FlowNode>)
+  }
+  if (patch.edgesToRemove.length) {
+    removeEdges(patch.edgesToRemove)
+  }
+  if (patch.edgesToAdd.length) {
+    const normalized = normalizeFlowEdges(patch.edgesToAdd, getFlowNodes())
+    addEdges(normalized)
+  }
+
+  void nextTick().then(() => {
+    nodes.value = getFlowNodes()
+    edges.value = normalizeFlowEdges((toObject().edges ?? []) as FlowEdge[], getFlowNodes())
+    if (!options?.silent) {
+      markDirty()
+      saveSnapshot()
+    }
+  })
+}
+
+function applyTopologySyncPatches(patches: TopologySyncPatch[], options?: { silent?: boolean }) {
+  if (!patches.length) return
+  const merged: TopologySyncPatch = {
+    nodeUpdates: [],
+    edgesToAdd: [],
+    edgesToRemove: [],
+  }
+  for (const patch of patches) {
+    merged.nodeUpdates.push(...patch.nodeUpdates)
+    merged.edgesToAdd.push(...patch.edgesToAdd)
+    merged.edgesToRemove.push(...patch.edgesToRemove)
+  }
+  applyTopologySyncPatch(merged, options)
+}
+
+function syncContainerMembershipEdges(options?: { silent?: boolean }) {
+  const patches = buildMissingContainerEdgePatches(getFlowNodes(), getFlowEdges())
+  applyTopologySyncPatches(patches, options)
 }
 
 /** 将 Vue Flow 内部边同步到本地 ref（单向绑定时以内部状态为准） */
@@ -417,13 +537,9 @@ async function captureSavedSnapshot(): Promise<boolean> {
 
 function isSameAsSavedSnapshot(): boolean {
   if (!savedSnapshot.value?.nodes?.length) return true
-  const current = {
-    nodes: getFlowNodes(),
-    edges: getFlowEdges(),
-  }
-  return (
-    JSON.stringify(current.nodes) === JSON.stringify(savedSnapshot.value.nodes)
-    && JSON.stringify(current.edges) === JSON.stringify(savedSnapshot.value.edges)
+  return isFlowSnapshotEqual(
+    { nodes: getFlowNodes(), edges: getFlowEdges() },
+    { nodes: savedSnapshot.value.nodes as FlowNode[], edges: savedSnapshot.value.edges as FlowEdge[] },
   )
 }
 
@@ -474,8 +590,68 @@ async function redo() {
   markDirty()
 }
 
+function removeNodesByIds(idsToRemove: string[]) {
+  const idSet = new Set(idsToRemove)
+  const currentNodes = getFlowNodes()
+  const nextNodes = currentNodes.filter((n) => !idSet.has(n.id))
+  const nextEdges = getFlowEdges().filter((e) => !idSet.has(e.source) && !idSet.has(e.target))
+  isRestoringHistory = true
+  setNodes(nextNodes)
+  setEdges(nextEdges)
+  void nextTick().then(() => {
+    nodes.value = (toObject().nodes ?? nextNodes) as FlowNode[]
+    edges.value = normalizeFlowEdges((toObject().edges ?? nextEdges) as FlowEdge[])
+    if (selectedNode.value && idSet.has(selectedNode.value.id)) {
+      selectedNode.value = null
+    }
+    isRestoringHistory = false
+    markDirty()
+    saveSnapshot()
+  })
+}
+
 function onNodesChangeHandler(changes: NodeChange[]) {
   if (isViewMode.value || isRestoringHistory) return
+
+  const removeChanges = changes.filter((c) => c.type === 'remove')
+  if (removeChanges.length > 0) {
+    const snapshotNodes = JSON.parse(
+      JSON.stringify(nodes.value.length ? nodes.value : getFlowNodes()),
+    ) as FlowNode[]
+    const stationIds = new Set(
+      snapshotNodes.filter((n) => n.type === 'station').map((n) => n.id),
+    )
+    const removingStation = removeChanges.some((c) =>
+      stationIds.has((c as { id: string }).id),
+    )
+    if (removingStation) {
+      ElMessage.warning('Station node cannot be deleted')
+      isRestoringHistory = true
+      setNodes(snapshotNodes)
+      void nextTick(() => {
+        nodes.value = snapshotNodes
+        isRestoringHistory = false
+      })
+      return
+    }
+
+    const currentNodes = getFlowNodes()
+    const extraIds = new Set<string>()
+    for (const change of removeChanges) {
+      const id = (change as { id: string }).id
+      for (const childId of collectNodesToDelete(id, currentNodes)) {
+        if (childId !== id && currentNodes.some((n) => n.id === childId)) {
+          extraIds.add(childId)
+        }
+      }
+    }
+    if (extraIds.size > 0) {
+      const removedIds = removeChanges.map((c) => (c as { id: string }).id)
+      removeNodesByIds([...removedIds, ...extraIds])
+      return
+    }
+  }
+
   const meaningful = changes.some(
     (c) =>
       c.type === 'position'
@@ -599,6 +775,7 @@ async function enterEditMode() {
   if (!savedSnapshot.value?.nodes?.length) {
     await captureSavedSnapshot()
   }
+  await store.loadChannelBindings(true)
   isViewMode.value = false
   selectedNode.value = null
   selectedEdgeId.value = null
@@ -613,6 +790,7 @@ function exitEditMode() {
   isViewMode.value = true
   selectedNode.value = null
   selectedEdgeId.value = null
+  clearDropTargetHighlight()
   nextTick(() => fitFlowToViewport(true))
 }
 
@@ -713,32 +891,50 @@ function handleEdgeDoubleClickGuard(event: any) {
   handleEdgeDoubleClick(event)
 }
 
-// ---- 节点拖拽结束：检测是否拖入了容器，若是则自动归入（re-parent） ----
+// ---- 节点拖拽：容器落点高亮 ----
+onNodeDrag(({ node }) => {
+  if (isViewMode.value || node.type !== 'product') return
+  const productName = (node.data as { productName?: string }).productName || ''
+  if (!productName) return
+  const absPos = getNodeAbsolutePosition(node, getFlowNodes())
+  updateDropTargetForProduct(productName, absPos, getFlowNodes())
+})
+
+// ---- 节点拖拽结束：容器归属与连线同步 ----
 onNodeDragStop(({ node }) => {
+  clearDropTargetHighlight()
   if (isViewMode.value) return
-  if (node.type !== 'product') return  // 只处理设备节点
+  if (node.type !== 'product') return
 
   const productName = (node.data as { productName?: string }).productName || ''
   if (!productName) return
 
-  // 已有父容器的节点受 extent='parent' 约束，无法拖出，无需处理
-  if (node.parentNode) return
+  const flowNodes = getFlowNodes()
+  const flowEdges = getFlowEdges()
+  const absPos = getNodeAbsolutePosition(node, flowNodes)
 
-  // 节点当前无父容器，检查落点是否在合法容器内
-  const absPos = node.position  // 无父节点时 position 即为 flow 绝对坐标
-  const hit = findContainerForNode(productName, absPos, getNodes.value)
+  if (node.parentNode) {
+    const hit = findContainerForNode(productName, absPos, flowNodes)
+    if (hit?.parentNodeId === node.parentNode) return
+
+    if (hit) {
+      applyTopologySyncPatch(
+        buildAttachPatch(node.id, hit.parentNodeId, hit.relativePosition, flowNodes, flowEdges),
+      )
+      return
+    }
+
+    const detachPatch = buildDetachPatch(node.id, flowNodes, flowEdges)
+    if (detachPatch) applyTopologySyncPatch(detachPatch)
+    return
+  }
+
+  const hit = findContainerForNode(productName, absPos, flowNodes)
   if (!hit) return
 
-  // 归入容器：更新 parentNode + 转换为相对坐标
-  updateNode(node.id, {
-    parentNode: hit.parentNodeId,
-    extent: 'parent' as const,
-    position: hit.relativePosition,
-  })
-  void nextTick().then(() => {
-    markDirty()
-    saveSnapshot()
-  })
+  applyTopologySyncPatch(
+    buildAttachPatch(node.id, hit.parentNodeId, hit.relativePosition, flowNodes, flowEdges),
+  )
 })
 
 // ---- 拖放 ----
@@ -748,6 +944,7 @@ function handleDrop(e: DragEvent) {
   dndOnDrop(e)
   void nextTick().then(() => {
     nodes.value = getFlowNodes()
+    syncContainerMembershipEdges()
     markDirty()
     saveSnapshot()
   })
@@ -770,7 +967,7 @@ function handleConnect(connection: Connection) {
   }
 
   if (hasEdgeBetweenNodesEitherDirection(flowEdges, resolved.source.id, resolved.target.id)) {
-    ElMessage.info('这两个节点之间已有连线')
+    ElMessage.info('An edge already exists between these two nodes')
     void nextTick().then(() => purgeInvalidFlowEdges())
     return
   }
@@ -790,6 +987,17 @@ function handleConnect(connection: Connection) {
   addEdges(newEdge)
   void nextTick().then(() => {
     edges.value = normalizeFlowEdges((toObject().edges ?? []) as FlowEdge[], getFlowNodes())
+
+    if (isContainerNode(resolved.source) && resolved.target.type === 'product') {
+      const reparentPatch = buildConnectReparentPatch(
+        resolved.source.id,
+        resolved.target.id,
+        getFlowNodes(),
+        getFlowEdges(),
+      )
+      if (reparentPatch) applyTopologySyncPatch(reparentPatch)
+    }
+
     markDirty()
     saveSnapshot()
   })
@@ -899,27 +1107,32 @@ async function persistFlowJson() {
 // ---- 右侧面板：删除节点 ----
 function handleDeleteNode(id: string) {
   if (isViewMode.value) return
-  ElMessageBox.confirm('Delete this node? Related edges will also be removed.', 'Delete Node', {
+  const target = getFlowNodes().find((n) => n.id === id)
+  if (target?.type === 'station') {
+    ElMessage.warning('Station node cannot be deleted')
+    return
+  }
+  const childCount = collectNodesToDelete(id, getFlowNodes()).length - 1
+  const message = childCount > 0
+    ? `Delete this container and ${childCount} device node(s) inside? Related edges will also be removed.`
+    : 'Delete this node? Related edges will also be removed.'
+  ElMessageBox.confirm(message, 'Delete Node', {
     type: 'warning',
     confirmButtonText: 'Delete',
     cancelButtonText: 'Cancel',
   })
     .then(() => {
-      const nextNodes = nodes.value.filter((n) => n.id !== id)
-      const nextEdges = edges.value.filter((e) => e.source !== id && e.target !== id)
-      isRestoringHistory = true
-      setNodes(nextNodes)
-      setEdges(nextEdges)
-      void nextTick().then(() => {
-        nodes.value = (toObject().nodes ?? nextNodes) as FlowNode[]
-        edges.value = normalizeFlowEdges((toObject().edges ?? nextEdges) as FlowEdge[])
-        isRestoringHistory = false
-        selectedNode.value = null
-        markDirty()
-        saveSnapshot()
-      })
+      removeNodesByIds(collectNodesToDelete(id, getFlowNodes()))
     })
     .catch(() => {})
+}
+
+function handleDetachFromContainer(id: string) {
+  if (isViewMode.value) return
+  const patch = buildDetachPatch(id, getFlowNodes(), getFlowEdges())
+  if (!patch) return
+  applyTopologySyncPatch(patch)
+  ElMessage.success('Device detached from container')
 }
 
 function normalizeFlowEdges(raw: FlowEdge[], flowNodes?: FlowNode[]): FlowEdge[] {
@@ -1042,7 +1255,26 @@ async function handleAutoLayout() {
 // ---- 保存 ----
 async function handleSave() {
   await syncEdgesFromFlow()
-  const flow = exportCurrentFlow()
+  let flow = exportCurrentFlow()
+  flow = enrichFlowWithLiveChannelBindings(flow, store.channelBindings)
+  const validation = validateTopology(flow, store.products, topologyValidationOptions())
+
+  if (!validation.canSave) {
+    await topologyIssuesDialogRef.value?.open({
+      mode: 'save-blocked',
+      issues: validation.issues,
+    })
+    return
+  }
+
+  if (validation.warnings.length) {
+    const proceed = await topologyIssuesDialogRef.value?.open({
+      mode: 'save-confirm',
+      issues: validation.issues,
+    })
+    if (!proceed) return
+  }
+
   const ok = await store.saveFlowJson(modelId, flow)
   if (!ok) {
     ElMessage.error('Failed to save topology')
@@ -1085,17 +1317,47 @@ function handleImportChange(e: Event) {
     try {
       const parsed = JSON.parse(reader.result as string)
       const flow = parsed.flowJson || parsed
-      const nextNodes = Array.isArray(flow.nodes) ? flow.nodes : []
-      const nextEdges = Array.isArray(flow.edges) ? flow.edges : []
-      if (!nextNodes.length && !nextEdges.length) {
+      const rawNodes = Array.isArray(flow.nodes) ? flow.nodes : []
+      const rawEdges = Array.isArray(flow.edges) ? flow.edges : []
+      if (!rawNodes.length && !rawEdges.length) {
         ElMessage.error('Import failed: no node data found')
         return
       }
-      void hydrateCanvasFromFlow({ nodes: nextNodes, edges: nextEdges }).then(() => {
+
+      const normalized = normalizeTopology(
+        { nodes: rawNodes, edges: rawEdges },
+        store.products,
+        topologyValidationOptions(),
+      )
+
+      void (async () => {
+        if (!normalized.canImport) {
+          await topologyIssuesDialogRef.value?.open({
+            mode: 'import',
+            issues: normalized.issues,
+            appliedFixes: normalized.appliedFixes,
+          })
+          return
+        }
+
+        if (normalized.warnings.length || normalized.appliedFixes.length) {
+          const proceed = await topologyIssuesDialogRef.value?.open({
+            mode: 'import',
+            issues: normalized.issues,
+            appliedFixes: normalized.appliedFixes,
+          })
+          if (!proceed) return
+        }
+
+        await hydrateCanvasFromFlow(normalized.flow)
         markDirty()
         saveSnapshot()
-      })
-      ElMessage.success('Imported successfully')
+        ElMessage.success(
+          normalized.appliedFixes.length
+            ? 'Imported successfully (data was cleaned up)'
+            : 'Imported successfully',
+        )
+      })()
     } catch {
       ElMessage.error('Import failed: invalid JSON')
     } finally {
@@ -1127,6 +1389,8 @@ async function initEditorCanvas() {
     await Promise.all([
       store.loadStationTopology(true),
       store.loadInstances(true),
+      store.loadProducts(),
+      store.loadChannelBindings(true),
     ])
   } catch (err) {
     console.error('[VisualModeling] load topology failed', err)
@@ -1142,7 +1406,6 @@ async function initEditorCanvas() {
 
   let flow = model.flowJson
   const isNewFlow = isEmptyFlow(flow)
-  const edgeCountBefore = flow.edges?.length ?? 0
   const hadLegacyEdgeIds = (flow.edges ?? []).some((e) => !/^edge-\d+$/.test(e.id))
 
   if (isNewFlow) {
@@ -1155,12 +1418,17 @@ async function initEditorCanvas() {
   }
 
   flow = repairMissingFlowEdges(flow)
-  const edgesRepaired = (flow.edges?.length ?? 0) !== edgeCountBefore
 
   store.setCurrentModel(modelId)
+  setModelFlowProductRules(store.products)
   await hydrateCanvasFromFlow(flow, { autoLayout: true })
 
-  if (isNewFlow || edgesRepaired || hadLegacyEdgeIds) {
+  isRestoringHistory = true
+  syncContainerMembershipEdges({ silent: true })
+  await nextTick()
+  isRestoringHistory = false
+
+  if (isNewFlow || hadLegacyEdgeIds) {
     await persistFlowJson()
   }
 
@@ -1232,26 +1500,34 @@ onUnmounted(() => {
     }
 
     :deep(.module-page-header__toolbar) {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+
       .el-button,
       .el-dropdown {
         margin-left: 0 !important;
       }
-    }
 
-    .modeling-editor__save-btn.is-dirty:not(:disabled) {
-      box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.55);
+      .el-button {
+        height: 24px;
+        padding: 0 8px;
+        font-size: 11px;
+      }
     }
 
     .modeling-editor__toolbar-icon {
       margin-right: 6px;
       :deep(svg) {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
       }
     }
 
     .modeling-editor__canvas .modeling-editor__floating-actions {
-      position: absolute;
+      position: fixed;
       right: 100px;
       bottom: 24px;
       display: flex;
@@ -1292,6 +1568,54 @@ onUnmounted(() => {
       min-width: 0;
       position: relative;
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .modeling-editor__canvas.modeling-editor__canvas--drag-over {
+      outline: 2px dashed rgba(74, 144, 217, 0.45);
+      outline-offset: -2px;
+    }
+
+    .modeling-editor__drop-hint {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 40;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(15, 31, 61, 0.12);
+    }
+
+    .modeling-editor__drop-hint :deep(svg) {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .modeling-editor__drop-hint.modeling-editor__drop-hint--valid {
+      background: rgba(67, 160, 71, 0.12);
+      color: #2e7d32;
+      border: 1px solid rgba(67, 160, 71, 0.35);
+    }
+
+    .modeling-editor__drop-hint.modeling-editor__drop-hint--valid :deep(svg) {
+      color: #43a047 !important;
+    }
+
+    .modeling-editor__drop-hint.modeling-editor__drop-hint--invalid {
+      background: rgba(229, 57, 53, 0.1);
+      color: #c62828;
+      border: 1px solid rgba(229, 57, 53, 0.3);
+    }
+
+    .modeling-editor__drop-hint.modeling-editor__drop-hint--invalid :deep(svg) {
+      color: #e53935 !important;
     }
 
     .modeling-editor__flow {

@@ -1,6 +1,6 @@
 import type { Connection, Edge as FlowEdge, Node as FlowNode } from '@vue-flow/core'
 import type { ProductListItem } from '@/types/deviceConfiguration'
-import { DEFAULT_DEVICE_PRODUCTS, isContainerProduct } from '@/constants/deviceProducts'
+import { DEFAULT_DEVICE_PRODUCTS, isContainerProduct, mergeWithDefaultProducts } from '@/constants/deviceProducts'
 
 function productParentMap(products: ProductListItem[]): Map<string, string | null> {
   const map = new Map<string, string | null>()
@@ -10,7 +10,12 @@ function productParentMap(products: ProductListItem[]): Map<string, string | nul
   return map
 }
 
-const parentMap = productParentMap(DEFAULT_DEVICE_PRODUCTS)
+let parentMap = productParentMap(DEFAULT_DEVICE_PRODUCTS)
+
+/** 用 API / 默认合并后的产品列表刷新父子规则 */
+export function setModelFlowProductRules(products?: ProductListItem[] | null) {
+  parentMap = productParentMap(mergeWithDefaultProducts(products))
+}
 
 export function getProductParentName(productName?: string): string | null | undefined {
   if (!productName) return undefined
@@ -197,16 +202,16 @@ export function getConnectionRuleHint(
 
   if (!isStrictParentChildConnection(source, target)) {
     if (isStrictParentChildConnection(target, source)) {
-      return '请连接父节点与子节点（拖线方向不限，系统将自动规范为父→子）'
+      return 'Connect parent to child (drag direction is flexible; edges are normalized parent → child)'
     }
     if (source.parentNode || target.parentNode) {
-      return '请从父容器连到子设备（例如 ESS → Battery）'
+      return 'Connect from parent container to child device (e.g. ESS → Battery)'
     }
-    return '请从父节点连到子节点（例如 Station → Generator；任意设备均可直连 Station）'
+    return 'Connect parent to child (e.g. Station → Generator; any device may connect directly to Station)'
   }
 
   if (hasEdgeBetweenNodes(edges, source.id, target.id) || hasEdgeBetweenNodes(edges, target.id, source.id)) {
-    return '这两个节点之间已有连线'
+    return 'An edge already exists between these two nodes'
   }
   return 'Invalid connection'
 }

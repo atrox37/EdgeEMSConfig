@@ -112,7 +112,7 @@
           <!-- <el-table-column prop="error_count" label="Error Count" /> -->
           <el-table-column min-width="380" fixed="right">
             <template #header>
-              <IconButton type="primary" :icon="userAddIcon" text="New"
+              <IconButton v-permission="'engineer'" type="primary" :icon="userAddIcon" text="New"
                 custom-class="rule-management__btn rule-management__table-header-btn" @click="addChannel" />
             </template>
             <template #default="{ row }">
@@ -125,7 +125,7 @@
                   <AppIcon name="i-tabler-transform-point" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Points/Mappings</span>
                 </div>
-                <div class="rule-management__operation-item" @click="
+                <div v-permission="'engineer'" class="rule-management__operation-item" @click="
                   deleteRow(
                     row.id,
                     `Are you sure you want to delete channel ${row.name}?`,
@@ -135,7 +135,7 @@
                   <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                   <span class="rule-management__operation-text">Delete</span>
                 </div>
-                <el-dropdown trigger="click" placement="bottom-end" :teleported="true">
+                <el-dropdown v-permission="'engineer'" trigger="click" placement="bottom-end" :teleported="true">
                   <div class="rule-management__operation-item rule-management__operation-item--more">
                     <AppIcon name="i-tabler-dots" className="rule-management__more-icon" />
                   </div>

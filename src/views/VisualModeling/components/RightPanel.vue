@@ -96,6 +96,14 @@
                 class="right-panel__instance-item"
               >
                 <div class="right-panel__instance-name">{{ inst.instanceName }}</div>
+                <div v-if="instanceChannelLabel(inst)" class="right-panel__instance-channels">
+                  <AppIcon name="i-tabler-antenna-bars-5" />
+                  <span>{{ instanceChannelLabel(inst) }}</span>
+                </div>
+                <div v-else-if="inst.instanceId" class="right-panel__instance-channels right-panel__instance-channels--empty">
+                  <AppIcon name="i-tabler-alert-triangle" />
+                  <span>No routing channels configured</span>
+                </div>
                 <div class="right-panel__instance-actions">
                   <button type="button" class="right-panel__action-btn" @click="openInstanceDetail(inst.instanceId)">
                     <AppIcon name="i-tabler-file-text" />
@@ -150,8 +158,19 @@
         </template>
       </div>
 
-      <div v-if="!readonly" class="right-panel__footer">
-        <el-button type="danger" size="small" plain @click="emit('delete-node', selectedNode.id)">
+      <div v-if="!readonly && selectedNode.type !== 'station'" class="right-panel__footer">
+        <el-button
+          v-if="canDetachFromContainer"
+          v-permission="'engineer'"
+          size="small"
+          plain
+          class="right-panel__detach-btn"
+          @click="emit('detach-from-container', selectedNode.id)"
+        >
+          <AppIcon name="i-tabler-external-link" style="margin-right:4px" />
+          Detach from Container
+        </el-button>
+        <el-button v-permission="'engineer'" type="danger" size="small" plain @click="emit('delete-node', selectedNode.id)">
           <AppIcon name="i-tabler-trash" style="margin-right:4px" />
           Delete Node
         </el-button>
@@ -179,8 +198,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, inject } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
 import { getProducts, getInstanceChannelSummary } from '@/api/devicesManagement'
 import InstanceDetailDialog from '@/views/Setting/Configuration/DeviceConfiguration/components/InstanceDetailDialog.vue'
@@ -193,6 +213,7 @@ import {
   isBindableContainerProduct,
 } from '@/constants/deviceProducts'
 import { normalizeNodeInstances } from '@/utils/visualModeling'
+import { MODELING_EDITOR_KEY } from '../modelingEditorContext'
 
 const props = defineProps<{
   selectedNode: ModelFlowNode | null
@@ -202,9 +223,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update-node', node: ModelFlowNode): void
   (e: 'delete-node', id: string): void
+  (e: 'detach-from-container', id: string): void
 }>()
 
 const store = useVisualModelingStore()
+const editorCtx = inject(MODELING_EDITOR_KEY, null)
 const pointsDialogRef = ref<InstanceType<typeof PointsTablesDialog> | null>(null)
 const instanceDialogRef = ref<InstanceType<typeof InstanceDetailDialog> | null>(null)
 
@@ -257,6 +280,11 @@ const canBindInstances = computed(() => {
   return type === 'product' || type === 'station' || type === 'group'
 })
 
+const canDetachFromContainer = computed(() => {
+  const node = props.selectedNode
+  return node?.type === 'product' && !!node.parentNode
+})
+
 const isContainerNode = computed(() => {
   const node = props.selectedNode
   if (!node || node.type !== 'group') return false
@@ -268,12 +296,20 @@ const instanceBindLabel = computed(() => 'Bind Instance')
 
 const instanceBindPlaceholder = computed(() => 'Search and select instance')
 
+const boundElsewhere = computed(() => {
+  const nodeId = props.selectedNode?.id
+  if (!nodeId || !editorCtx?.getBoundInstanceIdsExcluding) return new Set<number>()
+  return editorCtx.getBoundInstanceIdsExcluding(nodeId)
+})
+
 const filteredInstances = computed(() => {
   const product = form.value.productName?.trim()
-  if (!product) return storeInstances.value
-  return storeInstances.value.filter(
-    (i) => (i.product_name || '').trim() === product,
-  )
+  const byProduct = !product
+    ? storeInstances.value
+    : storeInstances.value.filter(
+        (i) => (i.product_name || '').trim() === product,
+      )
+  return byProduct.filter((i) => !boundElsewhere.value.has(i.instance_id))
 })
 
 function instanceOptionLabel(inst: {
@@ -361,7 +397,21 @@ function buildInstancesFromIds(ids: number[]): ModelInstanceBinding[] {
     .filter((item) => item.instanceId)
 }
 
+function instanceChannelLabel(inst: ModelInstanceBinding): string | null {
+  const nodeId = props.selectedNode?.id
+  const ids = nodeId
+    ? store.getLiveChannelIds(nodeId, inst.instanceId)
+    : (inst.channelIds ?? [])
+  if (!ids.length) return null
+  return `Channels: ${ids.join(', ')}`
+}
+
 async function fetchAndFillChannelIds(instanceId: number): Promise<number[]> {
+  const nodeId = props.selectedNode?.id
+  if (nodeId) {
+    const live = store.getLiveChannelIds(nodeId, instanceId)
+    if (live.length) return live
+  }
   try {
     const res = await getInstanceChannelSummary(instanceId)
     return res?.data?.channelIds ?? []
@@ -391,8 +441,15 @@ async function onContainerInstanceSelect(val: number | undefined | null) {
 
 async function onInstancesChange(ids: number[]) {
   if (props.readonly) return
+  const taken = boundElsewhere.value
+  const blocked = ids.filter((id) => taken.has(id))
+  if (blocked.length) {
+    ElMessage.warning('This instance is already bound to another node')
+    return
+  }
   selectedInstanceIds.value = ids
   form.value.instances = await buildInstancesWithChannels(ids)
+  await store.loadChannelBindings(true)
   applyChanges()
 }
 
@@ -438,6 +495,11 @@ async function onInstanceCreated(payload: {
   }
 
   if (!instanceId) return
+
+  if (boundElsewhere.value.has(instanceId)) {
+    ElMessage.warning('This instance is already bound to another node')
+    return
+  }
 
   // 单实例约束：新建后直接替换当前绑定
   selectedInstanceIds.value = [instanceId]
@@ -492,6 +554,7 @@ const hasProductMismatchWarning = computed(() => {
 onMounted(() => {
   loadProductOptions()
   void store.loadInstances(true)
+  void store.loadChannelBindings(true)
 })
 </script>
 
@@ -686,7 +749,33 @@ onMounted(() => {
   font-weight: 700;
   color: #0f1f3d;
   word-break: break-all;
+  margin-bottom: 4px;
+}
+
+.right-panel__instance-channels {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 10px;
+  color: #4a90d9;
   margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.right-panel__instance-channels :deep(svg) {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #4a90d9 !important;
+}
+
+.right-panel__instance-channels.right-panel__instance-channels--empty {
+  color: #ef6c00;
+}
+
+.right-panel__instance-channels.right-panel__instance-channels--empty :deep(svg) {
+  color: #ef6c00 !important;
 }
 
 .right-panel__instance-actions {
@@ -751,10 +840,19 @@ onMounted(() => {
   padding: 10px 12px;
   border-top: 1px solid rgba(15, 31, 61, 0.08);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .right-panel__footer .el-button {
   width: 100%;
+  margin-left: 0 !important;
+}
+
+.right-panel__detach-btn {
+  color: #4a90d9;
+  border-color: rgba(74, 144, 217, 0.45);
 }
 
 .right-panel__placeholder {

@@ -540,8 +540,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.voltage-class {
-  .voltage-class.action-period-delta-form {
+.voltage-class.action-period-delta-form {
     width: 100%;
     height: 100%;
     .scroll-section {
@@ -602,6 +601,5 @@ onMounted(() => {
     :deep(.el-input-number) {
         width: 100% !important;
     }
-  }
 }
 </style>

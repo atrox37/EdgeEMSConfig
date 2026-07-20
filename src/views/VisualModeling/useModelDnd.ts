@@ -5,6 +5,11 @@ import type { ModelNodeTemplate } from '@/types/visualModeling'
 import { isContainerProduct } from '@/constants/deviceProducts'
 import { canPlaceInContainer } from '@/utils/modelFlowRules'
 import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
+import {
+  evaluateContainerDropTarget,
+  findContainerAtPosition,
+  type ContainerDropStatus,
+} from '@/utils/containerDropTarget'
 
 let nodeCounter = 0
 function genId() {
@@ -21,6 +26,23 @@ const state = {
   draggedTemplate: ref<ModelNodeTemplate | null>(null),
   isDragOver: ref(false),
   isDragging: ref(false),
+  dropTargetContainerId: ref<string | null>(null),
+  dropTargetStatus: ref<ContainerDropStatus | null>(null),
+}
+
+export function clearDropTargetHighlight() {
+  state.dropTargetContainerId.value = null
+  state.dropTargetStatus.value = null
+}
+
+export function updateDropTargetForProduct(
+  productName: string,
+  flowPosition: { x: number; y: number },
+  nodes: FlowNode[],
+) {
+  const result = evaluateContainerDropTarget(productName, flowPosition, nodes)
+  state.dropTargetContainerId.value = result.containerId
+  state.dropTargetStatus.value = result.status
 }
 
 /**
@@ -32,30 +54,14 @@ export function findContainerForNode(
   position: { x: number; y: number },
   nodes: FlowNode[],
 ): { parentNodeId: string; relativePosition: { x: number; y: number } } | null {
-  const margin = 8
-  const headerH = 44
-  for (const node of nodes) {
-    if (node.type !== 'group') continue
-    const containerProduct = (node.data as { productName?: string })?.productName
-    if (!containerProduct || !canPlaceInContainer(productName, containerProduct)) continue
-    const style = node.style as Record<string, string | number> | undefined
-    const gw = parsePx(style?.width, (node.data as { width?: number })?.width || 280)
-    const gh = parsePx(style?.height, (node.data as { height?: number })?.height || 180)
-    const nx = node.position.x
-    const ny = node.position.y
-    if (
-      position.x > nx + margin &&
-      position.x < nx + gw - margin &&
-      position.y > ny + headerH &&
-      position.y < ny + gh - margin
-    ) {
-      return {
-        parentNodeId: node.id,
-        relativePosition: { x: position.x - nx, y: position.y - ny },
-      }
-    }
+  const hit = findContainerAtPosition(position, nodes)
+  if (!hit || !canPlaceInContainer(productName, hit.containerProduct)) return null
+  const parent = nodes.find((n) => n.id === hit.parentNodeId)
+  if (!parent) return null
+  return {
+    parentNodeId: hit.parentNodeId,
+    relativePosition: { x: position.x - parent.position.x, y: position.y - parent.position.y },
   }
-  return null
 }
 
 export default function useModelDnd() {
@@ -79,20 +85,30 @@ export default function useModelDnd() {
 
   function onDragOver(event: DragEvent) {
     event.preventDefault()
-    if (draggedTemplate.value) {
+    const template = draggedTemplate.value
+    if (template) {
       isDragOver.value = true
       if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+      const productName = template.productName || ''
+      if (productName && template.type !== 'group' && productName !== 'Station') {
+        const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
+        updateDropTargetForProduct(productName, position, getNodes.value)
+      } else {
+        clearDropTargetHighlight()
+      }
     }
   }
 
   function onDragLeave() {
     isDragOver.value = false
+    clearDropTargetHighlight()
   }
 
   function onDragEnd() {
     isDragging.value = false
     isDragOver.value = false
     draggedTemplate.value = null
+    clearDropTargetHighlight()
     document.removeEventListener('drop', onDragEnd)
   }
 
@@ -184,7 +200,7 @@ export default function useModelDnd() {
           }
         : {}),
       ...(parentNodeId
-        ? { parentNode: parentNodeId, extent: 'parent' as const }
+        ? { parentNode: parentNodeId }
         : {}),
     }
 
@@ -207,10 +223,14 @@ export default function useModelDnd() {
   return {
     isDragOver,
     isDragging,
+    dropTargetContainerId: state.dropTargetContainerId,
+    dropTargetStatus: state.dropTargetStatus,
     onDragStart,
     onDragLeave,
     onDragOver,
     onDrop,
     findValidContainerParent,
+    clearDropTargetHighlight,
+    updateDropTargetForProduct,
   }
 }

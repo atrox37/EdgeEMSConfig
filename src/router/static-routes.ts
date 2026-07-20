@@ -106,6 +106,7 @@ export const staticRoutes: RouteRecordRaw[] = [
           title: 'Visual Modeling',
           activeNav: '/visualModeling',
           icon: ModelingIcon,
+          hidden: true,
         },
       },
       {

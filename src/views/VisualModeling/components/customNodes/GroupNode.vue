@@ -1,7 +1,12 @@
 <template>
   <div
     class="voltage-class group-node"
-    :class="{ selected: selected, 'group-node--view-mode': hideConnectionHandles }"
+    :class="{
+      selected: selected,
+      'group-node--view-mode': hideConnectionHandles,
+      'group-node--drop-valid': dropHighlight === 'valid',
+      'group-node--drop-invalid': dropHighlight === 'invalid',
+    }"
     :style="containerStyle"
   >
     <!-- 可拖拽缩放句柄（右下、右、下三个方向） -->
@@ -90,6 +95,12 @@ const props = defineProps<{
 const { updateNode } = useVueFlow()
 const editorCtx = inject(MODELING_EDITOR_KEY, null)
 const hideConnectionHandles = computed(() => editorCtx?.isViewMode.value ?? false)
+
+const dropHighlight = computed(() => {
+  if (editorCtx?.isViewMode.value) return null
+  if (editorCtx?.dropTargetContainerId?.value !== props.id) return null
+  return editorCtx?.dropTargetStatus?.value ?? null
+})
 
 const GROUP_COLORS: Record<string, { border: string; bg: string; header: string }> = {
   purple:  { border: '#9c27b0', bg: 'rgba(243,229,245,0.45)', header: '#9c27b0' },
@@ -280,8 +291,15 @@ function onResizeEnd() {
   transition: opacity 0.15s;
 }
 
-.group-node :deep(.vue-flow__resize-control.line),
-.group-node :deep(.vue-flow__resize-control.handle) {
-  opacity: 1;
+.group-node.group-node--drop-valid {
+  border-color: #43a047;
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.28), inset 0 0 0 1px rgba(67, 160, 71, 0.2);
+}
+
+.group-node.group-node--drop-invalid {
+  border-color: #e53935;
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.25), inset 0 0 0 1px rgba(229, 57, 53, 0.15);
 }
 </style>

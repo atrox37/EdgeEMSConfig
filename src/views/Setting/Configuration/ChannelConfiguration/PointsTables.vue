@@ -135,7 +135,7 @@
         </div>
 
         <!-- Footer Actions -->
-        <div class="points-tables-page__footer">
+        <div v-permission="'engineer'" class="points-tables-page__footer">
             <el-button v-if="isEditing && !isPublish" @click="handleCancelEdit">
                 Cancel Edit
             </el-button>

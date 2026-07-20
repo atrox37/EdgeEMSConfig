@@ -30,6 +30,7 @@
         </el-button>
         <el-button
           v-if="isMonitorMode"
+          v-permission="'engineer'"
           size="small"
           type="primary"
           @click="enterEditMode"
@@ -39,11 +40,12 @@
           Edit
         </el-button>
         <template v-if="!isMonitorMode">
-          <el-button size="small" class="custom-button" @click="handleAutoLayout">
+          <el-button v-permission="'engineer'" size="small" class="custom-button" @click="handleAutoLayout">
             <AppIcon name="i-tabler-layout-distribute-vertical" style="margin-right:4px" />
             Auto Layout
           </el-button>
           <el-button
+            v-permission="'engineer'"
             size="small"
             type="primary"
             class="custom-button"
@@ -53,6 +55,7 @@
             Import
           </el-button>
           <el-button
+            v-permission="'engineer'"
             size="small"
             type="primary"
             class="custom-button"
@@ -185,7 +188,7 @@
       </div>
     </div>
 
-    <div v-if="!isMonitorMode" class="rule-chain-editor__floating-actions">
+    <div v-if="!isMonitorMode" v-permission="'engineer'" class="rule-chain-editor__floating-actions">
       <el-button
         circle
         class="floating-btn floating-btn--cancel"

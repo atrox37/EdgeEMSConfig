@@ -25,11 +25,8 @@
       <el-form-item label="Point Refs:" required class="trigger-config-form__point-refs-item">
         <div class="trigger-config-form__point-refs">
           <div class="trigger-config-form__point-refs-header">
-            <el-button class="trigger-config-form__add-btn" type="primary" link @click="addPointRef">
-              <AppIcon
-                name="i-tabler-circle-plus"
-                className="trigger-config-form__icon trigger-config-form__icon--add"
-              />
+            <el-button class="trigger-config-form__add-btn section__add-btn" type="primary" @click="addPointRef">
+              <AppIcon name="i-tabler-plus" className="section__add-btn-icon" />
             </el-button>
           </div>
 
@@ -83,15 +80,12 @@
                 />
               </el-select>
               <el-button
-                class="trigger-config-form__remove-btn"
-                link
+                class="trigger-config-form__remove-btn variable-row__delete"
+                style="width: 32px !important"
                 :disabled="form.point_refs.length <= 1"
                 @click="removePointRef(idx)"
               >
-                <AppIcon
-                  name="i-tabler-circle-x-filled"
-                  className="trigger-config-form__icon trigger-config-form__icon--remove"
-                />
+                <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
               </el-button>
             </div>
           </div>
@@ -326,6 +320,7 @@ defineExpose({ preloadPointOptions })
     display: flex;
     justify-content: flex-end;
     margin-bottom: 4px;
+    padding-right: 4px;
   }
 
   .trigger-config-form__point-refs-list {
@@ -349,37 +344,30 @@ defineExpose({ preloadPointOptions })
   .trigger-config-form__select {
     flex: 1 1 0;
     min-width: 0;
-
-    .trigger-config-form__select--type {
-      flex: 0 0 130px;
-      width: 130px;
-    }
-
-    .trigger-config-form__select--deadband {
-      flex: 0 0 160px;
-      width: 160px;
-    }
   }
 
-  .trigger-config-form__add-btn,
-  .trigger-config-form__remove-btn {
+  .trigger-config-form__select--type {
+    flex: 0 0 130px;
+    width: 130px;
+  }
+
+  .trigger-config-form__select--deadband {
+    flex: 0 0 160px;
+    width: 160px;
+  }
+
+  .trigger-config-form__add-btn.section__add-btn,
+  .trigger-config-form__remove-btn.variable-row__delete {
     width: 32px !important;
     min-width: 32px !important;
-    padding: 0 !important;
-    flex-shrink: 0;
+    padding: 0 4px !important;
+    flex: 0 0 32px;
   }
 
-  .trigger-config-form__icon {
+  .trigger-config-form__add-btn :deep(.section__add-btn-icon),
+  .trigger-config-form__remove-btn :deep(.variable-row__delete-icon) {
     width: 16px;
     height: 16px;
-
-    .trigger-config-form__icon--add {
-      color: #67c23a;
-    }
-
-    .trigger-config-form__icon--remove {
-      color: #f56c6c;
-    }
   }
 
   .trigger-config-form__deadband-item {

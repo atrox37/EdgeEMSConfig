@@ -248,7 +248,7 @@ const getHttpStatusErrorMessage = (status: number, statusText?: string): string 
     case 400:
       return 'Bad request'
     case 403:
-      return 'Access denied'
+      return 'Insufficient permissions. Please contact your administrator.'
     case 404:
       return 'Request URL not found'
     case 408:
@@ -297,11 +297,27 @@ const getUnifiedErrorMessage = (error: any, fallback: string = 'Network request 
   return error?.message || fallback
 }
 
-const isRequestCanceled = (error: any) =>
-  error?.name === 'AbortError' ||
-  error?.message === 'request canceled' ||
-  error?.message === 'Request canceled' ||
-  error?.message === 'Request cancelled'
+export const isRequestCanceled = (error: any): boolean => {
+  if (!error) return false
+  if (error.name === 'AbortError' || error.code === 'ERR_CANCELED' || error.code === 'ABORT_ERR') {
+    return true
+  }
+  if (error.config?.signal?.aborted || error.config?._abortController?.signal?.aborted) {
+    return true
+  }
+  const reason = error.cause ?? error.config?.signal?.reason
+  if (reason === 'request canceled' || reason === 'Request canceled' || reason === 'Request cancelled') {
+    return true
+  }
+  const msg = String(error.message ?? '').toLowerCase()
+  return (
+    msg === 'request canceled'
+    || msg === 'request cancelled'
+    || msg === 'canceled'
+    || msg === 'cancelled'
+    || (msg.includes('abort') && (msg.includes('request') || msg.includes('user')))
+  )
+}
 
 /**
  * 创建统一的服务实例
@@ -538,6 +554,12 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
         wrappedError.request = { responseType: config.responseType }
         throw wrappedError
       }
+    }
+
+    if (isRequestCanceled(error) || config.signal?.aborted) {
+      error.config = config
+      error.request = { responseType: config.responseType }
+      throw error
     }
 
     const wrappedError: any = new Error(error?.message || 'Network request failed')
@@ -783,8 +805,9 @@ const createResponseInterceptor = (
           })
           break
         case 403:
-          errorMessage = 'No permission to access this resource'
-          break
+          errorMessage = 'Insufficient permissions. Please contact your administrator.'
+          ElMessage.warning(errorMessage)
+          return Promise.reject(new Error(errorMessage))
         case 404:
           errorMessage = 'Requested resource not found'
           break
@@ -838,6 +861,13 @@ const createResponseInterceptor = (
 
     const originalRequest = error.config
     const requestConfig = originalRequest as any
+
+    if (error.response?.status === 403) {
+      if (requestConfig?.showErrorMessage !== false) {
+        ElMessage.warning('Insufficient permissions. Please contact your administrator.')
+      }
+      return Promise.reject(error)
+    }
 
     /**
      * 401 处理分两类：
@@ -1070,6 +1100,8 @@ class Request {
 
       ElMessage.success(`File downloaded: ${result.displayPath}`)
     } catch (error) {
+      if (isRequestCanceled(error)) return
+
       const status = (error as any)?.response?.status
       const errorMessage =
         status === 404 ? 'File not found' : getUnifiedErrorMessage(error as any, 'File download failed')

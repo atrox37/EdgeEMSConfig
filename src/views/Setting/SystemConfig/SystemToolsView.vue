@@ -19,7 +19,7 @@
         </template>
         <div class="system-tools__card-body">
           <div class="system-tools__actions">
-            <el-button type="primary" @click="handleConfigImport" :loading="configImportLoading">
+            <el-button v-permission="'engineer'" type="primary" @click="handleConfigImport" :loading="configImportLoading">
               Import Configuration (.zip)
             </el-button>
             <el-button type="primary" @click="handleConfigExport" :loading="configExportLoading">
@@ -40,7 +40,7 @@
         </template>
         <div class="system-tools__card-body">
           <div class="system-tools__upload-section">
-            <div class="system-tools__upload-actions">
+            <div v-permission="'engineer'" class="system-tools__upload-actions">
               <el-upload
                 ref="upgradeUploadRef"
                 class="system-tools__upload"

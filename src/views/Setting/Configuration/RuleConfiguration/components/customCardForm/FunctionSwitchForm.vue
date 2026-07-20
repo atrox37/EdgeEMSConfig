@@ -110,18 +110,19 @@
                     </el-select>
                     <el-button class="combined-row__delete" link
                       @click="removeCombinedRow(v, pairIdx - 1)">
-                      <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" :style="{ color: 'red' }" />
+                      <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" />
                     </el-button>
                   </div>
 
                   <div class="variable-row__combined-add">
                     <el-button type="primary" link @click="addCombinedRow(v)">
-                      <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" :style="{ color: 'green' }" />
+                      <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" />
                     </el-button>
                   </div>
                 </div>
               </el-form-item>
-              <el-button class="variable-row__delete" @click="removeVariable(idx)">
+              <el-button class="variable-row__delete" style="width: 32px !important"
+                @click="removeVariable(idx)">
                 <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
               </el-button>
             </div>
@@ -173,7 +174,7 @@
                     <span class="rule-row__relation-spacer" aria-hidden="true"></span>
                     <el-select v-model="r.rule.variables" :fit-input-width="true" class="rule-row__select rule-row__select--var"
                       placeholder="variable" filterable>
-                      <el-option v-for="opt in singleVariableOptions" :key="opt.value" :label="opt.label"
+                      <el-option v-for="opt in variableOptions" :key="opt.value" :label="opt.label"
                         :value="opt.value as any">
                         <div class="option-remind-row" :title="opt.tooltip || opt.label">
                           {{ opt.label }}
@@ -216,7 +217,7 @@
 
                           <el-select v-model="sub.variables" :fit-input-width="true" class="rule-row__select rule-row__select--var"
                             placeholder="variable" filterable>
-                            <el-option v-for="opt in singleVariableOptions" :key="opt.value" :label="opt.label"
+                            <el-option v-for="opt in variableOptions" :key="opt.value" :label="opt.label"
                               :value="opt.value as any">
                               <div class="option-remind-row" :title="opt.tooltip || opt.label">
                                 {{ opt.label }}
@@ -241,7 +242,7 @@
                           <!-- 从第二个条件开始提供删除按钮（需同时移除其前置 relation） -->
                           <el-button v-if="Number(i) > 0" class="default-cond-row__delete" link
                             @click="removedefaultCondition(r, i)">
-                            <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" :style="{ color: 'red' }" />
+                            <AppIcon name="i-tabler-circle-x-filled" className="combined-row__delete-icon" />
                           </el-button>
                           <span v-else class="default-cond-row__delete-spacer" aria-hidden="true"></span>
                         </div>
@@ -249,7 +250,7 @@
                     </div>
                     <div class="rule-row__default-add">
                       <el-button type="primary" link @click="adddefaultCondition(r)">
-                        <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" :style="{ color: 'green' }" />
+                        <AppIcon name="i-tabler-circle-plus" className="combined-row__add-icon" />
                       </el-button>
                     </div>
                   </div>
@@ -259,7 +260,7 @@
                     <el-input v-model="r.rule" type="textarea" :rows="2" placeholder="custom rule expression" />
                   </div>
                 </el-form-item>
-                <el-button class="rule-row__delete" @click="removeRule(rIdx)">
+                <el-button class="rule-row__delete" style="width: 32px !important" @click="removeRule(rIdx)">
                   <AppIcon name="i-tabler-trash" className="variable-row__delete-icon" />
                 </el-button>
               </div>
@@ -621,7 +622,6 @@ interface VariableOption {
   tooltip: string
 }
 const variableOptions = computed<VariableOption[]>(() => buildVariableOptions(false))
-const singleVariableOptions = computed<VariableOption[]>(() => buildVariableOptions(true))
 const variableNameOptions = computed(() =>
   variableOptions.value.map((opt: VariableOption) => opt.value),
 )
@@ -992,444 +992,448 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.voltage-class,
-.function-switch-form {
-
-  width: 100%;
-  height: 100%;
-
-
-  .main-section {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    height: calc(100% - 120px);
+.voltage-class.function-switch-form {
     width: 100%;
-  }
+    height: 100%;
 
-  .el-form {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .section {
-    margin-bottom: 24px;
-
-    .section.variable-section {
-      padding-right: 10px;
-      flex: 1 1 0;
-      min-width: 0;
-      height: 100%;
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .section.rule-section {
-      flex: 1 1 0;
-      min-width: 0;
-      height: 100%;
-    }
-
-    .section__header {
+    .main-section {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
+      gap: 10px;
+      align-items: flex-start;
+      height: calc(100% - 120px);
+      width: 100%;
+    }
 
-      .section__title {
-        font-weight: $font-weight-semibold;
-        font-size: $font-size-base;
-        color: $text-color-primary;
+    .el-form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section {
+      margin-bottom: 24px;
+
+      .section__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+
+        .section__title {
+          font-weight: $font-weight-semibold;
+          font-size: $font-size-base;
+          color: $text-color-primary;
+        }
+        .section__title-text {
+          display: inline;
+          font-weight: inherit;
+          font-size: inherit;
+          color: inherit;
+        }
+        .section__title-lines {
+          display: none;
+          flex-direction: column;
+          align-items: flex-start;
+          line-height: 1.2;
+        }
+        .section__title-line {
+          display: block;
+        }
+
+        .section__add-btn {
+          width: 32px !important;
+          min-width: 32px !important;
+          flex: 0 0 32px;
+
+          :deep(.section__add-btn-icon) {
+            width: 16px;
+            height: 16px;
+          }
+        }
       }
-      .section__title-text {
-        display: inline;
-      }
-      .section__title-lines {
-        display: none;
+
+      .section__body {
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        line-height: 1.2;
-      }
-      .section__title-line {
-        display: block;
-      }
+        gap: 8px;
 
-      .section__add-btn {
-        width: 32px !important;
-
-        :deep(.section__add-btn-icon) {
-          width: 16px;
-          height: 16px;
+        .section__body.variable,
+        .section__body.rule {
+          height: calc(100% - 44px);
+          overflow-y: auto;
+          scrollbar-gutter: stable;
         }
       }
     }
 
-    .section__body {
+    .variable-section {
+      padding-right: 10px;
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      border-right: 1px solid #dcdfe6;
+    }
+
+    .rule-section {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+    }
+
+    .section__body--basic {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-
-      .section__body.variable,
-      .section__body.rule {
-        height: calc(100% - 44px);
-        overflow-y: auto;
-        scrollbar-gutter: stable;
-      }
-    }
-  }
-  .section__body--basic {
-    display: flex;
-    gap: 8px;
-    flex-direction: row !important;
-  }
-  .basic-item {
-    margin-bottom: 0;
-    flex: 1 1 0;
-  }
-  .basic-item--label {
-    flex: 1 1 0;
-  }
-  .basic-item--description {
-    flex: 2 1 0;
-  }
-
-  .variable-section .section__header,
-  .rule-section .section__header {
-    padding-right: $width-scrollbar;
-  }
-
-  .collapse-center {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-  }
-
-  .collapse-center--left {
-    left: 0;
-  }
-
-  .collapse-center--right {
-    right: 0;
-  }
-
-  .collapse-center__btn {
-    width: 26px !important;
-    color: $primary-color !important;
-
-    :deep(.collapse-center__glyph) {
-      width: 18px;
-      height: 18px;
-      color: $primary-color !important;
-    }
-  }
-
-  .variable-row__controls,
-  .combined-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .variable-row__combined {
-    width: 100%;
-  }
-
-  .variable-row__combined-add {
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .variable-row__item :deep(.el-form-item__content) {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .variable-row__controls :deep(.el-select),
-  .combined-row :deep(.el-select),
-  .combined-row :deep(.el-input) {
-    flex: 1 1 0;
-  }
-
-  .variable-row__select {
-    width: auto;
-  }
-
-  :deep(.el-select .el-select__selected-item) {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .variable-row__delete {
-    width: 32px !important;
-
-    :deep(.variable-row__delete-icon) {
-      width: 16px;
-      height: 16px;
-    }
-  }
-
-  .rule-row {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    // padding-bottom: 20px;
-    // border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-    .rule-row:last-child {
-      padding-bottom: 0;
-      border-bottom: none;
-    }
-  }
-
-  @media (max-width: 1400px) {
-    .main-section {
-      gap: 0;
+      gap: 12px;
+      flex-direction: row !important;
     }
 
-    .collapse-hint {
-      display: flex;
+    .basic-item {
+      margin-bottom: 0;
+      flex: 1 1 0;
     }
+
+    .basic-item--label {
+      flex: 1 1 0;
+    }
+
+    .basic-item--description {
+      flex: 2 1 0;
+    }
+
+    // .variable-section .section__header,
+    // .rule-section .section__header {
+    //   padding-right: $width-scrollbar;
+    // }
 
     .collapse-center {
-      display: inline-flex;
-      flex: 0 0 60px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
     }
 
-    .main-section.collapse-rule .rule-section,
-    .main-section.collapse-variable .variable-section {
-      display: block;
-      flex: 0 0 60px;
-      padding: 0;
+    .collapse-center--left {
+      left: 0;
     }
 
-    .main-section.collapse-rule .rule-section {
-      border-left: 2px solid rgba(255, 255, 255, 0.9);
+    .collapse-center--right {
+      right: 0;
     }
 
-    .main-section.collapse-variable .variable-section {
-      border-right: none;
+    .collapse-center__btn {
+      width: 26px !important;
+      color: $primary-color !important;
+
+      :deep(.collapse-center__glyph) {
+        width: 18px;
+        height: 18px;
+        color: $primary-color !important;
+      }
     }
 
-    .main-section.collapse-rule .variable-section,
-    .main-section.collapse-variable .rule-section {
-      flex: 1 1 auto;
+    .variable-row__controls,
+    .combined-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
       min-width: 0;
-      padding-right: 0;
     }
 
-    .main-section.collapse-rule .rule-section .section__header,
-    .main-section.collapse-variable .variable-section .section__header {
+    .variable-row__combined {
+      width: 100%;
+    }
+
+    .variable-row__combined-add {
+      display: flex;
       justify-content: flex-start;
     }
 
-    .main-section.collapse-rule .rule-section .section__title,
-    .main-section.collapse-variable .variable-section .section__title {
-      font-size: 12px;
-      letter-spacing: 2px;
-    }
-    .main-section.collapse-rule .rule-section .section__title-text,
-    .main-section.collapse-variable .variable-section .section__title-text {
-      display: none;
-    }
-    .main-section.collapse-rule .rule-section .section__title-lines,
-    .main-section.collapse-variable .variable-section .section__title-lines {
+    .variable-row__item :deep(.el-form-item__content) {
       display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
     }
 
-    .main-section.collapse-rule .rule-section .section__body,
-    .main-section.collapse-variable .variable-section .section__body,
-    .main-section.collapse-rule .rule-section .section__add-btn,
-    .main-section.collapse-variable .variable-section .section__add-btn {
+    .variable-row__controls :deep(.el-select),
+    .combined-row :deep(.el-select),
+    .combined-row :deep(.el-input) {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .variable-row__select {
+      width: auto;
+    }
+
+    :deep(.el-select .el-select__selected-item) {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .variable-row__delete,
+    .rule-row__delete {
+      padding: 0 4px;
+      flex: 0 0 32px;
+      min-width: 32px !important;
+
+      :deep(.variable-row__delete-icon) {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .combined-row__delete {
+      flex: 0 0 32px;
+      width: 32px !important;
+      min-width: 32px !important;
+      padding: 4px !important;
+    }
+
+    :deep(.combined-row__add-icon) {
+      color: $success-color !important;
+    }
+
+    :deep(.combined-row__delete-icon) {
+      color: $danger-color !important;
+    }
+
+    .rule-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (max-width: 1400px) {
+      .main-section {
+        gap: 0;
+      }
+
+      .collapse-hint {
+        display: flex;
+      }
+
+      .collapse-center {
+        display: inline-flex;
+        flex: 0 0 60px;
+      }
+
+      .main-section.collapse-rule .rule-section,
+      .main-section.collapse-variable .variable-section {
+        display: block;
+        flex: 0 0 60px;
+        padding: 0;
+      }
+
+      .main-section.collapse-rule .rule-section {
+        border-left: 2px solid #dcdfe6;
+      }
+
+      .main-section.collapse-variable .variable-section {
+        border-right: none;
+      }
+
+      .main-section.collapse-rule .variable-section,
+      .main-section.collapse-variable .rule-section {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding-right: 0;
+      }
+
+      .main-section.collapse-rule .rule-section .section__header,
+      .main-section.collapse-variable .variable-section .section__header {
+        justify-content: flex-start;
+      }
+
+      .main-section.collapse-rule .rule-section .section__title,
+      .main-section.collapse-variable .variable-section .section__title {
+        font-size: 12px;
+        letter-spacing: 2px;
+      }
+
+      .main-section.collapse-rule .rule-section .section__title-text,
+      .main-section.collapse-variable .variable-section .section__title-text {
+        display: none;
+      }
+
+      .main-section.collapse-rule .rule-section .section__title-lines,
+      .main-section.collapse-variable .variable-section .section__title-lines {
+        display: flex;
+      }
+
+      .main-section.collapse-rule .rule-section .section__body,
+      .main-section.collapse-variable .variable-section .section__body,
+      .main-section.collapse-rule .rule-section .section__add-btn,
+      .main-section.collapse-variable .variable-section .section__add-btn {
+        display: none;
+      }
+    }
+
+    .rule-row__head,
+    .variable-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .rule-row__name,
+    .variable-row__item {
+      margin-bottom: 0;
+      align-items: flex-start;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .rule-row__name :deep(.el-form-item__content) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .rule-row__type {
+      width: 240px;
+    }
+
+    .rule-row__body {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-start;
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .rule-row__select {
+      min-width: 0;
+    }
+
+    .rule-row__select--relation {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .rule-row__select--var {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .rule-row__select--op {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .rule-row__select--val {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .rule-row__relation-spacer {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .rule-row__delete-spacer {
+      flex: 0 0 32px;
+      height: 32px;
+      width: 32px;
+    }
+
+    :deep(.el-input),
+    :deep(.el-select) {
+      max-width: 100%;
+    }
+
+    .rule-row__default,
+    .variable-row__combined {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .default-cond-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .default-cond-row__relation {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .default-cond-row__relation-spacer {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .default-cond-row__delete {
+      padding: 4px !important;
+      flex: 0 0 32px;
+      width: 32px !important;
+      min-width: 32px !important;
+    }
+
+    .default-cond-row__delete-spacer {
+      flex: 0 0 32px;
+      height: 32px;
+      width: 32px;
+    }
+
+    .rule-row__default-add {
+      min-height: 20px;
+    }
+
+    .collapse-hint {
+      margin-top: 8px;
+      height: 24px;
+      font-size: 12px;
       display: none;
+      align-items: center;
+      gap: 6px;
+      padding-left: 10px;
+      color: $text-color-white-60;
     }
 
-  }
-
-  .rule-row__head,
-  .variable-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-
-    :deep(.el-form-item) {
-      width: calc(100% - 40px);
+    @media (max-width: 1400px) {
+      .collapse-hint {
+        display: flex;
+      }
     }
-  }
 
-  .rule-row__name,
-  .variable-row__item {
-    margin-bottom: 0;
-    align-items: flex-start;
-    flex: 1 1 0;
-  }
+    :deep(.collapse-hint__arrow) {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      color: $primary-color;
+    }
 
-  .rule-row__name :deep(.el-form-item__content) {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .rule-row__type {
-    width: 240px;
-  }
-
-  .rule-row__delete {
-    padding: 0 4px;
-    width: 32px;
-
-    :deep(.variable-row__delete-icon) {
+    :deep(.collapse-hint__icon) {
       width: 16px;
       height: 16px;
+      flex-shrink: 0;
+      color: $warning-color;
     }
-  }
 
-  .rule-row__body {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: flex-start;
-    flex: 1 1 0;
-    min-width: 0;
-    width: 100%;
-
-  }
-
-  .rule-row__select {
-    min-width: 0;
-  }
-
-  .rule-row__select--relation {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .rule-row__select--var {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .rule-row__select--op {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .rule-row__select--val {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .rule-row__relation-spacer {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .rule-row__delete-spacer {
-    // flex: 0 0 32px;
-    height: 32px;
-    width: 32px;
-  }
-
-  :deep(.el-input),
-  :deep(.el-select) {
-    max-width: 100%;
-  }
-
-  .rule-row__default,
-  .variable-row__combined {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
-  }
-
-  .default-cond-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .default-cond-row__relation {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .default-cond-row__relation-spacer {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .default-cond-row__delete {
-    padding: 4px !important;
-  }
-
-  .default-cond-row__delete-spacer {
-    flex: 0 0 32px;
-    height: 32px;
-  }
-
-  .rule-row__default-add {
-    min-height: 20px;
-  }
-
-  .collapse-hint {
-    margin-top: 8px;
-    height: 24px;
-    font-size: 12px;
-    display: none;
-    align-items: center;
-    gap: 6px;
-    padding-left: 10px;
-    color: $text-color-white-60;
-  }
-
-  @media (max-width: 1400px) {
-    .collapse-hint {
-      display: flex;
+    .collapse-hint__text {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-  }
 
-  :deep(.collapse-hint__arrow) {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-    color: $primary-color;
-  }
-
-  :deep(.collapse-hint__icon) {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    color: $warning-color;
-  }
-
-  .collapse-hint__text {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .option-remind-row {
-    display: block;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
+    .option-remind-row {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 }
-
-// // 统一输入组件宽度
-// .voltage-class .function-switch-form :deep(.el-input),
-// .voltage-class .function-switch-form :deep(.el-select) {
-//   width: 120px;
-// }</style>
+</style>
