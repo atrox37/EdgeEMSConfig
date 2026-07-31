@@ -378,9 +378,9 @@ onMounted(() => {
     .points-tables-page__dropdown-trigger {
       display: inline-flex;
       align-items: center;
-      font-size: $font-size-large;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
+      font-size: var(--vt-font-size-lg);
+      font-weight: var(--vt-font-weight-semibold);
+      color: var(--vt-text-primary);
       cursor: pointer;
 
       :deep(.el-icon--right) {
@@ -391,9 +391,9 @@ onMounted(() => {
     }
 
     .points-tables-page__channel-name {
-      font-size: $font-size-large;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
+      font-size: var(--vt-font-size-lg);
+      font-weight: var(--vt-font-weight-semibold);
+      color: var(--vt-text-primary);
       flex-shrink: 0;
       margin-left: 4px;
     }

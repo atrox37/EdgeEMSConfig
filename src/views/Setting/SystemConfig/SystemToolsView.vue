@@ -509,16 +509,16 @@ onUnmounted(() => {
 }
 
 .system-tools__title {
-  font-size: $font-size-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-lg);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
   margin: 0;
 }
 
 .system-tools__desc {
   margin: 8px 0 0;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
   line-height: 1.6;
 }
 
@@ -532,8 +532,8 @@ onUnmounted(() => {
 }
 
 .system-tools__card {
-  border-radius: $border-radius-base;
-  box-shadow: $box-shadow-base;
+  border-radius: var(--vt-radius-md);
+  box-shadow: var(--vt-shadow-base);
 }
 
 .system-tools__card-header {
@@ -544,15 +544,15 @@ onUnmounted(() => {
 }
 
 .system-tools__card-title {
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-base;
-  color: $text-color-primary;
+  font-weight: var(--vt-font-weight-semibold);
+  font-size: var(--vt-font-size-base);
+  color: var(--vt-text-primary);
 }
 
 .system-tools__card-desc {
-  font-size: $font-size-small;
-  color: $text-color-secondary;
-  font-weight: $font-weight-normal;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
+  font-weight: var(--vt-font-weight-normal);
 }
 
 .system-tools__card--expand {
@@ -593,8 +593,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  font-size: $font-size-small;
-  color: $warning-color;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-color-warning);
 }
 
 .system-tools__upload {
@@ -604,9 +604,9 @@ onUnmounted(() => {
 
 .system-tools__upgrade-status {
   margin-top: 16px;
-  border: 1px solid $border-color-base;
-  border-radius: $border-radius-small;
-  background: $bg-color-overlay;
+  border: 1px solid var(--vt-border-color);
+  border-radius: var(--vt-radius-sm);
+  background: var(--vt-bg-overlay);
   display: flex;
   flex-direction: column;
   height: calc(100% - 48px);
@@ -614,10 +614,10 @@ onUnmounted(() => {
 
 .system-tools__upgrade-status-header {
   padding: 10px 14px;
-  border-bottom: 1px solid $border-color-base;
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-base;
-  color: $text-color-primary;
+  border-bottom: 1px solid var(--vt-border-color);
+  font-weight: var(--vt-font-weight-semibold);
+  font-size: var(--vt-font-size-base);
+  color: var(--vt-text-primary);
 }
 
 .system-tools__upgrade-status-body {
@@ -631,8 +631,8 @@ onUnmounted(() => {
   max-height: 100%;
   overflow-y: auto;
   white-space: pre-wrap;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
 }
 
 :deep(.el-upload) {
@@ -642,9 +642,9 @@ onUnmounted(() => {
 .system-tools__upload-progress {
   margin-top: 16px;
   padding: 12px 14px;
-  border: 1px solid $border-color-base;
-  border-radius: $border-radius-small;
-  background: $bg-color-overlay;
+  border: 1px solid var(--vt-border-color);
+  border-radius: var(--vt-radius-sm);
+  background: var(--vt-bg-overlay);
   flex-shrink: 0;
 }
 
@@ -656,20 +656,20 @@ onUnmounted(() => {
 }
 
 .system-tools__upload-progress-label {
-  font-size: $font-size-small;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-sm);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-tools__upload-progress-size {
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .system-tools__upload-progress-bar {
   :deep(.el-progress-bar__inner) {
-    background-color: $primary-color;
+    background-color: var(--vt-color-primary);
     transition: width 0.4s ease;
   }
 }
@@ -678,16 +678,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: $font-size-small;
-  color: $primary-color;
-  font-weight: $font-weight-normal;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-color-primary);
+  font-weight: var(--vt-font-weight-normal);
 }
 
 .system-tools__running-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: $primary-color;
+  background-color: var(--vt-color-primary);
   animation: running-pulse 1.4s ease-in-out infinite;
 }
 

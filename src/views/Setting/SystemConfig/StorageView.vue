@@ -530,25 +530,25 @@ onUnmounted(() => {
 
 .system-storage__title {
   margin: 0;
-  font-size: $font-size-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-lg);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-storage__desc {
   margin: 8px 0 0;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
   line-height: 1.6;
 }
 
 .system-storage__panel {
   flex: 1;
   min-height: 0;
-  border: $border-width-base solid $border-color-base;
-  border-radius: $border-radius-base;
-  background: $bg-color-overlay;
-  box-shadow: $box-shadow-base;
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  border-radius: var(--vt-radius-md);
+  background: var(--vt-bg-overlay);
+  box-shadow: var(--vt-shadow-base);
 }
 
 .system-storage__body {
@@ -614,13 +614,13 @@ onUnmounted(() => {
 }
 
 .system-storage__enable-label {
-  color: $text-color-secondary;
-  font-size: $font-size-small;
+  color: var(--vt-text-secondary);
+  font-size: var(--vt-font-size-sm);
 }
 
 .system-storage__hint {
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
   margin-left: 8px;
   white-space: nowrap;
 }
@@ -645,12 +645,12 @@ onUnmounted(() => {
   grid-template-columns: 1fr 300px 36px;
   gap: 8px;
   padding: 0 2px 4px;
-  border-bottom: 1px solid $white-alpha-10;
+  border-bottom: 1px solid var(--vt-color-white-10);
 }
 
 .system-storage__patterns-col {
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
 }
 
 .system-storage__pattern-row {
@@ -705,29 +705,29 @@ onUnmounted(() => {
 }
 
 .system-storage__status-title {
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-storage__status-line {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: $text-color-primary;
+  color: var(--vt-text-primary);
   margin-bottom: 12px;
 }
 
 .system-storage__status-icon {
   font-size: 16px;
-  .system-storage__status-icon.is-connected { color: $success-color; }
-  .system-storage__status-icon.is-disconnected { color: $danger-color; }
-  .system-storage__status-icon.is-unknown { color: $text-color-secondary; }
+  .system-storage__status-icon.is-connected { color: var(--vt-color-success); }
+  .system-storage__status-icon.is-disconnected { color: var(--vt-color-danger); }
+  .system-storage__status-icon.is-unknown { color: var(--vt-text-secondary); }
 }
 
 .system-storage__status-text {
-  font-size: $font-size-base;
-  font-weight: $font-weight-medium;
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-medium);
 }
 
 .system-storage__status-field {
@@ -736,12 +736,12 @@ onUnmounted(() => {
   justify-content: space-between;
   padding-top: 10px;
   margin-top: 10px;
-  border-top: 1px solid $border-color-base;
-  color: $text-color-secondary;
+  border-top: 1px solid var(--vt-border-color);
+  color: var(--vt-text-secondary);
 }
 
 .system-storage__status-value {
-  color: $text-color-primary;
+  color: var(--vt-text-primary);
   text-align: right;
   margin-left: 10px;
 }

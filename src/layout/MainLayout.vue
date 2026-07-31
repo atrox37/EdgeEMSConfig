@@ -91,15 +91,16 @@ watch(
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: $bg-gradient-page; // 使用渐变背景，从浅蓝色到深蓝色
+  background: var(--vt-color-secondary); // 使用渐变背景，从浅蓝色到深蓝色
   overflow: hidden;
 
   // 主布局容器(主内容区域)
   .main-layout__container {
     flex: 1;
     display: flex;
-    padding-top: 32px; // 顶部高度
-    height: calc(100vh - 32px);
+    // padding-top: 36px; // 顶部高度
+    // height: calc(100vh - 36px);
+    height: 100%;
   }
 
   .main-layout__left {
@@ -109,26 +110,49 @@ watch(
 
   .main-layout__right {
     position: relative;
-    transition: width $transition-base;
-    width: calc(100% - 180px);
+    transition: width var(--vt-transition-base);
+    width: calc(100% - 220px);
     height: 100%;
   }
 
   .main-layout__right.collapse {
-    width: calc(100% - 48px);
+    width: calc(100% - 85px);
   }
 
   .main-layout__content {
-    height: calc(100% - 10px);
-    width: calc(100% - 10px);
-    margin: 5px;
-    border-radius: 10px;
+    height: calc(100% - 12px);
+    width: calc(100% - 12px);
+    margin: 6px;
+    border-radius: 8px;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    padding: 10px;
+    // padding: 10px;
     background: rgba(255, 255, 255, 0.8);
   }
 }
 
 /* 移除未登录模式下的主内容区域，重定向到 /login */
+</style>
+
+<style lang="scss" scoped>
+// .voltage-class.main-layout {
+//   // background: #395583;
+
+//   .main-layout__container {
+//     height: 100vh;
+//     padding: 0;
+//   }
+
+//   .main-layout__content {
+//     width: calc(100% - 20px);
+//     height: calc(100% - 20px);
+//     margin: 10px;
+//     padding: 0;
+//     overflow: hidden;
+//     border: 1px solid rgba(255, 255, 255, 0.55);
+//     border-radius: 10px;
+//     background: #ffffff;
+//     box-shadow: 0 8px 24px rgba(20, 40, 78, 0.22);
+//   }
+// }
 </style>

@@ -1,105 +1,117 @@
-.voltage-class {
-  .vtable {
+.vtable {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .vtable__header {
     display: flex;
-    flex-direction: column;
-    height: 100%;
+    align-items: center;
+    background: rgba(58, 82, 121, 0.8);
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    height: var(--vt-table-row-height);
+  }
 
-    .vtable__header {
-      display: flex;
-      align-items: center;
-      background: rgba(58, 82, 121, 0.8);
-      color: #fff;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      height: 40px;
+  .vtable__body {
+    flex: 1;
+    overflow: auto;
+
+    // 增强滚动条可见性
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
 
-    .vtable__body {
+    &::-webkit-scrollbar-track {
+      background: rgba(58, 82, 121, 0.3);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 4px;
+      transition: background 0.3s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.6);
+      }
+    }
+
+    // // Firefox滚动条样式
+    // scrollbar-width: thin;
+    // scrollbar-color: rgba(255, 255, 255, 0.4) rgba(58, 82, 121, 0.3);
+
+    .vtable__row {
+      display: flex;
+      align-items: center;
+      min-height: var(--vt-table-row-height);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+      &:hover {
+        background: rgba(64, 158, 255, 0.1);
+      }
+    }
+    .vue-recycle-scroller__item-wrapper {
+      overflow: visible;
+    }
+
+    // 让带有这个类名的元素的z-index依次减少
+    .vue-recycle-scroller__item-view {
+      overflow: visible;
+      // 通过 nth-child 实现递减 z-index
+      z-index: 100;
+      @for $i from 1 through 40 {
+        &:nth-child(#{$i}) {
+          z-index: #{100 - $i};
+        }
+      }
+      .el-select__popper.el-popper {
+        top: 44px !important;
+      }
+    }
+  }
+
+  .vtable__cell {
+    color: #fff;
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+    white-space: normal;
+    padding: var(--vt-table-cell-padding-y) 12px;
+    line-height: var(--vt-table-cell-line-height);
+    // display: flex;
+    // align-items: center;
+    // justify-content: center;
+    // transition: all 0.3s ease-in-out;
+    &:last-child {
       flex: 1;
-      overflow: auto;
-
-      // 增强滚动条可见性
-      .vtable__body::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-
-      .vtable__body::-webkit-scrollbar-track {
-        background: rgba(58, 82, 121, 0.3);
-        border-radius: 4px;
-      }
-
-      .vtable__body::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.4);
-        border-radius: 4px;
-        transition: background 0.3s;
-
-        .vtable__body::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.6);
-        }
-      }
-
-      // // Firefox滚动条样式
-      // scrollbar-width: thin;
-      // scrollbar-color: rgba(255, 255, 255, 0.4) rgba(58, 82, 121, 0.3);
-
-      .vtable__row {
-        display: flex;
-        align-items: center;
-        // height: 40px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-        .vtable__row:hover {
-          background: rgba(64, 158, 255, 0.1);
-        }
-      }
-      .vue-recycle-scroller__item-wrapper {
-        overflow: visible !important;
-      }
-
-      // 让带有这个类名的元素的z-index依次减少
-      .vue-recycle-scroller__item-view {
-        overflow: visible !important;
-        // 通过 nth-child 实现递减 z-index
-        z-index: 100;
-        @for $i from 1 through 40 {
-          .vue-recycle-scroller__item-view:nth-child(#{$i}) {
-            z-index: #{100 - $i};
-          }
-        }
-        .el-select__popper.el-popper {
-          top: 44px !important;
-        }
-      }
+      width: unset;
     }
-
-    .vtable__cell {
-      color: #fff;
-      display: flex;
-      align-items: center;
-      word-break: break-all;
-      white-space: normal;
-      padding: 9px 12px;
-      line-height: 22px;
-      // display: flex;
-      // align-items: center;
-      // justify-content: center;
-      // transition: all 0.3s ease-in-out;
-      .vtable__cell:last-child {
-        flex: 1 !important;
-        width: unset !important;
-      }
-      .vtable__cell.vtable__cell--name {
-        width: 50%;
-      }
-      .vtable__cell.vtable__cell--value {
-        width: 25%;
-      }
-      .vtable__cell.vtable__cell--unit {
-        width: 25%;
-      }
-      .vtable__cell.vtable__cell--status {
-        width: 50%;
-      }
+    &.vtable__cell--name {
+      width: 25%;
     }
+    &.vtable__cell--value {
+      width: 25%;
+    }
+    &.vtable__cell--unit {
+      width: 25%;
+    }
+    &.vtable__cell--status {
+      width: 50%;
+    }
+    &.vtable__cell--time {
+      width: 25%;
+    }
+  }
+}
+.device__table--right {
+  .vtable__cell--name {
+    width: 30%;
+  }
+  .vtable__cell--status {
+    width: 30%;
+  }
+  .vtable__cell--time {
+    width: 40%;
   }
 }

@@ -1,10 +1,14 @@
-@use "@/assets/styles/_variables.scss" as *;
-  .el-tag {
-    // background: red;
-    border-width: 1px;
-    border-radius: 4px;
-    padding: 0 9px;
-    height: 24px;
-    font-size: 12px;
-  }
+// ============================================
+// Element Plus: Tag (el-tag)
+// ============================================
+.el-tag.el-tag {
+  --el-tag-bg-color: var(--vt-bg-input);
+  --el-tag-border-color: var(--vt-border-color);
+  --el-tag-text-color: var(--vt-text-primary);
+  --el-tag-font-size: var(--vt-font-size-sm);
 
+  border-width: 1px;
+  padding: 0 9px;
+  height: 24px;
+  font-size: 12px;
+}

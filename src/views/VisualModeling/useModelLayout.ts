@@ -6,21 +6,22 @@ import type { ModelNodeData } from '@/types/visualModeling'
 const DEFAULT_NODE_SIZE: Record<string, { width: number; height: number }> = {
   station: { width: 180, height: 90 },
   product: { width: 110, height: 120 },
-  productImage: { width: 96, height: 108 },
-  group: { width: 380, height: 260 },
+  productImage: { width: 280, height: 262 },
+  group: { width: 280, height: 254 },
 }
 
 /** 图片设备节点绑定实例后，底部实例标签占用的高度（含间距） */
 const INSTANCE_BADGE_EXTRA_HEIGHT = 34
+const COMPONENT_DETAILS_EXTRA_HEIGHT = 260
 
 const LAYOUT = {
   stationY: 24,
   rowGapY: 100,
   childHeaderH: 44,
-  childPaddingX: 20,
-  childPaddingY: 16,
-  childGapX: 28,
-  childGapY: 24,
+  childPaddingX: 12,
+  childPaddingY: 12,
+  childGapX: 12,
+  childGapY: 12,
   topGapX: 36,
   canvasCenterX: 520,
 }
@@ -60,7 +61,12 @@ function getNodeSize(node: FlowNode | GraphNode): { width: number; height: numbe
     parsePx(data?.height, defaults.height)
   return {
     width,
-    height: height + getInstanceBadgeExtraHeight(node as FlowNode),
+    height:
+      height
+      + getInstanceBadgeExtraHeight(node as FlowNode)
+      + ((node.data as { uiExpanded?: boolean } | undefined)?.uiExpanded
+        ? COMPONENT_DETAILS_EXTRA_HEIGHT
+        : 0),
   }
 }
 
@@ -88,10 +94,15 @@ function sortContainerGroups(groups: FlowNode[]): FlowNode[] {
   })
 }
 
-function layoutChildrenInGroup(children: FlowNode[]): Map<string, { x: number; y: number }> {
+export function getGroupContentLayout(
+  children: FlowNode[],
+  expanded: boolean,
+  isContainer: boolean,
+): { size: { width: number; height: number }; positions: Map<string, { x: number; y: number }> } {
   const positions = new Map<string, { x: number; y: number }>()
   const sortedChildren = [...children].sort(compareChildNodes)
-  if (!sortedChildren.length) return positions
+  const groupBaseWidth = DEFAULT_NODE_SIZE.group.width
+  const groupCollapsedHeight = DEFAULT_NODE_SIZE.group.height
 
   const cols = Math.max(1, Math.min(3, Math.ceil(Math.sqrt(sortedChildren.length))))
   const rowHeights: number[] = []
@@ -114,7 +125,9 @@ function layoutChildrenInGroup(children: FlowNode[]): Map<string, { x: number; y
       if (prev) x += getNodeSize(prev).width + LAYOUT.childGapX
     }
 
-    let y = LAYOUT.childHeaderH + LAYOUT.childPaddingY
+    const detailsHeight = expanded ? (isContainer ? 178 : 222) : 0
+    const childStartY = 54 + 202 + detailsHeight
+    let y = childStartY
     for (let r = 0; r < row; r++) {
       y += (rowHeights[r] ?? 0) + LAYOUT.childGapY
     }
@@ -122,29 +135,22 @@ function layoutChildrenInGroup(children: FlowNode[]): Map<string, { x: number; y
     positions.set(child.id, { x, y })
   })
 
-  return positions
-}
-
-function suggestGroupSize(children: FlowNode[]): { width: number; height: number } {
-  if (!children.length) {
-    return { width: DEFAULT_NODE_SIZE.group.width, height: DEFAULT_NODE_SIZE.group.height }
-  }
-
-  const positions = layoutChildrenInGroup(children)
   let maxRight = LAYOUT.childPaddingX
-  let maxBottom = LAYOUT.childHeaderH + LAYOUT.childPaddingY
-
-  children.forEach((child) => {
+  let maxBottom = 54 + 202 + (expanded ? (isContainer ? 178 : 222) : 0)
+  sortedChildren.forEach((child) => {
     const pos = positions.get(child.id)
-    const { width, height } = getNodeSize(child)
     if (!pos) return
+    const { width, height } = getNodeSize(child)
     maxRight = Math.max(maxRight, pos.x + width + LAYOUT.childPaddingX)
     maxBottom = Math.max(maxBottom, pos.y + height + LAYOUT.childPaddingY)
   })
 
   return {
-    width: Math.max(240, maxRight),
-    height: Math.max(160, maxBottom),
+    size: {
+      width: Math.max(groupBaseWidth, maxRight),
+      height: Math.max(groupCollapsedHeight, maxBottom),
+    },
+    positions,
   }
 }
 
@@ -204,10 +210,13 @@ export function layoutModelGraph(
       .sort(compareChildNodes)
     if (!children.length) return
 
-    const suggested = suggestGroupSize(children)
-    sizeUpdates.set(node.id, suggested)
+    const data = node.data as { uiExpanded?: boolean; topologyType?: string; productName?: string }
+    const expanded = data.uiExpanded === true
+    const isContainer = data.topologyType === 'container' || /container|distribution board/i.test(data.productName ?? '')
+    const groupLayout = getGroupContentLayout(children, expanded, isContainer)
+    sizeUpdates.set(node.id, groupLayout.size)
 
-    const childPositions = layoutChildrenInGroup(children)
+    const childPositions = groupLayout.positions
     childPositions.forEach((pos, id) => positions.set(id, pos))
   })
 
@@ -218,6 +227,7 @@ export function layoutModelGraph(
       ...node,
       sourcePosition,
       targetPosition,
+      ...(node.parentNode ? { hidden: true } : {}),
       ...(pos ? { position: { x: pos.x, y: pos.y } } : {}),
     }
 

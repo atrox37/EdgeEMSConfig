@@ -81,11 +81,11 @@ defineExpose({
   }
 
   .dialog-head-title {
-    font-weight: $font-weight-bold;
-    font-size: $font-size-large;
+    font-weight: var(--vt-font-weight-bold);
+    font-size: var(--vt-font-size-lg);
     line-height: 20px;
     letter-spacing: 0%;
-    color: $text-color-primary;
+    color: var(--vt-text-primary);
   }
 }
 

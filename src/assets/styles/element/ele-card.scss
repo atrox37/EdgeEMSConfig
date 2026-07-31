@@ -1,21 +1,21 @@
 @use "@/assets/styles/_variables.scss" as *;
 
 .el-card {
-  border-radius: $border-radius-base;
-  border: 1px solid $border-color-white-10;
-  background: linear-gradient(180deg, $white-alpha-05, transparent);
-  box-shadow: $box-shadow-base;
-  color: $text-color-primary;
+  border-radius: var(--vt-radius-md);
+  border: 1px solid var(--vt-color-black-12);
+  background: linear-gradient(180deg, var(--vt-color-white-05), transparent);
+  box-shadow: var(--vt-shadow-base);
+  color: var(--vt-text-primary);
 
   .el-card__header {
     padding: 10px 12px;
-    border-bottom: 1px solid $border-color-white-10;
-    color: $text-color-primary;
-    font-weight: $font-weight-semibold;
+    border-bottom: 1px solid var(--vt-color-black-12);
+    color: var(--vt-text-primary);
+    font-weight: var(--vt-font-weight-semibold);
   }
 
   .el-card__body {
-    color: $text-color-primary;
+    color: var(--vt-text-primary);
     padding: 10px 12px;
     height: calc(100% - 41px);
   }

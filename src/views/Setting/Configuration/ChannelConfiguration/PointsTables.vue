@@ -829,17 +829,17 @@ watch(
             min-width: 0;
 
             .points-tables-page__header-title {
-                font-size: $font-size-large;
-                font-weight: $font-weight-semibold;
-                color: $text-color-primary;
+                font-size: var(--vt-font-size-lg);
+                font-weight: var(--vt-font-weight-semibold);
+                color: var(--vt-text-primary);
             }
 
             .points-tables-page__dropdown-trigger {
                 display: inline-flex;
                 align-items: center;
-                font-size: $font-size-large;
-                font-weight: $font-weight-semibold;
-                color: $text-color-primary;
+                font-size: var(--vt-font-size-lg);
+                font-weight: var(--vt-font-weight-semibold);
+                color: var(--vt-text-primary);
                 cursor: pointer;
 
                 :deep(.el-icon--right) {
@@ -850,9 +850,9 @@ watch(
             }
 
             .points-tables-page__channel-name {
-                font-size: $font-size-large;
-                font-weight: $font-weight-semibold;
-                color: $text-color-primary;
+                font-size: var(--vt-font-size-lg);
+                font-weight: var(--vt-font-weight-semibold);
+                color: var(--vt-text-primary);
                 flex-shrink: 0;
                 margin-left: 4px;
             }

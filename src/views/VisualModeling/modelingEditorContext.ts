@@ -1,5 +1,6 @@
 import type { InjectionKey, Ref } from 'vue'
-import type { ContainerDropStatus } from '@/utils/containerDropTarget'
+import type { ModelNodeData } from '@/types/visualModeling'
+import type { DeviceInstanceBasic } from '@/types/deviceConfiguration'
 
 export type ModelingEditorContext = {
   isViewMode: Ref<boolean>
@@ -7,10 +8,11 @@ export type ModelingEditorContext = {
   notifyFlowChanged?: () => void
   /** 返回除指定节点外，画布上已绑定的实例 id */
   getBoundInstanceIdsExcluding?: (nodeId: string) => Set<number>
-  /** 拖放时高亮的容器节点 id */
-  dropTargetContainerId?: Ref<string | null>
-  /** 拖放目标容器：合法 / 非法 */
-  dropTargetStatus?: Ref<ContainerDropStatus | null>
+  instances?: Ref<DeviceInstanceBasic[]>
+  expandedNodeIds?: Ref<Set<string>>
+  setNodeExpanded?: (nodeId: string, expanded: boolean) => void
+  updateNodeData?: (nodeId: string, data: Partial<ModelNodeData>) => void
+  deleteNode?: (nodeId: string) => void
 }
 
 export const MODELING_EDITOR_KEY: InjectionKey<ModelingEditorContext> = Symbol('modelingEditor')

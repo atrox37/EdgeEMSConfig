@@ -738,7 +738,7 @@ defineExpose({
     .channel-detail__section-title {
       font-size: 16px;
       font-weight: 600;
-      color: $text-color-primary;
+      color: var(--vt-text-primary);
       margin: 0 0 15px 0;
     }
 
@@ -773,7 +773,7 @@ defineExpose({
   // }
 
   .channel-detail__text {
-    color: $text-color-primary;
+    color: var(--vt-text-primary);
     font-size: 14px;
     line-height: 32px;
   }

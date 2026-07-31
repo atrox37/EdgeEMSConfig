@@ -179,7 +179,7 @@ defineProps<Props>()
   }
 
   .protocol-params__text {
-    color: $text-color-primary;
+    color: var(--vt-text-primary);
     font-size: 14px;
     line-height: 32px;
   }

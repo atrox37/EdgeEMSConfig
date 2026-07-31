@@ -1,0 +1,200 @@
+:root {
+  color-scheme: light;
+
+  /* Brand */
+  --vt-color-primary: #ff6900;
+  --vt-color-primary-hover: #ff8733;
+  --vt-color-primary-active: #ff6f00;
+  --vt-color-secondary: #354C7B;
+  --vt-color-secondary-hover: #496899;
+  --vt-color-secondary-active: #2f476f;
+  --vt-color-success: #52c41a;
+  --vt-color-success-hover: #49aa15;
+  --vt-color-success-active: #409611;
+  --vt-color-warning: #faad14;
+  --vt-color-warning-hover: #e6a017;
+  --vt-color-warning-active: #d29213;
+  --vt-color-danger: #F53F3F;
+  --vt-color-danger-hover: #E64447;
+  --vt-color-danger-active: #CC3B3F;
+  --vt-color-info: #8c8c8c; 
+  --vt-color-info-hover: #7a7a7a;
+  --vt-color-info-active: #686868;
+  --vt-color-chart-pv: #69cbff;
+  --vt-color-chart-ess: #4fadf7;
+  --vt-color-chart-dg: #f6c85f;
+  --vt-color-chart-online: #6dd400;
+  --vt-color-chart-alarm: #ff4d4f;
+
+  /* Accent */
+  --vt-color-accent: #2878ff;
+  --vt-color-level-critical: #da2d2c;
+  --vt-color-level-warning: #ff6e08;
+  --vt-color-level-info: #fe9900;
+
+  /* Text */
+  --vt-text-primary: #000000;
+  --vt-text-regular: #4f5561;
+  --vt-text-secondary: #767d8a;
+  --vt-text-placeholder: #bfbfbf;
+  --vt-text-disabled: #c0c4cc;
+  --vt-color-white-05: rgba(255, 255, 255, 0.05);
+  --vt-color-white-10: rgba(255, 255, 255, 0.1);
+  --vt-color-white-15: rgba(255, 255, 255, 0.15);
+  --vt-color-white-20: rgba(255, 255, 255, 0.2);
+  --vt-color-white-30: rgba(255, 255, 255, 0.3);
+  --vt-color-white-40: rgba(255, 255, 255, 0.4);
+  --vt-color-white-60: rgba(255, 255, 255, 0.6);
+  --vt-color-black-04: rgba(0, 0, 0, 0.04);
+  --vt-color-black-06: rgba(0, 0, 0, 0.06);
+  --vt-color-black-12: rgba(0, 0, 0, 0.12);
+  --vt-color-black-25: rgba(0, 0, 0, 0.25);
+  --vt-color-black-28: rgba(0, 0, 0, 0.28);
+  --vt-color-black-50: rgba(0, 0, 0, 0.5);
+
+  /* Surface */
+  --vt-bg-body: #395583;
+  --vt-bg-page: #ffffff;
+  --vt-bg-panel: #ffffff;
+  --vt-bg-overlay: rgba(0, 0, 0, 0.3);
+  --vt-bg-elevated: #f6f8fc;
+  --vt-bg-input: #f6f8fc;
+  --vt-bg-muted: rgba(57, 85, 131, 0.07);
+  --vt-bg-glass: rgba(255, 255, 255, 0.9);
+  --vt-bg-glass-strong: rgba(255, 255, 255, 0.95);
+  --vt-bg-glass-heavy: rgba(255, 255, 255, 0.98);
+  --vt-bg-status-online: rgba(82, 196, 26, 0.2);
+  --vt-bg-hover: rgba(57, 85, 131, 0.08);
+
+  /* Brand — interaction */
+  --vt-color-hover: #edf2fa;
+
+  /* Table */
+  --vt-table-header-bg: #d3dde7;
+  --vt-table-fixed-bg: rgba(250, 250, 250, 0.95);
+  --vt-table-row-hover-bg: #e6edf4;
+  --vt-table-sort-color: var(--vt-color-primary);
+  --vt-text-empty: #999999;
+
+  /* Dialog */
+  --vt-dialog-fixed-bg: rgba(250, 250, 250, 0.95);
+  --vt-dialog-row-hover-bg: #e6edf4;
+
+  /* Message box / notification */
+  --vt-message-box-bg: #ffffff;
+  --vt-notification-error-bg: #fff1f0;
+  --vt-notification-error-border: #e53935;
+  --vt-notification-success-bg: #f6ffed;
+  --vt-notification-success-border: #43a047;
+
+  /* Picker */
+  --vt-picker-popper-bg: #ffffff;
+
+  /* Border */
+  --vt-border-color: #dce4f0;
+  --vt-border-color-strong: #bccbe0;
+  --vt-border-color-soft: #edf1f6;
+  --vt-border-color-dashed: #cbd6e5;
+  --vt-border-gradient: linear-gradient(
+    117.31deg,
+    rgba(200, 200, 200, 0.5) 2.77%,
+    rgba(200, 200, 200, 0) 32.18%,
+    rgba(200, 200, 200, 0.2) 72.63%,
+    rgba(200, 200, 200, 0.5) 99.05%
+  );
+  --vt-border-gradient-strong: linear-gradient(
+    147.24deg,
+    rgba(200, 200, 200, 0.8) 39.16%,
+    rgba(200, 200, 200, 0.5) 66.27%,
+    rgba(200, 200, 200, 0.8) 98.58%
+  );
+  --vt-border-gradient-popper: linear-gradient(
+    117.64deg,
+    rgba(200, 200, 200, 0.5) 2.73%,
+    rgba(200, 200, 200, 0) 25.27%,
+    rgba(200, 200, 200, 0.5) 41.05%,
+    rgba(200, 200, 200, 0.2) 61.63%,
+    rgba(200, 200, 200, 0.5) 97.67%
+  ) 1;
+
+  /* Radius */
+  --vt-radius-none: 6px;
+  --vt-radius-sm: 4px;
+  --vt-radius-md: 10px;
+  --vt-radius-round: 20px;
+
+  /* Shadow */
+  --vt-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+  --vt-shadow-dialog: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  /* Typography */
+  --vt-font-family-base: Arimo, sans-serif;
+  --vt-font-family-heading: Montserrat, sans-serif;
+  --vt-font-size-xs: 12px;
+  --vt-font-size-sm: 13px;
+  --vt-font-size-base: 14px;
+  --vt-font-size-md: 16px;
+  --vt-font-size-lg: 18px;
+  --vt-font-size-xl: 20px;
+  --vt-font-size-2xl: 30px;
+  --vt-font-weight-normal: 400;
+  --vt-font-weight-medium: 500;
+  --vt-font-weight-semibold: 600;
+  --vt-font-weight-bold: 700;
+  --vt-line-height-tight: 1.2;
+  --vt-line-height-normal: 1.4;
+  --vt-line-height-relaxed: 1.5;
+  --vt-line-height-loose: 1.6;
+
+  /* Spacing */
+  --vt-space-1: 4px;
+  --vt-space-2: 8px;
+  --vt-space-3: 12px;
+  --vt-space-4: 16px;
+  --vt-space-5: 20px;
+  --vt-space-6: 32px;
+  --vt-space-7: 48px;
+  --vt-button-padding-sm: 0 12px;
+  --vt-button-padding: 0 16px;
+  --vt-button-padding-lg: 0 20px;
+  --vt-button-line-height-sm: 1.4;
+  --vt-button-line-height: 1.5;
+  --vt-button-line-height-lg: 1.6;
+  --vt-transition-fast: 0.15s ease;
+  --vt-transition-base: 0.3s ease;
+  --vt-transition-slow: 0.5s ease;
+  --vt-opacity-disabled: 0.6;
+  --vt-opacity-loading: 0.8;
+  --vt-opacity-hover: 0.9;
+
+  /* Component size */
+  --vt-control-height-sm: 28px;
+  --vt-control-height: 32px;
+  --vt-control-height-lg: 40px;
+  --vt-table-row-height: 40px;
+  --vt-table-cell-padding-y: 9px;
+  --vt-table-cell-padding-x: 20px;
+  --vt-table-cell-line-height: 22px;
+  --vt-table-cell-inner-height: calc(
+    var(--vt-table-row-height) - var(--vt-table-cell-padding-y) * 2
+  );
+  --vt-field-width: 240px;
+  --vt-select-width: 240px;
+  --vt-width-scrollbar: 6px;
+  --vt-width-menu-collapse: 48px;
+  --vt-border-width-base: 1px;
+  --vt-border-width-medium: 2px;
+  --vt-z-toast: 3000;
+
+  /* Scrollbar */
+  --vt-scrollbar-thumb: rgba(200, 200, 200, 0.6);
+  --vt-scrollbar-thumb-hover: rgba(180, 180, 180, 0.8);
+  --vt-scrollbar-track: transparent;
+  --vt-scrollbar-thumb-light: #c1c1c1;
+  --vt-scrollbar-track-light: #f1f1f1;
+  --vt-scrollbar-thumb-light-hover: #a8a8a8;
+
+  /* Effect */
+  --vt-backdrop-blur: blur(10px);
+  --vt-backdrop-blur-strong: blur(20px);
+}

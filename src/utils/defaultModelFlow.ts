@@ -17,13 +17,12 @@ interface DeviceSlot {
 }
 
 const STATION_SLOT = { instanceName: 'station_01', productName: 'Station' }
-const LOAD_CONTAINER_SLOT = { instanceName: 'Load_01', productName: 'Load' }
 
 const DEVICE_SLOTS: DeviceSlot[] = [
-  { instanceName: 'battery_01', productName: 'Battery', nodeId: 'node-battery', parentId: 'node-ess', label: 'Battery' },
+  { instanceName: 'battery_01', productName: 'Battery', nodeId: 'node-battery', parentId: '', label: 'Battery' },
   { instanceName: 'diesel_gen_01', productName: 'Diesel', nodeId: 'node-diesel', parentId: 'node-generator', label: 'Diesel' },
-  { instanceName: 'pcs_01', productName: 'PCS', nodeId: 'node-pcs', parentId: 'node-ess', label: 'PCS' },
-  { instanceName: 'pv_01', productName: 'PV DCDC', nodeId: 'node-pv-dcdc', parentId: 'node-generator', label: 'PV DCDC' },
+  { instanceName: 'load_01', productName: 'Load', nodeId: 'node-load-device', parentId: '', label: 'Load' },
+  { instanceName: 'PV Group_01', productName: 'PV Group', nodeId: 'node-pv-group', parentId: '', label: 'PV Group' },
 ]
 
 function normalizeKey(value: string): string {
@@ -103,6 +102,7 @@ function groupNode(
   width: number,
   height: number,
   instances: ModelInstanceBinding[] = [],
+  topologyType: 'composite' | 'container' = 'container',
 ): ModelFlowNode {
   return {
     id,
@@ -112,7 +112,9 @@ function groupNode(
       label,
       productName,
       parentName: 'Station',
-      isContainer: true,
+      isContainer: topologyType === 'container',
+      topologyType,
+      uiExpanded: true,
       width,
       height,
       instances,
@@ -130,7 +132,6 @@ export function createDefaultModelFlow(
   instances: DefaultFlowInstanceInput[] = [],
 ): ModelFlowData {
   const stationInst = findInstance(instances, STATION_SLOT.instanceName, STATION_SLOT.productName)
-  const loadInst = findInstance(instances, LOAD_CONTAINER_SLOT.instanceName, LOAD_CONTAINER_SLOT.productName)
 
   const nodes: ModelFlowNode[] = [
     {
@@ -143,71 +144,48 @@ export function createDefaultModelFlow(
         instances: stationInst ? [toBinding(stationInst, 'Station')] : [],
       },
     },
-    groupNode('node-generator', 'Generator', 'Generator', { x: 240, y: 140 }, 320, 200),
-    groupNode('node-ess', 'ESS', 'ESS', { x: 900, y: 140 }, 260, 180),
+    groupNode('node-ess', 'Hybrid Inverter', 'Hybrid Inverter', { x: 900, y: 140 }, 280, 254, [], 'composite'),
     groupNode(
       'node-load',
-      'Load',
-      'Load',
+      'Distribution Board',
+      'Distribution Board',
       { x: 580, y: 140 },
-      260,
-      200,
-      loadInst ? [toBinding(loadInst, 'Load')] : [],
+      280,
+      254,
+      [],
+      'container',
     ),
   ]
 
   const childIndexByParent = new Map<string, number>()
 
   // Load 容器内放置 Load 设备节点（与容器绑定同一 Load 实例）
-  if (loadInst) {
-    nodes.push(
-      productNode(
-        'node-load-device',
-        'Load',
-        'LoadDevice',
-        { x: 24, y: 56 },
-        [toBinding(loadInst, 'LoadDevice')],
-        'node-load',
-        'Load',
-      ),
-    )
-    childIndexByParent.set('node-load', 1)
-  }
+  nodes.push(
+    productNode('node-hybrid-ac-inverter', 'AC Inverter', 'AC Inverter', { x: 20, y: 500 }, [], 'node-ess', 'Hybrid Inverter'),
+    productNode('node-hybrid-pcs', 'PCS', 'PCS', { x: 320, y: 500 }, [], 'node-ess', 'Hybrid Inverter'),
+    productNode('node-distribution-meter', 'Meter', 'Meter', { x: 20, y: 500 }, [], 'node-load', 'Distribution Board'),
+  )
+  childIndexByParent.set('node-ess', 2)
+  childIndexByParent.set('node-load', 1)
 
   for (const slot of DEVICE_SLOTS) {
     const inst = findInstance(instances, slot.instanceName, slot.productName)
     if (!inst) continue
-
-    const parentName =
-      slot.parentId === 'node-generator'
-        ? 'Generator'
-        : slot.parentId === 'node-ess'
-          ? 'ESS'
-          : 'Load'
-
-    const childIndex = childIndexByParent.get(slot.parentId) ?? 0
-    childIndexByParent.set(slot.parentId, childIndex + 1)
 
     nodes.push(
       productNode(
         slot.nodeId,
         slot.label,
         slot.productName,
-        { x: 24 + childIndex * 94, y: 56 },
+        { x: 24 + nodes.length * 94, y: 56 },
         [toBinding(inst, slot.productName)],
-        slot.parentId,
-        parentName,
+        undefined,
+        undefined,
       ),
     )
   }
 
-  const hierarchyHandle = { sourceHandle: 'bottom-source', targetHandle: 'top-target' } as const
-
-  const edges: ModelFlowEdge[] = [
-    { id: createFlowEdgeId(), source: 'node-station', target: 'node-generator', ...hierarchyHandle },
-    { id: createFlowEdgeId(), source: 'node-station', target: 'node-ess', ...hierarchyHandle },
-    { id: createFlowEdgeId(), source: 'node-station', target: 'node-load', ...hierarchyHandle },
-  ]
+  const edges: ModelFlowEdge[] = []
 
   return { nodes, edges }
 }

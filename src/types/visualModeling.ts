@@ -2,6 +2,7 @@
 
 export type ModelNodeType = 'station' | 'product' | 'group'
 export type ModelEdgeType = 'hierarchy' | 'classification'
+export type TopologyNodeKind = 'standalone' | 'composite' | 'container'
 
 /** 网页展示点位配置（运维在PCManagement中配置，由VoltageEMS apps读取） */
 export interface DisplayPointConfig {
@@ -49,10 +50,14 @@ export interface ModelNodeData {
   imageUrl?: string
   /** ESS / Generator 等纯容器节点标记 */
   isContainer?: boolean
+  /** 拓扑节点展示类型；用于区分 Standalone / Composite / Container。 */
+  topologyType?: TopologyNodeKind
   /** @deprecated 属性改由点位配置页维护 */
   properties?: Record<string, string | number>
   width?: number
   height?: number
+  /** 节点展开状态，仅用于画布交互布局 */
+  uiExpanded?: boolean
 }
 
 export interface ModelFlowNode {
@@ -81,6 +86,11 @@ export interface ModelFlowEdge {
 export interface ModelFlowData {
   nodes: ModelFlowNode[]
   edges: ModelFlowEdge[]
+  /** 固定在画布左上角的绑定，不属于拓扑节点或连线。 */
+  fixedBindings?: {
+    station?: ModelInstanceBinding | null
+    environment?: ModelInstanceBinding | null
+  }
 }
 
 export interface VisualModel {
@@ -109,4 +119,5 @@ export interface ModelNodeTemplate {
   instanceId?: number
   instanceName?: string
   imageUrl?: string
+  topologyType?: TopologyNodeKind
 }

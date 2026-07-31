@@ -52,26 +52,56 @@ export function isContainerNode(node?: FlowNode | null): boolean {
   return !!data?.isContainer || isContainerProduct(data?.productName)
 }
 
+type ConnectionRuleKey =
+  | 'pv-group'
+  | 'battery'
+  | 'hybrid-inverter'
+  | 'ac-inverter'
+  | 'pcs'
+  | 'diesel'
+  | 'distribution-board'
+  | 'load'
+  | 'other'
+
+function getConnectionRuleKey(node?: FlowNode | null): ConnectionRuleKey {
+  const productName = getNodeProductName(node)?.trim().toLowerCase() ?? ''
+  const compactName = productName.replace(/[\s_-]+/g, '')
+  if (compactName === 'pvgroup') return 'pv-group'
+  if (compactName === 'battery') return 'battery'
+  if (compactName === 'hybridinverter') return 'hybrid-inverter'
+  if (compactName === 'acinverter') return 'ac-inverter'
+  if (compactName === 'pcs') return 'pcs'
+  if (compactName === 'diesel') return 'diesel'
+  if (compactName === 'distributionboard') return 'distribution-board'
+  if (['load', 'threephaseload', 'evchargingload', 'hvacload'].includes(compactName)) return 'load'
+  return 'other'
+}
+
+/** 拓扑连接白名单；Load 代表所有负载产品。 */
+export const MODEL_FLOW_CONNECTION_RULES: Readonly<Record<ConnectionRuleKey, readonly ConnectionRuleKey[]>> = {
+  'pv-group': ['hybrid-inverter', 'ac-inverter'],
+  battery: ['hybrid-inverter', 'pcs'],
+  'hybrid-inverter': ['distribution-board', 'battery'],
+  'ac-inverter': [],
+  pcs: ['battery', 'distribution-board'],
+  diesel: ['distribution-board'],
+  'distribution-board': ['load'],
+  load: [],
+  other: [],
+}
+
 export function canConnectNodes(
   source?: FlowNode | null,
   target?: FlowNode | null,
 ): boolean {
   if (!source || !target || source.id === target.id) return false
 
-  // Station → 任意非 Station 节点（顶层容器、顶层设备、容器内设备均可直连）
-  if (source.type === 'station') {
-    return target.type !== 'station'
-  }
-
-  // 容器 → 直接子设备
-  if (isContainerNode(source) && isDirectChildNode(source, target)) {
-    return true
-  }
-
-  return false
+  const sourceKey = getConnectionRuleKey(source)
+  const targetKey = getConnectionRuleKey(target)
+  return MODEL_FLOW_CONNECTION_RULES[sourceKey].includes(targetKey)
 }
 
-/** 仅允许父→子方向（不自动交换端点） */
+/** 仅允许白名单方向；拖拽方向可以反向，最终会规范为表格方向。 */
 export function isStrictParentChildConnection(
   source?: FlowNode | null,
   target?: FlowNode | null,
@@ -190,7 +220,7 @@ export function isValidModelConnection(
   const source = nodes.find((n) => n.id === connection.source)
   const target = nodes.find((n) => n.id === connection.target)
   if (!isStrictParentChildConnection(source, target)) return false
-  return !hasEdgeBetweenNodes(edges, source!.id, target!.id)
+  return !hasEdgeBetweenNodesEitherDirection(edges, source!.id, target!.id)
 }
 
 export function getConnectionRuleHint(
@@ -199,6 +229,13 @@ export function getConnectionRuleHint(
   edges: Array<Pick<FlowEdge, 'source' | 'target'>> = [],
 ): string {
   if (!source || !target) return 'Invalid connection'
+
+  if (!isStrictParentChildConnection(source, target)) {
+    if (isStrictParentChildConnection(target, source)) {
+      return 'Connection direction will be normalized according to the topology rules'
+    }
+    return 'This connection is not allowed by the topology rules'
+  }
 
   if (!isStrictParentChildConnection(source, target)) {
     if (isStrictParentChildConnection(target, source)) {

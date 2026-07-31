@@ -1,10 +1,13 @@
 <template>
-  <div class="voltage-class rule-management modeling-editor" :class="{ 'is-fullscreen': isFullscreen }">
-    <ModulePageHeader title="Visual Modeling">
+  <div
+    class="voltage-class rule-management modeling-editor"
+    :class="{ 'is-fullscreen': isFullscreen, 'is-editing': !isViewMode }"
+  >
+    <ModulePageHeader title="Visual Modeling" variant="actions">
       <template #toolbar>
         <el-button size="small" type="primary" class="custom-button" @click="toggleFullscreen">
-          <AppIcon
-            :name="isFullscreen ? 'i-tabler-arrows-minimize' : 'i-tabler-arrows-maximize'"
+          <img
+            :src="fullscreenIcon"
             class="modeling-editor__toolbar-icon"
           />
           {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
@@ -16,12 +19,13 @@
           :teleported="true"
           popper-class="visual-modeling-popper"
           :disabled="exportLoading"
+          split-button
           @command="handleExportCommand"
         >
-          <el-button size="small" type="primary" class="custom-button" :loading="exportLoading">
-            <AppIcon name="i-tabler-file-export" class="modeling-editor__toolbar-icon" />
+          <!-- <el-button size="small"  class="custom-button" :loading="exportLoading"> -->
+            <img :src="exportIcon" class="modeling-editor__toolbar-icon" />
             Export
-          </el-button>
+          <!-- </el-button> -->
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="json">Export JSON</el-dropdown-item>
@@ -37,7 +41,7 @@
           class="custom-button"
           @click="enterEditMode"
         >
-          <AppIcon name="i-tabler-pencil" class="modeling-editor__toolbar-icon" />
+          <img :src="editIcon" class="modeling-editor__toolbar-icon" />
           Edit
         </el-button>
 
@@ -76,13 +80,29 @@
     </ModulePageHeader>
 
     <div class="modeling-editor__body">
-      <LeftPanel v-if="!isViewMode" v-model:collapsed="leftPanelCollapsed" />
+      <div v-if="!isViewMode" class="modeling-editor__left-panel">
+        <LeftPanel />
+      </div>
 
-      <div
-        ref="canvasRef"
-        class="modeling-editor__canvas"
-        :class="{ 'modeling-editor__canvas--drag-over': isDragOver }"
-      >
+      <div ref="canvasRef" class="modeling-editor__canvas">
+        <div class="modeling-editor__fixed-bindings">
+          <FixedBindingCard
+            kind="station"
+            label="Station"
+            :instances="stationInstances"
+            :readonly="isViewMode"
+            :model-value="fixedStationBinding"
+            @update:model-value="updateFixedBinding('station', $event)"
+          />
+          <FixedBindingCard
+            kind="environment"
+            label="Environment"
+            :instances="environmentInstances"
+            :readonly="isViewMode"
+            :model-value="fixedEnvironmentBinding"
+            @update:model-value="updateFixedBinding('environment', $event)"
+          />
+        </div>
         <VueFlow
           :nodes="nodes"
           :edges="edges"
@@ -90,51 +110,49 @@
           :connection-mode="ConnectionMode.Loose"
           :connection-radius="48"
           :connect-on-click="false"
-          :connection-line-style="{ stroke: '#ff8a00', strokeWidth: 2.5 }"
+          :connection-line-style="{ stroke: '#B3CEFA', strokeWidth: 1 }"
           :min-zoom="0.1"
           :max-zoom="4"
           :snap-to-grid="true"
           :snap-grid="[10, 10]"
-          :nodes-draggable="!isViewMode"
+          :nodes-draggable="true"
           :nodes-connectable="!isViewMode"
           :nodes-deletable="!isViewMode"
           :edges-deletable="!isViewMode"
-          :delete-key-code="isViewMode ? null : true"
+          :delete-key-code="null"
           :elements-selectable="!isViewMode"
           :edges-focusable="!isViewMode"
           :elevate-edges-on-select="!isViewMode"
           :elevate-nodes-on-select="!isViewMode"
           :class="['modeling-editor__flow', { 'modeling-editor__flow--view': isViewMode }]"
-          @drop.prevent="handleDropGuard"
-          @dragover.prevent="handleDragOverGuard"
-          @dragleave="handleDragLeaveGuard"
           @connect="handleConnectGuard"
           @node-click="handleNodeClick"
           @edge-click="handleEdgeClickGuard"
           @pane-click="handlePaneClick"
           @edge-double-click="handleEdgeDoubleClickGuard"
         >
-          <Background variant="lines" :gap="20" color="rgba(180,180,180,0.35)" />
-          <MiniMap
-            class="rf-minimap-custom"
-            :node-stroke-color="'#74b9ff'"
-            :node-color="'#dde8f8'"
-            :node-border-radius="3"
-            position="top-right"
+          <Background variant="lines" :gap="10" color="rgba(220, 226, 238, 0.78)" />
+          <FlowMiniMap
+            v-show="showMiniMap"
           />
-          <Controls position="bottom-right" />
-        </VueFlow>
-
-        <Transition name="edge-toolbar">
-          <div
-            v-if="!isViewMode && dropTargetStatus"
-            class="modeling-editor__drop-hint"
-            :class="`modeling-editor__drop-hint--${dropTargetStatus}`"
-          >
-            <AppIcon :name="dropTargetStatus === 'valid' ? 'i-tabler-check' : 'i-tabler-x'" />
-            <span>{{ dropTargetStatus === 'valid' ? 'Release to place inside container' : 'Invalid container for this device' }}</span>
+          <div class="modeling-editor__flow-controls" aria-label="Canvas controls">
+            <button type="button" class="flow-control-button" aria-label="Fit view" @click="fitView()">
+              <img class="flow-control-button__icon" :src="fitViewIcon" alt="" aria-hidden="true" />
+            </button>
+            <span class="flow-control-divider" aria-hidden="true"></span>
+            <button type="button" class="flow-control-button" aria-label="Zoom out" @click="zoomOut()">
+              <img class="flow-control-button__icon" :src="zoomOutIcon" alt="" aria-hidden="true" />
+            </button>
+            <span class="flow-control-zoom">{{ Math.round(viewport.zoom * 100) }}%</span>
+            <button type="button" class="flow-control-button" aria-label="Zoom in" @click="zoomIn()">
+              <img class="flow-control-button__icon" :src="zoomInIcon" alt="" aria-hidden="true" />
+            </button>
+            <span class="flow-control-divider" aria-hidden="true"></span>
+            <button type="button" class="flow-control-button" :class="{ 'is-active': showMiniMap }" aria-label="Toggle minimap" @click="showMiniMap = !showMiniMap">
+              <img class="flow-control-button__icon" :src="toggleMinimapIcon" alt="" aria-hidden="true" />
+            </button>
           </div>
-        </Transition>
+        </VueFlow>
 
         <Transition name="edge-toolbar">
           <div v-if="!isViewMode && selectedEdgeId" class="modeling-editor__edge-toolbar">
@@ -151,16 +169,16 @@
 
         <div v-if="!isViewMode" v-permission="'engineer'" class="modeling-editor__floating-actions">
           <el-button
-            circle
             class="floating-btn floating-btn--cancel"
             title="Restore to last saved"
             :disabled="!hasUnsavedChanges"
             @click="handleRestoreToSaved"
           >
+            <AppIcon name="i-tabler-rotate-2" />
+            <span>Restart</span>
             ×
           </el-button>
           <el-button
-            circle
             type="primary"
             class="floating-btn floating-btn--submit"
             :class="{ 'is-dirty': hasUnsavedChanges }"
@@ -168,19 +186,13 @@
             title="Save"
             @click="handleSave"
           >
+            <AppIcon name="i-tabler-device-floppy" />
+            <span>Save</span>
             √
           </el-button>
         </div>
       </div>
 
-      <RightPanel
-        v-if="selectedNode"
-        :selected-node="selectedNode"
-        :readonly="isViewMode"
-        @update-node="handleUpdateNode"
-        @delete-node="handleDeleteNode"
-        @detach-from-container="handleDetachFromContainer"
-      />
     </div>
 
     <!-- 边标签编辑对话框 -->
@@ -211,6 +223,7 @@
 </template>
 
 <script setup lang="ts">
+import LeftPanel from './components/LeftPanel.vue'
 import { ref, markRaw, computed, onMounted, onUnmounted, nextTick, provide } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -218,7 +231,6 @@ import {
   VueFlow,
   ConnectionMode,
   useVueFlow,
-  MarkerType,
   type Connection,
   type Node as FlowNode,
   type Edge as FlowEdge,
@@ -227,30 +239,25 @@ import {
   type NodeTypesObject,
 } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
-import { Controls } from '@vue-flow/controls'
-import { MiniMap } from '@vue-flow/minimap'
-import '@vue-flow/node-resizer/dist/style.css'
 
 import AppIcon from '@/components/AppIcon.vue'
 import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
-import LeftPanel from './components/LeftPanel.vue'
-import RightPanel from './components/RightPanel.vue'
-import StationNode from './components/customNodes/StationNode.vue'
-import ProductNode from './components/customNodes/ProductNode.vue'
-import GroupNode from './components/customNodes/GroupNode.vue'
+import FixedBindingCard from './components/FixedBindingCard.vue'
+import TopologyNode from './components/customNodes/TopologyNode.vue'
+import FlowMiniMap from './components/FlowMiniMap.vue'
 
 import { useVisualModelingStore, STATION_EDITOR_ID } from '@/stores/visualModeling'
-import useModelDnd, { findContainerForNode } from './useModelDnd'
-import { layoutModelGraph } from './useModelLayout'
+import { getGroupContentLayout, layoutModelGraph } from './useModelLayout'
 import {
   createDefaultModelFlow,
   createFlowEdgeId,
   isEmptyFlow,
   repairMissingFlowEdges,
 } from '@/utils/defaultModelFlow'
-import type { ModelFlowData } from '@/types/visualModeling'
+import type { ModelFlowData, ModelInstanceBinding } from '@/types/visualModeling'
 import {
   getConnectionRuleHint,
+  canConnectNodes,
   hasEdgeBetweenNodesEitherDirection,
   resolveConnectionEndpoints,
   correctEdgeDirection,
@@ -261,35 +268,31 @@ import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 import type { ModelFlowNode } from '@/types/visualModeling'
 import { MODELING_EDITOR_KEY } from './modelingEditorContext'
-import { collectBoundInstanceIds, collectNodesToDelete } from '@/utils/visualModeling'
-import { normalizeTopology, validateTopology } from '@/utils/topologyNormalize'
-import {
-  buildAttachPatch,
-  buildConnectReparentPatch,
-  buildDetachPatch,
-  buildMissingContainerEdgePatches,
-  getNodeAbsolutePosition,
-  type TopologySyncPatch,
-} from '@/utils/topologySync'
-import { isContainerNode, setModelFlowProductRules } from '@/utils/modelFlowRules'
+import { collectBoundInstanceIds, collectNodesToDelete, normalizeNodeInstances } from '@/utils/visualModeling'
+import { normalizeTopology } from '@/utils/topologyNormalize'
+import { setModelFlowProductRules } from '@/utils/modelFlowRules'
 import TopologyIssuesDialog from './components/dialogs/TopologyIssuesDialog.vue'
 import { isFlowSnapshotEqual } from '@/utils/flowSnapshot'
 import { enrichFlowWithLiveChannelBindings } from '@/utils/topologyChannelBindings'
 
+import fullscreenIcon from '@/assets/icons/button-fullscreen.svg'
+import editIcon from '@/assets/icons/button-edit.svg'
+import exportIcon from '@/assets/icons/button-download.svg'
+import fitViewIcon from '@/assets/icons/tuopu-fitView.svg'
+import toggleMinimapIcon from '@/assets/icons/tuopu-toggleMinimap.svg'
+import zoomInIcon from '@/assets/icons/tuopu-zoomIn.svg'
+import zoomOutIcon from '@/assets/icons/tuopu-zoomOut.svg'
+
 const store = useVisualModelingStore()
 const modelId = STATION_EDITOR_ID
+const showMiniMap = ref(true)
+const fixedStationBinding = ref<ModelInstanceBinding | null>(null)
+const fixedEnvironmentBinding = ref<ModelInstanceBinding | null>(null)
+const stationInstances = computed(() => store.instances.filter((item) => item.product_name === 'Station'))
+const environmentInstances = computed(() =>
+  store.instances.filter((item) => ['Env', 'Environment'].includes(item.product_name)),
+)
 
-const {
-  onDragOver,
-  onDragLeave,
-  onDrop: dndOnDrop,
-  isDragOver,
-  isDragging,
-  dropTargetContainerId,
-  dropTargetStatus,
-  clearDropTargetHighlight,
-  updateDropTargetForProduct,
-} = useModelDnd()
 const {
   setNodes,
   setEdges,
@@ -298,20 +301,22 @@ const {
   applyEdgeChanges,
   onNodesChange,
   onEdgesChange,
-  onNodeDrag,
-  onNodeDragStop,
   toObject,
   fitView,
+  zoomIn,
+  zoomOut,
+  viewport,
   getNodes,
   updateNode,
   findNode,
+  setViewport,
 } = useVueFlow()
 
 // ---- 节点类型注册（markRaw 避免 Vue Flow 节点被深度响应式包装）----
 const nodeTypes = {
-  station: markRaw(StationNode),
-  product: markRaw(ProductNode),
-  group: markRaw(GroupNode),
+  station: markRaw(TopologyNode),
+  product: markRaw(TopologyNode),
+  group: markRaw(TopologyNode),
 } as unknown as NodeTypesObject
 
 // ---- 连线类型定义 ----
@@ -363,18 +368,14 @@ function buildEdgeStyle(
   const def = EDGE_VARIANTS.find((v) => v.value === variant) ?? EDGE_VARIANTS[0]
   const animated =
     variant === 'dataflow' ? (options?.dataFlowActive ?? true) : def.animated
-  const marker = { type: MarkerType.ArrowClosed, color: def.color, width: 10, height: 10 }
   return {
     type: 'smoothstep',
     animated,
     zIndex: 1001,
     style: {
-      stroke: def.color,
-      strokeWidth: 2.5,
-      ...(def.strokeDasharray ? { strokeDasharray: def.strokeDasharray } : {}),
+      stroke: '#B3CEFA',
+      strokeWidth: 1,
     },
-    markerEnd: marker,
-    ...(def.bidirectional ? { markerStart: { ...marker } } : {}),
     data: { edgeVariant: variant, dataFlowActive: variant === 'dataflow' ? animated : undefined },
   }
 }
@@ -384,20 +385,48 @@ const nodes = ref<FlowNode[]>([])
 const edges = ref<FlowEdge[]>([])
 const isViewMode = ref(true)
 const isFullscreen = ref(false)
-const leftPanelCollapsed = ref(false)
 const hasUnsavedChanges = ref(false)
 const selectedNode = ref<ModelFlowNode | null>(null)
 const selectedEdgeId = ref<string | null>(null)
+const expandedNodeIds = ref(new Set<string>())
+const EDIT_SIDEBAR_OFFSET = 381
 const edgeLabelDialogVisible = ref(false)
 const editingEdgeLabel = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
 const exportLoading = ref(false)
 const topologyIssuesDialogRef = ref<InstanceType<typeof TopologyIssuesDialog> | null>(null)
 
+function setNodeExpanded(nodeId: string, expanded: boolean) {
+  const next = new Set(expandedNodeIds.value)
+  if (expanded) next.add(nodeId)
+  else next.delete(nodeId)
+  expandedNodeIds.value = next
+
+  const group = getFlowNodes().find((node) => node.id === nodeId)
+  if (!group) return
+  const children = getFlowNodes().filter((node) => node.parentNode === nodeId)
+  const productName = String((group.data as { productName?: string })?.productName ?? '')
+  const topologyType = String((group.data as { topologyType?: string })?.topologyType ?? '')
+  const isContainer = topologyType === 'container' || /container|distribution board/i.test(productName)
+  const layout = getGroupContentLayout(children, expanded, isContainer)
+
+  updateNode(nodeId, {
+    data: { ...group.data, uiExpanded: expanded, width: layout.size.width, height: layout.size.height },
+    style: { ...(group.style as Record<string, string | number>), width: `${layout.size.width}px`, height: `${layout.size.height}px` },
+  })
+  layout.positions.forEach((position, childId) => {
+    updateNode(childId, { position, hidden: true })
+  })
+  children.forEach((child) => {
+    if (!layout.positions.has(child.id)) updateNode(child.id, { hidden: true })
+  })
+}
+
 provide(MODELING_EDITOR_KEY, {
   isViewMode,
-  dropTargetContainerId,
-  dropTargetStatus,
+  instances: store.instances,
+  expandedNodeIds,
+  setNodeExpanded,
   notifyFlowChanged: () => {
     if (isViewMode.value || isRestoringHistory) return
     void nextTick().then(() => {
@@ -408,6 +437,14 @@ provide(MODELING_EDITOR_KEY, {
   },
   getBoundInstanceIdsExcluding: (nodeId: string) =>
     collectBoundInstanceIds(getFlowNodes(), nodeId),
+  updateNodeData: (nodeId, data) => {
+    const current = getFlowNodes().find((node) => node.id === nodeId)
+    if (!current) return
+    updateNode(nodeId, { data: { ...current.data, ...data } })
+    markDirty()
+    void nextTick().then(() => saveSnapshot())
+  },
+  deleteNode: handleDeleteNode,
 })
 
 function topologyValidationOptions() {
@@ -446,58 +483,6 @@ function getFlowEdges(): FlowEdge[] {
   return JSON.parse(JSON.stringify(pick)) as FlowEdge[]
 }
 
-function applyTopologySyncPatch(patch: TopologySyncPatch, options?: { silent?: boolean }) {
-  if (isViewMode.value) return
-  if (isRestoringHistory && !options?.silent) return
-  if (
-    !patch.nodeUpdates.length
-    && !patch.edgesToAdd.length
-    && !patch.edgesToRemove.length
-  ) {
-    return
-  }
-
-  for (const { id, patch: nodePatch } of patch.nodeUpdates) {
-    updateNode(id, nodePatch as Partial<FlowNode>)
-  }
-  if (patch.edgesToRemove.length) {
-    removeEdges(patch.edgesToRemove)
-  }
-  if (patch.edgesToAdd.length) {
-    const normalized = normalizeFlowEdges(patch.edgesToAdd, getFlowNodes())
-    addEdges(normalized)
-  }
-
-  void nextTick().then(() => {
-    nodes.value = getFlowNodes()
-    edges.value = normalizeFlowEdges((toObject().edges ?? []) as FlowEdge[], getFlowNodes())
-    if (!options?.silent) {
-      markDirty()
-      saveSnapshot()
-    }
-  })
-}
-
-function applyTopologySyncPatches(patches: TopologySyncPatch[], options?: { silent?: boolean }) {
-  if (!patches.length) return
-  const merged: TopologySyncPatch = {
-    nodeUpdates: [],
-    edgesToAdd: [],
-    edgesToRemove: [],
-  }
-  for (const patch of patches) {
-    merged.nodeUpdates.push(...patch.nodeUpdates)
-    merged.edgesToAdd.push(...patch.edgesToAdd)
-    merged.edgesToRemove.push(...patch.edgesToRemove)
-  }
-  applyTopologySyncPatch(merged, options)
-}
-
-function syncContainerMembershipEdges(options?: { silent?: boolean }) {
-  const patches = buildMissingContainerEdgePatches(getFlowNodes(), getFlowEdges())
-  applyTopologySyncPatches(patches, options)
-}
-
 /** 将 Vue Flow 内部边同步到本地 ref（单向绑定时以内部状态为准） */
 async function syncEdgesFromFlow() {
   await nextTick()
@@ -519,6 +504,22 @@ function exportCurrentFlow(): ModelFlowData {
   return {
     nodes: flowNodes as unknown as ModelFlowData['nodes'],
     edges: flowEdges as unknown as ModelFlowData['edges'],
+    fixedBindings: {
+      station: fixedStationBinding.value,
+      environment: fixedEnvironmentBinding.value,
+    },
+  }
+}
+
+function updateFixedBinding(
+  kind: 'station' | 'environment',
+  value: ModelInstanceBinding | null,
+) {
+  if (kind === 'station') fixedStationBinding.value = value
+  else fixedEnvironmentBinding.value = value
+  if (!isViewMode.value) {
+    hasUnsavedChanges.value = true
+    store.hasUnsavedChanges = true
   }
 }
 
@@ -604,6 +605,47 @@ function removeNodesByIds(idsToRemove: string[]) {
     if (selectedNode.value && idSet.has(selectedNode.value.id)) {
       selectedNode.value = null
     }
+    isRestoringHistory = false
+    markDirty()
+    saveSnapshot()
+  })
+}
+
+function removeSelectedElements() {
+  const currentNodes = getNodes.value as FlowNode[]
+  const currentEdges = getFlowEdges()
+  const selectedNodeIds = currentNodes
+    .filter((node) => node.selected)
+    .map((node) => node.id)
+
+  if (selectedNodeIds.some((id) => currentNodes.find((node) => node.id === id)?.type === 'station')) {
+    ElMessage.warning('Station node cannot be deleted')
+    return
+  }
+
+  const nodeIds = new Set<string>()
+  for (const id of selectedNodeIds) {
+    for (const childId of collectNodesToDelete(id, currentNodes)) nodeIds.add(childId)
+  }
+  const edgeIds = new Set(
+    currentEdges.filter((edge) => edge.selected).map((edge) => edge.id),
+  )
+
+  if (!nodeIds.size && !edgeIds.size) return
+
+  const nextNodes = currentNodes.filter((node) => !nodeIds.has(node.id))
+  const nextEdges = currentEdges.filter(
+    (edge) => !edgeIds.has(edge.id) && !nodeIds.has(edge.source) && !nodeIds.has(edge.target),
+  )
+
+  isRestoringHistory = true
+  setNodes(nextNodes)
+  setEdges(nextEdges)
+  selectedNode.value = null
+  selectedEdgeId.value = null
+  void nextTick().then(() => {
+    nodes.value = (toObject().nodes ?? nextNodes) as FlowNode[]
+    edges.value = normalizeFlowEdges((toObject().edges ?? nextEdges) as FlowEdge[])
     isRestoringHistory = false
     markDirty()
     saveSnapshot()
@@ -709,11 +751,9 @@ onEdgesChange(onEdgesChangeHandler)
 
 function enrichNodesWithImages(flowNodes: FlowNode[]): FlowNode[] {
   return flowNodes.map((node) => {
-    if (node.type !== 'product') return node
     const data = node.data as { productName?: string; imageUrl?: string }
-    if (data.imageUrl) return node
     const imageUrl = getProductInstanceImageUrl(data.productName)
-    if (!imageUrl) return node
+    if (!imageUrl || data.imageUrl === imageUrl) return node
     return { ...node, data: { ...node.data, imageUrl } }
   })
 }
@@ -723,8 +763,28 @@ async function hydrateCanvasFromFlow(
   options?: { autoLayout?: boolean },
 ) {
   const flow = repairMissingFlowEdges(rawFlow)
-  const nodesWithImages = enrichNodesWithImages(flow.nodes as FlowNode[])
-  const flowEdges = normalizeFlowEdges((flow.edges ?? []) as FlowEdge[], nodesWithImages)
+  if (flow.fixedBindings) {
+    fixedStationBinding.value = flow.fixedBindings.station ?? null
+    fixedEnvironmentBinding.value = flow.fixedBindings.environment ?? null
+  }
+  const fixedNodeIds = new Set<string>()
+  const topologyNodes = (flow.nodes as FlowNode[]).filter((node) => {
+    const productName = String((node.data as { productName?: string })?.productName ?? '')
+    const isEnvironment = productName === 'Env' || productName === 'Environment'
+    const isFixed = node.type === 'station' || isEnvironment
+    if (isFixed) {
+      fixedNodeIds.add(node.id)
+      const binding = normalizeNodeInstances(node.data as ModelFlowNode['data'])[0] ?? null
+      if (node.type === 'station') fixedStationBinding.value = binding
+      if (isEnvironment) fixedEnvironmentBinding.value = binding
+    }
+    return !isFixed
+  })
+  const nodesWithImages = enrichNodesWithImages(topologyNodes)
+  const topologyEdges = (flow.edges ?? []).filter(
+    (edge) => !fixedNodeIds.has(edge.source) && !fixedNodeIds.has(edge.target),
+  )
+  const flowEdges = normalizeFlowEdges(topologyEdges as FlowEdge[], nodesWithImages)
   await applyFlowState(nodesWithImages, flowEdges)
   if (options?.autoLayout) {
     const preservedEdges = JSON.parse(JSON.stringify(getFlowEdges())) as FlowEdge[]
@@ -783,14 +843,23 @@ async function enterEditMode() {
   snapIdx.value = -1
   hasUnsavedChanges.value = false
   store.hasUnsavedChanges = false
-  nextTick(() => pushUndoSnapshot())
+  await nextTick()
+  const currentViewport = viewport.value
+  setViewport(
+    {
+      x: currentViewport.x + EDIT_SIDEBAR_OFFSET,
+      y: currentViewport.y,
+      zoom: currentViewport.zoom,
+    },
+    { duration: 0 },
+  )
+  pushUndoSnapshot()
 }
 
 function exitEditMode() {
   isViewMode.value = true
   selectedNode.value = null
   selectedEdgeId.value = null
-  clearDropTargetHighlight()
   nextTick(() => fitFlowToViewport(true))
 }
 
@@ -849,6 +918,12 @@ function toggleFullscreen() {
 
 // ---- 键盘快捷键 ----
 function onKeydown(e: KeyboardEvent) {
+  const target = e.target as HTMLElement | null
+  const isEditableTarget = target?.isContentEditable
+    || target?.tagName === 'INPUT'
+    || target?.tagName === 'TEXTAREA'
+    || target?.tagName === 'SELECT'
+
   if (isViewMode.value) {
     if (e.key === 'Backspace' || e.key === 'Delete') {
       e.preventDefault()
@@ -856,24 +931,21 @@ function onKeydown(e: KeyboardEvent) {
     }
     return
   }
+
+  if ((e.key === 'Backspace' || e.key === 'Delete') && !isEditableTarget) {
+    const hasSelectedElements = getNodes.value.some((node) => node.selected)
+      || getFlowEdges().some((edge) => edge.selected)
+    if (hasSelectedElements) {
+      e.preventDefault()
+      e.stopPropagation()
+      removeSelectedElements()
+      return
+    }
+  }
+
   const mod = e.ctrlKey || e.metaKey
   if (!mod) return
   if (e.key === 's') { e.preventDefault(); handleSave() }
-}
-
-function handleDropGuard(e: DragEvent) {
-  if (isViewMode.value) return
-  handleDrop(e)
-}
-
-function handleDragOverGuard(e: DragEvent) {
-  if (isViewMode.value) return
-  onDragOver(e)
-}
-
-function handleDragLeaveGuard() {
-  if (isViewMode.value) return
-  onDragLeave()
 }
 
 function handleConnectGuard(connection: Connection) {
@@ -889,65 +961,6 @@ function handleEdgeClickGuard(event: any) {
 function handleEdgeDoubleClickGuard(event: any) {
   if (isViewMode.value) return
   handleEdgeDoubleClick(event)
-}
-
-// ---- 节点拖拽：容器落点高亮 ----
-onNodeDrag(({ node }) => {
-  if (isViewMode.value || node.type !== 'product') return
-  const productName = (node.data as { productName?: string }).productName || ''
-  if (!productName) return
-  const absPos = getNodeAbsolutePosition(node, getFlowNodes())
-  updateDropTargetForProduct(productName, absPos, getFlowNodes())
-})
-
-// ---- 节点拖拽结束：容器归属与连线同步 ----
-onNodeDragStop(({ node }) => {
-  clearDropTargetHighlight()
-  if (isViewMode.value) return
-  if (node.type !== 'product') return
-
-  const productName = (node.data as { productName?: string }).productName || ''
-  if (!productName) return
-
-  const flowNodes = getFlowNodes()
-  const flowEdges = getFlowEdges()
-  const absPos = getNodeAbsolutePosition(node, flowNodes)
-
-  if (node.parentNode) {
-    const hit = findContainerForNode(productName, absPos, flowNodes)
-    if (hit?.parentNodeId === node.parentNode) return
-
-    if (hit) {
-      applyTopologySyncPatch(
-        buildAttachPatch(node.id, hit.parentNodeId, hit.relativePosition, flowNodes, flowEdges),
-      )
-      return
-    }
-
-    const detachPatch = buildDetachPatch(node.id, flowNodes, flowEdges)
-    if (detachPatch) applyTopologySyncPatch(detachPatch)
-    return
-  }
-
-  const hit = findContainerForNode(productName, absPos, flowNodes)
-  if (!hit) return
-
-  applyTopologySyncPatch(
-    buildAttachPatch(node.id, hit.parentNodeId, hit.relativePosition, flowNodes, flowEdges),
-  )
-})
-
-// ---- 拖放 ----
-function handleDrop(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  dndOnDrop(e)
-  void nextTick().then(() => {
-    nodes.value = getFlowNodes()
-    syncContainerMembershipEdges()
-    markDirty()
-    saveSnapshot()
-  })
 }
 
 // ---- 连线（父→子；允许从任意方向拖线并自动纠正）----
@@ -988,35 +1001,12 @@ function handleConnect(connection: Connection) {
   void nextTick().then(() => {
     edges.value = normalizeFlowEdges((toObject().edges ?? []) as FlowEdge[], getFlowNodes())
 
-    if (isContainerNode(resolved.source) && resolved.target.type === 'product') {
-      const reparentPatch = buildConnectReparentPatch(
-        resolved.source.id,
-        resolved.target.id,
-        getFlowNodes(),
-        getFlowEdges(),
-      )
-      if (reparentPatch) applyTopologySyncPatch(reparentPatch)
-    }
-
     markDirty()
     saveSnapshot()
   })
 }
 
-// ---- 节点点击：选中并居中到画布 ----
-async function centerNodeInView(nodeId: string) {
-  await nextTick()
-  const flowNode = findNode(nodeId)
-  if (!flowNode) return
-  fitView({
-    nodes: [nodeId],
-    padding: 0.45,
-    duration: 280,
-    maxZoom: 1.2,
-    minZoom: 0.35,
-  })
-}
-
+// ---- 节点点击：只更新选中状态，不改变当前画布视口 ----
 function handleNodeClick(event: any) {
   selectedEdgeId.value = null
   const node = event.node ?? event
@@ -1031,7 +1021,6 @@ function handleNodeClick(event: any) {
       extent: fresh.extent,
       style: fresh.style,
     } as ModelFlowNode
-    void centerNodeInView(fresh.id)
   }
 }
 
@@ -1112,14 +1101,16 @@ function handleDeleteNode(id: string) {
     ElMessage.warning('Station node cannot be deleted')
     return
   }
-  const childCount = collectNodesToDelete(id, getFlowNodes()).length - 1
-  const message = childCount > 0
-    ? `Delete this container and ${childCount} device node(s) inside? Related edges will also be removed.`
-    : 'Delete this node? Related edges will also be removed.'
+  // const childCount = collectNodesToDelete(id, getFlowNodes()).length - 1
+  const message = 'Delete this node and its related connections?'
   ElMessageBox.confirm(message, 'Delete Node', {
     type: 'warning',
-    confirmButtonText: 'Delete',
+    confirmButtonText: 'Confirm',
     cancelButtonText: 'Cancel',
+    center: true,
+    showClose: false,
+    cancelButtonClass:'el-button--cancel',
+    confirmButtonClass:'el-button--confirm',
   })
     .then(() => {
       removeNodesByIds(collectNodesToDelete(id, getFlowNodes()))
@@ -1127,18 +1118,16 @@ function handleDeleteNode(id: string) {
     .catch(() => {})
 }
 
-function handleDetachFromContainer(id: string) {
-  if (isViewMode.value) return
-  const patch = buildDetachPatch(id, getFlowNodes(), getFlowEdges())
-  if (!patch) return
-  applyTopologySyncPatch(patch)
-  ElMessage.success('Device detached from container')
-}
-
 function normalizeFlowEdges(raw: FlowEdge[], flowNodes?: FlowNode[]): FlowEdge[] {
   const nodes = flowNodes ?? getFlowNodes()
   return raw
     .filter((edge) => Boolean(edge?.id && edge?.source && edge?.target))
+    .filter((edge) => {
+      if (!nodes.length) return true
+      const source = nodes.find((node) => node.id === edge.source)
+      const target = nodes.find((node) => node.id === edge.target)
+      return canConnectNodes(source, target) || canConnectNodes(target, source)
+    })
     .map((edge) => {
       const corrected = nodes.length
         ? correctEdgeDirection({ ...edge }, nodes)
@@ -1172,9 +1161,13 @@ function normalizeFlowEdges(raw: FlowEdge[], flowNodes?: FlowNode[]): FlowEdge[]
           : corrected.labelBgStyle,
         labelBgPadding: corrected.labelBgPadding ?? (hasLabel ? [4, 6] : undefined),
         labelBgBorderRadius: corrected.labelBgBorderRadius ?? (hasLabel ? 4 : undefined),
-        style: { ...styled.style, ...(corrected.style ?? {}) },
-        markerEnd: corrected.markerEnd ?? styled.markerEnd,
-        markerStart: corrected.markerStart ?? styled.markerStart,
+        style: {
+          ...(corrected.style ?? {}),
+          stroke: '#B3CEFA',
+          strokeWidth: 1,
+        },
+        markerEnd: undefined,
+        markerStart: undefined,
         data: { ...styled.data, ...corrected.data, edgeVariant: variant },
       } as FlowEdge
     })
@@ -1255,25 +1248,7 @@ async function handleAutoLayout() {
 // ---- 保存 ----
 async function handleSave() {
   await syncEdgesFromFlow()
-  let flow = exportCurrentFlow()
-  flow = enrichFlowWithLiveChannelBindings(flow, store.channelBindings)
-  const validation = validateTopology(flow, store.products, topologyValidationOptions())
-
-  if (!validation.canSave) {
-    await topologyIssuesDialogRef.value?.open({
-      mode: 'save-blocked',
-      issues: validation.issues,
-    })
-    return
-  }
-
-  if (validation.warnings.length) {
-    const proceed = await topologyIssuesDialogRef.value?.open({
-      mode: 'save-confirm',
-      issues: validation.issues,
-    })
-    if (!proceed) return
-  }
+  const flow = enrichFlowWithLiveChannelBindings(exportCurrentFlow(), store.channelBindings)
 
   const ok = await store.saveFlowJson(modelId, flow)
   if (!ok) {
@@ -1398,6 +1373,21 @@ async function initEditorCanvas() {
     return
   }
 
+  fixedStationBinding.value ??= stationInstances.value[0]
+    ? {
+        instanceId: stationInstances.value[0].instance_id,
+        instanceName: stationInstances.value[0].instance_name,
+        productName: stationInstances.value[0].product_name,
+      }
+    : null
+  fixedEnvironmentBinding.value ??= environmentInstances.value[0]
+    ? {
+        instanceId: environmentInstances.value[0].instance_id,
+        instanceName: environmentInstances.value[0].instance_name,
+        productName: environmentInstances.value[0].product_name,
+      }
+    : null
+
   const model = store.getModelById(modelId)
   if (!model) {
     ElMessage.warning('Station topology not loaded')
@@ -1424,7 +1414,6 @@ async function initEditorCanvas() {
   await hydrateCanvasFromFlow(flow, { autoLayout: true })
 
   isRestoringHistory = true
-  syncContainerMembershipEdges({ silent: true })
   await nextTick()
   isRestoringHistory = false
 
@@ -1527,9 +1516,11 @@ onUnmounted(() => {
     }
 
     .modeling-editor__canvas .modeling-editor__floating-actions {
-      position: fixed;
-      right: 100px;
-      bottom: 24px;
+      position: absolute;
+      right: auto;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       gap: 16px;
       z-index: 10;
@@ -1537,14 +1528,26 @@ onUnmounted(() => {
 
       .floating-btn {
         pointer-events: auto;
-        width: 48px !important;
-        height: 48px !important;
-        font-size: 18px !important;
-        border-radius: 50% !important;
+        width: auto !important;
+        min-width: 96px;
+        height: 36px !important;
+        padding: 0 16px !important;
+        font-size: 0 !important;
+        border-radius: 4px !important;
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+        span {
+          font-size: 14px;
+        }
+
+        :deep(svg) {
+          width: 15px;
+          height: 15px;
+        }
 
         .floating-btn--submit.is-dirty:not(:disabled) {
           box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
@@ -1554,6 +1557,7 @@ onUnmounted(() => {
 
     // ---- 主体 ----
     .modeling-editor__body {
+      position: relative;
       display: flex;
       flex: 1;
       min-height: 0;
@@ -1561,61 +1565,66 @@ onUnmounted(() => {
       width: 100%;
     }
 
+    .modeling-editor__left-panel {
+      position: absolute;
+      top: 16px;
+      bottom: 16px;
+      left: 0;
+      z-index: 20;
+      display: flex;
+      flex: 0 0 348px;
+      width: 348px;
+      min-width: 348px;
+      height: auto;
+      min-height: 0;
+      overflow: hidden;
+      background-color: transparent;
+    }
+
+    .modeling-editor__left-panel :deep(.left-panel-shell) {
+      flex: 1 1 auto;
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+    }
+
+    // .modeling-editor__left-panel :deep(.left-panel-shell) {
+    //   flex: 1 1 auto;
+    //   width: 100%;
+    //   min-width: 0;
+    //   height: 100%;
+    // }
+
     // ---- 画布 ----
     .modeling-editor__canvas {
       flex: 1;
       min-height: 0;
       min-width: 0;
       position: relative;
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      background: #fbfcff;
     }
 
-    .modeling-editor__canvas.modeling-editor__canvas--drag-over {
-      outline: 2px dashed rgba(74, 144, 217, 0.45);
-      outline-offset: -2px;
-    }
-
-    .modeling-editor__drop-hint {
+    .modeling-editor__fixed-bindings {
       position: absolute;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 16px;
+      left: 16px;
+      z-index: 12;
       display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      z-index: 40;
-      pointer-events: none;
-      box-shadow: 0 4px 16px rgba(15, 31, 61, 0.12);
+      align-items: flex-start;
+      gap: 16px;
+      pointer-events: auto;
     }
 
-    .modeling-editor__drop-hint :deep(svg) {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
+    &.is-editing .modeling-editor__fixed-bindings {
+      left: 381px;
     }
 
-    .modeling-editor__drop-hint.modeling-editor__drop-hint--valid {
-      background: rgba(67, 160, 71, 0.12);
-      color: #2e7d32;
-      border: 1px solid rgba(67, 160, 71, 0.35);
-    }
-
-    .modeling-editor__drop-hint.modeling-editor__drop-hint--valid :deep(svg) {
-      color: #43a047 !important;
-    }
-
-    .modeling-editor__drop-hint.modeling-editor__drop-hint--invalid {
-      background: rgba(229, 57, 53, 0.1);
-      color: #c62828;
-      border: 1px solid rgba(229, 57, 53, 0.3);
-    }
-
-    .modeling-editor__drop-hint.modeling-editor__drop-hint--invalid :deep(svg) {
-      color: #e53935 !important;
+    @media (max-width: 900px) {
+      .modeling-editor__fixed-bindings {
+        gap: 8px;
+        transform: scale(0.86);
+        transform-origin: top left;
+      }
     }
 
     .modeling-editor__flow {
@@ -1633,18 +1642,18 @@ onUnmounted(() => {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(15, 20, 40, 0.92);
-      backdrop-filter: blur(8px);
-      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #dce4f0;
+      border-radius: 8px;
       padding: 8px 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 6px 18px rgba(31, 57, 100, 0.16);
       z-index: 50;
       pointer-events: all;
     }
 
     .modeling-editor__edge-toolbar .edge-toolbar__label {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.55);
+      color: #767d8a;
       margin-right: 2px;
       white-space: nowrap;
     }
@@ -1652,7 +1661,7 @@ onUnmounted(() => {
     .modeling-editor__edge-toolbar .edge-toolbar__sep {
       width: 1px;
       height: 22px;
-      background: rgba(255, 255, 255, 0.18);
+      background: #e5eaf2;
       margin: 0 2px;
       flex-shrink: 0;
     }
@@ -1661,11 +1670,11 @@ onUnmounted(() => {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: #f7f9fd;
+      border: 1px solid #dce4f0;
       border-radius: 6px;
       padding: 5px 10px;
-      color: rgba(255, 255, 255, 0.82);
+      color: #395583;
       font-size: 11px;
       line-height: 1.2;
       cursor: pointer;
@@ -1681,9 +1690,9 @@ onUnmounted(() => {
     }
 
     .modeling-editor__edge-toolbar .edge-toolbar__btn:hover {
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.28);
+      background: #edf4ff;
+      color: #2878ff;
+      border-color: #8bb5ff;
     }
 
     .modeling-editor__edge-toolbar .edge-toolbar__btn.active {
@@ -1715,9 +1724,13 @@ onUnmounted(() => {
       pointer-events: none !important;
     }
 
+    .modeling-editor__flow--view :deep(.node-connection-handle--connected) {
+      opacity: 1 !important;
+    }
+
     .modeling-editor__flow--view :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-      stroke-width: 2.5 !important;
-      stroke: inherit !important;
+      stroke-width: 1px !important;
+      stroke: #B3CEFA !important;
       filter: none !important;
     }
 
@@ -1730,6 +1743,8 @@ onUnmounted(() => {
     // VueFlow 样式覆盖
     :deep(.vue-flow__edge-path) {
       fill: none !important;
+      stroke: #B3CEFA !important;
+      stroke-width: 1px !important;
       stroke-linejoin: round;
       stroke-linecap: round;
     }
@@ -1740,22 +1755,22 @@ onUnmounted(() => {
     }
 
     :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-      stroke-width: 4.5 !important;
-      stroke: #ff5722 !important;
-      filter: drop-shadow(0 0 8px rgba(255, 87, 34, 0.9));
+      stroke-width: 1px !important;
+      stroke: #B3CEFA !important;
+      filter: none;
     }
 
-    :deep(.vue-flow__node.selected) {
-      box-shadow:
-        0 0 16px rgba(255, 87, 34, 0.7),
-        0 0 24px rgba(255, 87, 34, 0.5),
-        2px 2px 8px rgba(0, 0, 0, 0.15) !important;
-    }
+    // :deep(.vue-flow__node.selected) {
+    //   box-shadow:
+    //     0 0 12px rgba(40, 120, 255, 0.38),
+    //     0 0 20px rgba(40, 120, 255, 0.24),
+    //     2px 2px 8px rgba(0, 0, 0, 0.15) !important;
+    // }
 
     :deep(.vue-flow__edge-label),
     :deep(.vue-flow__edge-text) {
       font-size: 11px !important;
-      fill: #4a5568 !important;
+      fill: #4f5561 !important;
       font-weight: 600;
     }
 
@@ -1774,6 +1789,15 @@ onUnmounted(() => {
   }
 }
 
+.el-button--cancel {
+  background: #F7F8FA;
+  color: #272E3B;
+}
+
+.el-button--confirm {
+  background: #F53F3F;
+  color: #F7F8FA;
+}
 // 边工具栏出现动画
 .edge-toolbar-enter-active, .edge-toolbar-leave-active {
   transition: opacity 0.15s, transform 0.15s;
@@ -1782,15 +1806,12 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateX(-50%) translateY(6px);
 }
-</style>
-
-<style lang="scss">
 /* 全屏编辑器的确认框需高于编辑器层 */
-.visual-modeling-confirm-box {
+:global(.visual-modeling-confirm-box) {
   z-index: 10050 !important;
 }
-.el-overlay:has(+ .visual-modeling-confirm-box),
-.el-overlay.is-message-box {
+:global(.el-overlay:has(+ .visual-modeling-confirm-box)),
+:global(.el-overlay.is-message-box) {
   z-index: 10049 !important;
 }
 </style>

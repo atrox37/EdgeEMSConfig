@@ -4,19 +4,17 @@
  */
 
 // 导入全局变量（必须在最前面）
-@use './_variables.scss' as *;
+@use "./_variables.scss" as *;
 
 // 导入字体
-@use './fonts/index.scss' as fonts;
 
 // 导入 Element Plus 组件样式
-@use './element/index.scss' as element;
 
 // 导入 Vue Flow 样式
-@use './vueflow.scss' as vueflow;
 
 // 模块页标题（各配置页共用）
-@use './_module-page-header.scss';
+@use "./_module-page-header.scss";
+@use "./element/ele-card.scss";
 
 // 可视化建模页：占满主内容区并显示画布
 .main-layout__content:has(.modeling-editor) {
@@ -42,25 +40,20 @@
 // 全局滚动条样式
 
 *::-webkit-scrollbar {
-  width: $width-scrollbar;
-  height: $width-scrollbar;
+  width: var(--vt-width-scrollbar);
+  height: var(--vt-width-scrollbar);
 }
 
-// *::-webkit-scrollbar-track {
-//   background: $scrollbar-track-bg;
-//   border-radius: $scrollbar-border-radius;
-// }
-
 *::-webkit-scrollbar-thumb {
-  background: $scrollbar-thumb-bg;
-  border-radius: $scrollbar-border-radius;
+  background: var(--vt-scrollbar-thumb);
+  border-radius: var(--vt-radius-round);
   border: 2px solid transparent;
   background-clip: padding-box;
   transition: background 0.2s ease;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: $scrollbar-thumb-hover-bg;
+  background: var(--vt-scrollbar-thumb-hover);
 }
 
 *::-webkit-scrollbar-button {
@@ -68,19 +61,13 @@
   width: 0;
   height: 0;
 }
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-    background: transparent;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: rgba(200, 200, 200, 0.6); /* 浅灰色滚动条 */
-    min-height: 8px;
-    min-width: 8px;
-  }
-  
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(200, 200, 200, 0.6); /* 浅灰色滚动条 */
+  min-height: 6px;
+  min-width: 6px;
+}

@@ -302,26 +302,26 @@ onUnmounted(() => {
 }
 
 .system-network__title {
-  font-size: $font-size-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-lg);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
   margin: 0;
 }
 
 .system-network__desc {
   margin: 8px 0 0;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
   line-height: 1.6;
 }
 
 .system-network__panel {
   flex: 1;
   min-height: 0;
-  border: $border-width-base solid $border-color-base;
-  border-radius: $border-radius-base;
-  background: $bg-color-overlay;
-  box-shadow: $box-shadow-base;
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  border-radius: var(--vt-radius-md);
+  background: var(--vt-bg-overlay);
+  box-shadow: var(--vt-shadow-base);
 }
 
 .system-network__body {
@@ -383,7 +383,7 @@ onUnmounted(() => {
 }
 
 .system-network__actions {
-  border-top: $border-width-base solid $border-color-base;
+  border-top: var(--vt-border-width-base) solid var(--vt-border-color);
   padding-top: 12px;
   margin-top: 12px;
   flex-shrink: 0;

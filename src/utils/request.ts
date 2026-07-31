@@ -10,6 +10,7 @@ import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 import type { ApiConfig } from '@/utils/apiConfig'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
+import { goToLogin } from '@/utils/navigation'
 
 // 存储所有pending的请求（使用 ref 包装 Map 以确保响应式）
 const pendingRequests = ref(new Map<string, AbortController>())
@@ -800,9 +801,7 @@ const createResponseInterceptor = (
           userStore401.clearUserData()
           errorMessage = 'Login expired, please log in again'
           // 跳转到登录页（使用router，避免页面刷新）
-          import('@/router').then(({ router }) => {
-            router.push('/login')
-          })
+          goToLogin()
           break
         case 403:
           errorMessage = 'Insufficient permissions. Please contact your administrator.'
@@ -889,10 +888,7 @@ const createResponseInterceptor = (
       if (requestConfig?.showErrorMessage !== false) {
         ElMessage.error('Login expired, please log in again')
       }
-      // 跳转到登录页（使用router，避免页面刷新）
-      import('@/router').then(({ router }) => {
-        router.push('/login')
-      })
+      goToLogin()
       return Promise.reject(new Error('Token refresh request returned 401'))
     }
 
@@ -943,10 +939,7 @@ const createResponseInterceptor = (
         if (requestConfig?.showErrorMessage !== false) {
           ElMessage.error('Login expired, please log in again')
         }
-        // 跳转到登录页（使用router，避免页面刷新）
-        import('@/router').then(({ router }) => {
-          router.push('/login')
-        })
+        goToLogin()
         return Promise.reject(refreshError)
       } finally {
         // 无论刷新成功还是失败，都要复位刷新标记。

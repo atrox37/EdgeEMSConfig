@@ -44,8 +44,8 @@ const handleCommand = (command: string) => {
     }
 
   .operation-more-btn {
-    color: $text-color-primary;
-    padding: $size-xs;
+    color: var(--vt-text-primary);
+    padding: var(--vt-space-1);
 
     :deep(.operation-dropdown__more-icon) {
       width: 18px;
@@ -53,7 +53,7 @@ const handleCommand = (command: string) => {
     }
 
     .operation-more-btn:hover {
-      background: $white-alpha-10;
+      background: var(--vt-color-white-10);
     }
   }
 }
@@ -62,19 +62,19 @@ const handleCommand = (command: string) => {
   .el-dropdown-menu__item {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-sm $spacing-md;
-    color: $text-color-primary;
-    font-size: $font-size-base;
+    gap: var(--vt-space-2);
+    padding: var(--vt-space-2) var(--vt-space-4);
+    color: var(--vt-text-primary);
+    font-size: var(--vt-font-size-base);
 
     img {
-      width: $font-size-base;
-      height: $font-size-base;
+      width: var(--vt-font-size-base);
+      height: var(--vt-font-size-base);
       object-fit: contain;
     }
 
     .el-dropdown-menu__item:hover {
-      background: $white-alpha-10;
+      background: var(--vt-color-white-10);
     }
   }
 }

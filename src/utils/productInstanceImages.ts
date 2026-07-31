@@ -1,32 +1,22 @@
-/** 产品名 → Instance 设备图片（assets/images） */
-const PRODUCT_IMAGE_FILE: Record<string, string> = {
-  Battery: 'Instance Battery.png',
-  PCS: 'Instance PCS.png',
-  Diesel: 'Instance Diesel.png',
-  PVInverter: 'Instance PV Inverter.png',
-  'PV DCDC': 'Instance PV DCDC.png',
-  EVChargingLoad:   'Instance EV Charging Load.png',
-  Env:              'Instance Environment.png',
-  HVACLoad:         'Instance HVAC Load.png',
-  Load:             'Instance Load.png',
-  Load_Three_Phase: 'Instance Three Phase Load.png',
-}
-
-const imageModules = import.meta.glob<string>(
-  '/src/assets/images/Instance *.png',
-  { eager: true, import: 'default' },
-)
-
-function resolveImageUrl(fileName: string): string | undefined {
-  const entry = Object.entries(imageModules).find(([path]) => path.endsWith(fileName))
-  return entry?.[1]
+/** Product name → topology device image URL. */
+const PRODUCT_IMAGE_URL: Record<string, string> = {
+  'PV Group': new URL('../assets/images/device-PvGroup.png', import.meta.url).href,
+  'AC Inverter': new URL('../assets/images/device-ACInverter.png', import.meta.url).href,
+  'Hybrid Inverter': new URL('../assets/images/device-HybridInverter.png', import.meta.url).href,
+  'Distribution Board': new URL('../assets/images/device-DistributionBoard.png', import.meta.url).href,
+  'Three Phase Load': new URL('../assets/images/device-ThreePhaseLoad.png', import.meta.url).href,
+  'EV Charging Load': new URL('../assets/images/device-EVChargingLoad.png', import.meta.url).href,
+  'HVAC Load': new URL('../assets/images/device-HVACLoad.png', import.meta.url).href,
+  Battery: new URL('../assets/images/device-Battery.png', import.meta.url).href,
+  PCS: new URL('../assets/images/device-PCS.png', import.meta.url).href,
+  Diesel: new URL('../assets/images/device-Diesel.png', import.meta.url).href,
+  Load: new URL('../assets/images/device-Load.png', import.meta.url).href,
+  Meter: new URL('../assets/images/device-LoadMeter.png', import.meta.url).href,
 }
 
 export function getProductInstanceImageUrl(productName?: string): string | undefined {
   if (!productName) return undefined
-  const fileName = PRODUCT_IMAGE_FILE[productName]
-  if (!fileName) return undefined
-  return resolveImageUrl(fileName)
+  return PRODUCT_IMAGE_URL[productName]
 }
 
 export function hasProductInstanceImage(productName?: string): boolean {

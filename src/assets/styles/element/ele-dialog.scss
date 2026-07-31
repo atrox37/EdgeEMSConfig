@@ -1,265 +1,190 @@
-@use "@/assets/styles/_variables.scss" as *;
-// 弹窗主体样式（包含表单弹窗样式和全屏弹窗样式）
+// ============================================
+// Element Plus: Overlay + Dialog (el-overlay, el-dialog)
+// Overrides: glass background, gradient border, fullscreen
+// ============================================
+// ---- Overlay (modal backdrop) ----
+.el-overlay.el-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
 
-// .voltage-class {
-  // 弹窗遮罩层
-  .el-overlay {
-    // height: calc(100% + 40px);
-    // width: calc(100% + 40px);
-    height: 100%;
-    width: 100%;
-    position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    background-color: $dialog-overlay-bg;
-    backdrop-filter: $backdrop-blur-small;
-    transition: all $transition-base;
+  .el-overlay-dialog {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .el-overlay-dialog {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  .el-dialog {
+    --el-dialog-bg-color: var(--vt-bg-panel);
+    --el-dialog-box-shadow: var(--vt-shadow-dialog);
+    --el-dialog-title-font-size: var(--vt-font-size-lg);
+    --el-dialog-content-font-size: var(--vt-font-size-base);
+    --el-dialog-font-line-height: var(--vt-line-height-relaxed);
+    --el-dialog-padding-primary: var(--vt-space-5);
 
-    // 普通弹窗样式
-    .el-dialog {
-      padding: $spacing-md;
-      margin: 0 !important;
-      border-radius: $border-radius-base;
-      box-shadow: $box-shadow-medium;
-      backdrop-filter: $backdrop-blur-base;
-      background: $dialog-bg;
-      border: $border-width-base solid;
-      border-image: $border-gradient-base 1;
+
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(20px);
+    background: var(--vt-bg-page);
+    border: 1px solid;
+    border-image: var(--vt-border-gradient-popper);
+    overflow: hidden;
+
+    // ---- State: fullscreen ----
+    &.is-fullscreen {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(20px);
+      background: var(--vt-bg-page);
+      border: 1px solid;
+      border-image: var(--vt-border-gradient-popper);
       overflow: hidden;
       display: flex;
       flex-direction: column;
 
-      // 弹窗头部
       .el-dialog__header {
-        background: transparent;
-        padding: 10px 24px 20px 24px;
-        border-bottom: none;
-        position: relative;
-
-        .el-dialog__title {
-          color: $text-color-primary;
-          font-size: $dialog-title-size;
-          font-weight: $font-weight-semibold;
-          line-height: $line-height-normal;
-          margin: 0;
-        }
-
-        // 关闭按钮
-        .el-dialog__headerbtn {
-          top: 5px;
-          right: 15px;
-          height: $dialog-close-size;
-          width: $dialog-close-size;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all $transition-fast;
-          width: unset;
-          height: unset;
-
-          .el-dialog__close {
-            color: $text-color-primary;
-            font-size: $dialog-close-icon-size;
-            font-weight: $font-weight-bold;
-          }
-        }
+        margin: 0;
+        padding: 20px 24px;
+        color: var(--vt-text-primary);
+        font-size: 24px;
       }
-      .el-dialog__body {
-        padding: 0 20px;
-        flex: 1 1 auto;
-        background: transparent;
-        min-height: 0;
 
-        // 针对表单弹窗的特殊内边距
+      .el-dialog__close {
+        color: var(--vt-text-primary);
+      }
+
+      .el-dialog__body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        padding: 20px 20px 0;
+
         .el-dialog--form & {
           padding: 24px 24px 12px;
         }
-        .el-table {
-          .el-table__inner-wrapper {
-            .el-table__header-wrapper {
-              th.el-table-fixed-column--right {
-                background-color: $table-fixed-column-bg-dialog;
-                // background-color: red !important;
-                box-shadow: $box-shadow-large;
-              }
-            }
-            .el-table__body-wrapper {
-              .el-table__row:hover {
-                background: $table-row-hover-bg-dialog !important;
-                .el-table-fixed-column--right {
-                  background: $table-row-hover-bg-dialog;
-                }
-              }
-              td.el-table-fixed-column--right {
-                background: $table-fixed-column-bg-dialog;
-                box-shadow: $box-shadow-large;
-              }
-            }
-          }
-        }
-        // 滚动条样式
+
         &::-webkit-scrollbar {
           width: 6px;
         }
 
         &::-webkit-scrollbar-track {
-          background: $scrollbar-track-bg;
-          border-radius: $border-radius-small;
+          background: var(--vt-scrollbar-track-light);
+          border-radius: 3px;
         }
 
         &::-webkit-scrollbar-thumb {
-          background: $scrollbar-thumb-bg;
-          border-radius: $border-radius-small;
+          background: var(--vt-scrollbar-thumb-light);
+          border-radius: 3px;
 
           &:hover {
-            background: $scrollbar-thumb-hover-bg;
+            background: var(--vt-scrollbar-thumb-light-hover);
           }
         }
       }
+    }
 
-      // 弹窗底部
-      .el-dialog__footer {
-        padding: $dialog-footer-padding;
-        margin: $dialog-footer-margin;
-        background: transparent;
-        border-top: $border-width-base solid $border-color-white-10;
+    .el-dialog__header {
+      padding: 20px 24px;
+      background: transparent;
+      border-bottom: none;
+      position: relative;
+
+      .el-dialog__title {
+        margin: 0;
+        color: var(--vt-text-primary);
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .el-dialog__headerbtn {
+        top: 5px;
+        right: 15px;
+        width: 48px;
+        height: 48px;
         display: flex;
-        justify-content: flex-end;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+
+        .el-dialog__close {
+          color: var(--vt-text-primary);
+          font-size: 16px;
+          font-weight: bold;
+        }
+      }
+
+    }
+
+    .el-dialog__body {
+      flex: 1;
+      min-height: 0;
+      padding: 0 20px;
+      background: transparent;
+
+      .el-dialog--form & {
+        padding: 24px 24px 12px;
+      }
+
+      // .el-table {
+
+      //   th.el-table-fixed-column--right,
+      //   td.el-table-fixed-column--right {
+      //     background-color: var(--vt-dialog-fixed-bg);
+      //   }
+
+      //   .el-table__row:hover {
+      //     background: var(--vt-dialog-row-hover-bg);
+
+      //     .el-table-fixed-column--right {
+      //       background: var(--vt-dialog-row-hover-bg);
+      //     }
+      //   }
+      // }
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: var(--vt-scrollbar-track-light);
+        border-radius: 3px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: var(--vt-scrollbar-thumb-light);
+        border-radius: 3px;
+
+        &:hover {
+          background: var(--vt-scrollbar-thumb-light-hover);
+        }
       }
     }
-  }
-// }
-// 全屏弹窗样式
-.el-dialog.is-fullscreen {
-  padding: 0;
-  margin: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: 100vw;
-  max-height: 100vh;
-  border-radius: $border-radius-base;
-  box-shadow: $box-shadow-medium;
-  backdrop-filter: $backdrop-blur-base;
-  background: $dialog-bg;
-  border: $border-width-base solid;
-  border-image: $border-gradient-base 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 
-  .el-dialog__header {
-    background: transparent;
-    padding: $dialog-header-padding;
-    border-bottom: none;
-    position: relative;
-    color: $text-color-primary;
-    font-size: $dialog-title-size-fullscreen;
-    font-weight: $font-weight-semibold;
-    line-height: $line-height-normal;
-    margin: 0;
-
-    .el-dialog__title {
-    }
-
-    .el-dialog__headerbtn {
-      top: -5px;
-      right: 15px;
-      height: 48px;
-      width: 48px;
+    .el-dialog__footer {
+      margin: 0 20px;
+      padding: 40px 0 20px;
+      background: transparent;
+      border-top: 1px solid var(--vt-border-color-soft);
       display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-
-      .el-dialog__close {
-        color: $text-color-primary;
-        font-size: $dialog-close-icon-size;
-        font-weight: $font-weight-bold;
-      }
+      justify-content: flex-end;
     }
   }
 
-  .el-dialog__body {
-    flex: 1 1 auto;
-    padding: $dialog-body-padding;
-    background: transparent;
-    min-height: 0;
-    overflow: auto;
 
-    // 针对表单弹窗的特殊内边距
-    .el-dialog--form & {
-      padding: 24px 24px 12px;
-    }
-
-    // 滚动条样式
-    &::-webkit-scrollbar {
-      width: $width-scrollbar;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: $scrollbar-track-bg;
-      border-radius: $border-radius-small;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $scrollbar-thumb-bg;
-      border-radius: $border-radius-small;
-
-      &:hover {
-        background: $scrollbar-thumb-hover-bg;
-      }
-    }
-  }
-
-  // .el-dialog__footer {
-  //   padding: 40px 0 20px 0;
-  //   margin: 0 20px;
-  //   background: transparent;
-  //   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  //   display: flex;
-  //   justify-content: flex-end;
-  // }
 }
 
-// 更新弹框主题色适配（不依赖 .voltage-class）
-.el-dialog.update-dialog {
-  background: $dialog-bg;
-  border: $border-width-base solid;
-  border-image: $border-gradient-base 1;
-  box-shadow: $box-shadow-orange;
-  border-radius: $border-radius-base;
-  backdrop-filter: $backdrop-blur-base;
-  overflow: hidden;
-
-  .el-dialog__header {
-    padding: 20px 24px;
-    border-bottom: 1px solid $border-color-orange-light;
-
-    .el-dialog__title {
-      color: $primary-color;
-      font-size: $dialog-title-size;
-      font-weight: $font-weight-semibold;
-    }
-  }
-
-  .el-dialog__body {
-    padding: 0 20px 20px;
-    color: $text-color-primary;
-  }
-
-  .el-dialog__footer {
-    padding: $dialog-footer-padding;
-    margin: $dialog-footer-margin;
-    border-top: 1px solid $border-color-orange-light;
-  }
-}
-
-
-
+// ---- Dialog elements ----

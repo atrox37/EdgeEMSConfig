@@ -1,0 +1,129 @@
+// ============================================
+// Element Plus: Pagination (el-pagination)
+// ============================================
+@use './_select-trigger.scss' as select-trigger;
+
+// --- Base ---
+.el-pagination.el-pagination {
+  --el-pagination-font-size: var(--vt-font-size-base);
+  --el-pagination-bg-color: transparent;
+  --el-pagination-text-color: var(--vt-text-primary);
+  --el-pagination-button-color: var(--vt-text-primary);
+  --el-pagination-button-bg-color: transparent;
+  --el-pagination-button-disabled-color: var(--vt-text-disabled);
+  --el-pagination-button-disabled-bg-color: transparent;
+  --el-pagination-hover-color: var(--vt-color-primary);
+  --el-pagination-font-size-small: var(--vt-font-size-sm);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--vt-control-height);
+  margin-top: 20px;
+
+  // --- Navigation buttons ---
+  button {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 4px;
+    font-size: 14px;
+
+    .el-icon {
+      font-size: 12px;
+    }
+
+    &.btn-prev {
+      margin-left: 16px;
+    }
+
+    &.btn-next {
+      margin-right: 16px;
+    }
+
+    &:disabled {
+      background-color: transparent;
+    }
+  }
+
+  // --- Total ---
+  .el-pagination__total {
+    margin-right: 16px;
+    color: var(--vt-text-primary);
+    font-size: 14px;
+  }
+
+  // --- Sizes select ---
+  .el-pagination__sizes {
+    display: flex;
+    align-items: center;
+    margin-left: 16px;
+
+    .el-select {
+      width: 128px;
+      --vt-select-width: 128px;
+      @include select-trigger.vt-el-select-trigger;
+    }
+  }
+
+  // --- Pager ---
+  .el-pager {
+    li {
+      min-width: 32px;
+      height: 32px;
+      margin: 0 2px;
+      padding: 0 4px;
+      color: var(--vt-text-primary);
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 32px;
+      background-color: transparent;
+      border-radius: 0;
+
+      &:hover {
+        color: var(--vt-color-primary);
+        background-color: transparent;
+      }
+
+      &.is-active {
+        color: var(--vt-text-primary);
+        background-color: var(--vt-bg-hover);
+      }
+    }
+  }
+
+  // --- Prev / Next ---
+  .btn-prev,
+  .btn-next {
+    color: var(--vt-text-primary);
+    background-color: transparent;
+    border-radius: 0;
+
+    &:hover {
+      color: var(--vt-color-primary);
+    }
+
+    &:disabled {
+      color: var(--vt-text-disabled);
+      cursor: not-allowed;
+
+      &:hover {
+        background-color: transparent;
+      }
+    }
+  }
+
+  // --- Jump ---
+  .el-pagination__jump {
+    color: var(--vt-text-secondary);
+    font-size: 14px;
+
+    .el-input__inner {
+      border-color: var(--vt-text-disabled);
+      border-radius: 6px;
+
+      &:hover {
+        border-color: var(--vt-text-empty);
+      }
+    }
+  }
+}

@@ -1,121 +1,50 @@
-@use "@/assets/styles/_variables.scss" as *;
+// ============================================
+// Element Plus: Collapse (el-collapse)
+// Overrides: header, wrap, content
+// ============================================
 
-.voltage-class {
-  .el-collapse {
+// ==============================
+// el-collapse
+// ==============================
+.el-collapse.el-collapse {
+  border: none;
+
+  // color: var(--vt-text-primary);
+  .el-collapse-item__header {
+    background-color: transparent;
+    // border: 1px solid;
+    // border-image: var(--vt-border-gradient-popper);
+    // box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.25);
+    // backdrop-filter: blur(20px);
+    gap: 8px;
+    font-size: 14px;
+    // height: 16px;
+    line-height: 16px;
+    min-height: 16px;
+    color: var(--vt-text-primary);
+    font-weight: 700;
+    margin-bottom: 16px;
+    border:none;
+    // .el-collapse-item__title {
+    //   padding-left: 30px;
+    // }
+
+    .el-collapse-item__arrow {
+      color: var(--vt-text-primary);
+      font-size: 16px;
+      font-weight: 600;
+      // margin: 0 20px;
+    }
+  }
+
+  .el-collapse-item__wrap {
+    background-color: var(--vt-bg-glass);
     border: none;
-    color: $text-color-primary;
 
-    .el-collapse-item__header {
-      background-color: $bg-color-input;
-      border: $border-width-base solid;
-      border-image: $border-gradient-menu 1;
-      box-shadow: $box-shadow-medium;
-      backdrop-filter: $backdrop-blur-base;
-      gap: $spacing-md;
-      font-size: $font-size-medium;
-      color: $text-color-primary;
-      font-weight: $font-weight-semibold;
-      min-height: 40px;
-      line-height: 40px;
-
-      .el-collapse-item__title {
-        padding-left: 10px;
-      }
-
-      .el-collapse-item__header-text {
-        color: $text-color-primary;
-      }
-
-      .el-collapse-item__arrow {
-        color: $text-color-primary;
-        font-size: $font-size-medium;
-        font-weight: $font-weight-semibold;
-        margin: 0 $spacing-md;
-      }
-    }
-
-    .el-collapse-item__wrap {
-      background-color: $bg-color-input;
-      border: none;
-
-      .el-collapse-item__content {
-        padding-bottom: 10px;
-        font-style: $font-size-medium;
-      }
+    .el-collapse-item__content {
+      padding-bottom: 10px;
+      // font-style: 16px;
     }
   }
 }
-
-// Global tab style (MQTT-style), except System Config shell tabs.
-.el-tabs:not(.system-config-shell__tabs) {
-  color: $text-color-primary;
-
-  .el-tabs__header {
-    margin: 0;
-    border-bottom: 1px solid $border-color-base;
-    &.is-top {
-      margin-bottom: 20px;
-    }
-  }
-
-  .el-tabs__nav-wrap {
-    &::after {
-      display: none;
-    }
-  }
-
-  .el-tabs__nav {
-    border: none !important;
-  }
-
-  .el-tabs__item {
-    position: relative;
-    height: 32px;
-    line-height: 32px;
-    padding: 0 20px;
-    color: $text-color-primary;
-    font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
-    transition: color 0.2s ease;
-
-    &::after {
-      content: "";
-      position: absolute;
-      left: 8px;
-      right: 8px;
-      bottom: 0;
-      height: 2px;
-      border-radius: 2px;
-      background-color: transparent;
-      transition: background-color 0.2s ease;
-    }
-
-    &:hover {
-      color: $primary-color;
-    }
-
-    &.is-active {
-      color: $primary-color;
-
-      &::after {
-        background-color: $primary-color;
-      }
-    }
-
-    &.is-disabled {
-      color: $text-color-disabled;
-      cursor: not-allowed;
-    }
-  }
-
-  .el-tabs__active-bar {
-    display: none;
-  }
-}
-
-.el-tabs--bottom>.el-tabs__header .el-tabs__item:nth-child(2), .el-tabs--top>.el-tabs__header .el-tabs__item:nth-child(2){
-  padding-left: 20px !important;
-}
-.el-tabs--bottom>.el-tabs__header .el-tabs__item:last-child, .el-tabs--top>.el-tabs__header .el-tabs__item:last-child{
-  padding-right: 20px !important;
-}
+ 

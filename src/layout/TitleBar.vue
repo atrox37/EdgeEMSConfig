@@ -3,50 +3,37 @@
     <div class="titlebar__left" data-tauri-drag-region>
       <div class="titlebar__title" data-tauri-drag-region>Monarch Edge Console</div>
     </div>
-      <div class="titlebar__right">
+    <div class="titlebar__right">
       <div class="titlebar__ip-section" v-if="shouldShowUserInfo">
         <span class="titlebar__ip-address">{{ currentIpAddress }}</span>
       </div>
       <div class="titlebar__user" v-if="shouldShowUserInfo">
-          <el-dropdown
-            @command="handleUserCommand"
-            @visible-change="handleUserDropdownVisible"
-            trigger="click"
-            :teleported="false"
-          >
-            <div class="titlebar__user-info">
-              <div class="titlebar__user-avatar">
-                <div class="titlebar__user-avatar-initials">
-                  {{ getAvatarName(userStore.userInfo?.username || 'Admin') }}
-                </div>
+        <el-dropdown @command="handleUserCommand" @visible-change="handleUserDropdownVisible" trigger="click"
+          :teleported="false">
+          <div class="titlebar__user-info">
+            <div class="titlebar__user-avatar">
+              <div class="titlebar__user-avatar-initials">
+                {{ getAvatarName(userStore.userInfo?.username || 'Admin') }}
               </div>
-              <span class="titlebar__user-name">{{ userStore.userInfo?.username || '' }}</span>
-              <img
-                :src="arrowDownIcon"
-                class="titlebar__user-arrow"
-                :class="{ 'is-open': isUserDropdownOpen }"
-              />
             </div>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="logout" class="titlebar__user-item">
-                  <img :src="logoutIcon" class="titlebar__user-logout-icon" />
-                  Logout
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+            <span class="titlebar__user-name">{{ userStore.userInfo?.username || '' }}</span>
+            <img :src="arrowDownIcon" class="titlebar__user-arrow" :class="{ 'is-open': isUserDropdownOpen }" />
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="logout" class="titlebar__user-item">
+                <img :src="logoutIcon" class="titlebar__user-logout-icon" />
+                Logout
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="titlebar__controls">
-        <el-dropdown
-          trigger="click"
-          placement="bottom-start"
-          :teleported="false"
-          @command="handleSystemCommand"
-          style="height: 100%;"
-        >
+        <el-dropdown trigger="click" placement="bottom-start" :teleported="false" @command="handleSystemCommand"
+          style="height: 100%;">
           <div class="titlebar__button titlebar__button--settings">
-            <img :src="titlebarSettingIcon" class="titlebar__setting-icon" />
+            <img :src="buttonSettingIcon" class="titlebar__setting-icon" />
           </div>
           <template #dropdown>
             <el-dropdown-menu>
@@ -56,24 +43,13 @@
           </template>
         </el-dropdown>
         <div class="titlebar__button titlebar__button--minimize" @click="minimizeWindow">
-          <svg width="12" height="2" viewBox="0 0 12 2">
-            <rect width="12" height="2" fill="currentColor" />
-          </svg>
+          <img :src="buttonMinimizeIcon" class="titlebar__button-icon" />
         </div>
         <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize">
-          <svg v-if="!isMaximized" width="12" height="12" viewBox="0 0 12 12">
-            <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
-          </svg>
-          <svg v-else width="12" height="12" viewBox="0 0 12 12">
-            <rect x="2" y="0" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
-            <rect x="0" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1" />
-          </svg>
+          <img :src="buttonMaximizeIcon" class="titlebar__button-icon" />
         </div>
         <div class="titlebar__button titlebar__button--close" @click="closeWindow">
-          <svg width="12" height="12" viewBox="0 0 12 12">
-            <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" />
-            <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5" />
-          </svg>
+          <img :src="buttonCloseIcon" class="titlebar__button-icon" />
         </div>
       </div>
     </div>
@@ -93,9 +69,12 @@ import { useAppUpdateState } from '@/composables/useAppUpdateState'
 
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
-import titlebarSettingIcon from '@/assets/icons/titlebar-setting.svg'
+// import titlebarSettingIcon from '@/assets/icons/titlebar-setting.svg'
 import TitlebarSettingDialog from '@/layout/components/TitlebarSettingDialog.vue'
-
+import buttonMinimizeIcon from '@/assets/icons/button-minimize.svg'
+import buttonMaximizeIcon from '@/assets/icons/button-maximize.svg'
+import buttonCloseIcon from '@/assets/icons/button-close.svg'
+import buttonSettingIcon from '@/assets/icons/button-setting.svg'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -174,7 +153,7 @@ let unlistenResize: (() => void) | null = null
 onMounted(async () => {
   isMaximized.value = await appWindow.isMaximized()
   await ensureDefaultDownloadPath()
-  
+
   unlistenResize = await appWindow.onResized(async () => {
     isMaximized.value = await appWindow.isMaximized()
   })
@@ -210,34 +189,35 @@ const getAvatarName = (name: string): string => {
 </script>
 
 <style lang="scss" scoped>
-
 .titlebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  // background: $bg-color-dark-2;
-  // border-bottom: $border-width-base solid $border-color-base;
+  background: var(--vt-color-secondary);
+  color: #ffffff;
+  // position: fixed;
+  // top: 0;
+  // left: 0;
+  // right: 0;
+  // background: var(--vt-bg-muted);
+  // border-bottom: var(--vt-border-width-base) solid var(--vt-border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 100;
   user-select: none;
-  height: 32px;
+  padding: 0 16px;
+  height: 36px;
 
   .titlebar__left {
     flex: 1;
     display: flex;
     align-items: center;
-    padding-left: $spacing-md;
   }
 
   .titlebar__title {
-    font-family: $font-family-montserrat;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-medium;
-    line-height: $line-height-relaxed;
-    // color: $orange-color-light;
+    font-family: var(--vt-font-family-heading);
+    font-weight: var(--vt-font-weight-semibold);
+    font-size: var(--vt-font-size-md);
+    line-height: var(--vt-line-height-relaxed);
+    color: #ffffff;
     letter-spacing: 0.3px;
   }
 
@@ -245,23 +225,33 @@ const getAvatarName = (name: string): string => {
     display: flex;
     height: 100%;
     align-items: center;
-    gap: $spacing-md;
+    gap: 40px;
     padding-right: 0;
   }
 
   .titlebar__ip-section {
+    height: 24px;
     display: flex;
     align-items: center;
-    padding: 0 $spacing-sm;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 0 9px;
+    background:
+      linear-gradient(#445783, #445783) padding-box,
+      linear-gradient(117.64deg,
+        #94A6C5 2.73%,
+        rgba(148, 166, 197, 0) 31.73%,
+        rgba(148, 166, 197, 0.344221) 71.62%,
+        #94A6C5 97.67%) border-box;
 
     .titlebar__ip-address {
-      font-family: $font-family-base;
-      font-weight: $font-weight-medium;
-      font-size: $font-size-small;
-      color: $text-color-white-60;
-      padding: $spacing-xs $spacing-sm;
-      background: $bg-color-dark-11;
-      border-radius: $border-radius-small;
+      font-family: Arimo;
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 100%;
+      letter-spacing: 0%;
+
     }
   }
 
@@ -269,11 +259,11 @@ const getAvatarName = (name: string): string => {
     .titlebar__user-info {
       display: flex;
       align-items: center;
-      gap: $spacing-xs;
-      padding: $spacing-xs $spacing-sm;
-      border-radius: $border-radius-small;
+      gap: var(--vt-space-1);
+      padding: var(--vt-space-1) var(--vt-space-2);
+      border-radius: var(--vt-radius-sm);
       cursor: pointer;
-      transition: all $transition-base;
+      transition: all var(--vt-transition-base);
 
       .titlebar__user-info:hover {
         background: rgba(0, 0, 0, 0.05);
@@ -283,26 +273,27 @@ const getAvatarName = (name: string): string => {
     .titlebar__user-avatar {
       width: 24px;
       height: 24px;
-      border-radius: $border-radius-circle;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: $primary-color-alpha-20;
+      background-color: #E0C9BA;
 
       .titlebar__user-avatar-initials {
-        color: $primary-color;
-        font-weight: $font-weight-bold;
-        font-size: $font-size-small;
-        line-height: 1;
+        color: var(--vt-color-primary);
+        font-weight: var(--vt-font-weight-bold);
+        font-size: var(--vt-font-size-sm);
+        letter-spacing: 0%;
+
       }
     }
 
     .titlebar__user-name {
-      font-family: $font-family-base;
-      font-weight: $font-weight-medium;
-      font-size: $font-size-small;
-      line-height: $line-height-normal;
-      color: $text-color-primary;
+      font-family: var(--vt-font-family-base);
+      font-weight: var(--vt-font-weight-bold);
+      font-size: var(--vt-font-size-xs);
+      // line-height: var(--vt-line-height-normal);
+      color: #ffffff;
     }
 
     .titlebar__user-arrow {
@@ -310,6 +301,7 @@ const getAvatarName = (name: string): string => {
       height: 12px;
       opacity: 0.6;
       transition: transform 0.2s ease;
+
       .titlebar__user-arrow.is-open {
         transform: rotate(180deg);
       }
@@ -318,17 +310,17 @@ const getAvatarName = (name: string): string => {
     .titlebar__user-item {
       display: flex;
       align-items: center;
-      color: $text-color-primary;
-      font-weight: $font-weight-medium;
-      font-size: $font-size-base;
-      line-height: $line-height-normal;
+      color: var(--vt-text-primary);
+      font-weight: var(--vt-font-weight-medium);
+      font-size: var(--vt-font-size-base);
+      line-height: var(--vt-line-height-normal);
     }
 
     .titlebar__user-logout-icon {
-      width: $spacing-md;
-      height: $spacing-md;
+      width: var(--vt-space-4);
+      height: var(--vt-space-4);
       object-fit: contain;
-      margin-right: $spacing-sm;
+      margin-right: var(--vt-space-2);
     }
   }
 
@@ -338,25 +330,28 @@ const getAvatarName = (name: string): string => {
     height: 100%;
     align-items: center;
     justify-content: center;
-    margin-left: $spacing-sm;
+    margin-left: var(--vt-space-2);
   }
 
   .titlebar__button {
     height: 100%;
     display: flex;
-    padding: 0 15px;
+    padding: 0 10px;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
-    color: $text-color-primary;
+    color: #ffffff;
     cursor: pointer;
-    transition: all $transition-fast;
-    svg {
-      width: 12px;
-      height: 12px;
+    transition: all var(--vt-transition-fast);
+    &:last-child {
+      padding-right: 0;
     }
-
+    img{
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
     .titlebar__button:hover {
       background: rgba(0, 0, 0, 0.05); // 浅色背景 hover 效果
     }
@@ -384,8 +379,4 @@ const getAvatarName = (name: string): string => {
   height: 16px;
   object-fit: contain;
 }
-
-
 </style>
-
-

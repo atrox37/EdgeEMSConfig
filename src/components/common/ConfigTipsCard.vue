@@ -37,21 +37,21 @@ withDefaults(
 
 <style scoped lang="scss">
 .config-tips-card {
-  border: 1px solid rgba($secondary-color, 0.3);
-  border-radius: $border-radius-base;
-  background: rgba($secondary-color, 0.06);
+  border: 1px solid color-mix(in srgb, var(--vt-color-secondary) 30%, transparent);
+  border-radius: var(--vt-radius-md);
+  background: color-mix(in srgb, var(--vt-color-secondary) 6%, transparent);
   padding: 16px;
 }
 
 .config-tips-card__title {
-  font-weight: $font-weight-semibold;
-  color: $secondary-color;
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-color-secondary);
   margin-bottom: 10px;
 }
 
 .config-tips-card__content {
-  color: $secondary-color;
-  font-size: $font-size-base;
+  color: var(--vt-color-secondary);
+  font-size: var(--vt-font-size-base);
   line-height: 1.45;
   display: flex;
   flex-direction: column;
@@ -60,35 +60,35 @@ withDefaults(
 
 .config-tips-card__item {
   padding: 10px 12px;
-  border-radius: $border-radius-small;
-  border: 1px solid rgba($secondary-color, 0.2);
-  background: rgba($secondary-color, 0.08);
+  border-radius: var(--vt-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--vt-color-secondary) 20%, transparent);
+  background: color-mix(in srgb, var(--vt-color-secondary) 8%, transparent);
 }
 
 .config-tips-card__item-label {
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
   margin-bottom: 2px;
 }
 
 .config-tips-card__item-text {
-  color: $text-color-secondary;
+  color: var(--vt-text-secondary);
 }
 
 .config-tips-card__note {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px dashed rgba($secondary-color, 0.35);
+  border-top: 1px dashed color-mix(in srgb, var(--vt-color-secondary) 35%, transparent);
 }
 
 .config-tips-card__note-title {
-  font-weight: $font-weight-semibold;
-  color: $secondary-color;
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-color-secondary);
   margin-bottom: 4px;
 }
 
 .config-tips-card__note-text {
-  color: $text-color-secondary;
+  color: var(--vt-text-secondary);
   line-height: 1.5;
 }
 </style>

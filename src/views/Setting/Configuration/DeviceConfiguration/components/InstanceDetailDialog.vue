@@ -385,7 +385,7 @@ defineExpose({ open, close })
   }
 
   .instance-detail__readonly-text {
-    color: $text-color-primary;
+    color: var(--vt-text-primary);
     font-size: 14px;
   }
 
@@ -403,10 +403,10 @@ defineExpose({ open, close })
     min-height: 0;
     overflow-y: auto;
     overflow-x: visible;
-    background-color: $white-alpha-05;
+    background-color: var(--vt-color-white-05);
     position: relative;
-    border: 1px solid $white-alpha-10;
-    border-radius: $border-radius-medium;
+    border: 1px solid var(--vt-color-white-10);
+    border-radius: var(--vt-radius-md);
     padding: 8px;
 
     .instance-detail__properties-grid {
@@ -424,7 +424,7 @@ defineExpose({ open, close })
       min-height: 32px;
       position: relative;
       // padding: 6px 8px;
-      border-bottom: 1px dashed $white-alpha-10;
+      border-bottom: 1px dashed var(--vt-color-white-10);
 
       .instance-detail__property-item:last-child {
         border-bottom: none;
@@ -459,7 +459,7 @@ defineExpose({ open, close })
     .instance-detail__property-key,
     .instance-detail__property-value {
       font-size: 14px;
-      color: $text-color-primary;
+      color: var(--vt-text-primary);
       word-break: break-all;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -472,7 +472,7 @@ defineExpose({ open, close })
     }
 
     .instance-detail__property-separator {
-      color: $text-color-secondary;
+      color: var(--vt-text-secondary);
       font-weight: 600;
       margin: 0 2px;
       flex-shrink: 0;
@@ -482,16 +482,16 @@ defineExpose({ open, close })
     .instance-detail__property-value-box {
       display: block;
       padding: 4px 8px;
-      background: $white-alpha-05;
-      border: 1px solid $white-alpha-15;
-      border-radius: $border-radius-small;
-      color: $text-color-primary;
+      background: var(--vt-color-white-05);
+      border: 1px solid var(--vt-color-white-15);
+      border-radius: var(--vt-radius-sm);
+      color: var(--vt-text-primary);
     }
 
     .instance-detail__properties-empty {
       padding: 10px 8px;
       font-size: 13px;
-      color: $text-color-secondary;
+      color: var(--vt-text-secondary);
     }
   }
 

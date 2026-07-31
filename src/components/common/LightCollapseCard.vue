@@ -119,9 +119,9 @@ watch(
 
 <style scoped lang="scss">
 .light-collapse-card {
-  border: 1px solid $white-alpha-10;
+  border: 1px solid var(--vt-color-white-10);
   border-radius: 10px;
-  background: linear-gradient(180deg, $white-alpha-05, transparent);
+  background: linear-gradient(180deg, var(--vt-color-white-05), transparent);
   overflow: hidden;
   width: 100%;
 }
@@ -136,7 +136,7 @@ watch(
   border: none;
   cursor: pointer;
   text-align: left;
-  color: $text-color-primary;
+  color: var(--vt-text-primary);
   position: relative;
   transition: color 0.2s ease, background-color 0.2s ease;
 }
@@ -149,14 +149,14 @@ watch(
   bottom: 10px;
   width: 3px;
   border-radius: 2px;
-  background: $secondary-color;
+  background: var(--vt-color-secondary);
   opacity: 0.6;
   transition: opacity 0.2s ease, background-color 0.2s ease;
 }
 
 .light-collapse-card__header:hover:not(:disabled):not([data-collapsible='false']) {
-  background: $orange-color-hover-bg;
-  color: $primary-color;
+  background: color-mix(in srgb, var(--vt-color-primary) 10%, transparent);
+  color: var(--vt-color-primary);
 }
 
 .light-collapse-card__header[data-collapsible='false'] {
@@ -164,7 +164,7 @@ watch(
 }
 
 .light-collapse-card__header:focus-visible {
-  outline: 2px solid $primary-color-alpha-40;
+  outline: 2px solid color-mix(in srgb, var(--vt-color-primary) 40%, transparent);
   outline-offset: 2px;
 }
 
@@ -183,8 +183,8 @@ watch(
 .light-collapse-card__icon {
   width: 8px;
   height: 8px;
-  border-right: 2px solid $secondary-color;
-  border-bottom: 2px solid $secondary-color;
+  border-right: 2px solid var(--vt-color-secondary);
+  border-bottom: 2px solid var(--vt-color-secondary);
   transform: rotate(-45deg);
   transition: transform 0.25s ease, border-color 0.2s ease;
 }
@@ -209,26 +209,26 @@ watch(
 .light-collapse-card__footer {
   padding-top: 12px;
   margin-top: 8px;
-  border-top: 1px solid $white-alpha-10;
+  border-top: 1px solid var(--vt-color-white-10);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
 .light-collapse-card.is-open {
-  border-color: $primary-color-alpha-20;
-  box-shadow: 0 0 0 1px $primary-color-alpha-20 inset;
+  border-color: color-mix(in srgb, var(--vt-color-primary) 20%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vt-color-primary) 20%, transparent) inset;
 }
 
 .light-collapse-card.is-open .light-collapse-card__icon {
   transform: rotate(45deg);
-  border-right-color: $primary-color;
-  border-bottom-color: $primary-color;
+  border-right-color: var(--vt-color-primary);
+  border-bottom-color: var(--vt-color-primary);
 }
 
 .light-collapse-card.is-open .light-collapse-card__header::before {
   opacity: 1;
-  background: $primary-color;
+  background: var(--vt-color-primary);
 }
 
 .light-collapse-card.is-disabled {

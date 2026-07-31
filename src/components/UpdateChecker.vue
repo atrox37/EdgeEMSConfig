@@ -118,6 +118,7 @@ const dismissed = ref(false)
 const currentVersion = ref('')
 const dialogMode = ref<DialogMode>('auto')
 const progressBarStatus = ref<'success' | 'exception' | ''>('')
+let autoCheckTimer: ReturnType<typeof setTimeout> | null = null
 
 const formatDate = (dateStr?: string): string => {
   if (!dateStr) return ''
@@ -280,13 +281,17 @@ watch(isInstalling, (val) => {
 onMounted(async () => {
   currentVersion.value = await getVersion()
   window.addEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
-  setTimeout(() => {
+  autoCheckTimer = setTimeout(() => {
     dialogMode.value = 'auto'
     void checkUpdate(true)
   }, 3000)
 })
 
 onUnmounted(() => {
+  if (autoCheckTimer) {
+    clearTimeout(autoCheckTimer)
+    autoCheckTimer = null
+  }
   window.removeEventListener('titlebar-open-updates-dialog', handleTitlebarOpenUpdatesDialog)
   isAppUpdating.value = false
 })
@@ -295,22 +300,22 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .update-dialog-content {
   .update-header {
-    margin-bottom: $spacing-sm;
-    padding-bottom: $spacing-sm;
-    border-bottom: $border-width-base solid $border-color-white-10;
+    margin-bottom: var(--vt-space-2);
+    padding-bottom: var(--vt-space-2);
+    border-bottom: var(--vt-border-width-base) solid var(--vt-color-black-12);
 
     h3 {
-      margin: 0 0 $spacing-xs 0;
-      color: $primary-color;
-      font-size: $font-size-extra-large;
-      font-weight: $font-weight-semibold;
+      margin: 0 0 var(--vt-space-1) 0;
+      color: var(--vt-color-primary);
+      font-size: var(--vt-font-size-xl);
+      font-weight: var(--vt-font-weight-semibold);
     }
 
     .update-description {
-      margin: 0 0 $spacing-sm 0;
-      color: $text-color-white-60;
-      font-size: $font-size-base;
-      line-height: $line-height-normal;
+      margin: 0 0 var(--vt-space-2) 0;
+      color: var(--vt-color-black-50);
+      font-size: var(--vt-font-size-base);
+      line-height: var(--vt-line-height-normal);
     }
   }
 }
@@ -318,19 +323,19 @@ onUnmounted(() => {
 .update-row {
   display: flex;
   justify-content: space-between;
-  gap: $spacing-md;
+  gap: var(--vt-space-4);
   margin-bottom: 2px;
 }
 
 .update-label {
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .update-latest {
   display: inline-flex;
   align-items: center;
-  gap: $spacing-xs;
+  gap: var(--vt-space-1);
 }
 
 .update-tag-new {
@@ -339,20 +344,20 @@ onUnmounted(() => {
   justify-content: center;
   padding: 1px 6px;
   font-size: 10px;
-  font-weight: $font-weight-semibold;
+  font-weight: var(--vt-font-weight-semibold);
   line-height: 1.6;
-  border-radius: $border-radius-small;
+  border-radius: var(--vt-radius-sm);
   background: rgba(255, 138, 0, 0.16);
-  color: $primary-color;
+  color: var(--vt-color-primary);
 }
 
 .update-progress {
-  margin-bottom: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
-  border: $border-width-base solid rgba(255, 138, 0, 0.18);
-  border-radius: $border-radius-small;
+  margin-bottom: var(--vt-space-2);
+  padding: var(--vt-space-2) var(--vt-space-4);
+  border: var(--vt-border-width-base) solid rgba(255, 138, 0, 0.18);
+  border-radius: var(--vt-radius-sm);
   background: linear-gradient(180deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 138, 0, 0.03) 100%);
-  transition: border-color $transition-base, background $transition-base;
+  transition: border-color var(--vt-transition-base), background var(--vt-transition-base);
 
   .update-progress.is-success-state {
     border-color: rgba(103, 194, 58, 0.3);
@@ -368,74 +373,74 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $spacing-md;
-    margin-bottom: $spacing-xs;
+    gap: var(--vt-space-4);
+    margin-bottom: var(--vt-space-1);
   }
 
   .update-progress__title {
-    font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
-    color: $text-color-primary;
+    font-size: var(--vt-font-size-base);
+    font-weight: var(--vt-font-weight-semibold);
+    color: var(--vt-text-primary);
   }
 
   .update-progress__percent {
-    font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
-    color: $primary-color;
-    transition: color $transition-base;
+    font-size: var(--vt-font-size-base);
+    font-weight: var(--vt-font-weight-semibold);
+    color: var(--vt-color-primary);
+    transition: color var(--vt-transition-base);
 
     .update-progress__percent.is-success {
-      color: $success-color;
+      color: var(--vt-color-success);
     }
 
     .update-progress__percent.is-exception {
-      color: $danger-color;
+      color: var(--vt-color-danger);
     }
   }
 
   .update-progress__message {
-    margin-top: $spacing-xs;
-    color: $text-color-primary;
-    font-size: $font-size-small;
+    margin-top: var(--vt-space-1);
+    color: var(--vt-text-primary);
+    font-size: var(--vt-font-size-sm);
   }
 
   .update-progress__bytes {
     margin-top: 2px;
-    color: $text-color-white-60;
-    font-size: $font-size-small;
+    color: var(--vt-color-black-50);
+    font-size: var(--vt-font-size-sm);
   }
 }
 
 :deep(.el-progress) {
   .el-progress-bar__inner {
-    background-color: $primary-color;
-    transition: background-color $transition-base;
+    background-color: var(--vt-color-primary);
+    transition: background-color var(--vt-transition-base);
   }
 
   :deep(.el-progress).is-success .el-progress-bar__inner {
-    background-color: $success-color;
+    background-color: var(--vt-color-success);
   }
 
   :deep(.el-progress).is-exception .el-progress-bar__inner {
-    background-color: $danger-color;
+    background-color: var(--vt-color-danger);
   }
 }
 
 .update-notes {
   h4 {
-    margin: 0 0 $spacing-xs 0;
-    font-weight: $font-weight-semibold;
-    color: $text-color-primary;
-    font-size: $font-size-medium;
+    margin: 0 0 var(--vt-space-1) 0;
+    font-weight: var(--vt-font-weight-semibold);
+    color: var(--vt-text-primary);
+    font-size: var(--vt-font-size-md);
   }
 
   .notes-content {
     max-height: 130px;
     overflow-y: auto;
-    padding: $spacing-md;
+    padding: var(--vt-space-4);
     background: #f5f6f7;
-    border-radius: $border-radius-small;
-    line-height: $line-height-loose;
+    border-radius: var(--vt-radius-sm);
+    line-height: var(--vt-line-height-loose);
     color: #3f444d;
 
     .notes-content--empty {
@@ -445,23 +450,23 @@ onUnmounted(() => {
 
     .notes-list {
       margin: 0;
-      padding-left: $spacing-md;
+      padding-left: var(--vt-space-4);
       list-style: disc;
 
       li {
-        margin: $spacing-xs 0;
+        margin: var(--vt-space-1) 0;
       }
     }
 
     .notes-section + .notes-section {
-      margin-top: $spacing-md;
-      padding-top: $spacing-sm;
-      border-top: $border-width-base solid rgba(63, 68, 77, 0.14);
+      margin-top: var(--vt-space-4);
+      padding-top: var(--vt-space-2);
+      border-top: var(--vt-border-width-base) solid rgba(63, 68, 77, 0.14);
     }
 
     .notes-section__title {
-      font-weight: $font-weight-semibold;
-      margin-bottom: $spacing-xs;
+      font-weight: var(--vt-font-weight-semibold);
+      margin-bottom: var(--vt-space-1);
       color: #2f3440;
     }
   }

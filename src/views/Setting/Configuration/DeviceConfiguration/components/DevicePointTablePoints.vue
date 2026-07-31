@@ -497,8 +497,8 @@ defineExpose({
     justify-content: flex-end;
     align-items: center;
     :deep(.el-pagination .el-pager .number.is-active) {
-      background-color: $primary-color;
-      border-color: $primary-color;
+      background-color: var(--vt-color-primary);
+      border-color: var(--vt-color-primary);
       color: #fff;
       font-weight: 600;
       border-radius: 6px;

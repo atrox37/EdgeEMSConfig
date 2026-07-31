@@ -3,7 +3,7 @@ import { createDefaultModelFlow } from '@/utils/defaultModelFlow'
 
 export const STATION_TOPOLOGY_ID = 'station'
 
-const MOCK_STORAGE_KEY = 'mock_station_topology_v1'
+const MOCK_STORAGE_KEY = 'mock_station_topology_v2'
 
 /** 模拟边端已绑定的实例 ID（需与实例列表 mock/真实数据对齐） */
 function buildDefaultTopology(): StationTopology {
@@ -11,7 +11,7 @@ function buildDefaultTopology(): StationTopology {
     { instance_id: 1, instance_name: 'battery_01', product_name: 'Battery' },
     { instance_id: 2, instance_name: 'diesel_gen_01', product_name: 'Diesel' },
     { instance_id: 3, instance_name: 'pcs_01', product_name: 'PCS' },
-    { instance_id: 4, instance_name: 'pv_01', product_name: 'PV DCDC' },
+    { instance_id: 4, instance_name: 'PV Group_01', product_name: 'PV Group' },
     { instance_id: 5, instance_name: 'station_01', product_name: 'Station' },
     { instance_id: 6, instance_name: 'Load_01', product_name: 'Load' },
   ])

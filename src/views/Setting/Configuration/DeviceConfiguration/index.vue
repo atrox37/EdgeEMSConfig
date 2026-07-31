@@ -1,6 +1,6 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
-    <ModulePageHeader title="Model Config" />
+    <ModulePageHeader title="Model Config" variant="filters" />
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 桌面端：显示筛选框 -->
@@ -293,9 +293,9 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
     margin-bottom: 24px;
 
     .rule-management__title {
-      font-size: $font-size-large;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
+      font-size: var(--vt-font-size-lg);
+      font-weight: var(--vt-font-weight-semibold);
+      color: var(--vt-text-primary);
       margin: 0;
     }
   }

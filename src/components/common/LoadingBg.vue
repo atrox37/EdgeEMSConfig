@@ -61,7 +61,7 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: $height-lg;
+  min-height: var(--vt-control-height-lg);
   display: flex;
   flex-direction: column;
 }
@@ -96,8 +96,8 @@ onBeforeUnmount(() => {
 }
 
 :deep(.el-loading-text) {
-  color: $primary-color !important;
-  font-size: $font-size-base;
+  color: var(--vt-color-primary) !important;
+  font-size: var(--vt-font-size-base);
   margin:0;
 }
 </style>

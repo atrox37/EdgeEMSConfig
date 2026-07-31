@@ -1,222 +1,206 @@
-@use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Input 组件样式 */
+// ============================================
+// Element Plus: Input / InputNumber / Textarea
+// Overrides: wrapper, inner, prefix/suffix, sizes
+// ============================================
+// ---- Input (base) ----
+.el-input.el-input,
+.el-input-number.el-input-number.is-without-controls .el-input,
+.el-textarea.el-textarea {
+  --el-input-bg-color: var(--vt-bg-input);
+  --el-input-border-color: var(--vt-border-color);
+  --el-input-hover-border-color: var(--vt-border-color);
+  --el-input-focus-border-color: var(--vt-border-color);
+  --el-input-text-color: var(--vt-text-primary);
+  --el-input-placeholder-color: var(--vt-text-placeholder);
+  --el-input-icon-color: var(--vt-text-secondary);
+  --el-input-transparent-bg-color: transparent;
 
-$field-placeholder-color: rgba($text-color-primary, 0.55);
-$field-disabled-text-color: rgba($text-color-primary, 0.35);
+  width: 100%;
+  min-height: var(--vt-control-height);
 
-.voltage-class {
-  // Input 基础样式
-  .el-input {
-    height: 32px;
-    // width: 180px;
+  // -- Size variants --
+  &.el-input--small {
+    width: 100%;
 
-    &.is-disabled {
-      .el-input__wrapper {
-        box-shadow: none !important;
-      }
+    .el-input__wrapper {
+      min-height: var(--vt-control-height-sm);
+      padding: 0 var(--vt-space-1) !important;
     }
 
     .el-input__inner {
-      border: none !important;
-      outline: none !important;
-      background: transparent !important;
-      color: $text-color-primary !important;
-      font-size: $font-size-base !important;
-      line-height: $line-height-normal !important;
-      width: 100% !important;
-      height: 100% !important;
-      padding: 0 12px !important;
-      border-radius: $border-radius-base !important;
-      border-color: $border-color-base !important;
-      &::placeholder {
-        color: $field-placeholder-color !important;
-      }
-
-      &:disabled {
-        color: $field-disabled-text-color !important;
-        cursor: not-allowed !important;
-      }
-
-      &:read-only {
-        color: $text-color-primary;
-      }
-    }
-
-    // 前缀图标
-    .el-input__prefix,
-    .el-input__suffix {
-      color: #000000 !important; // 黑色图标
-      font-size: $font-size-base !important;
-      margin: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      .el-input__prefix-inner,
-      .el-input__suffix-inner {
-        line-height: 16px !important;
-        width: 100% !important;
-        height: 100% !important;
-        .el-input__icon {
-          width: 100% !important;
-          height: 100% !important;
-          font-size: 16px !important;
-          margin: 0 !important;
-          color: #000000 !important; // 黑色图标
-        }
-      }
-    }
-    .el-input__prefix {
-      padding-left: 12px !important;
-    }
-    .el-input__suffix {
-      padding-right: 12px !important;
-    }
-
-    // 密码显示切换按钮
-    .el-input__password {
-      width: 16px !important;
-      height: 16px !important;
-      font-size: 16px !important;
-      // color: rgb(168, 171, 178) !important;
-      cursor: pointer !important;
-      transition: color $transition-fast !important;
-      // margin-right: 10px !important;
-
-      // &:hover {
-      //   color: #fff !important;
-      // }
-    }
-
-    // 计数
-    .el-input__count {
-      color: $text-color-secondary !important;
-      font-size: $font-size-small !important;
-      margin-left: $spacing-xs !important;
+      font-size: var(--vt-font-size-sm);
     }
   }
 
-  // Input 尺寸变体
-  .el-input {
-    &.el-input--small {
-      width: 100% !important;
-      .el-input__wrapper {
-        height: $button-height-small !important;
-        padding: 0 $spacing-xs !important;
-      }
-
-      .el-input__inner {
-        font-size: $font-size-small !important;
-      }
-
-      .el-input__prefix,
-      .el-input__suffix {
-        font-size: $font-size-small !important;
-      }
+  &.el-input--large {
+    .el-input__wrapper {
+      min-height: var(--vt-control-height-lg);
+      padding: 0 var(--vt-space-4) !important;
     }
 
-    // 大尺寸
-    &.el-input--large {
-      .el-input__wrapper {
-        height: $button-height-large !important;
-        padding: 0 $spacing-md !important;
-      }
-
-      .el-input__inner {
-        font-size: $font-size-large !important;
-      }
-
-      .el-input__prefix,
-      .el-input__suffix {
-        font-size: $font-size-large !important;
-      }
+    .el-input__inner {
+      font-size: var(--vt-font-size-lg);
     }
   }
 
-  // Input 类型变体
-  .el-textarea {
-    .el-textarea__inner {
-      border-radius: $border-radius-base !important;
-      border: $border-width-base solid $border-color-base !important;
-      background-color: $bg-color-input !important;
-      color: $text-color-primary !important;
-      font-size: $font-size-base !important;
-      line-height: $line-height-relaxed !important;
-      padding: $spacing-sm !important;
-      resize: vertical !important;
-      min-height: 64px !important;
-      transition: all $transition-base !important;
-      box-shadow: none !important;
-      &:focus {
-        box-shadow: none !important;
-        border-color: none !important;
-      }
+  // -- State: disabled --
+  &.is-disabled .el-input__wrapper {
+    box-shadow: none;
+  }
 
-      &::placeholder {
-        color: $field-placeholder-color !important;
-      }
+  // ---- Elements ----
+  .el-input__prefix,
+  .el-input__suffix {
 
-      &:disabled {
-        color: $field-disabled-text-color !important;
-        cursor: not-allowed !important;
+    .el-input__prefix-inner,
+    .el-input__suffix-inner {
+
+      .el-input__icon {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        font-size: 16px;
       }
-      &:hover {
-        border-color: none !important;
-      }
+    }
+
+    .el-input__prefix-inner> :last-child {
+      margin-right: 8px;
+    }
+
+    .el-input__suffix-inner> :last-child {
+      margin-left: 8px;
     }
   }
 
-  .el-input-number {
-    line-height: 32px;
-    width: 100% !important;
-    .el-input {
-      width: 100% !important;
-    }
-    .el-input-number__decrease,
-    .el-input-number__increase {
-      width: 32px;
-      font-size: 13px;
-      top: 1px;
-      bottom: 1px;
-      border-radius: 0;
-    }
-    .el-input-number__decrease {
-      border-right: 1px solid $border-color-base;
-    }
-    .el-input-number__increase {
-      border-left: 1px solid $border-color-base;
+  .el-input__clear,
+  .el-input__password {
+    color: var(--vt-text-secondary);
+    font-size: 16px;
+    transition: color var(--vt-transition-fast);
+
+    &:hover {
+      color: var(--vt-text-regular);
     }
   }
+
+  .el-input__count {
+    margin-left: var(--vt-space-1);
+    color: var(--vt-text-secondary);
+    font-size: var(--vt-font-size-sm);
+  }
+
+  // ---- Input__wrapper (shared element, inside `.el-input`) ----
   .el-input__wrapper {
-    padding: 0 !important;
-    height: 32px !important;
-    display: flex !important;
-    align-items: center !important;
-    position: relative !important;
-    background-color: $bg-color-input !important;
-    box-shadow: none !important;
-    border: 1px solid $border-color-base !important;
-    border-radius: $border-radius-base !important;
-    // outline: none !important;
-    // 聚焦状态
-    &.is-focus {
-      border-color: $border-color-base !important;
-      box-shadow: none !important;
-      //   outline: none !important;
+    display: flex;
+    align-items: center;
+    position: relative;
+    background-color: var(--vt-bg-input);
+    border: 1px solid var(--vt-border-color);
+    border-radius: var(--vt-radius-none);
+    // EP Input also uses inset box-shadow as border; clear it so only our border shows.
+    box-shadow: none;
+    // line-height: 32px;
+    transition:
+      border-color var(--vt-transition-fast),
+      box-shadow var(--vt-transition-fast),
+      background-color var(--vt-transition-fast);
+    padding: 1px 11px;
+
+    &:hover,
+    &.is-focus,
+    &.is-focused {
+      border-color: var(--vt-border-color);
+      box-shadow: none;
     }
 
-    // 错误状态
-    &.is-error {
-      border-color: $danger-color !important;
-    }
-
-    // 禁用状态
     &.is-disabled {
-      background-color: transparent !important;
-    }
-
-    // 只读状态
-    &.is-readonly {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(148, 166, 197, 0.16);
+      box-shadow: none;
     }
   }
+
+  // ---- Input__inner + range-input (shared element) ----
+  .el-input__inner,
+  .el-range-input,
+  .el-textarea__inner {
+    width: 100%;
+    height: 100%;
+
+    &::placeholder {
+      color: var(--vt-text-placeholder);
+    }
+
+    &:disabled {
+      color: var(--vt-text-disabled);
+      cursor: not-allowed;
+    }
+
+    &:read-only {
+      color: var(--vt-text-secondary);
+    }
+  }
+
+  .el-textarea__inner {
+    min-height: 32px !important;
+  }
+
+  // ---- Textarea (separate block) ----
+  // .el-textarea {
+  //   --el-input-bg-color: var(--vt-bg-input);
+  //   --el-input-border-color: var(--vt-border-color);
+  //   --el-input-hover-border-color: var(--vt-border-color);
+  //   --el-input-focus-border-color: var(--vt-border-color);
+  //   --el-input-text-color: var(--vt-text-primary);
+  //   --el-input-placeholder-color: var(--vt-text-placeholder);
+  //   --el-input-icon-color: var(--vt-text-secondary);
+  //   --el-input-transparent-bg-color: transparent;
+
+  //   .el-textarea__inner {
+  //     min-height: 80px;
+  //     padding: var(--vt-space-2);
+  //     border: 1px solid var(--vt-border-color);
+  //     border-radius: var(--vt-radius-none);
+  //     background-color: var(--vt-bg-input);
+  //     color: var(--vt-text-primary);
+  //     font-size: var(--vt-font-size-base);
+  //     line-height: var(--vt-line-height-relaxed);
+  //     resize: none;
+  //     box-shadow: none;
+  //     transition:
+  //       border-color var(--vt-transition-fast),
+  //       box-shadow var(--vt-transition-fast);
+
+  //     &:hover {
+  //       border-color: var(--vt-border-color);
+  //       box-shadow: none;
+  //     }
+
+  //     &:focus {
+  //       border-color: var(--vt-border-color);
+  //       box-shadow: none;
+  //     }
+
+  //     &::placeholder {
+  //       color: var(--vt-text-placeholder);
+  //     }
+
+  //     &:disabled {
+  //       color: var(--vt-text-disabled);
+  //       cursor: not-allowed;
+  //     }
+  //   }
+
+  //   .el-input__count {
+  //     margin-left: var(--vt-space-1);
+  //     color: var(--vt-text-secondary);
+  //     font-size: var(--vt-font-size-sm);
+  //     background-color: var(--vt-bg-input);
+  //   }
+  // }
 }
 
+// ---- InputNumber (shared input styling) ----
+.el-input-number.el-input-number {
+  width: 100%;
+}

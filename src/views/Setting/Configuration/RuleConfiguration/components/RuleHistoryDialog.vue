@@ -450,8 +450,8 @@ defineExpose({ open, close })
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: $spacing-md;
-    margin-bottom: $spacing-md;
+    gap: var(--vt-space-4);
+    margin-bottom: var(--vt-space-4);
   }
 
   .rule-history-dialog__toolbar-form {
@@ -466,12 +466,12 @@ defineExpose({ open, close })
   .rule-history-dialog__toolbar-actions {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
+    gap: var(--vt-space-2);
     flex-shrink: 0;
   }
 
   .rule-history-dialog__body {
-    min-height: 4.8rem;
+    min-height: 480px;
   }
 
   .rule-history-dialog__table {
@@ -481,39 +481,39 @@ defineExpose({ open, close })
   .rule-history-dialog__status {
     display: inline-flex;
     align-items: center;
-    padding: 0 $spacing-xs;
-    border-radius: $border-radius-small;
-    font-size: $font-size-small;
+    padding: 0 var(--vt-space-1);
+    border-radius: var(--vt-radius-sm);
+    font-size: var(--vt-font-size-sm);
     line-height: 22px;
 
     &.is-success {
-      color: $success-color;
-      background: rgba($success-color, 0.12);
+      color: var(--vt-color-success);
+      background: color-mix(in srgb, var(--vt-color-success) 12%, transparent);
     }
 
     &.is-failed {
-      color: $danger-color;
-      background: rgba($danger-color, 0.12);
+      color: var(--vt-color-danger);
+      background: color-mix(in srgb, var(--vt-color-danger) 12%, transparent);
     }
   }
 
   .rule-history-dialog__pagination {
-    padding-top: $spacing-md;
+    padding-top: var(--vt-space-4);
     display: flex;
     justify-content: flex-end;
   }
 
   .rule-history-dialog__detail {
-    padding: $spacing-sm $spacing-md $spacing-md 48px;
+    padding: var(--vt-space-2) var(--vt-space-4) var(--vt-space-4) 48px;
   }
 
   .rule-history-dialog__error-banner {
-    margin-bottom: $spacing-sm;
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $border-radius-small;
-    color: $danger-color;
-    background: rgba($danger-color, 0.08);
-    border: 1px solid rgba($danger-color, 0.24);
+    margin-bottom: var(--vt-space-2);
+    padding: var(--vt-space-1) var(--vt-space-2);
+    border-radius: var(--vt-radius-sm);
+    color: var(--vt-color-danger);
+    background: color-mix(in srgb, var(--vt-color-danger) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vt-color-danger) 24%, transparent);
     line-height: 1.5;
     word-break: break-word;
   }
@@ -526,17 +526,17 @@ defineExpose({ open, close })
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-bottom: $spacing-sm;
+    margin-bottom: var(--vt-space-2);
   }
 
   .rule-history-dialog__detail-label {
-    color: $text-color-secondary;
-    font-size: $font-size-small;
+    color: var(--vt-text-secondary);
+    font-size: var(--vt-font-size-sm);
   }
 
   .rule-history-dialog__detail-value {
-    color: $text-color-primary;
-    font-size: $font-size-base;
+    color: var(--vt-text-primary);
+    font-size: var(--vt-font-size-base);
     line-height: 1.5;
     word-break: break-word;
   }
@@ -544,38 +544,38 @@ defineExpose({ open, close })
   .rule-history-dialog__tag-list {
     display: flex;
     flex-wrap: wrap;
-    gap: $spacing-xs;
+    gap: var(--vt-space-1);
   }
 
   .rule-history-dialog__tag {
     display: inline-flex;
     align-items: center;
-    padding: 2px $spacing-xs;
-    border-radius: $border-radius-small;
-    background: rgba($primary-color, 0.08);
-    color: $text-color-primary;
-    font-size: $font-size-small;
+    padding: 2px var(--vt-space-1);
+    border-radius: var(--vt-radius-sm);
+    background: color-mix(in srgb, var(--vt-color-primary) 8%, transparent);
+    color: var(--vt-text-primary);
+    font-size: var(--vt-font-size-sm);
   }
 
   .rule-history-dialog__steps {
     display: flex;
     flex-direction: column;
-    gap: $spacing-sm;
+    gap: var(--vt-space-2);
   }
 
   .rule-history-dialog__step-card {
-    padding: $spacing-sm;
-    border-radius: $border-radius-small;
-    background: rgba($primary-color, 0.04);
-    border: 1px solid rgba($primary-color, 0.12);
+    padding: var(--vt-space-2);
+    border-radius: var(--vt-radius-sm);
+    background: color-mix(in srgb, var(--vt-color-primary) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vt-color-primary) 12%, transparent);
     border-left-width: 3px;
 
     &.is-branch {
-      border-left-color: $warning-color;
+      border-left-color: var(--vt-color-warning);
     }
 
     &.is-terminal {
-      border-left-color: $success-color;
+      border-left-color: var(--vt-color-success);
     }
   }
 
@@ -583,8 +583,8 @@ defineExpose({ open, close })
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $spacing-sm;
-    font-weight: $font-weight-medium;
+    gap: var(--vt-space-2);
+    font-weight: var(--vt-font-weight-medium);
     margin-bottom: 6px;
   }
 
@@ -600,11 +600,11 @@ defineExpose({ open, close })
     display: inline-flex;
     align-items: center;
     padding: 0 6px;
-    border-radius: $border-radius-small;
-    background: rgba($warning-color, 0.12);
-    color: $warning-color;
-    font-size: $font-size-small;
-    font-weight: $font-weight-normal;
+    border-radius: var(--vt-radius-sm);
+    background: color-mix(in srgb, var(--vt-color-warning) 12%, transparent);
+    color: var(--vt-color-warning);
+    font-size: var(--vt-font-size-sm);
+    font-weight: var(--vt-font-weight-normal);
   }
 
   .rule-history-dialog__step-badges {
@@ -615,26 +615,26 @@ defineExpose({ open, close })
   }
 
   .rule-history-dialog__step-kind {
-    color: $text-color-secondary;
-    font-size: $font-size-small;
-    font-weight: $font-weight-normal;
+    color: var(--vt-text-secondary);
+    font-size: var(--vt-font-size-sm);
+    font-weight: var(--vt-font-weight-normal);
   }
 
   .rule-history-dialog__terminal-badge {
     display: inline-flex;
     align-items: center;
     padding: 0 6px;
-    border-radius: $border-radius-small;
-    background: rgba($success-color, 0.12);
-    color: $success-color;
-    font-size: $font-size-small;
-    font-weight: $font-weight-normal;
+    border-radius: var(--vt-radius-sm);
+    background: color-mix(in srgb, var(--vt-color-success) 12%, transparent);
+    color: var(--vt-color-success);
+    font-size: var(--vt-font-size-sm);
+    font-weight: var(--vt-font-weight-normal);
   }
 
   .rule-history-dialog__terminal-reason {
     margin-bottom: 6px;
-    color: $text-color-secondary;
-    font-size: $font-size-small;
+    color: var(--vt-text-secondary);
+    font-size: var(--vt-font-size-sm);
     line-height: 1.4;
     word-break: break-word;
   }
@@ -647,49 +647,49 @@ defineExpose({ open, close })
     gap: 4px;
 
     li.is-matched {
-      color: $success-color;
+      color: var(--vt-color-success);
     }
 
     li.is-failed {
-      color: $danger-color;
+      color: var(--vt-color-danger);
     }
   }
 
   .rule-history-dialog__step-text {
-    font-size: $font-size-base;
+    font-size: var(--vt-font-size-base);
     word-break: break-word;
 
     &.is-failed {
-      color: $danger-color;
+      color: var(--vt-color-danger);
     }
   }
 
   .rule-history-dialog__actions-list {
     display: flex;
     flex-direction: column;
-    gap: $spacing-xs;
+    gap: var(--vt-space-1);
   }
 
   .rule-history-dialog__action-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $spacing-sm;
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $border-radius-small;
-    background: rgba($primary-color, 0.04);
+    gap: var(--vt-space-2);
+    padding: var(--vt-space-1) var(--vt-space-2);
+    border-radius: var(--vt-radius-sm);
+    background: color-mix(in srgb, var(--vt-color-primary) 4%, transparent);
   }
 
   .rule-history-dialog__action-status {
     white-space: nowrap;
-    font-size: $font-size-small;
+    font-size: var(--vt-font-size-sm);
 
     &.is-success {
-      color: $success-color;
+      color: var(--vt-color-success);
     }
 
     &.is-failed {
-      color: $danger-color;
+      color: var(--vt-color-danger);
     }
   }
 }

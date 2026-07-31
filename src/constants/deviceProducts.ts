@@ -70,11 +70,13 @@ const PRODUCT_META: Record<string, { icon: string; color: string; label?: string
   Load:           { icon: 'i-tabler-plug',               color: 'default', label: 'Load' },
   EVChargingLoad: { icon: 'i-tabler-charging-pile',      color: 'blue',    label: 'EV Charging Load' },
   HVACLoad:       { icon: 'i-tabler-air-conditioning',   color: 'blue',    label: 'HVAC Load' },
+  Meter:          { icon: 'i-tabler-gauge',              color: 'blue',    label: 'Meter' },
   Load_Three_Phase:{ icon: 'i-tabler-plug-connected',   color: 'default', label: 'Three-Phase Load' },
 }
 
 /** 画布容器节点（仅 ESS、Generator，无 Load 容器） */
-export const CONTAINER_PRODUCT_NAMES = ['ESS', 'Generator'] as const
+/** 旧产品层级不再生成容器节点，拓扑容器由 Hybrid Inverter / Distribution Board 显式标记。 */
+export const CONTAINER_PRODUCT_NAMES = [] as const
 
 /** 设备所属父节点排序（左侧面板 / 布局） */
 export const DEVICE_PARENT_ORDER = ['ESS', 'Generator', 'Station'] as const
@@ -90,7 +92,7 @@ export const DEVICE_PARENT_FILTER_OPTIONS = [
 ] as const
 
 /** 可绑定设备实例的容器 */
-export const BINDABLE_CONTAINER_PRODUCT_NAMES = ['ESS', 'Generator'] as const
+export const BINDABLE_CONTAINER_PRODUCT_NAMES = [] as const
 
 export function isContainerProduct(productName?: string) {
   return !!productName && CONTAINER_PRODUCT_NAMES.includes(productName as typeof CONTAINER_PRODUCT_NAMES[number])
@@ -98,6 +100,62 @@ export function isContainerProduct(productName?: string) {
 
 export function isBindableContainerProduct(productName?: string) {
   return !!productName && BINDABLE_CONTAINER_PRODUCT_NAMES.includes(productName as typeof BINDABLE_CONTAINER_PRODUCT_NAMES[number])
+}
+
+/** Visual Modeling 当前拓扑节点目录；后续可直接由 products 接口替换。 */
+export type TopologyNodeKind = 'standalone' | 'composite' | 'container'
+
+export interface TopologyNodeDefinition {
+  key: string
+  label: string
+  group: 'generation' | 'storage' | 'load'
+  kind: TopologyNodeKind
+  productName: string
+}
+
+export const TOPOLOGY_NODE_DEFINITIONS: TopologyNodeDefinition[] = [
+  { key: 'pv-group', label: 'PV Group', group: 'generation', kind: 'standalone', productName: 'PV Group' },
+  { key: 'ac-inverter', label: 'AC Inverter', group: 'generation', kind: 'standalone', productName: 'AC Inverter' },
+  { key: 'diesel', label: 'Diesel', group: 'generation', kind: 'standalone', productName: 'Diesel' },
+  { key: 'battery', label: 'Battery', group: 'storage', kind: 'standalone', productName: 'Battery' },
+  { key: 'pcs', label: 'PCS', group: 'storage', kind: 'standalone', productName: 'PCS' },
+  { key: 'hybrid-inverter', label: 'Hybrid Inverter', group: 'storage', kind: 'composite', productName: 'Hybrid Inverter' },
+  { key: 'load', label: 'Load', group: 'load', kind: 'standalone', productName: 'Load' },
+  { key: 'three-phase-load', label: 'Three Phase Load', group: 'load', kind: 'standalone', productName: 'Three Phase Load' },
+  { key: 'ev-charging-load', label: 'EV Charging Load', group: 'load', kind: 'standalone', productName: 'EV Charging Load' },
+  { key: 'hvac-load', label: 'HVAC Load', group: 'load', kind: 'standalone', productName: 'HVAC Load' },
+  { key: 'distribution-board', label: 'Distribution Board', group: 'load', kind: 'container', productName: 'Distribution Board' },
+]
+
+export function topologyNodeToTemplate(definition: TopologyNodeDefinition): ModelNodeTemplate {
+  const imageUrl = getProductInstanceImageUrl(definition.productName)
+  return {
+    id: `topology-${definition.key}`,
+    type: definition.kind === 'standalone' ? 'product' : 'group',
+    label: definition.label,
+    description: definition.kind === 'composite'
+      ? 'Composite'
+      : definition.kind === 'container'
+        ? 'Container'
+        : 'Standalone',
+    productName: definition.productName,
+    topologyType: definition.kind,
+    imageUrl,
+  }
+}
+
+export function getTopologyPanelGroups() {
+  const groups = [
+    { key: 'generation', title: 'Generation', group: 'generation' as const },
+    { key: 'storage', title: 'Storage & Conversion', group: 'storage' as const },
+    { key: 'load', title: 'Load', group: 'load' as const },
+  ]
+  return groups.map((group) => ({
+    ...group,
+    templates: TOPOLOGY_NODE_DEFINITIONS
+      .filter((definition) => definition.group === group.group)
+      .map(topologyNodeToTemplate),
+  }))
 }
 
 function parentRank(parentName?: string | null): number {

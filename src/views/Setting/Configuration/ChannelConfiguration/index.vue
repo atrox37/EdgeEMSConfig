@@ -1,6 +1,6 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
-    <ModulePageHeader title="Channel Config" />
+    <ModulePageHeader title="Channel Config" variant="filters" />
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 移动端：筛选按钮和筛选标?-->
@@ -504,9 +504,9 @@ const handleChannelDialogCancel = () => {
     margin-bottom: 24px;
 
     .rule-management__title {
-      font-size: $font-size-large;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
+      font-size: var(--vt-font-size-lg);
+      font-weight: var(--vt-font-weight-semibold);
+      color: var(--vt-text-primary);
       margin: 0;
     }
   }

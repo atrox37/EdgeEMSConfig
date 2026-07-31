@@ -288,11 +288,11 @@ const handleStartInit = async () => {
   width: 100%;
   height: 100%;
   min-height: 0;
-  background: $bg-gradient-page;
+  background: var(--vt-bg-page);
   position: relative;
   overflow: auto;
-  border: $border-width-base solid;
-  border-image-source: $border-gradient-base;
+  border: var(--vt-border-width-base) solid;
+  border-image-source: var(--vt-border-gradient);
   display: flex;
   flex-direction: column;
 }
@@ -300,7 +300,7 @@ const handleStartInit = async () => {
 .first-gateway-setup__hint-block {
   display: flex;
   align-items: flex-start;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
   max-width: 38em;
   margin: 0 auto;
   text-align: left;
@@ -311,19 +311,19 @@ const handleStartInit = async () => {
   margin-top: 2px;
   width: 16px;
   height: 16px;
-  color: $secondary-color;
+  color: var(--vt-color-secondary);
 }
 
 .first-gateway-setup__hint-text {
-  font-size: $font-size-base;
+  font-size: var(--vt-font-size-base);
   line-height: 20px;
   font-weight: inherit;
   margin: 0;
-  color: $secondary-color;
+  color: var(--vt-color-secondary);
 }
 
 .first-gateway-setup__hint-em {
-  font-weight: $font-weight-semibold;
+  font-weight: var(--vt-font-weight-semibold);
 }
 
 .first-gateway-setup__skip {
@@ -333,13 +333,13 @@ const handleStartInit = async () => {
   padding: 0;
   border: none;
   background: transparent;
-  font-family: $font-family-base;
-  font-size: $font-size-base;
+  font-family: var(--vt-font-family-base);
+  font-size: var(--vt-font-size-base);
   line-height: 1.55;
-  font-weight: $font-weight-medium;
-  color: $primary-color;
+  font-weight: var(--vt-font-weight-medium);
+  color: var(--vt-color-primary);
   cursor: pointer;
-  transition: opacity $transition-fast;
+  transition: opacity var(--vt-transition-fast);
   .first-gateway-setup__skip:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -368,7 +368,7 @@ const handleStartInit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  // padding: 56px $spacing-lg 40px;
+  // padding: 56px var(--vt-space-6) 40px;
 }
 
 .first-gateway-setup__container {
@@ -387,27 +387,27 @@ const handleStartInit = async () => {
 }
 
 .first-gateway-setup__title {
-  font-family: $font-family-montserrat;
-  font-size: $font-size-extra-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
-  margin: 0 0 $spacing-xs;
+  font-family: var(--vt-font-family-heading);
+  font-size: var(--vt-font-size-xl);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
+  margin: 0 0 var(--vt-space-1);
   line-height: 1.25;
 }
 
 .first-gateway-setup__subtitle {
-  font-family: $font-family-montserrat;
-  font-size: $font-size-medium;
-  font-weight: $font-weight-medium;
-  color: $text-color-secondary;
-  margin: 0 0 $spacing-md;
+  font-family: var(--vt-font-family-heading);
+  font-size: var(--vt-font-size-md);
+  font-weight: var(--vt-font-weight-medium);
+  color: var(--vt-text-secondary);
+  margin: 0 0 var(--vt-space-4);
   line-height: 1.4;
 }
 
 .first-gateway-setup__text {
-  font-size: $font-size-base;
+  font-size: var(--vt-font-size-base);
   // line-height: 1.55;
-  color: $text-color-regular;
+  color: var(--vt-text-regular);
   margin: 0;
   max-width: 38em;
   margin-left: auto;
@@ -418,43 +418,43 @@ const handleStartInit = async () => {
 .first-gateway-setup__mono {
   font-family: ui-monospace, monospace;
   font-size: 0.92em;
-  padding: 0 $spacing-xs;
-  border-radius: $border-radius-small;
-  background: $bg-color-input;
-  color: $text-color-primary;
+  padding: 0 var(--vt-space-1);
+  border-radius: var(--vt-radius-sm);
+  background: var(--vt-bg-input);
+  color: var(--vt-text-primary);
 }
 
 .first-gateway-setup__tip {
-  // margin-top: $spacing-md;
+  // margin-top: var(--vt-space-4);
   // width: 100%;
   text-align: left;
   background-color: transparent;
 
   :deep(.el-alert__content) {
-    font-size: $font-size-small;
+    font-size: var(--vt-font-size-sm);
     line-height: 1.5;
-    color: $text-color-regular;
+    color: var(--vt-text-regular);
     background-color: transparent;
   }
 
   :deep(.el-icon) {
-    color: $primary-color;
-    font-size: $font-size-base;
+    color: var(--vt-color-primary);
+    font-size: var(--vt-font-size-base);
   }
 }
 
 .first-gateway-setup__card {
   width: 100%;
   max-width: 500px;
-  background: $bg-color-dark-10;
-  border: $border-width-base solid $border-color-base;
-  border-radius: $border-radius-medium;
-  padding: $spacing-xl $spacing-lg;
+  background: var(--vt-bg-input);
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  border-radius: var(--vt-radius-md);
+  padding: var(--vt-space-6) var(--vt-space-6);
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  backdrop-filter: $backdrop-blur-base;
-  box-shadow: $box-shadow-medium;
+  backdrop-filter: var(--vt-backdrop-blur-strong);
+  box-shadow: var(--vt-shadow-dialog);
 }
 
 .first-gateway-setup__form {
@@ -464,33 +464,33 @@ const handleStartInit = async () => {
     margin-bottom: 20px;
 
     .el-form-item__label {
-      color: $text-color-primary;
-      font-size: $font-size-base;
-      font-weight: $font-weight-medium;
+      color: var(--vt-text-primary);
+      font-size: var(--vt-font-size-base);
+      font-weight: var(--vt-font-weight-medium);
     }
   }
 
   :deep(.el-form-item.is-required:not(.is-no-asterisk) .el-form-item__label:before) {
-    color: $danger-color;
+    color: var(--vt-color-danger);
   }
 
   :deep(.el-input__wrapper) {
-    background: $bg-color-input;
-    border: $border-width-base solid $border-color-base;
-    border-radius: $border-radius-base;
+    background: var(--vt-bg-input);
+    border: var(--vt-border-width-base) solid var(--vt-border-color);
+    border-radius: var(--vt-radius-md);
     box-shadow: none;
 
     :deep(.el-input__wrapper):hover {
-      border-color: $primary-color;
+      border-color: var(--vt-color-primary);
     }
 
     :deep(.el-input__wrapper).is-focus {
-      border-color: $primary-color;
+      border-color: var(--vt-color-primary);
     }
   }
 
   :deep(.el-input-number .el-input__wrapper) {
-    border-radius: $border-radius-base;
+    border-radius: var(--vt-radius-md);
   }
 
   :deep(.first-gateway-setup__field-full) {
@@ -503,11 +503,11 @@ const handleStartInit = async () => {
 
   .file-info {
     font-size: 12px;
-    color: $text-color-secondary;
+    color: var(--vt-text-secondary);
     margin-top: 8px;
 
     .file-name {
-      color: $text-color-primary;
+      color: var(--vt-text-primary);
       font-weight: bold;
     }
   }
@@ -516,10 +516,10 @@ const handleStartInit = async () => {
     margin-top: 8px;
     margin-bottom: 16px;
     padding: 12px;
-    background: $bg-color-input;
-    border-radius: $border-radius-base;
-    color: $text-color-primary;
-    font-size: $font-size-small;
+    background: var(--vt-bg-input);
+    border-radius: var(--vt-radius-md);
+    color: var(--vt-text-primary);
+    font-size: var(--vt-font-size-sm);
 
     .progress-message {
       margin-bottom: 8px;
@@ -529,28 +529,28 @@ const handleStartInit = async () => {
     .progress-detail {
       margin-top: 8px;
       font-size: 11px;
-      color: $text-color-secondary;
+      color: var(--vt-text-secondary);
     }
   }
 }
 
 .first-gateway-setup__submit {
   width: 100%;
-  height: $height-base;
-  margin-top: $spacing-md;
+  height: var(--vt-control-height);
+  margin-top: var(--vt-space-4);
 }
 
 :deep(.el-progress) {
   .el-progress-bar__inner {
-    background-color: $primary-color;
+    background-color: var(--vt-color-primary);
   }
 
   :deep(.el-progress).is-success .el-progress-bar__inner {
-    background-color: $success-color;
+    background-color: var(--vt-color-success);
   }
 
   :deep(.el-progress).is-exception .el-progress-bar__inner {
-    background-color: $danger-color;
+    background-color: var(--vt-color-danger);
   }
 }
 </style>

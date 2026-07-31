@@ -1,8 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { Request } from '@/utils/request'
-import { getAllInstances, getProducts } from '@/api/devicesManagement'
-import { getStationTopology, saveStationTopology, getChannelBindings } from '@/api/stationTopology'
 import { STATION_TOPOLOGY_ID } from '@/mock/stationTopologyMock'
 import type { VisualModel, ModelFlowData } from '@/types/visualModeling'
 import type { NodeChannelBinding, StationTopology } from '@/types/stationTopology'
@@ -10,6 +7,14 @@ import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfigu
 import { DEFAULT_DEVICE_PRODUCTS } from '@/constants/deviceProducts'
 import { setModelFlowProductRules } from '@/utils/modelFlowRules'
 import { createDefaultModelFlow, isEmptyFlow } from '@/utils/defaultModelFlow'
+import {
+  getFrontendChannelBindings,
+  getFrontendInstances,
+  getFrontendProducts,
+  getFrontendTopology,
+  saveFrontendTopology,
+  VISUAL_MODELING_CACHE_ONLY,
+} from '@/mock/visualModelingCache'
 
 /** 编辑器路由使用的固定站点 ID */
 export const STATION_EDITOR_ID = STATION_TOPOLOGY_ID
@@ -83,13 +88,12 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     if (topologyLoaded.value && !force) return
     topologyLoading.value = true
     try {
-      const res = await getStationTopology({ skipGlobalLoading: true })
-      let data = res?.data
+      let data = await getFrontendTopology()
       if (!data?.flow_json || isEmptyFlow(data.flow_json)) {
         const migrated = tryMigrateLegacyTopology()
         if (migrated) {
           data = migrated
-          await saveStationTopology({
+          await saveFrontendTopology({
             flow_json: migrated.flow_json,
             station_name: migrated.station_name,
             description: migrated.description,
@@ -126,13 +130,7 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     if (productsLoaded.value && !force) return
     productsLoading.value = true
     try {
-      const res = await getProducts()
-      const list = res?.data?.products
-      if (Array.isArray(list) && list.length) {
-        products.value = list
-      } else if (!products.value.length) {
-        products.value = [...DEFAULT_DEVICE_PRODUCTS]
-      }
+      products.value = getFrontendProducts()
       productsLoaded.value = true
     } catch {
       products.value = [...DEFAULT_DEVICE_PRODUCTS]
@@ -163,22 +161,23 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   async function loadInstances(force = false) {
     if (instancesLoaded.value && !force) return
     instancesLoading.value = true
-    const requestConfig = { skipGlobalLoading: true, showErrorMessage: false }
+    if (VISUAL_MODELING_CACHE_ONLY) {
+      instances.value = getFrontendInstances()
+      instancesLoaded.value = true
+      instancesLoading.value = false
+      return
+    }
     try {
       let raw: Record<string, unknown>[] = []
 
       // 分页列表含 product_name，优先用于绑定筛选
-      const pageRes = await Request.get(
-        '/modApi/api/instances',
-        { page: 1, page_size: 1000 },
-        requestConfig,
-      )
+      const pageRes = { data: { list: [] } }
       if (Array.isArray(pageRes?.data?.list) && pageRes.data.list.length) {
         raw = pageRes.data.list as Record<string, unknown>[]
       }
 
       if (!raw.length) {
-        const listRes = await getAllInstances(requestConfig)
+        const listRes = { data: { list: [] } }
         if (Array.isArray(listRes?.data?.list)) {
           raw = listRes.data.list as Record<string, unknown>[]
         }
@@ -199,11 +198,14 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   async function loadChannelBindings(force = false) {
     if (channelBindingsLoaded.value && !force) return
     channelBindingsLoading.value = true
+    if (VISUAL_MODELING_CACHE_ONLY) {
+      channelBindings.value = getFrontendChannelBindings()
+      channelBindingsLoaded.value = true
+      channelBindingsLoading.value = false
+      return
+    }
     try {
-      const res = await getChannelBindings({
-        skipGlobalLoading: true,
-        showErrorMessage: false,
-      })
+      const res = { data: { bindings: [] } }
       channelBindings.value = Array.isArray(res?.data?.bindings) ? res.data.bindings : []
       channelBindingsLoaded.value = true
     } catch {
@@ -242,7 +244,7 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   ): Promise<boolean> {
     if (!stationTopology.value) return false
     try {
-      const res = await saveStationTopology({
+      const res = await saveFrontendTopology({
         station_name: stationTopology.value.station_name,
         description: stationTopology.value.description,
         flow_json: flowJson,

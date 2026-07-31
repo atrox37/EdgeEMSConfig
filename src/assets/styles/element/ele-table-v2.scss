@@ -1,126 +1,103 @@
-@use "@/assets/styles/_variables.scss" as *;
-/**
- * Element Plus Table-V2 ????
- * ? ele-table.scss ????????????? hover??????
- */
+@use './_table-row.scss' as table-row;
 
+// ============================================
+// Element Plus: Table V2 (el-table-v2)
+// ============================================
 
-.voltage-class {
-  .el-table-v2 {
-    background-color: transparent !important;
-    // Table-v2 loading icon/text use secondary theme color.
-    .el-loading-mask {
-      .el-loading-spinner {
-        .path {
-          stroke: $secondary-color !important;
-        }
+// --- Base ---
+.el-table-v2 {
+  background-color: transparent;
 
-        .circular {
-          color: $secondary-color !important;
-        }
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-        .el-loading-text {
-          color: $secondary-color !important;
-        }
-      }
-    }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+  }
 
-    // ????????
-    &::-webkit-scrollbar {
-      height: $width-scrollbar;
-      width: $width-scrollbar;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: $scrollbar-thumb-bg;
-      border-radius: $border-radius-base;
-    }
-    &::-webkit-scrollbar-track {
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  // --- Header ---
+  .el-table-v2__header {
+    background: var(--vt-bg-glass);
+
+    .el-table-v2__header-row {
+      height: var(--vt-table-row-height);
       background: transparent;
     }
 
-    // ????
-    .el-table-v2__header {
-      background: $table-header-bg;
-
-      .el-table-v2__header-row {
-        background: transparent;
-      }
-
-      .el-table-v2__header-cell {
-        background: transparent;
-        color: $table-header-color;
-        font-weight: $font-weight-normal;
-        font-size: $font-size-base;
-        line-height: $table-cell-line-height;
-        border: none;
-        border-bottom: $border-width-base solid $border-color-white-10;
-        padding: $table-cell-padding;
-
-        &.is-fixed-right {
-          background-color: $table-fixed-column-bg;
-          box-shadow: $box-shadow-large;
-        }
-        &.is-fixed-left {
-          background-color: $table-fixed-column-bg;
-          box-shadow: $box-shadow-large;
-        }
-      }
-    }
-
-    // ????
-    .el-table-v2__body {
-      background: transparent;
-
-      .el-table-v2__row {
-        transition: background 0.2s,
-          box-shadow 0.2s,
-          color 0.2s;
-
-        &:hover {
-          background: $table-row-hover-bg !important;
-        }
-      }
-
-      .el-table-v2__cell {
-        background: transparent;
-        color: $text-color-primary;
-        font-size: $font-size-base;
-        line-height: $height-lg;
-        padding: $table-cell-padding;
-        border-bottom: $border-width-base solid $border-color-white-10;
-
-        &.is-fixed-right {
-          background-color: $table-fixed-column-bg;
-          box-shadow: $box-shadow-large;
-        }
-        &.is-fixed-left {
-          background-color: $table-fixed-column-bg;
-          box-shadow: $box-shadow-large;
-        }
-      }
-
-      // ????
-      .el-table-v2__empty {
-        background: transparent;
-
-        .el-table-v2__empty-text {
-          color: $table-empty-color;
-          font-size: $font-size-base;
-        }
-      }
-    }
-
-    // ??????/????
-    .el-table-v2__main,
-    .el-table-v2__header,
-    .el-table-v2__body,
-    .el-table-v2__row,
-    .el-table-v2__header-row,
-    .el-table-v2__cell,
     .el-table-v2__header-cell {
-      background-color: transparent;
+      @include table-row.vt-table-cell-shell;
+      padding-left: var(--vt-table-cell-padding-x);
+      padding-right: var(--vt-table-cell-padding-x);
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 400;
+      background: transparent;
+
+      &.is-fixed-right,
+      &.is-fixed-left {
+        background-color: var(--vt-table-fixed-bg);
+      }
+    }
+  }
+
+  // --- Body ---
+  .el-table-v2__body {
+    background: transparent;
+  }
+
+  // --- Row ---
+  .el-table-v2__row {
+    height: var(--vt-table-row-height);
+    transition:
+      background 0.2s,
+      box-shadow 0.2s,
+      color 0.2s;
+
+    &:hover {
+      background: var(--vt-table-row-hover-bg);
+    }
+  }
+
+  // --- Cell ---
+  .el-table-v2__cell {
+    @include table-row.vt-table-cell-shell;
+    padding-left: var(--vt-table-cell-padding-x);
+    padding-right: var(--vt-table-cell-padding-x);
+    color: var(--vt-text-primary);
+    background: transparent;
+
+    &.is-fixed-right,
+    &.is-fixed-left {
+      background-color: var(--vt-table-fixed-bg);
+    }
+  }
+
+  // --- Empty ---
+  .el-table-v2__empty {
+    background: transparent;
+
+    .el-table-v2__empty-text {
+      color: var(--vt-text-empty);
+      font-size: 14px;
     }
   }
 }
 
 
+
+// --- Transparent helpers ---
+.el-table-v2__main,
+.el-table-v2__header,
+.el-table-v2__body,
+.el-table-v2__row,
+.el-table-v2__header-row,
+.el-table-v2__cell,
+.el-table-v2__header-cell {
+  background-color: transparent;
+}

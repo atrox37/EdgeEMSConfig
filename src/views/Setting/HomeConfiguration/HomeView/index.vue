@@ -748,7 +748,7 @@ const handleNext = () => {
     content: '';
     position: absolute;
     inset: 0;
-    border: 1px solid $primary-color;
+    border: 1px solid var(--vt-color-primary);
     border-radius: inherit;
     pointer-events: none;
     box-sizing: border-box;

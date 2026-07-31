@@ -181,7 +181,8 @@ export default function useModelDnd() {
         productName,
         parentName: template.parentName || '',
         imageUrl,
-        isContainer: isGroup && isContainerProduct(productName),
+        isContainer: isGroup,
+        topologyType: template.topologyType ?? (isGroup ? 'container' : 'standalone'),
         instances: template.instances?.length
           ? template.instances.map((item) => ({ ...item }))
           : template.instanceId

@@ -787,13 +787,13 @@ const handleSave = async () => {
   flex: 1;
   min-height: 0;
   overflow: auto;
-//   padding-right: $width-scrollbar;
+//   padding-right: var(--vt-width-scrollbar);
 }
 
 .formula-lines {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
   height: 100%;
   overflow: auto;
 }
@@ -801,7 +801,7 @@ const handleSave = async () => {
 .formula-line {
   display: grid;
   grid-template-columns: 88px 1fr 40px;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
   align-items: center;
 }
 
@@ -820,7 +820,7 @@ const handleSave = async () => {
 
 .formula-line__inputs {
   display: flex;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
   align-items: center;
   width: 100%;
   flex-wrap: nowrap;
@@ -837,11 +837,11 @@ const handleSave = async () => {
 
 .remove-btn {
   padding: 0;
-  color: $danger-color;
+  color: var(--vt-color-danger);
 }
 
 .formula-add {
-  margin-top: $spacing-sm;
+  margin-top: var(--vt-space-2);
 }
 
 .icon-btn {
@@ -850,32 +850,32 @@ const handleSave = async () => {
 }
 
 .icon-btn :deep(.icon-btn__add) {
-  color: $success-color !important;
+  color: var(--vt-color-success) !important;
 }
 
 .icon-btn :deep(.icon-btn__delete) {
-  color: $danger-color !important;
+  color: var(--vt-color-danger) !important;
 }
 
 .icon-picker {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
 }
 
 .icon-picker__grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
 }
 
 .icon-picker__item {
   width: 100%;
   height: 48px;
-  border-radius: $border-radius-base;
-  border: $border-width-base solid $border-color-base;
-  background: $bg-color-input;
+  border-radius: var(--vt-radius-md);
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  background: var(--vt-bg-input);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -884,12 +884,12 @@ const handleSave = async () => {
 }
 
 .icon-picker__item:hover {
-  border-color: $primary-color;
+  border-color: var(--vt-color-primary);
 }
 
 .icon-picker__item.is-active {
-  border-color: $primary-color;
-  box-shadow: 0 0 0 1px rgba($primary-color, 0.2);
+  border-color: var(--vt-color-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vt-color-primary) 20%, transparent);
 }
 
 .icon-picker__img {

@@ -1,6 +1,6 @@
 <template>
   <div class="system-config-shell">
-    <ModulePageHeader title="System Config" />
+    <ModulePageHeader title="System Config" variant="actions" />
 
     <el-tabs v-model="activeTab" class="system-config-shell__tabs" @tab-change="handleTabChange">
       <el-tab-pane name="network">
@@ -100,9 +100,9 @@ const handleTabChange = (name: string | number) => {
 
 .system-config-shell__title {
   margin: 0;
-  font-size: $font-size-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-lg);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-config-shell__tabs {
@@ -146,11 +146,11 @@ const handleTabChange = (name: string | number) => {
   line-height: 30px;
   padding: 0 16px;
   margin-right: 8px;
-  border: 1px solid $border-color-base;
+  border: 1px solid var(--vt-border-color);
   border-radius: 6px;
-  color: $text-color-primary;
+  color: var(--vt-text-primary);
   background: #fff;
-  font-weight: $font-weight-medium;
+  font-weight: var(--vt-font-weight-medium);
   white-space: nowrap;
   // Keep a visible right/bottom "edge" for 3D block feeling.
   box-shadow:
@@ -175,12 +175,12 @@ const handleTabChange = (name: string | number) => {
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__item.is-active) {
   color: #fff;
-  border-color: $primary-color;
-  background: $primary-color;
+  border-color: var(--vt-color-primary);
+  background: var(--vt-color-primary);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    2px 2px 0 rgba($primary-color, 0.7),
-    4px 4px 12px rgba($primary-color, 0.32);
+    2px 2px 0 color-mix(in srgb, var(--vt-color-primary) 70%, transparent),
+    4px 4px 12px color-mix(in srgb, var(--vt-color-primary) 32%, transparent);
   transform: translateY(0);
 }
 

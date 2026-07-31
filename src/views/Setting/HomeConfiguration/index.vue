@@ -1,6 +1,6 @@
 <template>
   <div class="home-configuration">
-    <ModulePageHeader title="Home Configuration">
+    <ModulePageHeader title="Home Configuration" variant="actions">
       <template #toolbar>
         <el-button v-permission="'engineer'" type="primary" plain :loading="resetLoading" @click="handleRestore">
           Restore Default
@@ -265,9 +265,9 @@ onBeforeUnmount(() => {
 }
 
 .home-configuration__title {
-  font-size: $font-size-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-lg);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
   margin: 0;
 }
 
@@ -276,9 +276,9 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: flex-end;
   // padding: 12px 16px;
-  // border-radius: $border-radius-base;
-  // background: $bg-color-input;
-  // border: $border-width-base solid $border-color-base;
+  // border-radius: var(--vt-radius-md);
+  // background: var(--vt-bg-input);
+  // border: var(--vt-border-width-base) solid var(--vt-border-color);
 }
 
 .home-configuration__actions-left,
@@ -291,10 +291,10 @@ onBeforeUnmount(() => {
 .home-configuration__content {
   flex: 1;
   min-height: 0;
-  border-radius: $border-radius-base;
-  border: $border-width-base solid $border-color-base;
-  background: $bg-color-page;
-  padding: 20px; // 0.2rem in the old homepage (1rem = 100px)
+  border-radius: var(--vt-radius-md);
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  background: var(--vt-bg-page);
+  padding: 20px; // 20px in the old homepage (100px = 100px)
   overflow: hidden;
 }
 

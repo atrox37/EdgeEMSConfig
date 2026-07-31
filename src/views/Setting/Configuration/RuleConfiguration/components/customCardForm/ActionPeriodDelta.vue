@@ -560,9 +560,9 @@ onMounted(() => {
         justify-content: space-between;
         margin-bottom: 12px;
         .section__title {
-          font-weight: $font-weight-semibold;
-          font-size: $font-size-base;
-          color: $text-color-primary;
+          font-weight: var(--vt-font-weight-semibold);
+          font-size: var(--vt-font-size-base);
+          color: var(--vt-text-primary);
         }
       }
       .section__body {

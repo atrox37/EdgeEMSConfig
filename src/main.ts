@@ -3,7 +3,6 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/controls/dist/style.css'
@@ -24,7 +23,6 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
-app.use(ElementPlus)
 installElMessage(app)
 
 // 注册自定义指令 v-permission

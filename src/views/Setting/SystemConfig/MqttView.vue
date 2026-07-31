@@ -580,25 +580,25 @@ onUnmounted(() => {
 
 .system-mqtt__title {
   margin: 0;
-  font-size: $font-size-large;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-lg);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-mqtt__desc {
   margin: 8px 0 0;
-  font-size: $font-size-small;
-  color: $text-color-secondary;
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
   line-height: 1.6;
 }
 
 .system-mqtt__panel {
   flex: 1;
   min-height: 0;
-  border: $border-width-base solid $border-color-base;
-  border-radius: $border-radius-base;
-  background: $bg-color-overlay;
-  box-shadow: $box-shadow-base;
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  border-radius: var(--vt-radius-md);
+  background: var(--vt-bg-overlay);
+  box-shadow: var(--vt-shadow-base);
 }
 
 .system-mqtt__body {
@@ -662,7 +662,7 @@ onUnmounted(() => {
 }
 
 .system-mqtt__actions {
-  border-top: $border-width-base solid $border-color-base;
+  border-top: var(--vt-border-width-base) solid var(--vt-border-color);
   padding-top: 12px;
   margin-top: 12px;
   flex-shrink: 0;
@@ -687,9 +687,9 @@ onUnmounted(() => {
 }
 
 .system-mqtt__status-title {
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-mqtt__status-header {
@@ -703,22 +703,22 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: $text-color-primary;
+  color: var(--vt-text-primary);
   margin-bottom: 12px;
 
   .el-icon {
     font-size: 16px;
-    .el-icon.is-connected { color: $success-color; }
-    .el-icon.is-disconnected { color: $danger-color; }
-    .el-icon.is-unknown { color: $text-color-secondary; }
+    .el-icon.is-connected { color: var(--vt-color-success); }
+    .el-icon.is-disconnected { color: var(--vt-color-danger); }
+    .el-icon.is-unknown { color: var(--vt-text-secondary); }
   }
 }
 
 .system-mqtt__refresh-btn { margin-left: auto; }
 
 .system-mqtt__status-text {
-  font-size: $font-size-base;
-  font-weight: $font-weight-medium;
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-medium);
 }
 
 .system-mqtt__status-actions {
@@ -727,7 +727,7 @@ onUnmounted(() => {
   gap: 8px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid $border-color-base;
+  border-top: 1px solid var(--vt-border-color);
 }
 
 .system-mqtt__tls-card {
@@ -742,9 +742,9 @@ onUnmounted(() => {
 }
 
 .system-mqtt__tls-title {
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
 }
 
 .system-mqtt__tls-list {
@@ -757,8 +757,8 @@ onUnmounted(() => {
 }
 
 .system-mqtt__tls-row {
-  border: $border-width-base solid $border-color-base;
-  border-radius: $border-radius-small;
+  border: var(--vt-border-width-base) solid var(--vt-border-color);
+  border-radius: var(--vt-radius-sm);
   padding: 8px;
   display: flex;
   align-items: center;
@@ -785,8 +785,8 @@ onUnmounted(() => {
   align-self: stretch;
   min-width: 0;
   max-width: 100%;
-  color: $text-color-secondary;
-  font-size: $font-size-small;
+  color: var(--vt-text-secondary);
+  font-size: var(--vt-font-size-sm);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -794,8 +794,8 @@ onUnmounted(() => {
 }
 
 .system-mqtt__tls-label {
-  color: $text-color-primary;
-  font-weight: $font-weight-medium;
+  color: var(--vt-text-primary);
+  font-weight: var(--vt-font-weight-medium);
 }
 
 .system-mqtt__cert-tag {
@@ -815,7 +815,7 @@ onUnmounted(() => {
   font-size: 18px;
   width: 30px;
   height: 30px;
-  border-radius: $border-radius-small;
+  border-radius: var(--vt-radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -823,8 +823,8 @@ onUnmounted(() => {
   transition: opacity 0.2s ease, background-color 0.2s ease;
 
   .system-mqtt__icon-btn.is-danger {
-    color: $danger-color;
-    .system-mqtt__icon-btn.is-danger:hover { background-color: rgba($danger-color, 0.14); }
+    color: var(--vt-color-danger);
+    .system-mqtt__icon-btn.is-danger:hover { background-color: color-mix(in srgb, var(--vt-color-danger) 14%, transparent); }
   }
   .system-mqtt__icon-btn.is-disabled {
     opacity: 0.45;
@@ -843,12 +843,12 @@ onUnmounted(() => {
   justify-content: space-between;
   padding-top: 10px;
   margin-top: 10px;
-  border-top: 1px solid $border-color-base;
-  color: $text-color-secondary;
+  border-top: 1px solid var(--vt-border-color);
+  color: var(--vt-text-secondary);
 }
 
 .system-mqtt__status-value {
-  color: $text-color-primary;
+  color: var(--vt-text-primary);
   text-align: right;
   margin-left: 10px;
 }

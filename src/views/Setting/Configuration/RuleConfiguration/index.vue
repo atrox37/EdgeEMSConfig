@@ -1,6 +1,6 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef" v-if="!isDetailRoute">
-    <ModulePageHeader title="Rule Config" />
+    <ModulePageHeader title="Rule Config" variant="filters" />
       <div class="rule-management__content">
         <div class="rule-management__search-form" ref="levelSelectRef">
           <el-form :model="filters" :inline="true" class="rule-management__filters-desktop">
@@ -225,9 +225,9 @@ watch(
     margin-bottom: 24px;
 
     .rule-management__title {
-      font-size: $font-size-large;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
+      font-size: var(--vt-font-size-lg);
+      font-weight: var(--vt-font-weight-semibold);
+      color: var(--vt-text-primary);
       margin: 0;
     }
   }
@@ -375,7 +375,6 @@ watch(
   }
 }
 </style>
-
 
 
 

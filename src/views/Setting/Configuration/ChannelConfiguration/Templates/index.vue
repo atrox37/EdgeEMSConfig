@@ -356,9 +356,9 @@ onMounted(async () => {
   }
 
   .channel-templates-page__title {
-    font-size: $font-size-large;
-    font-weight: $font-weight-semibold;
-    color: $text-color-primary;
+    font-size: var(--vt-font-size-lg);
+    font-weight: var(--vt-font-weight-semibold);
+    color: var(--vt-text-primary);
   }
 
   .channel-templates-page__toolbar {

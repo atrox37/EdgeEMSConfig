@@ -1,231 +1,203 @@
-@use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Form 组件样式 */
+// ============================================
+// Element Plus: Form (el-form)
+// Overrides: layout, label, error states, sizes
+// ============================================
 
-.voltage-class {
+// ==============================
+// el-form
+// ==============================
+.el-form.el-form {
+  --el-form-label-font-size: var(--vt-font-size-base);
 
-  // Form 基础样式
-  .el-form {
-    .el-form-item {
-      margin-bottom: $spacing-lg;
+
+  // ---- Form item ----
+  .el-form-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    // ==============================
+    // el-form-item elements
+    // ==============================
+
+    // ---- Label ----
+    .el-form-item__label {
+      display: block;
+      height: var(--vt-control-height);
+      margin-right: var(--vt-space-4);
+      margin-bottom: 0;
+      padding: 0;
+      color: var(--vt-text-primary);
+      font-family: var(--vt-font-family-base);
+      font-size: var(--vt-font-size-base);
+      font-weight: var(--vt-font-weight-normal);
+      line-height: var(--vt-control-height);
+      // text-align: left;
+
+      &::before {
+        margin-right: var(--vt-space-1);
+      }
+    }
+
+    // ---- Content ----
+    .el-form-item__content {
+      position: relative;
+      flex: 1;
+      min-width: var(--vt-field-width);
       display: flex;
-      align-items: flex-start;
-      margin-bottom: 16px;
-
-      // &:last-child {
-      //   margin-bottom: 0;
-      // }
-      // 标签
-      .el-form-item__label {
-        color: $text-color-primary;
-        font-size: 14px;
-        font-family: Arimo sans-serif;
-        padding: 0;
-        margin-bottom: 0;
-        margin-right: 16px;
-        display: block;
-        text-align: left;
-        font-weight: 400;
-        line-height: 32px;
-        height: 32px;
-
-        // 必填星号
-        &::before {
-          // display: none !important;
-          margin-right: 4px !important;
-        }
-      }
-
-      // 表单项内容
-      .el-form-item__content {
-        flex: 1;
-        display: flex;
-        align-items: flex-start;
-        line-height: 32px;
-        height: 100%;
-
-        // 验证错误信息
-        .el-form-item__error {
-          color: $danger-color;
-          font-size: 10px;
-          line-height: 1;
-        }
-
-        // 帮助文本
-        .el-form-item__help {
-          color: $text-color-secondary;
-          font-size: $font-size-small;
-          line-height: 1;
-          margin-top: $spacing-xs;
-          display: block;
-        }
-      }
-
-      // 验证状态：错误时 label 与输入框边框
+      align-items: center;
+      line-height: var(--vt-control-height);
     }
 
-    &.is-success {
-      .el-form-item__label {
-        color: $text-color-primary !important;
-      }
+    // ---- Error / Help ----
+    .el-form-item__error {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 1;
+      display: block;
+      margin-top: var(--vt-space-1);
+      padding-top: 0;
+      color: var(--vt-color-danger);
+      line-height: var(--vt-line-height-normal);
     }
 
-    &.is-error {
+    .el-form-item__help {
+      display: block;
+      margin-top: var(--vt-space-1);
+      color: var(--vt-text-secondary);
+      font-size: var(--vt-font-size-sm);
+      line-height: var(--vt-line-height-normal);
+    }
+
+    // ---- States ----
+    .el-form-item.is-error {
       .el-form-item__label {
-        color: $text-color-primary !important;
+        color: var(--vt-text-primary);
       }
 
       .el-input__wrapper,
       .el-textarea__inner {
+        border-color: var(--vt-color-danger);
         box-shadow: none;
-        border-width: 1px;
-        border-color: #f56c6c !important;
       }
     }
 
-    &.is-warning {
+    .el-form-item.is-success,
+    .el-form-item.is-warning {
       .el-form-item__label {
-        color: $text-color-primary !important;
-      }
-
-      .el-input__wrapper,
-      .el-textarea__inner {
-        border-color: initial !important;
+        color: var(--vt-text-primary);
       }
     }
 
-    // 禁用状态
-    &.is-disabled {
-      .el-form-item__label {
-        color: $text-color-disabled;
-      }
-
-      .el-form-item__content {
-        opacity: $opacity-disabled;
-        cursor: not-allowed;
-      }
+    .el-form-item.is-validating .el-form-item__content::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: var(--vt-space-2);
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      border-top: 2px solid var(--vt-color-primary);
+      border-right: 2px solid transparent;
+      border-radius: 50%;
+      animation: form-loading 1s linear infinite;
     }
 
-    &.el-form--label-right {
-      .el-form-item {
-        .el-form-item__label {
-          text-align: right;
-          padding-right: 0;
-        }
-      }
-    }
-
-    &.el-form--inline {
-      .el-form-item {
-        display: inline-flex;
-        margin-bottom: 20px;
-        margin-right: 20px;
-
-        .el-form-item__label {
-          margin-bottom: 0;
-          margin-right: 16px;
-          white-space: nowrap;
-        }
-
-        // .el-form-item__content {
-        //   // flex: none;
-        // }
-      }
-    }
-
-    // 标签在上方
-    &.el-form--label-top {
-      .el-form-item {
-        flex-direction: column;
-        align-items: flex-start;
-
-        .el-form-item__label {
-          line-height: 22px;
-          margin-bottom: 9px;
-        }
-
-        .el-form-item__content {
-          width: 100%;
-        }
-      }
-    }
-  }
-
-  // 标签右对齐
-
-  // Form 尺寸变体
-  .el-form {
-
-    // 小尺寸
-    &.el-form--small {
-      .el-form-item {
-        margin-bottom: $spacing-md;
-
-        .el-form-item__label {
-          font-size: $font-size-small;
-          margin-bottom: $spacing-xs;
-        }
-
-        .el-form-item__content {
-
-          .el-form-item__error,
-          .el-form-item__help {
-            font-size: $font-size-extra-small;
-          }
-        }
-      }
-    }
-
-    // Form 验证中样式
-    .el-form {
-
-      // 验证中状态
-      .el-form-item.is-validating {
-        .el-form-item__content {
-          position: relative;
-
-          &::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: $spacing-sm;
-            transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            border-top-color: $primary-color;
-            border-radius: 50%;
-            animation: form-loading 1s linear infinite;
-          }
-        }
-      }
-    }
-
-    // 表单操作区
+    // ==============================
+    // el-form-actions
+    // ==============================
     .el-form-actions {
-      margin-top: $spacing-xl;
-      padding-top: $spacing-lg;
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: $spacing-sm;
+      gap: var(--vt-space-2);
+      margin-top: var(--vt-space-6);
+      padding-top: var(--vt-space-5);
 
       .el-button {
         min-width: 80px;
       }
 
-      // 左对齐
-      &.el-form-actions--left {
+      &--left {
         justify-content: flex-start;
       }
 
-      // 居中
-      &.el-form-actions--center {
+      &--center {
         justify-content: center;
       }
 
-      // 两端对齐
-      &.el-form-actions--space-between {
+      &--space-between {
         justify-content: space-between;
       }
+    }
+
+    @keyframes form-loading {
+      0% {
+        transform: translateY(-50%) rotate(0deg);
+      }
+
+      100% {
+        transform: translateY(-50%) rotate(360deg);
+      }
+    }
+  }
+
+  // ---- Layout variants ----
+  &--label-right .el-form-item__label {
+    padding-right: 0;
+    text-align: right;
+  }
+
+  &--inline .el-form-item {
+    display: inline-flex;
+    margin-right: 40px;
+    margin-bottom: 20px;
+
+    .el-form-item__label {
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+  }
+
+  &--label-top .el-form-item {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .el-form-item__label {
+      height: auto;
+      margin-right: 0;
+      margin-bottom: 9px;
+      line-height: 22px;
+    }
+
+    .el-form-item__content {
+      width: 100%;
+    }
+  }
+
+  // ---- Size variant ----
+  &--small .el-form-item {
+    margin-bottom: var(--vt-space-4);
+
+    .el-form-item__label {
+      font-size: var(--vt-font-size-sm);
+    }
+
+    .el-form-item__error,
+    .el-form-item__help {
+      font-size: var(--vt-font-size-xs);
+    }
+  }
+
+  // ---- Disabled ----
+  &.is-disabled {
+    .el-form-item__label {
+      color: var(--vt-text-disabled);
+    }
+
+    .el-form-item__content {
+      opacity: var(--vt-opacity-disabled);
+      cursor: not-allowed;
     }
   }
 }

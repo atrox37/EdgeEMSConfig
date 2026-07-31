@@ -156,11 +156,11 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
 .voltage-class.initial-config-page {
   width: 100%;
   height: 100%;
-  background: $bg-gradient-page;
+  background: var(--vt-bg-page);
   position: relative;
   overflow: hidden;
-  border: $border-width-base solid;
-  border-image-source: $border-gradient-base;
+  border: var(--vt-border-width-base) solid;
+  border-image-source: var(--vt-border-gradient);
 
   .initial-config-page__init-button {
     position: absolute;
@@ -177,7 +177,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     width: 100%;
     height: 100%;
     padding: 40px 20px;
-    gap: $spacing-xl;
+    gap: var(--vt-space-6);
   }
 
   // Logo 区域（在卡片内）
@@ -198,24 +198,24 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
   .initial-config-page__card {
     width: 100%;
     max-width: 500px;
-    background: $bg-color-dark-10;
-    border: $border-width-base solid $border-color-base;
-    border-radius: $border-radius-medium;
-    padding: $spacing-xl $spacing-lg;
+    background: var(--vt-bg-input);
+    border: var(--vt-border-width-base) solid var(--vt-border-color);
+    border-radius: var(--vt-radius-md);
+    padding: var(--vt-space-6) var(--vt-space-6);
     display: flex;
     flex-direction: column;
     align-items: center;
-    backdrop-filter: $backdrop-blur-base;
-    box-shadow: $box-shadow-medium;
+    backdrop-filter: var(--vt-backdrop-blur-strong);
+    box-shadow: var(--vt-shadow-dialog);
   }
 
   // 标题
   .initial-config-page__title {
-    font-family: $font-family-montserrat;
-    font-size: $font-size-extra-large;
-    font-weight: $font-weight-semibold;
-    color: $text-color-primary;
-    margin-bottom: $spacing-xl;
+    font-family: var(--vt-font-family-heading);
+    font-size: var(--vt-font-size-xl);
+    font-weight: var(--vt-font-weight-semibold);
+    color: var(--vt-text-primary);
+    margin-bottom: var(--vt-space-6);
     text-align: center;
   }
 
@@ -224,14 +224,14 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     width: 100%;
 
     :deep(.el-form-item) {
-      margin-bottom: $spacing-md;
+      margin-bottom: var(--vt-space-4);
 
       .el-form-item__label {
-        color: $text-color-primary;
-        font-size: $font-size-base;
-        font-weight: $font-weight-medium;
+        color: var(--vt-text-primary);
+        font-size: var(--vt-font-size-base);
+        font-weight: var(--vt-font-weight-medium);
         padding: 0;
-        line-height: $height-base;
+        line-height: var(--vt-control-height);
 
         .el-form-item__label::before {
           display: none !important;
@@ -239,7 +239,7 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       }
 
       .el-form-item__content {
-        line-height: $height-base;
+        line-height: var(--vt-control-height);
       }
     }
 
@@ -248,34 +248,34 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
       width: 100%;
 
       :deep(.el-input__wrapper) {
-        background: $bg-color-input;
-        border: $border-width-base solid $border-color-base;
-        border-radius: $border-radius-base;
-        padding: 0 $spacing-md;
+        background: var(--vt-bg-input);
+        border: var(--vt-border-width-base) solid var(--vt-border-color);
+        border-radius: var(--vt-radius-md);
+        padding: 0 var(--vt-space-4);
         box-shadow: none;
 
         :deep(.el-input__wrapper):hover {
-          border-color: $primary-color;
+          border-color: var(--vt-color-primary);
         }
 
         :deep(.el-input__wrapper).is-focus {
-          border-color: $primary-color;
+          border-color: var(--vt-color-primary);
         }
 
         .el-input__inner {
-          color: $text-color-primary;
-          font-size: $font-size-base;
-          height: $height-base;
+          color: var(--vt-text-primary);
+          font-size: var(--vt-font-size-base);
+          height: var(--vt-control-height);
 
           .el-input__inner::placeholder {
-            color: $text-color-placeholder;
+            color: var(--vt-text-placeholder);
           }
         }
 
         // Readonly input style
         :deep(.el-input__wrapper).is-disabled {
           .el-input__inner {
-            color: $text-color-primary;
+            color: var(--vt-text-primary);
             cursor: default;
           }
         }
@@ -285,25 +285,25 @@ const handleLogin = async (formEl: FormInstance | undefined) => {
     // Login 按钮
     .initial-config-page__login-btn {
       width: 100%;
-      height: $height-base;
-      margin-top: $spacing-md;
-      font-size: $font-size-base;
-      font-weight: $font-weight-medium;
+      height: var(--vt-control-height);
+      margin-top: var(--vt-space-4);
+      font-size: var(--vt-font-size-base);
+      font-weight: var(--vt-font-weight-medium);
     }
   }
 }
 
 // // Element Plus 按钮样式覆盖
 // :deep(.el-button.el-button--primary) {
-//   background: $primary-color !important;
+//   background: var(--vt-color-primary) !important;
 //   border: none !important;
 
 //   &:hover {
-//     background: $primary-color-hover !important;
+//     background: var(--vt-color-primary-hover) !important;
 //   }
 
 //   &:active {
-//     background: $primary-color-active !important;
+//     background: var(--vt-color-primary-active) !important;
 //   }
 // }
 

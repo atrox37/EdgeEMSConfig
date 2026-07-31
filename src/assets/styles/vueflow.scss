@@ -1,90 +1,115 @@
 // Warm theme overrides for Vue Flow
-@use './variables' as *;
-
 .vue-flow {
   // Edges
   .vue-flow__edge-path {
-    stroke: $primary-color-light !important;
-    stroke-width: $vueflow-edge-width;
+    stroke: #ff8a00 !important;
+    stroke-width: 2.5px;
   }
   //   .vue-flow__edge.selected .vue-flow__edge-path {
-  //     stroke: $primary-color-active !important;
+  //     stroke: #ff6f00 !important;
   //   }
 
   //   // Handles
   //   .vue-flow__handle {
-  //     background-color: $primary-color-light !important;
-  //     border-color: $text-color-primary !important;
+  //     background-color: #ff8a00 !important;
+  //     border-color: #fff !important;
   //   }
 
   //   // Selection/viewport helpers
   //   .vue-flow__selection {
-  //     border-color: $primary-color-alpha-35 !important;
-  //     background-color: $orange-color-hover-bg !important;
+  //     border-color: rgba(255, 138, 0, 0.6) !important;
+  //     background-color: rgba(255, 138, 0, 0.08) !important;
   //   }
 
   //   // Nodes default background (fallback)
-    .vue-flow__node {
-      // background-color: $bg-color-overlay;
-      // border-color: $primary-color-alpha-35;
-      border-radius: 8px;
-    }
+  //   .vue-flow__node {
+  //     background-color: #fff7e6;
+  //     border-color: rgba(255, 138, 0, 0.35);
+  //   }
   .vue-flow__minimap {
-    width: $vueflow-minimap-width;
-    height: $vueflow-minimap-height;
-    background: $vueflow-minimap-bg;
-    // border: 1px solid $border-color-orange;
-    border: none !important;
-    border-radius: $border-radius-base;
-    box-shadow: $box-shadow-small;
-    backdrop-filter: $backdrop-blur-medium;
+    width: 200px;
+    height: 200px;
+    padding: 10px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
   }
 
   .vue-flow__minimap-mask {
-    stroke: $vueflow-minimap-mask-stroke;
-    stroke-width: $vueflow-minimap-mask-width;
-  }
-
-  .vue-flow__controls {
-    padding: 3px;
-    background: $vueflow-controls-bg;
-    border: $border-width-base solid $border-color-dark-60;
-    border-radius: $border-radius-base;
-    box-shadow: $box-shadow-small;
-    gap: 6px;
-    backdrop-filter: $backdrop-blur-medium;
-  }
-
-  .vue-flow__controls button {
-    width: $vueflow-controls-button-size;
-    height: $vueflow-controls-button-size;
-    font-size: $vueflow-controls-icon-size;
-    color: $text-color-primary;
-    background: $vueflow-controls-button-bg;
-    border: $border-width-base solid $border-color-dark-60;
-    border-radius: $border-radius-base;
-    transition: all $transition-fast;
-  }
-
-  .vue-flow__controls button:hover {
-    background: $vueflow-controls-button-hover-bg;
-    border-color: $border-color-dark-60;
-  }
-
-  .vue-flow__controls svg {
-    color: $text-color-primary;
-    fill: currentColor;
-    width: $vueflow-controls-icon-size;
-    height: $vueflow-controls-icon-size;
+    fill: rgba(255, 105, 0, 0.06);
+    stroke: #ff6900;
+    stroke-width: 2.5px;
   }
 
   .vue-flow__minimap-node {
-    width: $vueflow-minimap-node-width;
-    height: $vueflow-minimap-node-height;
+    fill: #edf4ff;
+    stroke: #2878ff;
+    stroke-width: 1px;
   }
 
-  .rf-minimap-custom svg {
-    width: $vueflow-minimap-width;
-    height: $vueflow-minimap-height;
+  .modeling-editor__flow-controls {
+    position: absolute;
+    right: 20px;
+    bottom: 16px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    width: 200px;
+    height: 44px;
+    // padding: 0 4px;
+    background: #ffffff;
+    border: 1px solid #EEEEEE;
+    border-radius: 10px;
+    box-shadow: 0px 6px 12px 0px #0000000D;
+
+  }
+
+  .flow-control-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #333333;
+    cursor: pointer;
+  }
+
+  .flow-control-button:hover {
+    background: #F7F7FD;
+  }
+
+  .flow-control-button.is-active {
+    background: #E8E8F3;
+  }
+
+  .flow-control-button:active {
+    background: #E8E8F3;
+  }
+
+  .flow-control-button__icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+
+  .flow-control-divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: #e5e7eb;
+  }
+
+  .flow-control-zoom {
+    min-width: 48px;
+    color: #333333;
+    font-size: 16px;
+    line-height: 1;
+    text-align: center;
   }
 }

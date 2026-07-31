@@ -81,7 +81,7 @@ const props = defineProps({
     justify-content: space-between;
 
     // &.no-footer {
-    //   height: calc(100% - 0.2rem);
+    //   height: calc(100% - 20px);
     // }
   }
 
@@ -90,7 +90,7 @@ const props = defineProps({
     width: 100%;
     display: flex;
     flex-direction: row-reverse;
-    // border-top: 0.01rem solid rgba(255, 255, 255, 0.1);
+    // border-top: 1px solid rgba(255, 255, 255, 0.1);
 
     .card__content-footer-button {
       margin: 30px 0 10px 0;

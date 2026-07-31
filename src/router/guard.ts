@@ -12,7 +12,6 @@ const debugGuard = (...args: any[]) => {
 }
 
 router.beforeEach(async (to, _from, next) => {
-  // 取消所有pending的请求
   cancelAllPendingRequests()
 
   const userStore = useUserStore()

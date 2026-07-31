@@ -835,7 +835,7 @@ const { pv, ess, load, diesel } = toRefs(props.data)
   content: '';
   position: absolute;
   inset: 0;
-  border: 1px solid $primary-color;
+  border: 1px solid var(--vt-color-primary);
   border-top-width: 0;
   border-radius: inherit;
   pointer-events: none;

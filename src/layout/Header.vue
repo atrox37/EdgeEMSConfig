@@ -95,11 +95,11 @@ const getAvatarName = (name: string): string => {
 </script>
 
 <style lang="scss" scoped>
-
 .voltage-class.header {
   position: relative;
-  background: $bg-color-input;
-  border-bottom: $border-width-base solid $border-color-base;
+  background: var(--vt-color-secondary);
+  border-bottom: var(--vt-border-width-base) solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -110,17 +110,21 @@ const getAvatarName = (name: string): string => {
     align-items: center;
 
     .header__left-title {
-      font-family: $font-family-montserrat;
-      font-weight: $font-weight-semibold;
-      font-style: normal;
-      line-height: $line-height-relaxed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--vt-font-family-heading);
+      font-weight: var(--vt-font-weight-bold);
+      line-height: 1;
       letter-spacing: 0%;
-      color: $text-color-primary;
-      margin: 0 0 10px 0;
+      color: #ffffff;
+      // margin: 0 0 10px 0;
+      line-height: 100%;
+
     }
 
     .header__left-status {
-      border: $border-width-base solid transparent;
+      border: var(--vt-border-width-base) solid transparent;
       padding: 0;
       display: flex;
       align-items: center;
@@ -131,25 +135,25 @@ const getAvatarName = (name: string): string => {
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: $border-radius-circle;
+        border-radius: 50%;
         background-color: rgba(106, 193, 97, 0.2);
         margin: 0 0 10px 0;
 
         .header__left-statusIconCircle {
-          border-radius: $border-radius-circle;
+          border-radius: 50%;
           background-color: rgba(106, 193, 97, 1);
         }
       }
 
       .header__left-statusText {
-        font-family: $font-family-base;
-        font-weight: $font-weight-bold;
+        font-family: var(--vt-font-family-base);
+        font-weight: var(--vt-font-weight-bold);
         font-style: normal;
-        font-size: $font-size-medium;
-        line-height: $line-height-100;
+        font-size: var(--vt-font-size-md);
+        line-height: 1;
         letter-spacing: 0%;
         vertical-align: middle;
-        color: $text-color-primary;
+        color: #ffffff;
       }
     }
   }
@@ -171,12 +175,12 @@ const getAvatarName = (name: string): string => {
       }
 
       .header__right-weatherStatus {
-        font-weight: $font-weight-medium;
+        font-weight: var(--vt-font-weight-medium);
         font-style: normal;
       }
 
       .header__right-weatherValue {
-        font-weight: $font-weight-bold;
+        font-weight: var(--vt-font-weight-bold);
         font-style: normal;
       }
     }
@@ -189,17 +193,17 @@ const getAvatarName = (name: string): string => {
     .header__right-notice {
       .header__right-noticeBtn {
         padding: 0;
-        transition: all $transition-base;
+        transition: all var(--vt-transition-base);
 
         :deep(.el-badge__content) {
-          width: $font-size-medium;
-          height: $font-size-medium;
+          width: var(--vt-font-size-md);
+          height: var(--vt-font-size-md);
           border: none;
-          border-radius: $border-radius-circle;
+          border-radius: 50%;
           background-color: rgba(218, 45, 44, 1);
-          font-family: $font-family-base;
-          font-weight: $font-weight-normal;
-          font-size: $font-size-base;
+          font-family: var(--vt-font-family-base);
+          font-weight: var(--vt-font-weight-normal);
+          font-size: var(--vt-font-size-base);
         }
 
         .header__right-noticeIcon {
@@ -213,47 +217,47 @@ const getAvatarName = (name: string): string => {
 .header__user {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  padding: $size-xs $spacing-sm;
-  border-radius: $spacing-sm;
-  transition: all $transition-base;
+  gap: var(--vt-space-2);
+  padding: var(--vt-space-1) var(--vt-space-2);
+  border-radius: var(--vt-space-2);
+  transition: all var(--vt-transition-base);
 }
 
 .header__user-avatar {
-  width: $height-lg;
-  height: $height-lg;
-  border-radius: $border-radius-circle;
+  width: var(--vt-control-height-lg);
+  height: var(--vt-control-height-lg);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(29, 134, 255, 0.2);
 
   .header__user-avatar-initials {
-    color: rgba(29, 134, 255, 1);
-    font-weight: $font-weight-bold;
-    line-height: $line-height-100;
+    color: #ffffff;
+    font-weight: var(--vt-font-weight-bold);
+    line-height: 1;
     letter-spacing: 0%;
   }
 }
 
 .header__user-name {
-  font-family: $font-family-base;
-  font-weight: $font-weight-medium;
+  font-family: var(--vt-font-family-base);
+  font-weight: var(--vt-font-weight-medium);
   font-style: normal;
-  font-size: $font-size-large;
-  line-height: $line-height-normal;
+  font-size: var(--vt-font-size-lg);
+  line-height: var(--vt-line-height-normal);
   letter-spacing: 0%;
-  color: $text-color-primary;
+  color: #ffffff;
 }
 
 .header__user-arrow {
-  height: $spacing-sm;
-  font-size: $font-size-extra-small;
-  color: $text-color-secondary;
+  height: var(--vt-space-2);
+  font-size: var(--vt-font-size-xs);
+  color: #ffffff;
 }
 
 :deep(.el-badge__content.is-fixed) {
-  top: $size-xs;
+  top: var(--vt-space-1);
   padding: 0;
 }
 
@@ -261,10 +265,10 @@ const getAvatarName = (name: string): string => {
   width: 100%;
   display: flex;
   align-items: center;
-  color: $text-color-primary;
-  font-weight: $font-weight-medium;
-  font-size: $font-size-base;
-  line-height: $line-height-100;
+  color: var(--vt-text-primary);
+  font-weight: var(--vt-font-weight-medium);
+  font-size: var(--vt-font-size-base);
+  line-height: 1;
   letter-spacing: 0%;
 
   .header__user-logoutIcon {

@@ -1,367 +1,196 @@
-@use "@/assets/styles/_variables.scss" as *;
-// 导入主题变量
+@use './_table-row.scss' as table-row;
 
-/**
- * Element Plus Table 组件样式定制
- * 统一表格样式，提供现代化的视觉效果 */
+// ============================================
+// Element Plus: Table (el-table)
+// ============================================
 
-// 表格主体样式
-.voltage-class {
-  .el-table {
-    background-color: transparent !important; // 使el-table背景透明，优先级提升
-    // Table loading icon/text use secondary theme color.
-    .el-loading-mask {
-      .el-loading-spinner {
-        .path {
-          stroke: $secondary-color !important;
-        }
+.el-table.el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: var(--vt-table-header-bg);
+  --el-table-header-text-color: var(--vt-text-secondary);
+  --el-table-text-color: var(--vt-text-primary);
+  --el-table-row-hover-bg-color: var(--vt-table-row-hover-bg);
+  --el-table-current-row-bg-color: var(--vt-table-row-hover-bg);
+  --el-table-border-color: var(--vt-border-color-soft);
+  --el-table-fixed-box-shadow: 3px 0 6px rgba(0, 0, 0, 0.06);
+  // EP default is --el-index-normal (1). Do NOT use toast/popper z-index here —
+  // fixed columns inherit this and would cover dialogs/overlays.
+  --el-table-index: var(--el-index-normal);
 
-        .circular {
-          color: $secondary-color !important;
-        }
+  background-color: transparent;
 
-        .el-loading-text {
-          color: $secondary-color !important;
-        }
-      }
-    }
-    .el-table__inner-wrapper {
-      &::before {
-        height: $border-width-base;
-        background-color: $border-color-white-10;
-      }
-      // 表头样式
-      .el-table__header-wrapper,
-      .el-table__body-header {
-        background: $table-header-bg;
-
-        th {
-          background: transparent;
-
-          color: $table-header-color;
-          font-weight: $font-weight-normal;
-          font-size: $font-size-base;
-          line-height: $table-cell-line-height;
-
-          // border-bottom: 1px solid #e5e7eb;
-          // text-align: center !important;
-
-          &:first-child {
-            border-left: none;
-          }
-
-          &:last-child {
-            border-right: none;
-          }
-          &.el-table-fixed-column--right {
-            background-color: $table-header-bg;
-            box-shadow: $box-shadow-large;
-          }
-          .cell {
-            padding: 0;
-            display: flex;
-            align-items: center;
-            // justify-content: center;
-            line-height: $table-cell-line-height;
-            // text-align: center !important;
-            // justify-content: center;
-            // display: flex;
-            // align-items: center;
-          }
-        }
-
-        .el-table__cell {
-          padding: $table-cell-padding;
-          border: none;
-          border-bottom: $border-width-base solid $border-color-white-10;
-        }
-      }
-
-      // 表格主体样式
-      .el-table__body-wrapper {
-        // background-color: transparent !important; // 保证表格内容区背景透明
-        .el-scrollbar__bar.is-horizontal {
-          height: 6px;
-          left: 2px;
-        }
-        .el-scrollbar__bar.is-vertical {
-          top: 2px;
-          width: 6px;
-        }
-          td {
-          border-color: $border-color-white-10;
-          color: $text-color-primary;
-          font-size: $font-size-base;
-          line-height: $table-cell-line-height;
-          // background-color: transparent !important; // 保证每个单元格背景透明
-          padding: $table-cell-padding;
-          &:first-child {
-            border-left: none;
-          }
-
-          &:last-child {
-            border-right: none;
-          }
-          &.el-table__cell {
-            border-bottom: $border-width-base solid $border-color-white-10;
-            background: transparent;
-          }
-          &.el-table-fixed-column--right {
-            background-color: $table-header-bg;
-            box-shadow: $box-shadow-large;
-          }
-          .cell {
-            padding: 0;
-            min-height: 22px;
-            line-height: 22px;
-            display: flex;
-            align-items: center;
-            // justify-content: center;
-            // text-align: center;
-            &.el-tooltip {
-              // width: 100% !important;
-              padding-right: 20px;
-              span {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                // width: 100%;
-              }
-            }
-          }
-          // 表格中的 el-switch 禁用 hover :after 样式
-          .el-switch {
-            &:hover:not(.is-disabled) {
-              .el-switch__core {
-                &::after {
-                  display: none !important;
-                }
-              }
-            }
-          }
-        }
-        .el-table__row {
-          transition:
-            background 0.2s,
-            box-shadow 0.2s,
-            color 0.2s;
-          // 鼠标悬停时的行样式增强
-          &:hover {
-            background: $table-row-hover-bg !important;
-            // cursor: pointer;
-            .el-table-fixed-column--right {
-              background: $table-row-hover-bg;
-            }
-            // 禁用表格中 el-switch 的 hover :after 样式
-            .el-switch {
-              &:hover:not(.is-disabled) {
-                .el-switch__core {
-                  &::after {
-                    display: none !important;
-                  }
-                }
-              }
-            }
-            // td {
-            //   color: #3b82f6;
-            //   font-weight: 500;
-            //   transition: color 0.2s;
-            // }
-          }
-          .el-table__expand-icon {
-            color: $text-color-primary;
-            font-size: $font-size-base;
-            height: 20px;
-            & > .el-icon {
-              color: #000000 !important; // 黑色图标
-              font-size: $font-size-base;
-            }
-          }
-        }
-      }
-
-      // 空数据状态
-      .el-table__empty-block {
-        background-color: transparent; // 空数据时背景也透明
-
-        .el-table__empty-text {
-          color: $table-empty-color;
-          font-size: $font-size-base;
-        }
-      }
-
-      // 固定列样式
-      .el-table__fixed {
-        background-color: transparent; // 固定列背景透明
-        // background-color: red !important;
-        box-shadow: $box-shadow-large;
-
-        &.el-table__fixed--right {
-          // box-shadow: -2px 0 6px rgba(0, 0, 0, 0.06);
-          // background-color: red !important;
-        }
-      }
-
-      // 排序图标样式
-      .el-table__column-filter-trigger,
-      .el-table__column-resize-proxy {
-        border-color: $border-color-gray-light;
-      }
-
-      .caret-wrapper {
-        .sort-caret {
-          border-color: $border-color-gray-light;
-
-          &.ascending {
-            border-bottom-color: $primary-color;
-          }
-
-          &.descending {
-            border-top-color: $primary-color;
-          }
-        }
-      }
-      th,
-      tr,
-      td {
-        background-color: transparent;
-      }
-    }
-  }
-  .el-popper {
-    padding: 5px 11px;
-    font-size: 12px;
-    line-height: 20px;
-    .el-popper__arrow,
-    .el-popper__arrow:before {
-      height: 10px;
-      width: 10px;
-    }
-    &.is-dark,
-    &.is-dark > .el-popper__arrow:before {
-      border: $border-width-base solid $border-color-gray-dark;
-    }
-  }
-  .el-pagination {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    height: 32px;
-    margin-top: 20px;
-    button {
-      height: 32px;
-      font-size: 14px;
-      padding: 0 4px;
-      min-width: 32px;
-      &.btn-prev {
-        margin-left: 16px;
-        &:disabled {
-          background-color: transparent;
-        }
-      }
-      &.btn-next {
-        margin-right: 16px;
-        &:disabled {
-          background-color: transparent;
-        }
-      }
-      .el-icon {
-        font-size: 12px;
-        color: #000000 !important; // 黑色图标
-      }
-    }
-    .el-pagination__total {
-      color: $text-color-primary;
-      font-size: $font-size-base;
-      margin-right: $spacing-md;
+  // ---------- Inner wrapper ----------
+  .el-table__inner-wrapper {
+    &::before {
+      height: 1px;
+      background-color: var(--vt-bg-hover);
     }
 
-    .el-pagination__sizes {
-      margin-left: 16px;
-      display: flex;
-      .el-select {
-        width: 128px;
-        .el-select__input-wrapper {
-          height: 32px;
-        }
-        .el-input__inner {
-          height: 32px;
-        }
-        .el-select__input {
-          height: 24px;
-        }
-      }
-    }
-    .el-pager {
-      li {
-        background-color: transparent;
-        border-radius: 0;
-        margin: 0 2px;
-        color: $text-color-primary;
-        font-weight: $font-weight-medium;
-        font-size: $font-size-base;
-        padding: 0 $size-xs;
-        height: $pagination-height;
-        line-height: $pagination-height;
-        min-width: $pagination-height;
-
-        &:hover {
-          background-color: transparent;
-        }
-
-        &.is-active {
-          color: $text-color-primary;
-          background-color: $bg-color-transparent-white-10;
-
-          &:hover {
-            background-color: $bg-color-transparent-white-10;
-          }
-        }
-      }
-    }
-
-    .btn-prev,
-    .btn-next {
-      border-radius: $border-radius-base;
+    .el-table__fixed {
       background-color: transparent;
-      color: $text-color-primary;
-
-      &:hover {
-        color: $primary-color;
-        background-color: $bg-color-input;
-      }
-
-      &:disabled {
-        color: $border-color-gray-light;
-        cursor: not-allowed;
-
-        &:hover {
-          background-color: transparent;
-        }
-      }
     }
 
-    .el-pagination__jump {
-      color: $pagination-jump-color;
-      font-size: $font-size-base;
+    .el-table__column-filter-trigger,
+    .el-table__column-resize-proxy {
+      border-color: var(--vt-text-disabled);
+    }
+  }
 
-      .el-input__inner {
-        border-radius: $border-radius-base;
-        border-color: $border-color-gray-light;
-        text-align: center;
+  // ---------- Header ----------
+  .el-table__header-wrapper,
+  .el-table__body-header {
+    th {
+      @include table-row.vt-table-cell-shell;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 400;
 
-        &:hover {
-          border-color: $border-color-gray-light;
-        }
+      &:first-child {
+        border-left: none;
+      }
 
-        &:focus {
-          border-color: $primary-color;
-        }
+      &:last-child {
+        border-right: none;
+      }
+
+      &.el-table-fixed-column--right {
+        background-color: var(--vt-table-fixed-bg);
+      }
+
+      .cell {
+        @include table-row.vt-table-cell-inner;
       }
     }
   }
 
-  // 表格操作按钮样式
+  // ---------- Body ----------
+  .el-table__body-wrapper {
+    .el-scrollbar__bar.is-horizontal {
+      left: 2px;
+      height: 6px;
+    }
+
+    .el-scrollbar__bar.is-vertical {
+      top: 2px;
+      width: 6px;
+    }
+
+    td {
+      @include table-row.vt-table-cell-shell;
+      color: var(--vt-text-primary);
+      border-color: var(--vt-bg-hover);
+
+      &:first-child {
+        border-left: none;
+      }
+
+      &:last-child {
+        border-right: none;
+      }
+
+      &.el-table__cell {
+        background: transparent;
+        border-bottom: 1px solid var(--vt-bg-hover);
+      }
+
+      &.el-table-fixed-column--right {
+        background-color: var(--vt-table-fixed-bg);
+      }
+
+      .cell {
+        @include table-row.vt-table-cell-inner;
+      }
+    }
+  }
+
+  // ---------- Row ----------
+  .el-table__row {
+    transition:
+      background 0.2s,
+      box-shadow 0.2s,
+      color 0.2s;
+
+    &:hover {
+      background: var(--vt-table-row-hover-bg);
+
+      .el-table-fixed-column--right {
+        background: var(--vt-table-row-hover-bg);
+      }
+    }
+  }
+
+  // ---------- Expand ----------
+  .el-table__expand-icon {
+    height: var(--vt-table-cell-inner-height);
+    color: var(--vt-text-primary);
+    font-size: 14px;
+
+    > .el-icon {
+      font-size: 14px;
+    }
+  }
+
+  .el-table__expanded-cell.el-table__expanded-cell {
+    height: auto !important;
+    padding: 0;
+    background-color: transparent;
+
+    .cell {
+      display: block !important;
+      height: auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      padding: 0 !important;
+      overflow: visible;
+      white-space: normal !important;
+      line-height: var(--vt-table-cell-line-height);
+    }
+  }
+
+  // ---------- Empty ----------
+  .el-table__empty-block {
+    background-color: transparent;
+
+    .el-table__empty-text {
+      color: var(--vt-text-empty);
+      font-size: 14px;
+    }
+  }
+
+  // ---------- Sort ----------
+  .caret-wrapper {
+    .sort-caret {
+      border-color: var(--vt-text-disabled);
+
+      &.ascending {
+        border-bottom-color: var(--vt-table-sort-color);
+      }
+
+      &.descending {
+        border-top-color: var(--vt-table-sort-color);
+      }
+    }
+  }
+
+  // ---------- Ellipsis column ----------
+  .table-ellipsis {
+    .cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__text {
+      display: block;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // ---------- Cell actions ----------
   .table-actions {
     display: flex;
     align-items: center;
@@ -376,17 +205,46 @@
       }
 
       &.is-text {
-        color: $primary-color;
+        color: var(--vt-text-primary);
+        transition: color var(--vt-transition-fast);
 
         &:hover {
-          background-color: $orange-color-hover-bg;
+          color: var(--vt-color-primary);
+          background-color: transparent;
         }
       }
     }
-    .el-table__expanded-cell {
-      background-color: transparent !important;
+  }
+
+  [class*='__operation-item'] {
+    display: inline-flex;
+    align-items: center;
+    color: var(--vt-text-primary);
+    cursor: pointer;
+    transition: color var(--vt-transition-fast);
+
+    img {
+      width: 14px;
+      height: 14px;
+      margin-right: 4px;
+      object-fit: contain;
+      transition: filter var(--vt-transition-fast);
+    }
+
+    [class*='__operation-text'],
+    > span {
+      color: inherit;
+      font-size: 14px;
+      transition: color var(--vt-transition-fast);
+    }
+
+    &:hover {
+      color: var(--vt-color-primary);
+
+      img {
+        filter: invert(49%) sepia(79%) saturate(2476%) hue-rotate(359deg) brightness(103%)
+          contrast(104%);
+      }
     }
   }
 }
-
-

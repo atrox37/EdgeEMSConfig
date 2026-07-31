@@ -1455,20 +1455,20 @@ watch(
             padding: 0 4px;
             font-size: 14px;
             font-weight: 600;
-            color: $secondary-color;
-            background: rgba($secondary-color, 0.12);
-            border: 1px solid rgba($secondary-color, 0.35);
+            color: var(--vt-color-secondary);
+            background: color-mix(in srgb, var(--vt-color-secondary) 12%, transparent);
+            border: 1px solid color-mix(in srgb, var(--vt-color-secondary) 35%, transparent);
             border-radius: 6px;
           }
           :deep(.el-collapse-item__header.is-active) {
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
-            color: $primary-color;
-            background: $primary-color-alpha-20;
-            border-color: $primary-color-alpha-35;
+            color: var(--vt-color-primary);
+            background: color-mix(in srgb, var(--vt-color-primary) 20%, transparent);
+            border-color: color-mix(in srgb, var(--vt-color-primary) 35%, transparent);
           }
           :deep(.el-collapse-item__header.is-active .el-collapse-item__arrow) {
-            color: $primary-color;
+            color: var(--vt-color-primary);
           }
           :deep(.el-collapse-item__content) {
             border-top-left-radius: 0;
@@ -1476,7 +1476,7 @@ watch(
           }
           :deep(.el-collapse-item__arrow) {
             font-size: 12px;
-            color: $secondary-color;
+            color: var(--vt-color-secondary);
           }
           :deep(.el-collapse-item__title) {
             padding-left: 4px;

@@ -1,130 +1,129 @@
-@use "@/assets/styles/_variables.scss" as *;
+// ============================================
+// Element Plus: MessageBox Overlay (el-overlay)
+// ============================================
 
-.el-overlay {
-  &.is-message-box {
-    // background-color: $bg-color-dark-11;
-    .el-message-box {
-      padding: $spacing-md;
-      background-color: $bg-color-dark-3;
-      max-width: 450px;
-      border-radius: $border-radius-small;
-      font-size: $font-size-medium;
-      box-shadow: none;
-      .el-message-box__header {
-        font-size: $font-size-medium;
-        font-weight: $font-weight-bold;
-        font-size: $font-size-large;
-        max-width: 420px;
-        // padding: $spacing-md;
-        color: $text-color-primary;
-        .el-message-box__title {
-          font-size: $font-size-large;
-          line-height: $line-height-normal;
-          color: $text-color-primary;
+// --- MessageBox overlay ---
+// Element Plus 2.x renders the wrapper as `.is-message-box` and the overlay node as
+// `.el-overlay-message-box`, so the selector must match that structure.
+.is-message-box {
+  .el-overlay-message-box {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .el-message-box.el-message-box {
+    --el-messagebox-bg-color: var(--vt-message-box-bg);
+    --el-messagebox-title-color: var(--vt-text-primary);
+    --el-messagebox-width: 450px;
+    --el-messagebox-font-size: var(--vt-font-size-base);
+    --el-messagebox-font-line-height: var(--vt-line-height-relaxed);
+    --el-messagebox-padding-primary: var(--vt-space-3);
+
+    // width: 450px;
+    padding: 24px 32px 32px;
+    background-color: var(--vt-message-box-bg);
+    border-radius: 4px;
+    font-size: 16px;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .el-message-box__header {
+      // max-width: 420px;
+      padding: 0;
+      color: var(--vt-text-primary);
+      font-size: 16px;
+      font-weight: 700;
+
+      .el-message-box__title {
+        span {
+          color: #272E3B;
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 130%;
+          letter-spacing: 0%;
+          vertical-align: middle;
         }
-        .el-message-box__headerbtn {
-          width: 14px;
-          height: 14px;
-          font-size: $font-size-medium;
-          .el-icon.el-message-box__close {
-            color: #000000 !important; // 黑色图标
-            top: $spacing-md;
-            right: $spacing-md;
-          }
+
+      }
+
+
+
+
+      .el-message-box__headerbtn {
+        width: 20px;
+        height: 20px;
+        font-size: 16px;
+
+        .el-icon.el-message-box__close {
+          top: 12px;
+          right: 12px;
+          color: var(--vt-text-primary);
         }
       }
-      .el-message-box__content {
-        .el-message-box__container {
-          gap: $spacing-md;
-          .el-icon.el-message-box__status {
-            color: $text-color-primary !important;
-            &.el-message-box-icon--success {
-              font-size: $size-lg;
-              color: $success-color !important;
-            }
-            &.el-message-box-icon--warning {
-              font-size: $size-lg;
-              color: $warning-color !important;
-            }
-            &.el-message-box-icon--error {
-              font-size: $size-lg;
-              color: $danger-color !important;
-            }
-            &.el-message-box-icon--info {
-              font-size: $size-lg;
-              color: $info-color !important;
-            }
-          }
-          .el-message-box__message {
-            color: $text-color-primary;
-            font-size: $font-size-medium;
-            line-height: $line-height-normal;
-            font-weight: $font-weight-normal;
-          }
+    }
+
+    .el-message-box__content {
+      .el-message-box__container {
+        gap: 12px;
+
+        .el-message-box__message {
+          color: #272E3B;
+          font-size: 14px;
+          line-height: 130%;
+          // font-weight: 400;
         }
       }
-      .el-message-box__btns {
-        padding-top: 12px;
-      }
+    }
+
+    .el-message-box__btns {
+      padding-top: 0px;
     }
   }
 }
-.el-message {
-  gap: 8px !important;
-  padding: 11px 15px !important;
-  border-width: 1px !important;
-  border-radius: 4px !important;
-  background-color: $bg-color-dark-3 !important;
-  border-color: $border-color-gray-light !important;
+
+// ============================================
+// Element Plus: Message Toast (el-message)
+// ============================================
+
+// --- Message base ---
+.el-message.el-message {
+  --el-message-bg-color: rgba(33, 44, 73, 0.96);
+  --el-message-border-color: var(--vt-border-color);
+  --el-message-close-size: var(--vt-font-size-md);
+  --el-message-close-icon-color: var(--vt-text-secondary);
+  --el-message-close-hover-color: var(--vt-text-primary);
+
+  top: 100px;
+  gap: 8px;
+  padding: 11px 15px;
+  border-width: 1px;
+  border-radius: 4px;
+  background-color: var(--el-message-bg-color);
+  border-color: var(--el-message-border-color);
+  box-shadow: var(--vt-shadow-base);
+  z-index: var(--vt-z-toast);
+
   .el-icon.el-message__icon {
-    font-size: 24px !important;
+    font-size: 24px;
   }
+
   .el-message__content {
-    font-size: $font-size-base !important;
-    font-weight: $font-weight-normal !important;
+    font-size: 14px;
+    font-weight: 400;
   }
+
   .el-icon.el-message__closeBtn {
-    font-size: 16px !important;
-  }
-  &.el-message--success {
-    background-color: $success-color !important;
-    border-color: $success-color !important;
-    .el-icon.el-message__icon,
-    .el-message__content,
-    .el-icon.el-message__closeBtn {
-      color: $white-alpha-100 !important;
-    }
-  }
-  &.el-message--warning {
-    background-color: $warning-color !important;
-    border-color: $warning-color !important;
-    .el-icon.el-message__icon,
-    .el-message__content,
-    .el-icon.el-message__closeBtn {
-      color: $white-alpha-100 !important;
-    }
-  }
-  &.el-message--error {
-    background-color: $danger-color !important;
-    border-color: $danger-color !important;
-    .el-icon.el-message__icon,
-    .el-message__content,
-    .el-icon.el-message__closeBtn {
-      color: $white-alpha-100 !important;
-    }
-  }
-  &.el-message--info {
-    background-color: $info-color !important;
-    border-color: $info-color !important;
-    .el-icon.el-message__icon,
-    .el-message__content,
-    .el-icon.el-message__closeBtn {
-      color: $white-alpha-100 !important;
-    }
-  }
-  // 调整首条消息距顶高度
-  &:first-child {
-    top: 100px !important; // 可按需要改为 30px 或 0px
+    font-size: 16px;
   }
 }
 
+// --- Message error ---
+.el-message--error {
+  .el-message__content {
+    color: var(--vt-color-danger);
+  }
+}

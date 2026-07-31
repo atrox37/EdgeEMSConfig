@@ -1,427 +1,238 @@
-@use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Button 组件样式重写 */
+// ============================================
+// Element Plus: Button (el-button, el-button-group)
+// Overrides: size, color, states, group layout
+// ============================================
+// ==============================
+// el-button
+// ==============================
+.el-button.el-button {
+  --el-button-font-weight: var(--vt-font-weight-normal);
+  --el-button-border-color: transparent;
+  --el-button-bg-color: var(--vt-color-secondary);
+  --el-button-text-color: #ffffff;
+  --el-button-disabled-text-color: var(--vt-text-disabled);
+  --el-button-disabled-bg-color: var(--vt-bg-muted);
+  --el-button-disabled-border-color: transparent;
+  --el-button-hover-text-color: #ffffff;
+  --el-button-hover-bg-color: var(--vt-color-secondary-hover);
+  --el-button-hover-border-color: transparent;
+  --el-button-active-text-color: #ffffff;
+  --el-button-active-bg-color: var(--vt-color-secondary-active);
+  --el-button-active-border-color: transparent;
+  --el-border-radius-base: 4px;
+  // ---- Base ----
+  min-height: var(--vt-control-height);
+  padding: var(--vt-button-padding);
+  border: none;
+  // border-radius: 0;
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  vertical-align: middle;
+  cursor: pointer;
+  font-family: var(--vt-font-family-base);
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-normal);
+  line-height: var(--vt-button-line-height);
+  color: #ffffff;
+  background: var(--vt-color-secondary);
+  transition:
+    background-color var(--vt-transition-fast),
+    border-color var(--vt-transition-fast),
+    color var(--vt-transition-fast),
+    box-shadow var(--vt-transition-fast),
+    transform var(--vt-transition-fast);
 
-// 引入颜色工具
-@use "sass:color";
+  // ---- Pseudo states ----
+  &:hover {
+    background: var(--vt-color-secondary-hover);
+    color: #ffffff;
+  }
 
-// .voltage-class {
-  // 基础按钮样式
-  .el-button {
-    height: 32px !important;
-    font-size: 14px !important;
-    padding: 5px 16px !important;
-    border: none !important;
-    outline: none !important;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    font-family: Arimo, sans-serif;
-    font-weight: 400 !important;
-    vertical-align: middle;
-    color: #ffffff !important; 
-    border-radius: $border-radius-base !important;
-    background-color: #4b7295 !important;
+  &:active {
+    background: var(--vt-color-secondary-active);
+    color: #ffffff;
+    transform: translateY(1px);
+  }
 
+  &:focus-visible {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--vt-color-primary) 20%, transparent);
+  }
 
-    .el-icon {
+  // ---- Sibling ----
+  &+& {
+    margin-left: var(--vt-space-2);
+  }
+
+  // ---- Modifier: type ----
+  &--primary {
+    // --el-button-text-color: var(--el-color-white);
+    // --el-button-bg-color: var(--el-color-primary);
+    // --el-button-border-color: var(--el-color-primary);
+    // --el-button-outline-color: var(--el-color-primary-light-5);
+    // --el-button-active-color: var(--el-color-primary-dark-2) #ff6f00;
+    // --el-button-hover-text-color: var(--el-color-white);
+    // --el-button-hover-link-text-color: var(--el-color-primary-light-5);
+    // --el-button-hover-bg-color: var(--el-color-primary-light-3);
+    // --el-button-hover-border-color: var(--el-color-primary-light-3);
+    // --el-button-active-bg-color: var(--el-color-primary-dark-2);
+    // --el-button-active-border-color: var(--el-color-primary-dark-2);
+    // --el-button-disabled-text-color: var(--el-color-white);
+    // --el-button-disabled-bg-color: var(--el-color-primary-light-5);
+    // --el-button-disabled-border-color: var(--el-color-primary-light-5);
+
+    background: var(--vt-color-primary);
+    color: #ffffff;
+
+    &:hover {
+      background: var(--vt-color-primary-hover);
       color: #ffffff;
     }
 
-    img {
-      // 将图标转为白色
-      filter: brightness(0) invert(1);
+    &:active {
+      background: var(--vt-color-primary-active);
+      color: #ffffff;
     }
 
+    &.is-disabled {
+      background: var(--vt-bg-muted);
+      color: var(--vt-text-disabled);
+    }
+  }
+
+  &--warning {
+    background: var(--vt-color-warning);
+    color: #ffffff;
+
     &:hover {
-      background: $secondary-color-hover !important;
+      background: var(--vt-color-warning-hover);
+      color: #ffffff;
+    }
+  }
+
+  &--danger {
+    background: var(--vt-color-danger);
+    color: #ffffff;
+  }
+
+  &--default {
+    border: none;
+  }
+
+  &--info {
+    background: linear-gradient(135deg, var(--vt-color-info) 0%, #096dd9 100%);
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+    color: #ffffff;
+
+    &:hover {
+      background: linear-gradient(135deg, var(--vt-color-info-hover) 0%, #0050b3 100%);
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+      transform: translateY(-0.100px);
     }
 
     &:active {
-      background: $secondary-color-active !important;
-    }
-
-    &:focus {
-      box-shadow: none !important;
-    }
-
-    // 主要按钮与日期面板链接按钮
-    &.el-button--primary,
-    &.el-picker-panel__link-btn {
-      background: $primary-color !important;
-      color: #ffffff !important; // 主色按钮文字保持白色
-      box-shadow: none;
-
-      // 图标颜色与文字同色（白色）
-      .el-icon {
-        color: #ffffff;
-      }
-
-      img {
-        filter: brightness(0) invert(1);
-      }
-
-      &:hover {
-        background: $primary-color-hover !important;
-        color: #ffffff !important; // 主色按钮 hover 时文字保持白色
-      }
-
-      &:active {
-        background: $primary-color-hover !important;
-        color: #ffffff !important; // 主色按钮 active 时文字保持白色
-      }
-
-      &:focus {
-        box-shadow: none !important;
-      }
-
-      &.is-disabled {
-        // 禁用状态：背景为当前色与灰色混合，文字为灰色
-        background: color.mix($primary-color, #c0c4cc, 50%) !important;
-        color: $text-color-disabled !important;
-        box-shadow: none !important;
-        cursor: not-allowed;
-
-        .el-icon {
-          color: $text-color-disabled;
-        }
-
-        img {
-          filter: brightness(0) saturate(100%) opacity(0.6);
-        }
-
-        &:hover {
-          background: color.mix($primary-color, #c0c4cc, 50%) !important;
-          transform: none;
-          box-shadow: none;
-        }
-      }
-    }
-
-    // Warning 按钮 - 黄色主题
-    &.el-button--warning {
-      background: $warning-color !important; // 使用warning颜色
-      color: #ffffff !important; // 白色文字
-
-      .el-icon {
-        color: #ffffff;
-      }
-
-      img {
-        filter: brightness(0) invert(1);
-      }
-
-      &:hover {
-        background: $warning-color-hover !important;
-        color: #ffffff;
-      }
-
-      &:active {
-        background: $warning-color-active !important;
-        color: #ffffff;
-      }
-
-      &:focus {
-        box-shadow: none !important;
-      }
-
-      &.is-disabled {
-        // 状态为当前颜色与灰色50%混合的颜色
-        background: color.mix($warning-color, #c0c4cc, 50%) !important;
-        color: $text-color-disabled !important;
-        cursor: not-allowed;
-
-        .el-icon {
-          color: $text-color-disabled;
-        }
-
-        img {
-          filter: brightness(0) saturate(100%) opacity(0.6);
-        }
-
-        &:hover {
-          background: color.mix($warning-color, #c0c4cc, 50%) !important;
-          transform: none;
-          box-shadow: none;
-        }
-      }
-    }
-
-    // 文本按钮 - 当前颜色与灰色50%混合的颜色
-    &.is-text {
-      background: transparent !important;
-      color: #ffffff; // 白色
-
-      .el-icon {
-        color: #ffffff;
-      }
-
-      img {
-        filter: brightness(0) invert(1);
-      }
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-      }
-
-      &:active {
-        background: rgba(255, 255, 255, 0.2) !important;
-      }
-
-      &:focus {
-        box-shadow: none !important;
-      }
-
-      &.is-disabled {
-        color: $text-color-disabled;
-        cursor: not-allowed;
-
-        .el-icon {
-          color: $text-color-disabled;
-        }
-
-        img {
-          filter: brightness(0) saturate(100%) opacity(0.6);
-        }
-      }
-    }
-
-    // 信息按钮 - 渐变背景
-    &.el-button--info {
-      background: $gradient-info-button;
-      color: #ffffff !important; // 白色
-      box-shadow: $box-shadow-base;
-
-      .el-icon {
-        color: #ffffff;
-      }
-
-      img {
-        filter: brightness(0) invert(1);
-      }
-
-      &:hover {
-        background: $gradient-info-button-hover;
-        box-shadow: $box-shadow-medium;
-        transform: translateY(-1px);
-        color: #ffffff;
-      }
-
-      &:active {
-        background: $gradient-info-button-active;
-        box-shadow: $box-shadow-base;
-        transform: translateY(0);
-        color: #ffffff;
-      }
-
-      &:focus {
-        box-shadow: 0 0 0 2px $primary-color-alpha-20;
-      }
-
-      &.is-disabled {
-        // 状态为当前颜色与灰色50%混合的颜色
-        background: color.mix($info-color, #c0c4cc, 50%) !important;
-        color: $text-color-disabled !important;
-        cursor: not-allowed;
-
-        .el-icon {
-          color: $text-color-disabled;
-        }
-
-        img {
-          filter: brightness(0) saturate(100%) opacity(0.6);
-        }
-
-        &:hover {
-          background: color.mix($info-color, #c0c4cc, 50%) !important;
-          transform: none;
-          box-shadow: none;
-        }
-      }
-    }
-
-    // 默认按钮 - 使用当前颜色与灰色50%混合的颜色
-    &.el-button--default {
-      background: $secondary-color !important;
-      color: #ffffff; // 白色
-      border: $border-width-base solid $secondary-color;
-
-      .el-icon {
-        color: #ffffff !important;
-      }
-
-      img {
-        filter: brightness(0) invert(1);
-      }
-
-      &:hover {
-        background: $secondary-color-hover !important;
-        border-color: $secondary-color-hover;
-        transform: translateY(-1px);
-        color: #ffffff !important;
-      }
-
-      &:active {
-        background: $secondary-color-active !important;
-        border-color: $secondary-color-active;
-        transform: translateY(0);
-        color: #ffffff !important;
-      }
-
-      &:focus {
-        box-shadow: 0 0 0 2px $primary-color-alpha-20;
-      }
-
-      &.is-disabled {
-        // 状态为当前颜色与灰色50%混合的颜色
-        background: color.mix($secondary-color, #c0c4cc, 50%) !important;
-        border-color: color.mix($secondary-color, #c0c4cc, 50%);
-        color: $text-color-disabled !important;
-        cursor: not-allowed;
-
-        .el-icon {
-          color: $text-color-disabled !important;
-        }
-
-        img {
-          filter: brightness(0) saturate(100%) opacity(0.6);
-        }
-
-        &:hover {
-          background: color.mix($secondary-color, #c0c4cc, 50%) !important;
-          border-color: color.mix($secondary-color, #c0c4cc, 50%);
-          transform: none;
-          box-shadow: none;
-        }
-      }
-    }
-
-    // 链接按钮 - 使用当前颜色与灰色50%混合的颜色
-    &.is-link {
-      background: transparent !important;
-      padding: 5px 8px !important;
-      text-decoration: underline;
-      color: $primary-color !important;
-      font-size: 24px !important;
-
-      &:hover {
-        background: transparent !important;
-        color: $primary-color-hover !important;
-        // padding: 5px 8px !important;
-      }
-
-      &:focus {
-        box-shadow: 0 0 0 2px $primary-color-alpha-20;
-      }
-    }
-
-    // 圆形按钮
-    &.is-circle {
-      border-radius: $border-radius-circle;
-      padding: 0;
-
-      &.el-button--default {
-        width: $button-height-base;
-        height: $button-height-base;
-      }
-
-      &.el-button--small {
-        width: $button-height-small;
-        height: $button-height-small;
-      }
-
-      &.el-button--large {
-        width: $button-height-large;
-        height: $button-height-large;
-      }
-    }
-
-    // 圆形按钮
-    &.is-round {
-      border-radius: 4px;
-    }
-
-      // 加载状态
-    &.is-loading {
-      pointer-events: none;
-      opacity: $opacity-loading;
-
-      .el-icon {
-        animation: rotating 2s linear infinite;
-        color: #ffffff !important; // 加载图标为白色
-      }
-    }
-
-    // 通用禁用状态（无类型特定样式时）
-    &.is-disabled {
-      cursor: not-allowed;
-      opacity: $opacity-disabled;
-      // 默认禁用：背景为当前色与灰色混合，文字为灰色
-      background: color.mix($secondary-color, #c0c4cc, 50%) !important;
-      color: $text-color-disabled !important;
-
-      .el-icon {
-        color: $text-color-disabled !important;
-      }
-
-      img {
-        filter: brightness(0) saturate(100%) opacity(0.6);
-      }
-
-      &:hover {
-        transform: none;
-        box-shadow: none;
-        background: color.mix($secondary-color, #c0c4cc, 50%) !important;
-      }
-    }
-
-    // 按钮间距
-    &+.el-button {
-      margin-left: 8px !important;
+      background: linear-gradient(135deg, var(--vt-color-info-active) 0%, #003a8c 100%);
+      box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+      transform: translateY(0);
     }
   }
 
-  // 按钮组样式
-  .el-button-group {
-    display: inline-flex;
+  // ---- State: is-* ----
+  &.is-text {
+    background: var(--vt-color-secondary);
+    color: #ffffff;
 
-    .el-button {
-      border-radius: 0;
-      margin-left: 0;
-
-      &:first-child {
-        border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
-      }
-
-      &:last-child {
-        border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
-      }
-
-      &:not(:first-child) {
-        margin-left: -1px;
-      }
-
-      &:hover {
-        z-index: 1;
-      }
-
-      &:focus {
-        z-index: 1;
-      }
-    }
-
-    .el-icon {
-      font-size: 14px !important;
-      color: #ffffff !important; // 按钮内图标为白色
-    }
-
-    img {
-      // 将图标转为白色
-      filter: brightness(0) invert(1);
+    &:hover {
+      background: var(--vt-color-secondary-hover);
+      color: #ffffff;
     }
   }
-// }
 
+  &.is-link {
+    padding: 5px 8px;
+    background: transparent;
+    border: none;
+    text-decoration: underline;
 
+    &:hover,
+    &:active {
+      background: transparent;
+    }
+  }
+
+  // ---- State: is-circle (compound with size modifiers) ----
+  &.is-circle {
+    padding: 0;
+    border-radius: 0;
+  }
+
+  &.is-circle#{&}--default {
+    width: var(--vt-control-height);
+    height: var(--vt-control-height);
+  }
+
+  &.is-circle#{&}--small {
+    width: var(--vt-control-height-sm);
+    height: var(--vt-control-height-sm);
+  }
+
+  &.is-circle#{&}--large {
+    width: var(--vt-control-height-lg);
+    height: var(--vt-control-height-lg);
+  }
+
+  // ---- State: is-round ----
+  &.is-round {
+    border-radius: 0;
+  }
+
+  // ---- State: is-loading ----
+  &.is-loading {
+    pointer-events: none;
+    opacity: var(--vt-opacity-loading);
+  }
+
+  // ---- State: is-disabled ----
+  &.is-disabled {
+    cursor: not-allowed;
+    opacity: var(--vt-opacity-disabled);
+    box-shadow: none;
+
+    &:hover,
+    &:active {
+      transform: none;
+      background: var(--vt-bg-muted);
+    }
+  }
+}
+
+// ==============================
+// el-button-group
+// ==============================
+.el-button-group.el-button-group {
+  .el-button.el-button+.el-button.el-button {
+    margin-left: 0;
+  }
+
+  // display: inline-flex;
+  // gap:12px;
+  // items-align: center;
+
+  // .el-button {
+  //   // margin-left: 0;
+  //   // border-radius: 0;
+
+  //   &:not(:first-child) {
+  //     margin-left: -0.100px;
+  //   }
+
+  //   &:hover,
+  //   &:focus-visible {
+  //     z-index: 1;
+  //   }
+  // }
+
+  // .el-icon {
+  //   font-size: var(--vt-font-size-base);
+  // }
+}

@@ -88,26 +88,26 @@ defineExpose({
 .titlebar-setting-dialog {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: var(--vt-space-4);
 }
 
 .titlebar-setting-dialog__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-md;
+  gap: var(--vt-space-4);
 }
 
 .titlebar-setting-dialog__label {
-  font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  font-weight: var(--vt-font-weight-semibold);
+  color: var(--vt-text-primary);
   white-space: nowrap;
 }
 
 .titlebar-setting-dialog__path-wrap {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
   flex: 1;
 }
 

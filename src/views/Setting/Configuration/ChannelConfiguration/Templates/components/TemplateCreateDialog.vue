@@ -288,7 +288,7 @@ defineExpose({
   }
 
   .json-import-hint__link {
-    color: $primary-color;
+    color: var(--vt-color-primary);
     cursor: pointer;
     text-decoration: underline;
   }

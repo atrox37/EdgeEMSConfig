@@ -1019,9 +1019,9 @@ watch(
         margin-bottom: 12px;
 
         .section__title {
-          font-weight: $font-weight-semibold;
-          font-size: $font-size-base;
-          color: $text-color-primary;
+          font-weight: var(--vt-font-weight-semibold);
+          font-size: var(--vt-font-size-base);
+          color: var(--vt-text-primary);
         }
         .section__title-text {
           display: inline;
@@ -1100,7 +1100,7 @@ watch(
 
     // .variable-section .section__header,
     // .rule-section .section__header {
-    //   padding-right: $width-scrollbar;
+    //   padding-right: var(--vt-width-scrollbar);
     // }
 
     .collapse-center {
@@ -1120,12 +1120,12 @@ watch(
 
     .collapse-center__btn {
       width: 26px !important;
-      color: $primary-color !important;
+      color: var(--vt-color-primary) !important;
 
       :deep(.collapse-center__glyph) {
         width: 18px;
         height: 18px;
-        color: $primary-color !important;
+        color: var(--vt-color-primary) !important;
       }
     }
 
@@ -1192,11 +1192,11 @@ watch(
     }
 
     :deep(.combined-row__add-icon) {
-      color: $success-color !important;
+      color: var(--vt-color-success) !important;
     }
 
     :deep(.combined-row__delete-icon) {
-      color: $danger-color !important;
+      color: var(--vt-color-danger) !important;
     }
 
     .rule-row {
@@ -1399,7 +1399,7 @@ watch(
       align-items: center;
       gap: 6px;
       padding-left: 10px;
-      color: $text-color-white-60;
+      color: var(--vt-color-black-50);
     }
 
     @media (max-width: 1400px) {
@@ -1412,14 +1412,14 @@ watch(
       width: 14px;
       height: 14px;
       flex-shrink: 0;
-      color: $primary-color;
+      color: var(--vt-color-primary);
     }
 
     :deep(.collapse-hint__icon) {
       width: 16px;
       height: 16px;
       flex-shrink: 0;
-      color: $warning-color;
+      color: var(--vt-color-warning);
     }
 
     .collapse-hint__text {

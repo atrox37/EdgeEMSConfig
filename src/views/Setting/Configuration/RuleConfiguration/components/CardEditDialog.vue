@@ -99,7 +99,7 @@ function deepClone<T>(obj: T): T {
 <style lang="scss" scoped>
 .voltage-class {
   .card-edit-dialog {
-    color: $text-color-primary;
+    color: var(--vt-text-primary);
     width: 100%;
     height: 100%;
     :deep(.el-form) {

@@ -44,12 +44,12 @@ const handleClick = () => {
 .voltage-class {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: var(--vt-space-2);
 
   .icon-button__icon {
-    width: $font-size-base;
-    height: $font-size-base;
-    margin-right: $spacing-sm;
+    width: var(--vt-font-size-base);
+    height: var(--vt-font-size-base);
+    margin-right: var(--vt-space-2);
   }
 }
 </style>

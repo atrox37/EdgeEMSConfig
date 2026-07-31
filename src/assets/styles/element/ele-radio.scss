@@ -1,302 +1,253 @@
-@use "@/assets/styles/_variables.scss" as *;
-/* Element Plus Radio 与 RadioGroup 组件样式 */
+// ============================================
+// Element Plus: Radio (el-radio)
+// ============================================
 
+// --- Base ---
+.el-radio.el-radio {
+  --el-radio-font-size: var(--vt-font-size-base);
+  --el-radio-text-color: var(--vt-text-primary);
+  --el-radio-input-border-color: var(--vt-border-color);
+  --el-radio-input-bg-color: transparent;
+  --el-radio-input-border-color-hover: var(--vt-color-primary);
 
-.voltage-class {
-  // View Mode 简洁样式（更显眼但不过度修饰）
-  .view-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  margin-right: var(--vt-space-4);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--vt-font-size-base);
+  font-weight: var(--vt-font-weight-normal);
+  line-height: var(--vt-line-height-normal);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  &:hover:not(.is-disabled) {
+    .el-radio__inner {
+      border-color: rgba(148, 166, 197, 0.48);
+    }
+  }
+}
+
+// --- Checked ---
+.el-radio.is-checked {
+  .el-radio__inner {
+    background-color: var(--vt-color-primary);
+    border-color: var(--vt-color-primary);
+
+    &::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  .el-radio__label {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  &.is-disabled {
+    .el-radio__inner {
+      background-color: var(--vt-text-disabled);
+      border-color: var(--vt-text-disabled);
+    }
+
+    .el-radio__label {
+      color: var(--vt-text-disabled);
+    }
+  }
+}
+
+// --- Focus ---
+.el-radio.is-focus {
+  .el-radio__inner {
+    border-color: var(--vt-color-primary);
+    box-shadow: 0 0 0 2px rgba(255, 105, 0, 0.2);
+  }
+}
+
+// --- Disabled ---
+.el-radio.is-disabled {
+  color: var(--vt-text-disabled);
+  opacity: var(--vt-opacity-disabled);
+  cursor: not-allowed;
+}
+
+// --- Input ---
+.el-radio__input {
+  position: relative;
+  display: inline-flex;
+  margin-right: var(--vt-space-1);
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+
+  .el-radio__original {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: 0;
+    opacity: 0;
+    outline: none;
+  }
+}
+
+// --- Inner ---
+.el-radio__inner {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: transparent;
+  border: 1px solid rgba(148, 166, 197, 0.3);
+  border-radius: 50%;
+  box-sizing: border-box;
+  transition: all var(--vt-transition-fast);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform var(--vt-transition-fast);
+  }
+}
+
+// --- Label ---
+.el-radio__label {
+  padding-left: var(--vt-space-1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--vt-font-size-base);
+  transition: color var(--vt-transition-fast);
+  user-select: none;
+}
+
+// ============================================
+// Element Plus: Radio Group (el-radio-group)
+// ============================================
+.el-radio-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--vt-space-2);
+  font-size: 0;
+
+  &--vertical {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  // --- Button mode ---
+  &--button {
     display: inline-flex;
-    align-items: center;
-    gap: $spacing-sm;
-  }
-  .view-mode-switch .switch-label {
-    font-size: $font-size-large;
-    font-weight: $font-weight-semibold;
-    color: $text-color-white-60;
-    margin-right: 2px;
-  }
-  .view-mode-switch .el-radio-group.el-radio-group--button {
     gap: 0;
+
     .el-radio {
-      border: 1px solid rgba($primary-color, 0.55);
-      background: transparent;
-      // padding: 4px 14px;
-      // border-radius: 6px;
-      transition:
-        color $transition-fast,
-        background $transition-fast,
-        border-color $transition-fast;
-      &:not(:first-child) {
-        margin-left: -1px;
-      }
-      .el-radio__label {
-        padding-left: 0;
-        color: $text-color-white-60;
-        font-size: $font-size-medium;
-        font-weight: $font-weight-semibold;
-      }
-      // &:hover:not(.is-disabled) {
-      //   background: rgba($primary-color, 0.08);
-      //   border-color: rgba($primary-color, 0.85);
-      // }
-      &.is-checked {
-        background: rgba($primary-color, 0.14);
-        border-color: $primary-color;
-        .el-radio__label {
-          color: $primary-color;
-        }
-      }
-    }
-  }
-
-  // Radio 基础样式
-  .el-radio {
-    color: $text-color-regular;
-    height: $height-base;
-    font-size: $font-size-base;
-    font-weight: $font-weight-normal;
-    line-height: $line-height-normal;
-    cursor: pointer;
-    margin-right: $spacing-md;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    user-select: none;
-
-    &:last-child {
       margin-right: 0;
-    }
+      padding: var(--vt-space-1) var(--vt-space-4);
+      background-color: transparent;
+      border: 1px solid var(--vt-border-color);
+      border-radius: 0;
+      transition: all var(--vt-transition-fast);
 
-    // 禁用状态
-    &.is-disabled {
-      color: $text-color-disabled;
-      cursor: not-allowed;
-      opacity: $opacity-disabled;
+      &:first-child {
+        border-top-left-radius: var(--vt-radius-sm);
+        border-bottom-left-radius: var(--vt-radius-sm);
+      }
+
+      &:last-child {
+        border-top-right-radius: var(--vt-radius-sm);
+        border-bottom-right-radius: var(--vt-radius-sm);
+      }
+
+      &:not(:first-child) {
+        border-left: none;
+      }
 
       .el-radio__input {
-        cursor: not-allowed;
+        display: none;
       }
 
       .el-radio__label {
-        cursor: not-allowed;
+        padding-left: 0;
+        color: var(--vt-text-primary);
       }
-    }
 
-    // 选中状态
-    &.is-checked {
-      .el-radio__inner {
-        background-color: $primary-color;
-        border-color: $primary-color;
+      &:hover:not(.is-disabled) {
+        border-color: var(--vt-color-primary);
+        color: #ffffff;
+        z-index: 1;
+      }
 
-        &::after {
-          transform: translate(-50%, -50%) scale(1);
+      &.is-checked {
+        z-index: 2;
+        background-color: var(--vt-color-primary);
+        border-color: var(--vt-color-primary);
+        color: #ffffff;
+
+        .el-radio__label {
+          color: #ffffff;
         }
       }
 
-      .el-radio__label {
-        color: $primary-color;
-      }
-
-      // 禁用且选中状态
       &.is-disabled {
-        .el-radio__inner {
-          background-color: $text-color-disabled;
-          border-color: $text-color-disabled;
-        }
+        background-color: rgba(84, 98, 140, 0.1);
+        border-color: var(--vt-border-color);
 
         .el-radio__label {
-          color: $text-color-disabled;
-        }
-      }
-    }
-
-    // 聚焦状态
-    &.is-focus {
-      .el-radio__inner {
-        border-color: $primary-color;
-        box-shadow: 0 0 0 2px $primary-color-alpha-20;
-      }
-    }
-
-    // 悬停状态
-    &:hover:not(.is-disabled) {
-      .el-radio__inner {
-        border-color: none;
-      }
-
-      &:not(.is-checked) {
-        .el-radio__label {
-          color: $text-color-white-60;
-        }
-      }
-    }
-  }
-
-  // Radio 输入框样式
-  .el-radio__input {
-    white-space: nowrap;
-    cursor: pointer;
-    outline: none;
-    display: inline-flex;
-    position: relative;
-    line-height: 1;
-    vertical-align: middle;
-    margin-right: $spacing-xs;
-
-    // 隐藏原生 input
-    .el-radio__original {
-      opacity: 0;
-      outline: none;
-      position: absolute;
-      z-index: -1;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      margin: 0;
-    }
-  }
-
-  // Radio 圆形按钮样式
-  .el-radio__inner {
-    border: $border-width-base solid $border-color-base;
-    border-radius: $border-radius-circle;
-    width: 12px;
-    height: 12px;
-    background-color: transparent;
-    position: relative;
-    cursor: pointer;
-    display: inline-block;
-    box-sizing: border-box;
-    transition: all $transition-fast;
-
-    // 选中状态的内部圆点
-    &::after {
-      width: 6px;
-      height: 6px;
-      border-radius: $border-radius-circle;
-      background-color: $primary-color;
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      transition: transform $transition-fast;
-    }
-
-    // 悬停效果
-    &:hover {
-      border: $border-width-base solid $border-color-base;
-    }
-  }
-
-  // Radio 标签样式
-  .el-radio__label {
-    font-size: $font-size-base;
-    padding-left: $spacing-xs;
-    color: $text-color-regular;
-    transition: color $transition-fast;
-    user-select: none;
-  }
-  // RadioGroup 样式
-  .el-radio-group {
-    display: inline-flex;
-    align-items: center;
-    flex-wrap: wrap;
-    // gap: $spacing-sm;
-    font-size: 0;
-
-    // 垂直布局
-    &--vertical {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: $spacing-sm;
-
-      .el-radio {
-        margin-right: 0;
-        margin-bottom: $spacing-sm;
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-
-    // 按钮样式的 RadioGroup
-    &--button {
-      display: inline-flex;
-      gap: 0;
-
-      .el-radio {
-        margin-right: 0;
-        border: 1px solid $border-color-base;
-        background-color: transparent;
-        padding: $spacing-xs $spacing-md;
-        border-radius: 0;
-        transition: all $transition-fast;
-
-        &:first-child {
-          border-top-left-radius: $border-radius-small;
-          border-bottom-left-radius: $border-radius-small;
+          color: var(--vt-text-disabled);
         }
 
-        &:last-child {
-          border-top-right-radius: $border-radius-small;
-          border-bottom-right-radius: $border-radius-small;
-        }
-
-        &:not(:first-child) {
-          border-left: none;
-        }
-
-        // 隐藏原生样式
-        .el-radio__input {
-          display: none;
-        }
-
-        .el-radio__label {
-          padding-left: 0;
-          color: $text-color-primary;
-        }
-
-        // 悬停状态
-        &:hover:not(.is-disabled) {
-          // background-color: $primary-color-alpha-20;
-          border-color: $primary-color;
-          z-index: 1;
-          color: $text-color-primary;
-        }
-
-        // 选中状态
         &.is-checked {
-          background-color: $primary-color;
-          border-color: $primary-color;
-          color: $text-color-primary;
-          z-index: 2;
-
-          .el-radio__label {
-            color: $text-color-primary;
-          }
-        }
-
-        // 禁用状态
-        &.is-disabled {
-          background-color: $bg-color-dark-11;
-          border-color: $border-color-base;
-          cursor: not-allowed;
-          opacity: $opacity-disabled;
-
-          .el-radio__label {
-            color: $text-color-disabled;
-          }
-
-          &.is-checked {
-            background-color: $text-color-disabled;
-            border-color: $text-color-disabled;
-          }
+          background-color: var(--vt-text-disabled);
+          border-color: var(--vt-text-disabled);
         }
       }
     }
   }
 }
 
+// ============================================
+// View mode switch override
+// ============================================
+.view-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vt-space-2);
+
+  .switch-label {
+    margin-right: 2px;
+    color: var(--vt-text-primary);
+    opacity: 0.9;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.view-mode-switch .el-radio-group--button {
+  .el-radio {
+    border-color: color-mix(in srgb, var(--vt-color-primary) 55%, transparent);
+
+    .el-radio__label {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    &.is-checked {
+      background: color-mix(in srgb, var(--vt-color-primary) 14%, transparent);
+      border-color: var(--vt-color-primary);
+
+      .el-radio__label {
+        color: var(--vt-color-primary);
+      }
+    }
+  }
+}

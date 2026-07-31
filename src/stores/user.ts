@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 import type { UserInfo, LoginParams } from '@/types/user'
 import { userApi } from '@/api/user'
 import wsManager from '@/utils/websocket'
-import { setItem, getItem, removeItem } from '@/utils/secureStore'
-import { clearApiConfig } from '@/utils/apiConfig'
+import { getEncryptedItem, removeItem, setEncryptedItem } from '@/utils/secureStore'
 import MD5 from 'crypto-js/md5'
 import { isValidRole, normalizeRoleName } from '@/utils/rolePermission'
 // 用户状态管理
@@ -31,7 +30,7 @@ export const useUserStore = defineStore(
 
     const loadRefreshToken = async () => {
       try {
-        const val = (await getItem<string>(KEY_REFRESH, { asJson: false })) || ''
+        const val = (await getEncryptedItem<string>(KEY_REFRESH, { asJson: false })) || ''
         refreshToken.value = val
       } catch (e) {
         console.error('Failed to load refreshToken:', e)
@@ -54,7 +53,7 @@ export const useUserStore = defineStore(
           
           token.value = response.data.access_token
           refreshToken.value = response.data.refresh_token
-          await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
+          await setEncryptedItem(KEY_REFRESH, refreshToken.value, { asJson: false })
          
           return { success: true, message: response.message || 'Login successful', statusCode: 200 }
         } else {
@@ -100,7 +99,7 @@ export const useUserStore = defineStore(
         if (response.success) {
           userInfo.value = response.data
           // 持久化用户信息（可选）
-          await setItem(KEY_USER, userInfo.value, { asJson: true })
+          await setEncryptedItem(KEY_USER, userInfo.value, { asJson: true })
 
           return { success: true, message: response.message || 'Get user info successful' }
         } else {
@@ -115,14 +114,14 @@ export const useUserStore = defineStore(
     const refreshUserToken = async () => {
       try {
         // 尝试读取 refreshToken 并刷新 access token
-        const rt = await getItem<string>(KEY_REFRESH, { asJson: false })
+        const rt = await getEncryptedItem<string>(KEY_REFRESH, { asJson: false })
         if (!rt) return { success: false, message: 'No refresh token' }
         
         const response = await userApi.refreshToken(rt)
         if (response.success) {
           token.value = response.data.access_token
           refreshToken.value = response.data.refresh_token
-          await setItem(KEY_REFRESH, refreshToken.value, { asJson: false })
+          await setEncryptedItem(KEY_REFRESH, refreshToken.value, { asJson: false })
           return { success: true, message: 'Token refreshed successfully' }
         }
         return { success: false, message: response.message || 'Token refresh failed' }

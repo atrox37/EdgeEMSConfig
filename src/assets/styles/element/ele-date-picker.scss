@@ -1,442 +1,390 @@
-@use "@/assets/styles/_variables.scss" as *;
-// Element Plus Date Picker 样式定制
-// 文件路径: src/assets/styles/element/ele-date-picker.scss
+@use './_popper-glass.scss' as popper;
 
-.voltage-class {
-// 日期选择器弹出层
-.el-picker__popper.el-popper {
-  top: 44px !important;
-  background: transparent !important;
-  border-radius: $border-radius-base !important;
-  border: $border-width-base solid !important;
-  border-image: $border-gradient-menu !important;
-  box-shadow: $box-shadow-medium !important;
-  backdrop-filter: $backdrop-blur-base !important;
-  background-color: $bg-color-dark-10 !important;
+// ============================================
+// Element Plus: Date / Time Picker
+// ============================================
 
-  .el-date-range-picker__content {
-    padding: 16px;
-    display: block;
-    float: left;
-    &.is-left {
-      border-right: $border-width-base solid $border-color-white-30;
-    }
-    .el-date-range-picker__header {
-      height: 28px;
-      & div {
-        margin-left: 50px;
-        margin-right: 50px;
-        font-size: $font-size-medium;
-      }
-      .el-picker-panel__icon-btn {
-        font-size: $font-size-extra-small;
-        color: $text-color-primary;
-        margin-top: $size-sm;
-        &:hover {
-          color: $text-color-primary;
-        }
-      }
-
-      .el-date-range-picker__header-label {
-        font-size: $font-size-medium;
-        font-weight: $font-weight-medium;
-        color: $text-color-primary;
-        line-height: $table-cell-line-height;
-        padding: 0 5px;
-      }
-    }
-  }
-  .el-month-table,
-  .el-year-table {
-    font-size: 12px;
-    margin: -1px;
-    border-spacing: 2px !important;
-    td {
-      width: 68px;
-      padding: 8px 0;
-      .el-date-table-cell {
-        height: 48px;
-        padding: 6px 0;
-        .el-date-table-cell__text {
-          width: 54px;
-          height: 36px;
-          line-height: 36px;
-          border-radius: $border-radius-base;
-          color: $text-color-primary;
-        }
-      }
-      &.current:not(.disabled) .el-date-table-cell {
-        border-radius: $border-radius-base;
-        margin: 0 3px;
-        .el-date-table-cell__text {
-          background-color: $primary-color;
-        }
-      }
-    }
-  }
-
-  // 日期选择器宽�?
-  .el-date-picker {
-    width: 332px !important;
-  }
-
-  .el-date-range-picker {
-    width: 646px !important;
-  }
-
-  // 选择器面�?
-  .el-picker-panel {
-    background: transparent !important;
-    line-height: 30px;
-
-    .el-picker-panel__body {
-      color: $text-color-primary !important;
-      min-width: 513px;
-
-      // 时间选择器头�?
-      .el-date-picker__time-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-        padding: 8px 5px 5px;
-
-        .el-date-picker__editor-wrap {
-          padding: 0 5px;
-        }
-      }
-
-      // 日期选择器头�?
-      .el-date-picker__header {
-        padding: 12px 12px 0;
-
-        .el-date-picker__header-label {
-          font-size: $font-size-base;
-          color: $text-color-primary;
-        }
-
-        .el-date-picker__prev-btn,
-        .el-date-picker__next-btn {
-          .el-picker-panel__icon-btn {
-            color: $text-color-primary;
-            font-size: $font-size-extra-small;
-            margin-top: $size-sm;
-
-            &:hover {
-              color: $text-color-primary;
-            }
-          }
-        }
-      }
-
-      // 日期表格内容区域
-      .el-picker-panel__content {
-        width: 292px !important;
-        margin: 15px;
-
-        .el-date-table {
-          font-size: 12px;
-
-          th {
-            color: $text-color-primary;
-            padding: 5px;
-            border-bottom: $border-width-base solid $border-color-white-30;
-          }
-
-          td {
-            height: 30px;
-            width: 32px;
-            padding: 4px 0;
-
-            &.available:hover {
-              color: $primary-color !important;
-            }
-          }
-        }
-      }
-    }
-
-    // 选择器面板底�?
-    .el-picker-panel__footer {
-      background: transparent !important;
-      padding: 4px $spacing-md;
-      border-top: $border-width-base solid $border-color-white-30;
-
-      .el-picker-panel__link-btn {
-        color: $text-color-primary !important;
-        padding: 4px $spacing-md;
-
-        &.is-disabled {
-          background: $bg-color-dark-5 !important;
-          color: $text-color-primary !important;
-        }
-      }
-    }
-  }
-}
-// 时间选择器面�?
-.el-time-panel {
-  width: 180px;
-  border-radius: $border-radius-small;
-  border: $border-width-base solid $border-color-gray;
-  background-color: $bg-color-dark-1 !important;
-  margin: 0;
-
-  .el-time-panel__header {
-    padding: $spacing-md 20px;
-    color: $text-color-primary;
-    border-bottom: $border-width-base solid $border-color-white-30;
-    background: transparent;
-
-    .el-time-panel__title {
-      font-size: $font-size-base;
-      font-weight: $font-weight-semibold;
-      color: $text-color-primary;
-    }
-  }
-
-  .el-time-panel__content {
-    max-height: 192px;
-
-    &::before {
-      border-bottom: $border-width-base solid $border-color-white-30;
-      border-top: $border-width-base solid $border-color-white-30;
-    }
-
-    &:after {
-      height: 32px;
-      margin-top: -16px;
-      padding-top: 6px;
-    }
-
-    .el-time-spinner__wrapper {
-      max-height: 192px;
-    }
-
-    .el-time-spinner__list {
-      &::before {
-        height: 80px;
-      }
-
-      // 滚动条样�?
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: $scrollbar-thumb-dark;
-        border-radius: $border-radius-small;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      .el-time-spinner__item {
-        height: 36px;
-        line-height: 36px;
-        font-size: $font-size-base;
-        color: $text-color-primary;
-        transition: all $transition-base;
-
-        &:hover {
-          background: $bg-color-dark-2;
-          color: $text-color-primary;
-        }
-
-        &.is-active {
-          background: $bg-color-dark-1;
-          color: $text-color-primary;
-          font-weight: $font-weight-semibold;
-        }
-
-        &.is-disabled {
-          color: $text-color-disabled;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    .el-scrollbar {
-      .el-scrollbar__bar {
-        border-radius: 4px;
-        right: 2px;
-
-        &.is-vertical {
-          top: 2px;
-          width: 6px;
-
-          .el-scrollbar__thumb {
-            height: 20px !important;
-          }
-        }
-      }
-    }
-  }
-
-  .el-time-panel__footer {
-    height: 36px;
-    line-height: 25px;
-    padding: 4px;
-    border-top: $border-width-base solid $border-color-white-30;
-    background-color: $bg-color-dark-1 !important;
-
-    .el-time-panel__btn {
-      font-size: $font-size-base;
-      color: $text-color-primary;
-      transition: all $transition-base;
-      margin: 5px;
-      line-height: 16px;
-      padding: 0 5px;
-
-      &.confirm {
-        font-weight: $font-weight-normal;
-      }
-    }
-  }
-}
-
-// 日期表格通用样式（在 voltage-class 外，作用于所有场景）
-.el-date-table td {
-  // 禁用状�?
-  &.disabled {
-    background: transparent !important;
-
-    .el-date-table-cell {
-      background: $border-color-white-30 !important;
-    }
-  }
-
-  // // 单元格基础样式
-  // .el-date-table-cell {
-  //   height: 30px !important;
-  //   padding: 3px 0 !important;
-  //   line-height: 30px !important;
-
-  //   .el-date-table-cell__text {
-  //     height: 24px !important;
-  //     line-height: 24px !important;
-  //     width: 24px !important;
-  //     color: $text-color-primary !important;
-  //   }
+// ---------- Trigger (in-place) ----------
+.el-date-editor.el-date-editor {
+  --el-date-editor-width: var(--vt-field-width);
+  // &.el-input,
+  // &.el-input__wrapper {
+  //   width: 100% !important;
   // }
-  // 当前日期样式
-  &.current:not(.disabled) .el-date-table-cell__text {
-    height: 24px;
-    width: 24px;
-    line-height: 24px;
-    background-color: $primary-color !important;
-  }
 
-  // 今日日期样式
-  &.today .el-date-table-cell__text {
-    color: $primary-color;
-  }
-
-  // 日期单元格基础样式
-  .el-date-table-cell {
-    height: 30px !important;
-    padding: 3px 0 !important;
-    line-height: 30px !important;
-
-    .el-date-table-cell__text {
-      height: 24px !important;
-      line-height: 24px !important;
-      width: 24px !important;
-      color: $text-color-primary;
-    }
-  }
-
-  // 范围内日期单元格样式
-  &.in-range .el-date-table-cell {
-    background-color: $primary-color-alpha-20;
-
-    &:hover {
-      background-color: $primary-color-alpha-35;
-    }
-  }
-
-  // 开始日期单元格样式
-  &.start-date .el-date-table-cell {
-    margin-left: 5px !important;
-    border-top-left-radius: 15px !important;
-    border-bottom-left-radius: 15px !important;
-    background-color: $primary-color-alpha-20;
-  }
-
-  // 结束日期单元格样�?
-  &.end-date .el-date-table-cell {
-    margin-right: 5px !important;
-    border-top-right-radius: 15px !important;
-    border-bottom-right-radius: 15px !important;
-    background-color: $primary-color-alpha-20 !important;
-  }
-
-  // 开�?结束日期文本样式
-  &.start-date .el-date-table-cell__text,
-  &.end-date .el-date-table-cell__text {
-    background-color: $primary-color;
-    color: $primary-color;
-  }
-
-  // 当前日期（非禁用）文本样�?
-  &.current:not(.disabled) .el-date-table-cell__text {
-    height: 24px;
-    width: 24px;
-    line-height: 24px;
-    background-color: $primary-color;
-  }
-
-  // 今日日期文本样式
-  &.today .el-date-table-cell__text {
-    color: $primary-color;
-  }
-}
-// 日期范围编辑器样�?
-.el-range-editor.el-input__wrapper {
-  width: 400px;
-
-  &:hover {
+  &.is-focus .el-input__wrapper {
     box-shadow: none;
   }
 
-  .el-range__icon,
-  .el-range__close-icon {
-    width: $font-size-medium !important;
-    height: $font-size-medium !important;
-    color: $text-color-primary !important;
-    font-size: $font-size-medium !important;
-    margin: 0 $size-xs !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
+  &.el-range-editor.el-input__wrapper {
+    width: 400px;
 
-  .el-range-separator {
-    color: $text-color-primary !important;
-    font-size: $font-size-base !important;
-    padding: 0 5px !important;
+    &.is-active,
+    &:hover {
+      box-shadow: none;
+    }
+
+    .el-range__icon,
+    .el-range__close-icon {
+      // display: flex;
+      // align-items: center;
+      // justify-content: center;
+      // width: 16px;
+      // height: 16px;
+      // margin: 0 4px;
+      // color: var(--vt-text-primary);
+      font-size: 16px;
+    }
+
+    .el-range-separator {
+      padding: 0 5px;
+      color: var(--vt-text-primary);
+      font-size: 14px;
+    }
   }
 }
-// .el-range-editor.el-input__wrapper {
-//   width: 400px;
-//   &:hover {
-//     box-shadow: none;
-//   }
-//   .el-range__icon,
-//   .el-range__close-icon {
-//     width: 16px !important;
-//     height: 16px !important;
-//     color: #fff !important;
-//     font-size: 16px !important;
-//     margin: 0 4px !important;
-//     display: flex !important;
-//     align-items: center !important;
-//     justify-content: center !important;
-//   }
-//   .el-range-separator {
-//     color: #fff !important;
-//     font-size: 14px !important;
-//     padding: 0 5px !important;
-//   }
-// }
-}
 
+// ---------- Popper (teleported) ----------
+.el-picker__popper.el-popper.is-light {
+  --el-datepicker-border-color: var(--vt-border-color);
+  --el-datepicker-inner-border-color: var(--vt-border-color-soft);
+  --el-datepicker-inrange-bg-color: var(--vt-bg-elevated);
+  --el-datepicker-inrange-hover-bg-color: var(--vt-bg-hover);
+  --el-datepicker-active-color: var(--vt-color-primary);
+  --el-datepicker-hover-text-color: var(--vt-color-primary);
+  --el-datepicker-text-color: var(--vt-text-primary);
+  --el-datepicker-off-text-color: var(--vt-text-disabled);
+  --el-datepicker-header-text-color: var(--vt-text-primary);
+  --el-datepicker-icon-color: var(--vt-text-secondary);
+
+  @include popper.vt-popper-glass;
+  border-radius: 0;
+  background-color: var(--vt-picker-popper-bg);
+
+  // .el-date-picker {
+  //   // width: 332px;
+  // }
+
+  // .el-date-range-picker {
+  //   // width: 646px;
+  // }
+
+  // // ---- Panel ----
+  // .el-picker-panel {
+  //   background: transparent;
+  //   // line-height: 30px;
+
+  //   .el-picker-panel__body {
+  //     // color: var(--vt-text-primary);
+  //   }
+
+  //   .el-date-picker__time-header {
+  //     // padding: 8px 5px 5px;
+  //     // font-size: 12px;
+  //     // border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+
+  //     .el-date-picker__editor-wrap {
+  //       // padding: 0 5px;
+  //     }
+  //   }
+
+  //   .el-date-picker__header {
+  //     // padding: 12px 12px 0;
+
+  //     .el-date-picker__header-label,
+  //     .el-picker-panel__icon-btn {
+  //       // color: var(--vt-text-primary);
+  //     }
+
+  //     .el-picker-panel__icon-btn {
+  //       // margin-top: 8px;
+  //       // font-size: 12px;
+  //     }
+  //   }
+
+  //   .el-picker-panel__content {
+  //     .el-date-table {
+  //       // font-size: 12px;
+
+  //       th {
+  //         // padding: 5px;
+  //         // color: var(--vt-text-primary);
+  //         // border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  //       }
+
+  //       td {
+  //         // width: 32px;
+  //         // height: 30px;
+  //         // padding: 4px 0;
+
+  //         &.available:hover {
+  //           // color: var(--vt-color-primary);
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   .el-picker-panel__footer {
+  //     // padding: 4px 12px;
+  //     // background: transparent;
+  //     // border-top: 1px solid rgba(255, 255, 255, 0.5);
+
+  //     .el-picker-panel__link-btn {
+  //       // padding: 4px 12px;
+  //       // color: var(--vt-text-primary);
+
+  //       &.is-disabled {
+  //         // color: var(--vt-text-primary);
+  //         // background: var(--vt-bg-elevated);
+  //       }
+  //     }
+  //   }
+  // }
+
+  // // ---- Range content ----
+  // .el-date-range-picker__content {
+  //   // padding: 16px;
+  //   // margin: 0;
+
+  //   &.is-left {
+  //     // border-right: 1px solid rgba(255, 255, 255, 0.5);
+  //   }
+
+  //   .el-date-range-picker__header {
+  //     height: 28px;
+
+  //     div {
+  //       // margin-right: 50px;
+  //       // margin-left: 50px;
+  //       // font-size: 16px;
+  //     }
+
+  //     .el-picker-panel__icon-btn,
+  //     .el-date-range-picker__header-label {
+  //       // color: var(--vt-text-primary);
+  //     }
+
+  //     .el-picker-panel__icon-btn {
+  //       // margin-top: 8px;
+  //       // font-size: 12px;
+  //     }
+
+  //     .el-date-range-picker__header-label {
+  //       // padding: 0 5px;
+  //       // font-size: 16px;
+  //       // font-weight: 500;
+  //       // line-height: 22px;
+  //     }
+  //   }
+  // }
+
+  // // ---- Month / Year table ----
+  // .el-month-table,
+  // .el-year-table {
+  //   // margin: -0.100px;
+  //   // font-size: 12px;
+  //   // border-spacing: 2px;
+
+  //   td {
+  //     // width: 68px;
+  //     // padding: 8px 0;
+
+  //     .el-date-table-cell {
+  //       // height: 48px;
+  //       // padding: 6px 0;
+
+  //       .el-date-table-cell__text {
+  //         // width: 54px;
+  //         // height: 36px;
+  //         // color: var(--vt-text-primary);
+  //         // line-height: 36px;
+  //         border-radius: 0;
+  //       }
+  //     }
+
+  //     &.current:not(.disabled) .el-date-table-cell {
+  //       // margin: 0 3px;
+  //       border-radius: 0;
+
+  //       .el-date-table-cell__text {
+  //         background-color: var(--vt-color-primary);
+  //       }
+  //     }
+  //   }
+  // }
+
+  // // ---- Date cell states ----
+  // .el-date-table td {
+  //   .el-date-table-cell {
+  //     // height: 30px;
+  //     // padding: 3px 0;
+  //     // line-height: 30px;
+
+  //     .el-date-table-cell__text {
+  //       // width: 24px;
+  //       // height: 24px;
+  //       // color: var(--vt-text-primary);
+  //       // line-height: 24px;
+  //     }
+  //   }
+
+  //   &.today .el-date-table-cell__text {
+  //     // color: var(--vt-color-primary);
+  //   }
+
+  //   &.current:not(.disabled) .el-date-table-cell__text {
+  //     // background-color: var(--vt-color-primary);
+  //   }
+
+  //   &.in-range .el-date-table-cell {
+  //     background-color: rgba(255, 105, 0, 0.5);
+
+  //     &:hover {
+  //       background-color: rgba(255, 105, 0, 0.8);
+  //     }
+  //   }
+
+  //   &.start-date .el-date-table-cell {
+  //     // margin-left: 5px;
+  //     background-color: rgba(255, 105, 0, 0.5);
+  //     // border-top-left-radius: 15px;
+  //     // border-bottom-left-radius: 15px;
+  //   }
+
+  //   &.end-date .el-date-table-cell {
+  //     // margin-right: 5px;
+  //     background-color: rgba(255, 105, 0, 0.5);
+  //     // border-top-right-radius: 15px;
+  //     // border-bottom-right-radius: 15px;
+  //   }
+
+  //   &.start-date .el-date-table-cell__text,
+  //   &.end-date .el-date-table-cell__text {
+  //     // color: var(--vt-color-primary);
+  //     // background-color: var(--vt-color-primary);
+  //   }
+
+  //   &.disabled {
+  //     background: transparent;
+
+  //     .el-date-table-cell {
+  //       // background: rgba(255, 255, 255, 0.5);
+  //     }
+  //   }
+  // }
+
+  // // ---- Time panel ----
+  // .el-time-panel {
+  //   // width: 180px;
+  //   // margin: 0;
+  //   background-color: rgba(26, 48, 86, 1);
+  //   // border: 1px solid rgba(128, 128, 128, 0.5);
+  //   // border-radius: 2px;
+
+  //   .el-time-panel__header {
+  //     // padding: 16px 20px;
+  //     // color: var(--vt-text-primary);
+  //     // background: transparent;
+  //     // border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+
+  //     .el-time-panel__title {
+  //       color: var(--vt-text-primary);
+  //       font-size: 14px;
+  //       font-weight: 600;
+  //     }
+  //   }
+
+  //   .el-time-panel__content {
+  //     max-height: 192px;
+
+  //     &::before {
+  //       border-top: 1px solid rgba(255, 255, 255, 0.5);
+  //       border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  //     }
+
+  //     &::after {
+  //       height: 32px;
+  //       margin-top: -0.1600px;
+  //       padding-top: 6px;
+  //     }
+
+  //     .el-time-spinner__wrapper {
+  //       max-height: 192px;
+  //     }
+
+  //     .el-time-spinner__list {
+  //       &::before {
+  //         height: 80px;
+  //       }
+
+  //       &::-webkit-scrollbar {
+  //         width: 6px;
+  //       }
+
+  //       &::-webkit-scrollbar-thumb {
+  //         background: rgba(39, 68, 113, 0.7);
+  //         border-radius: 3px;
+  //       }
+
+  //       &::-webkit-scrollbar-track {
+  //         background: transparent;
+  //       }
+
+  //       .el-time-spinner__item {
+  //         height: 36px;
+  //         color: #fff;
+  //         font-size: 14px;
+  //         line-height: 36px;
+  //         transition: all 0.3s ease;
+
+  //         &:hover {
+  //           color: #fff;
+  //           background: rgba(39, 68, 113, 0.8);
+  //         }
+
+  //         &.is-active {
+  //           color: #ffffff;
+  //           font-weight: 600;
+  //           background: rgba(39, 68, 113, 1);
+  //         }
+
+  //         &.is-disabled {
+  //           color: #c0c4cc;
+  //           cursor: not-allowed;
+  //         }
+  //       }
+  //     }
+
+  //     .el-scrollbar__bar {
+  //       right: 2px;
+  //       border-radius: 4px;
+
+  //       &.is-vertical {
+  //         top: 2px;
+  //         width: 6px;
+
+  //         .el-scrollbar__thumb {
+  //           min-height: 20px;
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   .el-time-panel__footer {
+  //     height: 36px;
+  //     padding: 4px;
+  //     line-height: 25px;
+  //     background-color: rgba(26, 48, 86, 1);
+  //     border-top: 1px solid rgba(255, 255, 255, 0.5);
+
+  //     .el-time-panel__btn {
+  //       margin: 5px;
+  //       padding: 0 5px;
+  //       color: var(--vt-text-primary);
+  //       font-size: 14px;
+  //       line-height: 16px;
+  //       transition: all 0.3s ease;
+  //     }
+  //   }
+  // }
+}
