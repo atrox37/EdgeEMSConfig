@@ -35,7 +35,7 @@
   /* Text */
   --vt-text-primary: #000000;
   --vt-text-regular: #4f5561;
-  --vt-text-secondary: #767d8a;
+  --vt-text-secondary: #333333;
   --vt-text-placeholder: #bfbfbf;
   --vt-text-disabled: #c0c4cc;
   --vt-color-white-05: rgba(255, 255, 255, 0.05);
@@ -59,7 +59,8 @@
   --vt-bg-overlay: rgba(0, 0, 0, 0.3);
   --vt-bg-elevated: #f6f8fc;
   --vt-bg-input: #f6f8fc;
-  --vt-bg-muted: rgba(57, 85, 131, 0.07);
+  --vt-bg-disabled: #e8edf5;
+  --vt-bg-muted: #F5F6FA;
   --vt-bg-glass: rgba(255, 255, 255, 0.9);
   --vt-bg-glass-strong: rgba(255, 255, 255, 0.95);
   --vt-bg-glass-heavy: rgba(255, 255, 255, 0.98);
@@ -70,9 +71,9 @@
   --vt-color-hover: #edf2fa;
 
   /* Table */
-  --vt-table-header-bg: #d3dde7;
-  --vt-table-fixed-bg: rgba(250, 250, 250, 0.95);
-  --vt-table-row-hover-bg: #e6edf4;
+  --vt-table-header-bg: #ECEEFA;
+  --vt-table-fixed-bg: #ECEEFA;
+  --vt-table-row-hover-bg: #FFF0E5;
   --vt-table-sort-color: var(--vt-color-primary);
   --vt-text-empty: #999999;
 
@@ -94,6 +95,7 @@
   --vt-border-color: #dce4f0;
   --vt-border-color-strong: #bccbe0;
   --vt-border-color-soft: #edf1f6;
+  --vt-border-color-disabled: #c5d0df;
   --vt-border-color-dashed: #cbd6e5;
   --vt-border-gradient: linear-gradient(
     117.31deg,

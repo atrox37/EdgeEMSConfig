@@ -29,7 +29,7 @@
   }
 }
 
-// Visual Modeling 下拉/弹出层需高于全屏编辑器 (z-index: 10000)
+// Topology Config 下拉/弹出层需高于全屏编辑器 (z-index: 10000)
 .visual-modeling-popper.el-popper {
   z-index: 10051 !important;
 }

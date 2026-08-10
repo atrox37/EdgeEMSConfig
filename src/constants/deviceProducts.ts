@@ -102,7 +102,7 @@ export function isBindableContainerProduct(productName?: string) {
   return !!productName && BINDABLE_CONTAINER_PRODUCT_NAMES.includes(productName as typeof BINDABLE_CONTAINER_PRODUCT_NAMES[number])
 }
 
-/** Visual Modeling 当前拓扑节点目录；后续可直接由 products 接口替换。 */
+/** Topology Config 当前拓扑节点目录；后续可直接由 products 接口替换。 */
 export type TopologyNodeKind = 'standalone' | 'composite' | 'container'
 
 export interface TopologyNodeDefinition {

@@ -13,8 +13,6 @@
           allow-create
           clearable
           placeholder="Search Point Name"
-          :teleported="false"
-          popper-class="signal-name-popper"
           style="width: 280px"
           :fit-input-width="true"
         >
@@ -135,7 +133,7 @@
         v-model:page-size="pageSize"
         :page-sizes="[10, 20]"
         :total="total"
-        layout="total, sizes, prev, pager, next"
+        layout="total, prev, pager, next, sizes"
         @size-change="() => (currentPage = 1)"
       />
     </div>

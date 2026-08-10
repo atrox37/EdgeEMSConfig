@@ -1369,7 +1369,10 @@ watch(
     }
 
     .rule-chain-editor__page-header {
-      padding: 6px 10px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
       background-color: transparent;
       border-bottom: 1px solid rgba(15, 31, 61, 0.08);
       :deep(.el-page-header__left) {

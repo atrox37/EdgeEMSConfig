@@ -2,7 +2,17 @@
 import en from 'element-plus/es/locale/lang/en'
 import UpdateChecker from '@/components/UpdateChecker.vue'
 import TitleBar from '@/layout/TitleBar.vue'
-const locale = en
+
+const locale = {
+  ...en,
+  el: {
+    ...en.el,
+    pagination: {
+      ...en.el.pagination,
+      total: 'A total of {total} items',
+    },
+  },
+}
 </script>
 
 <template>

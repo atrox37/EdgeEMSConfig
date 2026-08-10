@@ -32,6 +32,16 @@
       </div>
     </div>
 
+    <div class="rule-management__search-form-second-row">
+      <IconButton
+        type="primary"
+        :icon="userAddIcon"
+        text="New"
+        custom-class="rule-management__btn"
+        @click="openCreateDialog"
+      />
+    </div>
+
     <div class="channel-templates-page__table">
       <el-table
         v-loading="loading"
@@ -44,16 +54,7 @@
         <el-table-column prop="description" label="Description" min-width="220" show-overflow-tooltip />
         <el-table-column prop="protocol" label="Protocol" width="130" />
         <el-table-column prop="created_at" label="Created At" min-width="180" />
-        <el-table-column fixed="right" label="Operation" min-width="390">
-          <template #header>
-            <IconButton
-              type="primary"
-              :icon="userAddIcon"
-              text="New"
-              custom-class="rule-management__btn rule-management__table-header-btn"
-              @click="openCreateDialog"
-            />
-          </template>
+        <el-table-column label="Action" min-width="390" fixed="right">
           <template #default="{ row }">
             <div class="rule-management__operation">
               <div class="rule-management__operation-item" @click="openEditDialog(row)">
@@ -83,7 +84,7 @@
           :page-sizes="[10, 20, 50, 100]"
           :total="pagination.total"
           :teleported="false"
-          layout="total, sizes, prev, pager, next"
+          layout="total, prev, pager, next, sizes"
           @size-change="handlePageSizeChange"
           @current-change="handlePageChange"
         />
@@ -352,13 +353,9 @@ onMounted(async () => {
   flex-direction: column;
 
   .channel-templates-page__header {
-    margin-bottom: 20px;
-  }
-
-  .channel-templates-page__title {
-    font-size: var(--vt-font-size-lg);
-    font-weight: var(--vt-font-weight-semibold);
-    color: var(--vt-text-primary);
+    height: 64px;
+    display: flex;
+    align-items: center;
   }
 
   .channel-templates-page__toolbar {
@@ -366,8 +363,8 @@ onMounted(async () => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
     border-bottom: 1px solid #dcdfe6;
     :deep(.el-form-item) {
       margin-bottom: 0;
@@ -380,6 +377,14 @@ onMounted(async () => {
   .channel-templates-page__toolbar-actions {
     display: flex;
     gap: 8px;
+  }
+
+  .rule-management__search-form-second-row {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
   .channel-templates-page__table {

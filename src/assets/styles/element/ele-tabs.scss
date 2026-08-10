@@ -3,16 +3,16 @@
 // ============================================
 // --- Base ---
 .el-tabs.el-tabs {
-  --el-tabs-header-height: var(--vt-control-height-lg);
+  --el-tabs-header-height: var(--vt-control-height);
 
-  color: #fff;
+  color: var(--vt-text-primary);
 
   .el-tabs__header {
-    margin: 0 0 10px;
+    // margin: 0 0 10px;
 
-    &.is-top {
-      height: 40px;
-    }
+    // &.is-top {
+    //   // height: 40px;
+    // }
 
     .el-tabs__nav-wrap {
       &:after {
@@ -22,8 +22,8 @@
 
       .el-tabs__nav-scroll {
         .el-tabs__nav {
-          height: 40px;
-          line-height: 40px;
+          // height: 40px;
+          // line-height: 40px;
 
           &.is-top {
             // border: 1px solid #7a8092;
@@ -32,12 +32,22 @@
           }
 
           .el-tabs__item {
-            color: #fff;
+            color: var(--vt-text-primary);
             font-size: 14px;
-            height: 40px;
-            line-height: 40px;
-            padding: 0 20px;
-            min-width: 100px;
+            // height: 40px;
+            line-height: 1;
+            padding: 0 10px;
+            min-width: 80px;
+
+            &:hover {
+              color: var(--vt-color-primary);
+            }
+
+            &:focus-visible {
+              outline: 2px solid color-mix(in srgb, var(--vt-color-primary) 45%, transparent);
+              outline-offset: -2px;
+            }
+
             // border-left: 1px solid #7a8092;
             // border-bottom: 1px solid transparent;
 

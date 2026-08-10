@@ -13,8 +13,6 @@
           allow-create
           clearable
           placeholder="Search Point Name"
-          :teleported="false"
-          popper-class="signal-name-popper"
           style="width: 280px"
           :fit-input-width="true"
         >
@@ -64,7 +62,6 @@
                   <div class="inline-edit-container">
                     <el-select
                       v-model="row.routing.channel_id"
-                      popper-class="inline-mapping-popper"
                       :fit-input-width="true"
                       placeholder="Select channel"
                       @change="() => onSelectChannel(row)"
@@ -100,7 +97,6 @@
                   <div class="inline-edit-container">
                     <el-select
                       v-model="row.routing.channel_type"
-                      popper-class="inline-mapping-popper"
                       :fit-input-width="true"
                       :disabled="!row.routing?.channel_id"
                       @change="() => onChannelTypeChange(row)"
@@ -136,7 +132,6 @@
                   <div class="inline-edit-container">
                     <el-select
                       v-model="row.routing.channel_point_id"
-                      popper-class="inline-mapping-popper"
                       :fit-input-width="true"
                       placeholder="Select point"
                       :disabled="!row.routing?.channel_id || !row.routing?.channel_type"
@@ -173,7 +168,6 @@
                   <div class="inline-edit-container">
                     <el-select
                       v-model="row.routing.enabled"
-                      popper-class="inline-mapping-popper"
                       :fit-input-width="true"
                       placeholder="Select"
                       @change="() => onRoutingFieldChange(row, 'enabled')"
@@ -211,7 +205,7 @@
         v-model:page-size="pageSize"
         :page-sizes="[10, 20]"
         :total="total"
-        layout="total, sizes, prev, pager, next"
+        layout="total, prev, pager, next, sizes"
         @size-change="() => (currentPage = 1)"
       />
     </div>

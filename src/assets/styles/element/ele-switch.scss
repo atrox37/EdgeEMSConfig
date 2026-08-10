@@ -125,11 +125,12 @@
   cursor: not-allowed;
 
   .el-switch__core {
-    background: #3a4f71;
+    background: var(--vt-bg-disabled);
+    border: 1px solid var(--vt-border-color-disabled);
     cursor: not-allowed;
 
     .el-switch__action {
-      background: #ffffff;
+      background: var(--vt-text-disabled);
       box-shadow: none;
     }
   }
@@ -140,7 +141,8 @@
   }
 
   &.is-checked .el-switch__core {
-    background: color-mix(in srgb, var(--vt-color-primary) 70%, transparent);
+    background: color-mix(in srgb, var(--vt-color-primary) 30%, var(--vt-bg-disabled));
+    border-color: color-mix(in srgb, var(--vt-color-primary) 45%, var(--vt-border-color-disabled));
   }
 }
 

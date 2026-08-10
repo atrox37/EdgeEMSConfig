@@ -19,6 +19,9 @@
   --el-text-color-secondary: var(--vt-text-secondary);
   --el-text-color-placeholder: var(--vt-text-placeholder);
   --el-text-color-disabled: var(--vt-text-disabled);
+  --el-disabled-bg-color: var(--vt-bg-disabled);
+  --el-disabled-text-color: var(--vt-text-disabled);
+  --el-disabled-border-color: var(--vt-border-color-disabled);
 
   /* ===== Surface / fill ===== */
   --el-bg-color: var(--vt-bg-page);
@@ -92,6 +95,9 @@
   --el-input-placeholder-color: var(--vt-text-placeholder);
   --el-input-icon-color: var(--vt-text-secondary);
   --el-input-transparent-bg-color: transparent;
+  --el-input-disabled-bg-color: var(--vt-bg-disabled);
+  --el-input-disabled-border-color: var(--vt-border-color-disabled);
+  --el-input-disabled-text-color: var(--vt-text-disabled);
 
   /* ===== Select ===== */
   --el-select-input-color: var(--vt-text-placeholder);
@@ -99,6 +105,7 @@
   --el-select-border-color-hover: var(--vt-border-color);
   --el-select-disabled-border: var(--vt-border-color);
   --el-select-disabled-color: var(--vt-text-disabled);
+  --el-select-disabled-bg-color: var(--vt-bg-disabled);
   --el-select-close-hover-color: var(--vt-text-regular);
   --el-select-dropdown-bg-color: var(--vt-picker-popper-bg);
   --el-select-option-hover-background: var(--vt-bg-hover);
@@ -112,8 +119,11 @@
   --el-checkbox-checked-bg-color: var(--vt-color-primary);
   --el-checkbox-checked-input-border-color: var(--vt-color-primary);
   --el-checkbox-input-border-color-hover: var(--vt-color-primary);
+  --el-checkbox-disabled-text-color: var(--vt-text-disabled);
+  --el-checkbox-disabled-input-fill: var(--vt-bg-disabled);
+  --el-checkbox-disabled-input-border-color: var(--vt-border-color-disabled);
   --el-checkbox-disabled-checked-bg-color: var(--vt-bg-input);
-  --el-checkbox-disabled-checked-input-border-color: var(--vt-border-color);
+  --el-checkbox-disabled-checked-input-border-color: var(--vt-border-color-disabled);
 
   --el-radio-font-size: var(--vt-font-size-base);
   --el-radio-text-color: var(--vt-text-primary);
@@ -157,7 +167,7 @@
   --el-menu-border-color: transparent;
 
   /* ===== Table ===== */
-  --el-table-bg-color: transparent;
+  /* --el-table-bg-color: transparent;
   --el-table-tr-bg-color: transparent;
   --el-table-header-bg-color: var(--vt-table-header-bg);
   --el-table-header-text-color: var(--vt-text-secondary);
@@ -166,7 +176,7 @@
   --el-table-current-row-bg-color: var(--vt-table-row-hover-bg);
   --el-table-border-color: var(--vt-border-color-soft);
   --el-table-fixed-box-shadow: 3px 0 6px rgba(0, 0, 0, 0.06);
-  --el-table-index: var(--el-index-normal);
+  --el-table-index: var(--el-index-normal); */
 
   /* ===== Pagination ===== */
   --el-pagination-font-size: var(--vt-font-size-base);

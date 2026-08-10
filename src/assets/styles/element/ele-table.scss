@@ -19,7 +19,7 @@
   --el-table-index: var(--el-index-normal);
 
   background-color: transparent;
-
+  border-radius: 8px;
   // ---------- Inner wrapper ----------
   .el-table__inner-wrapper {
     &::before {
@@ -42,8 +42,8 @@
   .el-table__body-header {
     th {
       @include table-row.vt-table-cell-shell;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 400;
+      // color: rgba(255, 255, 255, 0.6);
+      font-weight: 600;
 
       &:first-child {
         border-left: none;
@@ -53,9 +53,9 @@
         border-right: none;
       }
 
-      &.el-table-fixed-column--right {
-        background-color: var(--vt-table-fixed-bg);
-      }
+      // &.el-table-fixed-column--right {
+      //   background-color: var(--vt-table-fixed-bg);
+      // }
 
       .cell {
         @include table-row.vt-table-cell-inner;
@@ -94,7 +94,7 @@
       }
 
       &.el-table-fixed-column--right {
-        background-color: var(--vt-table-fixed-bg);
+        background-color: #ffffff;
       }
 
       .cell {

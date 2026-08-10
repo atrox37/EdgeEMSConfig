@@ -64,6 +64,7 @@ declare module 'vue' {
     ModuleCard: typeof import('./src/components/card/ModuleCard.vue')['default']
     ModulePageHeader: typeof import('./src/components/common/ModulePageHeader.vue')['default']
     OperationDropdown: typeof import('./src/components/common/OperationDropdown.vue')['default']
+    PageTitle: typeof import('./src/components/common/PageTitle.vue')['default']
     PVCard: typeof import('./src/components/card/PVCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

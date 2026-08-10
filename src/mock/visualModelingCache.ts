@@ -2,7 +2,7 @@ import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfigu
 import type { NodeChannelBinding, StationTopology } from '@/types/stationTopology'
 import { mockGetStationTopology, mockSaveStationTopology } from './stationTopologyMock'
 
-/** Visual Modeling 调试阶段仅使用前端缓存，不访问后端。 */
+/** Topology Config 调试阶段仅使用前端缓存，不访问后端。 */
 export const VISUAL_MODELING_CACHE_ONLY = true
 
 const INSTANCES_STORAGE_KEY = 'visual_modeling_instances_v1'

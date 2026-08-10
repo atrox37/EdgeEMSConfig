@@ -1,6 +1,8 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
-    <ModulePageHeader title="Model Config" variant="filters" />
+    <div class="rule-management__header">
+      <PageTitle title="Model Config" />
+    </div>
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 桌面端：显示筛选框 -->
@@ -58,18 +60,16 @@
           custom-class="rule-management__btn"
           @click="handleSyncInstances"
         />
+        <IconButton v-permission="'engineer'" type="primary" :icon="userAddIcon" text="New"
+          custom-class="rule-management__btn" @click="handleAddUser" />
       </div>
       <div class="rule-management__table">
-        <el-table v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
+        <el-table stripe v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
           row-key="instance_id">
           <el-table-column prop="instance_id" label="ID" width="100" />
           <el-table-column prop="instance_name" label="Instance Name" min-width="200" />
           <el-table-column prop="product_name" label="Product Name" min-width="200" />
-          <el-table-column min-width="250" fixed="right">
-            <template #header>
-              <IconButton v-permission="'engineer'" type="primary" :icon="userAddIcon" text="New"
-                custom-class="rule-management__btn rule-management__table-header-btn" @click="handleAddUser" />
-            </template>
+          <el-table-column label="Action" min-width="250" fixed="right">
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div class="rule-management__operation-item" @click="handleDetail(row)">
@@ -92,7 +92,7 @@
 
         <div class="rule-management__pagination">
           <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next"
+            :page-sizes="[10, 20, 50, 100]" :total="pagination.total" layout="total, prev, pager, next, sizes"
             @size-change="handlePageSizeChange" @current-change="handlePageChange" />
         </div>
       </div>
@@ -107,7 +107,7 @@
 
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue'
-import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
+import PageTitle from '@/components/common/PageTitle.vue'
 import IconButton from '@/components/common/IconButton.vue'
 import { ElMessage } from 'element-plus'
 import { triggerInstSync } from '@/api/systemConfig'
@@ -290,14 +290,10 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
 
 
   .rule-management__header {
-    margin-bottom: 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
 
-    .rule-management__title {
-      font-size: var(--vt-font-size-lg);
-      font-weight: var(--vt-font-weight-semibold);
-      color: var(--vt-text-primary);
-      margin: 0;
-    }
   }
 
   .rule-management__content {
@@ -313,15 +309,12 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 10px;
-      padding-bottom: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
       border-bottom: 1px solid #dcdfe6;
-      :deep(.el-select) {
-    width:180px;
-  }
       //   padding-bottom: 20px;
       :deep(.el-form-item) {
-        margin: 0;
+        margin-bottom: 0;
       }
 
       .form-oprations {
@@ -413,6 +406,7 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
     }
 
     .rule-management__search-form-second-row {
+      
       width: 100%;
       display: flex;
       justify-content: flex-end;
@@ -460,10 +454,6 @@ const openPointsDialog = (row: DeviceInstanceBasic) => {
         flex: 1;
         overflow-y: auto;
         min-height: 0;
-
-        :deep(.el-table-fixed-column--right) {
-          background-color: #d3dde7 !important;
-        }
 
         .rule-management__operation {
           display: flex;

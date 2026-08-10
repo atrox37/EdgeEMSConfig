@@ -1,6 +1,8 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef" v-if="!isDetailRoute">
-    <ModulePageHeader title="Rule Config" variant="filters" />
+    <div class="rule-management__header">
+      <PageTitle title="Rule Config" />
+    </div>
       <div class="rule-management__content">
         <div class="rule-management__search-form" ref="levelSelectRef">
           <el-form :model="filters" :inline="true" class="rule-management__filters-desktop">
@@ -18,8 +20,12 @@
             <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
           </div>
         </div>
+        <div class="rule-management__search-form-second-row">
+          <IconButton v-permission="'engineer'" type="primary" :icon="userAddIcon" text="New"
+            custom-class="rule-management__btn" @click="openCreateDialog" />
+        </div>
         <div class="rule-management__table">
-          <el-table v-loading="loading"
+          <el-table stripe v-loading="loading"
             :data="tableData"
             class="rule-management__table-content"
             align="left"
@@ -39,7 +45,7 @@
               </template>
             </el-table-column>
             <!-- <el-table-column prop="priority" label="Priority" width="120" /> -->
-            <el-table-column prop="enabled" label="Enabled" min-width="60">
+            <el-table-column prop="enabled" label="Enabled" min-width="100">
               <template #default="{ row, $index }">
                 <el-switch
                   v-permission="'engineer'"
@@ -49,17 +55,7 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column min-width="280" fixed="right">
-              <template #header>
-                <IconButton
-                  v-permission="'engineer'"
-                  type="primary"
-                  :icon="userAddIcon"
-                  text="New"
-                  custom-class="rule-management__btn rule-management__table-header-btn"
-                @click="openCreateDialog"
-                />
-              </template>
+            <el-table-column label="Action" min-width="280" fixed="right">
               <template #default="{ row }">
                 <div class="rule-management__operation">
                   <div class="rule-management__operation-item" @click="openDetail(row)">
@@ -89,7 +85,7 @@
               v-model:page-size="pagination.pageSize"
               :page-sizes="[10, 20, 50, 100]"
               :total="pagination.total"
-              layout="total, sizes, prev, pager, next"
+              layout="total, prev, pager, next, sizes"
               @size-change="handlePageSizeChange"
               @current-change="handlePageChange"
             />
@@ -106,7 +102,7 @@
 import { ElMessage } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
 import IconButton from '@/components/common/IconButton.vue'
-import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
+import PageTitle from '@/components/common/PageTitle.vue'
 import RuleEditDialog from './components/RuleEditDialog.vue'
 import RuleHistoryDialog from './components/RuleHistoryDialog.vue'
 import { enableRule, disableRule } from '@/api/rulesManagement'
@@ -222,14 +218,10 @@ watch(
 
   
   .rule-management__header {
-    margin-bottom: 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
 
-    .rule-management__title {
-      font-size: var(--vt-font-size-lg);
-      font-weight: var(--vt-font-weight-semibold);
-      color: var(--vt-text-primary);
-      margin: 0;
-    }
   }
 
 .rule-management__content {
@@ -275,6 +267,14 @@ watch(
           filter: brightness(0) saturate(100%) invert(48%) sepia(100%) saturate(7498%) hue-rotate(1deg) brightness(102%) contrast(101%);
         }
       }
+    }
+
+    .rule-management__search-form-second-row {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .rule-management__table-operations {

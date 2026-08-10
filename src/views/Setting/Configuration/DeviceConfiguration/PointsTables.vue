@@ -4,11 +4,9 @@
     <el-page-header @back="handleBack" class="points-tables-page__header">
       <template #content>
         <div class="points-tables-page__header-content">
-                    <!-- 右侧实例名称（样式与标题一致；编辑模式下不显示，避免红色焦点区域） -->
-                    <span v-if="instanceName" class="points-tables-page__channel-name">
+          <span v-if="instanceName" class="points-tables-page__channel-name">
             {{ instanceName }} -&nbsp;
           </span>
-          <!-- 模式切换下拉菜单：首次打开默认为 Points Table -->
           <el-dropdown
             v-if="!isEditing"
             trigger="click"
@@ -26,8 +24,7 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <span v-else class="points-tables-page__header-title"> {{ viewMode === 'points' ? 'Points Table' : 'Routings Table' }}</span>
-
+          <span v-else class="points-tables-page__header-title">{{ viewMode === 'points' ? 'Points Table' : 'Routings Table' }}</span>
         </div>
       </template>
     </el-page-header>
@@ -486,7 +483,7 @@ const performCancelEdit = () => {
   actionRoutingRef.value?.clearImportedFileName?.()
 }
 
-// Back: return to caller page when opened from visual modeling editor
+// Back: return to caller page when opened from topology config editor
 const handleBack = async () => {
   if (isEditing.value && getHasChanges()) {
     try {
@@ -652,7 +649,9 @@ watch(
   flex-direction: column;
 
   .points-tables-page__header {
-    margin-bottom: 20px;
+    height: 64px;
+    display: flex;
+    align-items: center;
 
     .points-tables-page__header-content {
       display: flex;

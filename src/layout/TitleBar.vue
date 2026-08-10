@@ -9,7 +9,7 @@
       </div>
       <div class="titlebar__user" v-if="shouldShowUserInfo">
         <el-dropdown @command="handleUserCommand" @visible-change="handleUserDropdownVisible" trigger="click"
-          :teleported="false">
+          :teleported="false" :show-arrow="false">
           <div class="titlebar__user-info">
             <div class="titlebar__user-avatar">
               <div class="titlebar__user-avatar-initials">
@@ -20,7 +20,7 @@
             <img :src="arrowDownIcon" class="titlebar__user-arrow" :class="{ 'is-open': isUserDropdownOpen }" />
           </div>
           <template #dropdown>
-            <el-dropdown-menu>
+            <el-dropdown-menu :show-arrow="false">
               <el-dropdown-item command="logout" class="titlebar__user-item">
                 <img :src="logoutIcon" class="titlebar__user-logout-icon" />
                 Logout
@@ -31,7 +31,7 @@
       </div>
       <div class="titlebar__controls">
         <el-dropdown trigger="click" placement="bottom-start" :teleported="false" @command="handleSystemCommand"
-          style="height: 100%;">
+          :show-arrow="false" style="height: 100%;">
           <div class="titlebar__button titlebar__button--settings">
             <img :src="buttonSettingIcon" class="titlebar__setting-icon" />
           </div>
@@ -46,7 +46,7 @@
           <img :src="buttonMinimizeIcon" class="titlebar__button-icon" />
         </div>
         <div class="titlebar__button titlebar__button--maximize" @click="toggleMaximize">
-          <img :src="buttonMaximizeIcon" class="titlebar__button-icon" />
+          <img :src="isMaximized ? buttonRestoreIcon : buttonMaximizeIcon" class="titlebar__button-icon" />
         </div>
         <div class="titlebar__button titlebar__button--close" @click="closeWindow">
           <img :src="buttonCloseIcon" class="titlebar__button-icon" />
@@ -73,6 +73,7 @@ import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
 import TitlebarSettingDialog from '@/layout/components/TitlebarSettingDialog.vue'
 import buttonMinimizeIcon from '@/assets/icons/button-minimize.svg'
 import buttonMaximizeIcon from '@/assets/icons/button-maximize.svg'
+import buttonRestoreIcon from '@/assets/icons/button-restore.svg'
 import buttonCloseIcon from '@/assets/icons/button-close.svg'
 import buttonSettingIcon from '@/assets/icons/button-setting.svg'
 const router = useRouter()
@@ -203,7 +204,7 @@ const getAvatarName = (name: string): string => {
   justify-content: space-between;
   z-index: 100;
   user-select: none;
-  padding: 0 16px;
+  padding-left:16px;
   height: 36px;
 
   .titlebar__left {
@@ -302,7 +303,7 @@ const getAvatarName = (name: string): string => {
       opacity: 0.6;
       transition: transform 0.2s ease;
 
-      .titlebar__user-arrow.is-open {
+      &.is-open {
         transform: rotate(180deg);
       }
     }
@@ -344,30 +345,28 @@ const getAvatarName = (name: string): string => {
     color: #ffffff;
     cursor: pointer;
     transition: all var(--vt-transition-fast);
-    &:last-child {
-      padding-right: 0;
-    }
     img{
       width: 24px;
       height: 24px;
       object-fit: contain;
     }
-    .titlebar__button:hover {
-      background: rgba(0, 0, 0, 0.05); // 浅色背景 hover 效果
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
     }
 
-    .titlebar__button:active {
-      background: rgba(0, 0, 0, 0.1); // 浅色背景 active 效果
+    &:active {
+      background: rgba(255, 255, 255, 0.2);
     }
 
-    .titlebar__button.titlebar__button--close {
-      .titlebar__button.titlebar__button--close:hover {
-        background: #e81123; // Windows 标准关闭按钮红色（悬停）
+    &.titlebar__button--close {
+      &:hover {
+        background: var(--el-color-error, #f56c6c);
         color: #ffffff;
       }
 
-      .titlebar__button.titlebar__button--close:active {
-        background: #f1707a; // Windows 标准关闭按钮红色（按下）
+      &:active {
+        background: var(--el-color-error-dark-2, #d9534f);
         color: #ffffff;
       }
     }

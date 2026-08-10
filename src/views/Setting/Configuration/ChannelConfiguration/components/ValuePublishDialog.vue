@@ -7,7 +7,7 @@
             <template v-if="form.category === 'C' || form.category === 'S'">
 
 
-              <el-select v-model="form.value" :fit-input-width="true" placeholder="Select" :teleported="false">
+              <el-select v-model="form.value" :fit-input-width="true" placeholder="Select">
                 <el-option label="1" :value="1" />
                 <el-option label="0" :value="0" />
               </el-select>

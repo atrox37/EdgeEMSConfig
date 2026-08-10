@@ -13,8 +13,6 @@
           allow-create
           clearable
           placeholder="Search Point Name"
-          :teleported="false"
-          popper-class="signal-name-popper"
           style="width: 280px"
           :fit-input-width="true"
         >
@@ -168,7 +166,6 @@
                 filterable
                 v-model="publishValues[row.point_id]"
                 placeholder="Select"
-                popper-class="inline-publish-popper"
                 :fit-input-width="true"
                 @change="notifyPublishChange"
                 clearable
@@ -197,7 +194,7 @@
         v-model:page-size="pageSize"
         :page-sizes="[10, 20]"
         :total="total"
-        layout="total, sizes, prev, pager, next"
+        layout="total, prev, pager, next, sizes"
         @size-change="() => (currentPage = 1)"
       />
     </div>

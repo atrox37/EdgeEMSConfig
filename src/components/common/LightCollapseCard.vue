@@ -203,7 +203,7 @@ watch(
 .light-collapse-card__body-inner {
   height: 100%;
   padding: 6px 16px 16px;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .light-collapse-card__footer {

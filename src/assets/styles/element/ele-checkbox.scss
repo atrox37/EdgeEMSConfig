@@ -14,8 +14,11 @@
   --el-checkbox-checked-bg-color: var(--vt-color-primary);
   --el-checkbox-checked-input-border-color: var(--vt-color-primary);
   --el-checkbox-input-border-color-hover: var(--vt-color-primary);
+  --el-checkbox-disabled-text-color: var(--vt-text-disabled);
+  --el-checkbox-disabled-input-fill: var(--vt-bg-disabled);
+  --el-checkbox-disabled-input-border-color: var(--vt-border-color-disabled);
   --el-checkbox-disabled-checked-bg-color: var(--vt-bg-input);
-  --el-checkbox-disabled-checked-input-border-color: var(--vt-border-color);
+  --el-checkbox-disabled-checked-input-border-color: var(--vt-border-color-disabled);
 
   // ---- Base ----
   display: inline-flex;
@@ -29,6 +32,26 @@
 
   &:hover .el-checkbox__inner {
     border-color: var(--vt-color-primary);
+  }
+
+  &.is-disabled {
+    color: var(--vt-text-disabled);
+    cursor: not-allowed;
+
+    .el-checkbox__inner {
+      background-color: var(--vt-bg-disabled);
+      border-color: var(--vt-border-color-disabled);
+      cursor: not-allowed;
+    }
+
+    .el-checkbox__label {
+      color: var(--vt-text-disabled);
+    }
+
+    &.is-checked .el-checkbox__inner {
+      background-color: var(--vt-bg-disabled);
+      border-color: var(--vt-border-color-disabled);
+    }
   }
 
   // ---- Size variants ----

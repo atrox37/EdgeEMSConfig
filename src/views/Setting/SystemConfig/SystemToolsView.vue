@@ -606,7 +606,7 @@ onUnmounted(() => {
   margin-top: 16px;
   border: 1px solid var(--vt-border-color);
   border-radius: var(--vt-radius-sm);
-  background: var(--vt-bg-overlay);
+  // background: var(--vt-bg-overlay);
   display: flex;
   flex-direction: column;
   height: calc(100% - 48px);

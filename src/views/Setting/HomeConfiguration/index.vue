@@ -1,12 +1,13 @@
 <template>
   <div class="home-configuration">
-    <ModulePageHeader title="Home Configuration" variant="actions">
-      <template #toolbar>
+    <div class="home-configuration__header">
+      <PageTitle title="Home Configuration" />
+      <div class="home-configuration__actions">
         <el-button v-permission="'engineer'" type="primary" plain :loading="resetLoading" @click="handleRestore">
           Restore Default
         </el-button>
-      </template>
-    </ModulePageHeader>
+      </div>
+    </div>
 
     <div class="home-configuration__content">
       <div class="home-configuration__preview">
@@ -42,7 +43,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
+import PageTitle from '@/components/common/PageTitle.vue'
 import HomeView from './HomeView/index.vue'
 import PointConfigDialog from './components/PointConfigDialog.vue'
 import type { PointConfigPayload } from './components/PointConfigDialog.vue'
@@ -258,17 +259,10 @@ onBeforeUnmount(() => {
 }
 
 .home-configuration__header {
-  margin-bottom: 24px;
+  height: 64px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.home-configuration__title {
-  font-size: var(--vt-font-size-lg);
-  font-weight: var(--vt-font-weight-semibold);
-  color: var(--vt-text-primary);
-  margin: 0;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .home-configuration__actions {

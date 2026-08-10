@@ -4,11 +4,9 @@
         <el-page-header @back="handleBack" class="points-tables-page__header">
             <template #content>
                 <div class="points-tables-page__header-content">
-                    <!-- 右侧通道名称（字体小于标题） -->
                     <span v-if="channelName" class="points-tables-page__channel-name">
                         {{ channelName }} -&nbsp;
                     </span>
-                    <!-- 模式切换下拉菜单：首次打开默认为 Points Table -->
                     <el-dropdown v-if="!isEditing" trigger="click" class="points-tables-page__view-mode-dropdown"
                         @command="handleDropdownCommand">
                         <span class="points-tables-page__dropdown-trigger">
@@ -25,7 +23,6 @@
                     <span v-else class="points-tables-page__header-title">{{ viewMode === 'points' ? 'Points Table' :
                         'Mappings Table'
                     }}</span>
-
                 </div>
             </template>
         </el-page-header>
@@ -819,7 +816,9 @@ watch(
 
 
     .points-tables-page__header {
-        margin-bottom: 20px;
+        height: 64px;
+        display: flex;
+        align-items: center;
 
         .points-tables-page__header-content {
             display: flex;

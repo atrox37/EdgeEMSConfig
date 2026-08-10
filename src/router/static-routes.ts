@@ -99,18 +99,18 @@ export const staticRoutes: RouteRecordRaw[] = [
         },
       },
       {
-        path: '/visualModeling',
-        name: 'visualModeling',
-        component: () => import('@/views/VisualModeling/ModelingEditorView.vue'),
+        path: '/topologyConfig',
+        name: 'topologyConfig',
+        component: () => import('@/views/VisualModeling/index.vue'),
         meta: {
-          title: 'Visual Modeling',
-          activeNav: '/visualModeling',
+          title: 'Topology Config',
+          activeNav: '/topologyConfig',
           icon: ModelingIcon,
         },
       },
       {
-        path: '/visualModeling/editor/:id',
-        redirect: '/visualModeling',
+        path: '/topologyConfig/editor/:id',
+        redirect: '/topologyConfig',
         meta: { hidden: true },
       },
       {

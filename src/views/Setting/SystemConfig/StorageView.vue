@@ -547,7 +547,7 @@ onUnmounted(() => {
   min-height: 0;
   border: var(--vt-border-width-base) solid var(--vt-border-color);
   border-radius: var(--vt-radius-md);
-  background: var(--vt-bg-overlay);
+  // background: var(--vt-bg-overlay);
   box-shadow: var(--vt-shadow-base);
 }
 

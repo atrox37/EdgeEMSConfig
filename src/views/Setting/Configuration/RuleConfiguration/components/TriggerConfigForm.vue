@@ -42,7 +42,6 @@
                 :fit-input-width="true"
                 placeholder="Instance"
                 class="trigger-config-form__select"
-                popper-class="trigger-config-form__popper"
                 @change="() => onInstanceChange(idx)"
               >
                 <el-option
@@ -56,7 +55,6 @@
                 v-model="ref.point_type"
                 placeholder="Point Type"
                 class="trigger-config-form__select trigger-config-form__select--type"
-                popper-class="trigger-config-form__popper trigger-config-form__popper--type"
                 :disabled="!ref.instance"
                 @change="() => onPointTypeChange(idx)"
               >
@@ -69,7 +67,6 @@
                 :fit-input-width="true"
                 placeholder="Point"
                 class="trigger-config-form__select"
-                popper-class="trigger-config-form__popper"
                 :disabled="!ref.instance || !ref.point_type"
               >
                 <el-option
@@ -108,7 +105,6 @@
           <el-select
             v-model="form.value_deadband_mode"
             class="trigger-config-form__select trigger-config-form__select--deadband"
-            popper-class="trigger-config-form__popper trigger-config-form__popper--deadband"
           >
             <el-option label="None" value="none" />
             <el-option label="Absolute" value="absolute" />

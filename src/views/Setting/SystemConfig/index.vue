@@ -1,6 +1,8 @@
 <template>
   <div class="system-config-shell">
-    <ModulePageHeader title="System Config" variant="actions" />
+    <div class="system-config-shell__header">
+      <PageTitle title="System Config" />
+    </div>
 
     <el-tabs v-model="activeTab" class="system-config-shell__tabs" @tab-change="handleTabChange">
       <el-tab-pane name="network">
@@ -47,7 +49,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
-import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
+import PageTitle from '@/components/common/PageTitle.vue'
 
 type SystemConfigTab = 'network' | 'storage' | 'mqtt' | 'tools'
 
@@ -95,19 +97,14 @@ const handleTabChange = (name: string | number) => {
 }
 
 .system-config-shell__header {
-  margin-bottom: 12px;
-}
-
-.system-config-shell__title {
-  margin: 0;
-  font-size: var(--vt-font-size-lg);
-  font-weight: var(--vt-font-weight-semibold);
-  color: var(--vt-text-primary);
+  height: 64px;
+  display: flex;
+  align-items: center;
 }
 
 .system-config-shell__tabs {
   flex-shrink: 0;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .system-config-shell__content {
@@ -127,46 +124,63 @@ const handleTabChange = (name: string | number) => {
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__header) {
   margin: 0;
-  border: none;
+  // height: 46px !important;
+  // min-height: 46px;
+  box-sizing: border-box;
+  // padding: 4px;
+  // border: 1px solid var(--vt-border-color);
+  border-radius: var(--vt-radius-sm);
+  background: var(--vt-bg-elevated);
+  box-shadow: 0 2px 6px rgba(53, 76, 123, 0.08);
+  overflow: hidden;
 }
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-wrap::after) {
   display: none;
 }
+
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-wrap),
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-scroll) {
-  overflow: visible !important;
+  height: 36px;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
 }
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-wrap::-webkit-scrollbar),
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav-scroll::-webkit-scrollbar) {
+  display: none;
+}
+
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__nav) {
   border: none !important;
+  display: flex;
+  gap: var(--vt-space-3);
+  height: 36px;
+  line-height: 36px;
+  min-width: max-content;
 }
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__item) {
-  height: 30px;
-  line-height: 30px;
-  padding: 0 16px;
-  margin-right: 8px;
-  border: 1px solid var(--vt-border-color);
-  border-radius: 6px;
-  color: var(--vt-text-primary);
-  background: #fff;
+  position: relative;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 18px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: var(--vt-radius-sm);
+  color: var(--vt-text-primary) !important;
+  background: transparent;
   font-weight: var(--vt-font-weight-medium);
   white-space: nowrap;
-  // Keep a visible right/bottom "edge" for 3D block feeling.
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    2px 2px 0 rgba(15, 23, 42, 0.18),
-    3px 3px 8px rgba(15, 23, 42, 0.12);
-  transform: translateY(0);
-  transition: box-shadow 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+  transition: color var(--vt-transition-fast), background-color var(--vt-transition-fast),
+    border-color var(--vt-transition-fast), box-shadow var(--vt-transition-fast);
 }
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__item:hover) {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    3px 3px 0 rgba(15, 23, 42, 0.2),
-    4px 4px 10px rgba(15, 23, 42, 0.16);
-  transform: translateY(-1px);
+  color: var(--vt-color-primary) !important;
+  background: #fff;
+  border-color: var(--vt-border-color-soft);
 }
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__item:last-child) {
@@ -174,14 +188,15 @@ const handleTabChange = (name: string | number) => {
 }
 
 .system-config-shell .system-config-shell__tabs :deep(.el-tabs__item.is-active) {
-  color: #fff;
+  color: #fff !important;
   border-color: var(--vt-color-primary);
   background: var(--vt-color-primary);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    2px 2px 0 color-mix(in srgb, var(--vt-color-primary) 70%, transparent),
-    4px 4px 12px color-mix(in srgb, var(--vt-color-primary) 32%, transparent);
-  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(255, 105, 0, 0.24);
+}
+
+.system-config-shell .system-config-shell__tabs :deep(.el-tabs__item:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--vt-color-primary) 45%, transparent);
+  outline-offset: -2px;
 }
 
 .system-config-shell__tab-label {
@@ -192,7 +207,7 @@ const handleTabChange = (name: string | number) => {
 }
 
 .system-config-shell__tab-icon {
-  font-size: 14px;
+  font-size: 16px;
   color: inherit;
 }
 

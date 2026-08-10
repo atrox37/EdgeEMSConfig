@@ -14,7 +14,7 @@
   align-items: center;
   height: 32px;
   margin-right: var(--vt-space-4);
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--vt-text-primary);
   font-size: var(--vt-font-size-base);
   font-weight: var(--vt-font-weight-normal);
   line-height: var(--vt-line-height-normal);
@@ -28,7 +28,11 @@
 
   &:hover:not(.is-disabled) {
     .el-radio__inner {
-      border-color: rgba(148, 166, 197, 0.48);
+      border-color: var(--vt-color-primary);
+    }
+
+    .el-radio__label {
+      color: var(--vt-color-primary);
     }
   }
 }
@@ -45,7 +49,7 @@
   }
 
   .el-radio__label {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--vt-color-primary);
   }
 
   &.is-disabled {
@@ -101,7 +105,7 @@
   width: 12px;
   height: 12px;
   background-color: transparent;
-  border: 1px solid rgba(148, 166, 197, 0.3);
+  border: 1px solid var(--vt-border-color-strong);
   border-radius: 50%;
   box-sizing: border-box;
   transition: all var(--vt-transition-fast);
@@ -123,7 +127,7 @@
 // --- Label ---
 .el-radio__label {
   padding-left: var(--vt-space-1);
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--vt-text-primary);
   font-size: var(--vt-font-size-base);
   transition: color var(--vt-transition-fast);
   user-select: none;

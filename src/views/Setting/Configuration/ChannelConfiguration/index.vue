@@ -1,6 +1,8 @@
 <template>
   <div class="voltage-class rule-management" ref="ruleManagementRef">
-    <ModulePageHeader title="Channel Config" variant="filters" />
+    <div class="rule-management__header">
+      <PageTitle title="Channel Config" />
+    </div>
     <div class="rule-management__content">
       <div class="rule-management__search-form" ref="levelSelectRef">
         <!-- 移动端：筛选按钮和筛选标?-->
@@ -15,21 +17,21 @@
               <el-form :model="filters" label-width="100px" class="rule-management__filter-form">
                 <el-form-item label="Protocol:" class="rule-management__filter-form-item">
                   <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="Select protocol" clearable style="width: 100%"
-                    :teleported="false" @change="handleFilterChange('protocol', filters.protocol)">
+                    @change="handleFilterChange('protocol', filters.protocol)">
                     <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                       :value="option.value" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Enabled:" class="rule-management__filter-form-item">
                   <el-select v-model="filters.enabled" :fit-input-width="true" placeholder="Select enabled status" clearable style="width: 100%"
-                    :teleported="false" @change="handleFilterChange()">
+                    @change="handleFilterChange()">
                     <el-option label="Enabled" :value="true" />
                     <el-option label="Disabled" :value="false" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Connected:" class="rule-management__filter-form-item-last">
                   <el-select v-model="filters.connected" :fit-input-width="true" placeholder="Select connected status" clearable
-                    style="width: 100%" :teleported="false" @change="handleFilterChange()">
+                    style="width: 100%" @change="handleFilterChange()">
                     <el-option label="Connected" :value="true" />
                     <el-option label="Disconnected" :value="false" />
                   </el-select>
@@ -52,14 +54,14 @@
         <!-- 桌面端：显示筛选框 -->
         <el-form :model="filters" :inline="true" class="test-form rule-management__filters-desktop">
           <el-form-item label="Protocol:">
-            <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="Select protocol" :teleported="false" clearable
+            <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="Select protocol" clearable
               @change="handleDesktopFilterChange('protocol', filters.protocol)">
               <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                 :value="option.value" />
             </el-select>
           </el-form-item>
           <el-form-item label="Enabled:">
-            <el-select v-model="filters.enabled" placeholder="Select enabled status" clearable :teleported="false"
+          <el-select v-model="filters.enabled" placeholder="Select enabled status" clearable
               :fit-input-width="true" @change="handleDesktopFilterChange('enabled', filters.enabled)">
               <el-option label="Enabled" :value="true" />
               <el-option label="Disabled" :value="false" />
@@ -67,7 +69,7 @@
           </el-form-item>
           <el-form-item label="Connected:">
             <el-select v-model="filters.connected" placeholder="Select connected status" clearable
-              :fit-input-width="true" :teleported="false"
+              :fit-input-width="true"
               @change="handleDesktopFilterChange('connected', filters.connected)">
               <el-option label="Connected" :value="true" />
               <el-option label="Disconnected" :value="false" />
@@ -81,9 +83,11 @@
       <div class="rule-management__search-form-second-row">
         <IconButton type="primary" :icon="sidebarSettingIcon" text="Template" custom-class="rule-management__btn"
           @click="handleTemplateManagement" />
+        <IconButton v-permission="'engineer'" type="primary" :icon="userAddIcon" text="New"
+          custom-class="rule-management__btn" @click="addChannel" />
       </div>
       <div class="rule-management__table">
-        <el-table v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
+        <el-table stripe v-loading="loading" :data="tableData" class="rule-management__table-content" align="left"
           :expand-row-keys="expandedRows.map(String)" row-key="id">
           <el-table-column prop="id" label="ID" min-width="80" />
           <el-table-column prop="name" label="Name" min-width="160" show-overflow-tooltip />
@@ -110,11 +114,7 @@
             </template>
           </el-table-column>
           <!-- <el-table-column prop="error_count" label="Error Count" /> -->
-          <el-table-column min-width="380" fixed="right">
-            <template #header>
-              <IconButton v-permission="'engineer'" type="primary" :icon="userAddIcon" text="New"
-                custom-class="rule-management__btn rule-management__table-header-btn" @click="addChannel" />
-            </template>
+          <el-table-column label="Action" min-width="380" fixed="right">
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div class="rule-management__operation-item" @click="handleDetail(row)">
@@ -157,7 +157,7 @@
         <div class="rule-management__pagination">
           <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
             :page-sizes="[10, 20, 50, 100]" :total="pagination.total" :teleported="false"
-            layout="total, sizes, prev, pager, next" @size-change="handlePageSizeChange"
+            layout="total, prev, pager, next, sizes" @size-change="handlePageSizeChange"
             @current-change="handlePageChange" />
         </div>
       </div>
@@ -179,7 +179,7 @@ import type { ChannelTemplateListItem } from '@/types/channelTemplates'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
-import ModulePageHeader from '@/components/common/ModulePageHeader.vue'
+import PageTitle from '@/components/common/PageTitle.vue'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
 import { useRouter } from 'vue-router'
 import ChannelDetailDialog from '@/views/Setting/Configuration/ChannelConfiguration/components/ChannelDetailDialog.vue'
@@ -501,14 +501,10 @@ const handleChannelDialogCancel = () => {
 
 
   .rule-management__header {
-    margin-bottom: 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
 
-    .rule-management__title {
-      font-size: var(--vt-font-size-lg);
-      font-weight: var(--vt-font-weight-semibold);
-      color: var(--vt-text-primary);
-      margin: 0;
-    }
   }
 
   .rule-management__content {
@@ -523,9 +519,9 @@ const handleChannelDialogCancel = () => {
       align-items: flex-start;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 12px; 
+      padding-bottom: 12px;
       margin-bottom: 12px;
-      padding-bottom: 10px;
       border-bottom: 1px solid #dcdfe6;
 
       //   padding-bottom: 20px;
@@ -534,6 +530,7 @@ const handleChannelDialogCancel = () => {
       }
 
       .form-oprations {
+
         display: flex;
         flex-direction: column;
         align-items: flex-start;
@@ -611,21 +608,12 @@ const handleChannelDialogCancel = () => {
         color: #ffffff;
         border: none;
 
-        :deep(.el-tag__close) {
-          color: #ffffff;
-
-          :deep(.el-tag__close):hover {
-            background-color: rgba(255, 255, 255, 0.2);
-          }
-        }
       }
 
-      :deep(.el-select) {
-        width: 180px;
-      }
     }
 
     .rule-management__search-form-second-row {
+      
       width: 100%;
       display: flex;
       justify-content: flex-end;
@@ -650,20 +638,7 @@ const handleChannelDialogCancel = () => {
       }
     }
 
-    // 筛选弹出框样式
-    :deep(.el-popover) {
-      background-color: #f5f5f5 !important;
 
-      .rule-management__filter-form {
-        .rule-management__filter-form-item {
-          margin-bottom: 16px;
-        }
-
-        .rule-management__filter-form-item-last {
-          margin-bottom: 0;
-        }
-      }
-    }
   }
 
   .rule-management__table {
@@ -676,11 +651,6 @@ const handleChannelDialogCancel = () => {
       flex: 1;
       overflow-y: auto;
       min-height: 0;
-
-      :deep(.el-table-fixed-column--right) {
-        background-color: #d3dde7 !important;
-      }
-
       .rule-management__operation {
         display: flex;
         align-items: center;

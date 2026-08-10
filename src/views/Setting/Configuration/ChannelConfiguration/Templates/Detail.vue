@@ -365,7 +365,9 @@ onMounted(() => {
   flex-direction: column;
 
   .template-detail-page__header {
-    margin-bottom: 20px;
+    height: 64px;
+    display: flex;
+    align-items: center;
   }
 
   .points-tables-page__header-content {

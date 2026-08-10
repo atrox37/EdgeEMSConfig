@@ -1,103 +1,57 @@
 <template>
-  <div class="loading-bg" ref="rootRef">
-    <slot />
+  <div v-if="loading" class="loading-bg">
+    <span class="loading-bg__spinner" />
+    <span v-if="text" class="loading-bg__text">{{ text }}</span>
   </div>
+  <slot v-else />
 </template>
+
 <script setup lang="ts">
-import type { Ref } from 'vue'
-import { ElLoading } from 'element-plus'
-
-const props = defineProps<{
-  loading: boolean
-}>()
-
-const loadingInstance: Ref<ReturnType<typeof ElLoading.service> | null> = ref(null)
-const rootRef = ref<HTMLElement | null>(null)
-const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <path fill="rgba(255, 105, 0, 1)" d="M512 64a32 32 0 0 1 32 32v192a32 32 0 0 1-64 0V96a32 32 0 0 1 32-32m0 640a32 32 0 0 1 32 32v192a32 32 0 1 1-64 0V736a32 32 0 0 1 32-32m448-192a32 32 0 0 1-32 32H736a32 32 0 1 1 0-64h192a32 32 0 0 1 32 32m-640 0a32 32 0 0 1-32 32H96a32 32 0 0 1 0-64h192a32 32 0 0 1 32 32M195.2 195.2a32 32 0 0 1 45.248 0L376.32 331.008a32 32 0 0 1-45.248 45.248L195.2 240.448a32 32 0 0 1 0-45.248zm452.544 452.544a32 32 0 0 1 45.248 0L828.8 783.552a32 32 0 0 1-45.248 45.248L647.744 692.992a32 32 0 0 1 0-45.248zM828.8 195.264a32 32 0 0 1 0 45.184L692.992 376.32a32 32 0 0 1-45.248-45.248l135.808-135.808a32 32 0 0 1 45.248 0m-452.544 452.48a32 32 0 0 1 0 45.248L240.448 828.8a32 32 0 0 1-45.248-45.248l135.808-135.808a32 32 0 0 1 45.248 0z"></path>
-</svg>
-`
-const openLoading = () => {
-  if (rootRef.value && !loadingInstance.value) {
-    loadingInstance.value = ElLoading.service({
-      target: rootRef.value,
-      lock: true,
-      background: 'rgba(0, 0, 0, 0.3)',
-      text: 'loading...',
-      spinner: svg,
-    })
-  }
-}
-
-const closeLoading = () => {
-  if (loadingInstance.value) {
-    loadingInstance.value.close()
-    loadingInstance.value = null
-  }
-}
-
-watch(
-  () => props.loading,
-  (val) => {
-    if (val) {
-      nextTick(() => {
-        openLoading()
-      })
-    } else {
-      closeLoading()
-    }
+withDefaults(
+  defineProps<{
+    loading?: boolean
+    text?: string
+  }>(),
+  {
+    loading: false,
+    text: '',
   },
-  { immediate: true },
 )
-
-onBeforeUnmount(() => {
-  closeLoading()
-})
 </script>
+
 <style scoped lang="scss">
-
 .loading-bg {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: var(--vt-control-height-lg);
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.el-loading-mask) {
-  width: 100%;
-  height: 100%;
   position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.el-loading-spinner) {
+  inset: 0;
+  z-index: 40;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
+  background: rgba(251, 252, 255, 0.86);
+  color: #395583;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  pointer-events: all;
 }
 
-:deep(.circular) {
-  animation: loading-rotate 1.2s linear infinite;
-
+.loading-bg__spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #dce8fb;
+  border-top-color: #2878ff;
+  border-radius: 50%;
+  animation: loading-bg-spin 0.8s linear infinite;
 }
 
-@keyframes loading-rotate {
-  100% {
+.loading-bg__text {
+  white-space: nowrap;
+}
+
+@keyframes loading-bg-spin {
+  to {
     transform: rotate(360deg);
   }
-}
-
-:deep(.el-loading-text) {
-  color: var(--vt-color-primary) !important;
-  font-size: var(--vt-font-size-base);
-  margin:0;
 }
 </style>

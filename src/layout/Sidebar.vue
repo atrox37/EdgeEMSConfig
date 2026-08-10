@@ -126,7 +126,7 @@ watch(
 
   .sidebar__nav {
     flex: 1;
-    padding-top: 20px; // 顶部偏移一点
+    padding: 20px; // 顶部偏移一点
     overflow-y: auto;
 
     .sidebar__subMenu-img {
