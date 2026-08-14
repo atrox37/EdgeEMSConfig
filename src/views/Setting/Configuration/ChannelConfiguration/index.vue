@@ -9,36 +9,34 @@
         <div class="rule-management__filters-mobile">
           <div class="rule-management__filter-trigger-wrapper" ref="filterTriggerRef">
             <el-popover v-model:visible="showFilterPopover" placement="bottom-start" :width="300" trigger="click"
-              :teleported="false">
+              :teleported="false" popper-class="rule-management__filter-popover">
               <template #reference>
                 <IconButton type="primary" :icon="tableSearchIcon" text="Filter"
                   custom-class="rule-management__btn rule-management__filter-btn" />
               </template>
-              <el-form :model="filters" label-width="100px" class="rule-management__filter-form">
+              <el-form :model="filters" label-width="88px" class="rule-management__filter-form">
                 <el-form-item label="Protocol:" class="rule-management__filter-form-item">
-                  <el-select v-model="filters.protocol" :fit-input-width="true" placeholder="Select protocol" clearable style="width: 100%"
-                    @change="handleFilterChange('protocol', filters.protocol)">
+                  <el-select v-model="mobileFilterDraft.protocol" :fit-input-width="true" :teleported="false" placeholder="Select protocol" clearable style="width: 100%">
                     <el-option v-for="option in PROTOCOL_OPTIONS" :key="option.value" :label="option.label"
                       :value="option.value" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Enabled:" class="rule-management__filter-form-item">
-                  <el-select v-model="filters.enabled" :fit-input-width="true" placeholder="Select enabled status" clearable style="width: 100%"
-                    @change="handleFilterChange()">
+                  <el-select v-model="mobileFilterDraft.enabled" :fit-input-width="true" :teleported="false" placeholder="Select enabled status" clearable style="width: 100%">
                     <el-option label="Enabled" :value="true" />
                     <el-option label="Disabled" :value="false" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="Connected:" class="rule-management__filter-form-item-last">
-                  <el-select v-model="filters.connected" :fit-input-width="true" placeholder="Select connected status" clearable
-                    style="width: 100%" @change="handleFilterChange()">
+                  <el-select v-model="mobileFilterDraft.connected" :fit-input-width="true" :teleported="false" placeholder="Select connected status" clearable
+                    style="width: 100%">
                     <el-option label="Connected" :value="true" />
                     <el-option label="Disconnected" :value="false" />
                   </el-select>
                 </el-form-item>
                 <div style="text-align: right; margin-top: 12px;">
-                  <el-button size="small" @click="handleCloseFilterPopover">Close</el-button>
-                  <el-button type="primary" size="small" @click="applyFilters">Apply</el-button>
+                  <el-button size="small" @click="resetMobileFilters">Reset</el-button>
+                  <el-button type="primary" size="small" @click="searchWithMobileFilters">Search</el-button>
                 </div>
               </el-form>
             </el-popover>
@@ -114,7 +112,7 @@
             </template>
           </el-table-column>
           <!-- <el-table-column prop="error_count" label="Error Count" /> -->
-          <el-table-column label="Action" min-width="380" fixed="right">
+          <el-table-column label="Action" width="380" fixed="right">
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div class="rule-management__operation-item" @click="handleDetail(row)">
@@ -215,12 +213,15 @@ filters.enabled = null
 filters.connected = null
 const ruleManagementRef = ref<HTMLElement | null>(null)
 const showFilterPopover = ref(false)
-const mobileFilterSnapshot = ref<{
+const mobileFilterDraft = reactive<{
   protocol: string | null
   enabled: boolean | null
   connected: boolean | null
-} | null>(null)
-const mobileFilterApplied = ref(false)
+}>({
+  protocol: null,
+  enabled: null,
+  connected: null,
+})
 
 // 筛选标签管理
 interface FilterTag {
@@ -298,21 +299,19 @@ const removeFilterTag = (key: string) => {
 }
 
 // 应用筛选
-const applyFilters = () => {
-  mobileFilterApplied.value = true
+const searchWithMobileFilters = () => {
+  filters.protocol = mobileFilterDraft.protocol
+  filters.enabled = mobileFilterDraft.enabled
+  filters.connected = mobileFilterDraft.connected
   updateFilterTags()
   showFilterPopover.value = false
   fetchTableData(true)
 }
 
-const handleCloseFilterPopover = () => {
-  if (mobileFilterSnapshot.value) {
-    filters.protocol = mobileFilterSnapshot.value.protocol
-    filters.enabled = mobileFilterSnapshot.value.enabled
-    filters.connected = mobileFilterSnapshot.value.connected
-  }
-  showFilterPopover.value = false
-  updateFilterTags()
+const resetMobileFilters = () => {
+  mobileFilterDraft.protocol = null
+  mobileFilterDraft.enabled = null
+  mobileFilterDraft.connected = null
 }
 
 // 监听筛选变化
@@ -325,22 +324,10 @@ watch(
   () => showFilterPopover.value,
   visible => {
     if (visible) {
-      mobileFilterSnapshot.value = {
-        protocol: (filters.protocol as string | null) ?? null,
-        enabled: (filters.enabled as boolean | null) ?? null,
-        connected: (filters.connected as boolean | null) ?? null,
-      }
-      mobileFilterApplied.value = false
-      return
+      mobileFilterDraft.protocol = (filters.protocol as string | null) ?? null
+      mobileFilterDraft.enabled = (filters.enabled as boolean | null) ?? null
+      mobileFilterDraft.connected = (filters.connected as boolean | null) ?? null
     }
-
-    if (!mobileFilterApplied.value && mobileFilterSnapshot.value) {
-      filters.protocol = mobileFilterSnapshot.value.protocol
-      filters.enabled = mobileFilterSnapshot.value.enabled
-      filters.connected = mobileFilterSnapshot.value.connected
-      updateFilterTags()
-    }
-    mobileFilterSnapshot.value = null
   },
 )
 // 展开行控制
@@ -418,6 +405,8 @@ const submitAssignTemplate = async (payload: {
         type: 'warning',
         confirmButtonText: 'Apply',
         cancelButtonText: 'Cancel',
+        center: true,
+        showClose: false,
       },
     )
   } catch {
@@ -608,6 +597,45 @@ const handleChannelDialogCancel = () => {
         color: #ffffff;
         border: none;
 
+      }
+
+      :deep(.rule-management__filter-popover) {
+        box-sizing: border-box;
+
+        .el-popper__arrow {
+          display: none;
+        }
+      }
+
+      .rule-management__filter-form {
+        width: 100%;
+
+        :deep(.el-form-item) {
+          display: flex;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+
+        :deep(.rule-management__filter-form-item-last) {
+          margin-bottom: 0;
+        }
+
+        :deep(.el-form-item__label) {
+          flex: 0 0 88px;
+          padding-right: 10px;
+        }
+
+        :deep(.el-form-item__content) {
+          flex: 1;
+          min-width: 0;
+        }
+
+        :deep(.el-select) {
+          display: block;
+          width: 100% !important;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
       }
 
     }

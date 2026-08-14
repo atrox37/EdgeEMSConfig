@@ -71,6 +71,7 @@
                 <div class="point-table-cell-content" :class="getFieldClass(row, col.fieldClassKey)">
                   <div class="inline-edit-container">
                     <el-input
+                      size="small"
                       v-if="col.editor === 'input'"
                       :model-value="getCellInputValue(row, col)"
                       :placeholder="col.placeholder || ''"
@@ -79,6 +80,7 @@
                       @blur="() => handleNumberOrTextBlur(row, col)"
                     />
                     <el-select
+                       size="small"
                       v-else-if="col.editor === 'select'"
                       v-model="(row as any)[col.key]"
                       :fit-input-width="true"
@@ -922,13 +924,13 @@ defineExpose({
     //   position: relative;
     //   height: 32px;
     // }
-    :deep(.point-table-cell-wrapper) {
-      position: static;
-      display: flex;
-      align-items: center;
-      min-height: 32px;
-      width: 100%;
-    }
+    // :deep(.point-table-cell-wrapper) {
+    //   position: static;
+    //   display: flex;
+    //   align-items: center;
+    //   min-height: 22px;
+    //   width: 100%;
+    // }
     :deep(.point-table-cell-content) {
       flex: 1;
       // padding-bottom: 9px;
@@ -942,7 +944,7 @@ defineExpose({
     :deep(.point-table-cell-wrapper .field-error) {
       position: absolute;
       bottom: 0;
-      left: 12px;
+      left: 34px;
       right: 0;
       height: 9px;
       line-height: 9px;
@@ -988,7 +990,6 @@ defineExpose({
     display: flex;
     gap: 15px;
     align-items: center;
-    justify-content: center;
 
     :deep(.point-table__op-icon) {
       width: 16px;

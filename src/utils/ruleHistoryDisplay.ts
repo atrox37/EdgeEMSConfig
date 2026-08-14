@@ -6,6 +6,8 @@ import type {
   RuleHistoryDisplayAction,
   RuleHistoryDisplayStep,
   RuleHistoryDisplayVariable,
+  RuleHistoryExecutionGraph,
+  RuleHistoryExecutionGraphNode,
   RuleHistoryItem,
   RuleHistoryPointSnapshot,
 } from '@/types/controlRule'
@@ -55,8 +57,78 @@ export const formatExecutionStep = (step: RuleHistoryDisplayStep): string => {
   return step.label
 }
 
+export type RuleHistoryStepStatus = 'default' | 'error' | 'interrupt'
+
+const getStepKind = (step: RuleHistoryDisplayStep): string => step.node_kind || step.type || ''
+
+const isStartOrEndStep = (step: RuleHistoryDisplayStep): boolean => {
+  const kind = getStepKind(step).toLowerCase()
+  const label = step.label.toLowerCase()
+  return kind === 'start' || kind === 'end' || label === 'start' || label === 'end'
+}
+
+export const getExecutionStepStatus = (
+  step: RuleHistoryDisplayStep,
+): RuleHistoryStepStatus => {
+  if (isStartOrEndStep(step)) return 'default'
+  if (step.success === false) return 'error'
+  if (step.terminal === true && step.terminal_reason) return 'interrupt'
+  return 'default'
+}
+
+export const formatExecutionStepDescription = (step: RuleHistoryDisplayStep): string => {
+  const kind = getStepKind(step)
+  if (kind === 'switch' && step.conditions?.length) {
+    return step.conditions.map((item) => item.expression_resolved || item.expression || '-').join(' · ')
+  }
+  if (kind === 'change' && step.assignments?.length) {
+    return step.assignments.map(formatAssignmentDetail).join(' · ')
+  }
+  if (kind === 'calculation' && step.calculations?.length) {
+    return step.calculations.map(formatCalculationDetail).join(' · ')
+  }
+  if (kind === 'periodDelta') return formatPeriodDeltaDetail(step)
+  if (step.terminal_reason) return step.terminal_reason
+  return ''
+}
+
 export const getDisplayActions = (row: RuleHistoryItem): RuleHistoryDisplayAction[] =>
   getHistoryDisplay(row)?.actions || []
+
+export const getExecutionGraph = (row: RuleHistoryItem): RuleHistoryExecutionGraph | null =>
+  getHistoryDisplay(row)?.execution_graph || null
+
+export const getExecutionGraphNodeStatus = (
+  node: RuleHistoryExecutionGraphNode,
+): RuleHistoryStepStatus => {
+  if (node.terminal_kind === 'no_matching_branch') return 'interrupt'
+  if (node.status === 'failed') return 'error'
+  return 'default'
+}
+
+export const formatExecutionGraphNodeDescription = (
+  node: RuleHistoryExecutionGraphNode,
+): string => {
+  if (node.type === 'switch' && node.conditions?.length) {
+    return node.conditions
+      .map((item) => item.expression_resolved || item.expression || '-')
+      .join(' · ')
+  }
+  if (node.type === 'change' && node.assignments?.length) {
+    return node.assignments.map(formatAssignmentDetail).join(' · ')
+  }
+  if (node.type === 'calculation' && node.calculations?.length) {
+    return node.calculations.map(formatCalculationDetail).join(' · ')
+  }
+  if (node.type === 'periodDelta') {
+    const period = node.period || '-'
+    const input = formatPointSnapshot(node.input)
+    const output = formatPointSnapshot(node.output)
+    const delta = formatOptionalNumber(node.delta)
+    return `${period}: ${input} → ${output}, Δ=${delta}`
+  }
+  return node.terminal_reason || ''
+}
 
 export const formatPointSnapshot = (point?: RuleHistoryPointSnapshot | null): string => {
   if (!point) return '-'

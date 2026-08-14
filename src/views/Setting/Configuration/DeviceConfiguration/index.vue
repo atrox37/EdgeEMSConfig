@@ -69,7 +69,7 @@
           <el-table-column prop="instance_id" label="ID" width="100" />
           <el-table-column prop="instance_name" label="Instance Name" min-width="200" />
           <el-table-column prop="product_name" label="Product Name" min-width="200" />
-          <el-table-column label="Action" min-width="250" fixed="right">
+          <el-table-column label="Action" width="340" fixed="right">
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div class="rule-management__operation-item" @click="handleDetail(row)">
@@ -234,11 +234,13 @@ watch(() => filters.product_name, () => {
 
 const productOptions = ref<Array<{ label: string; value: string }>>([])
 const getProductOptions = async () => {
-  const res = await getProducts()
-  productOptions.value = (res?.data?.products || []).map((it: ProductListItem) => ({
-    label: it.product_name,
-    value: it.product_name,
-  }))
+  const res = await getProducts({ can_create_instance: true })
+  productOptions.value = (res?.data?.products || [])
+    .filter((it: ProductListItem) => it.can_create_instance !== false)
+    .map((it: ProductListItem) => ({
+      label: it.product_name,
+      value: it.product_name,
+    }))
 }
 onMounted(() => getProductOptions())
 

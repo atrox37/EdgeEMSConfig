@@ -7,6 +7,7 @@ import 'element-plus/dist/index.css'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
+import './assets/styles/vueflow.scss'
 import App from './App.vue'
 import router from './router'
 import './router/guard' // 注册路由守卫

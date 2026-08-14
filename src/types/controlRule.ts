@@ -91,18 +91,60 @@ export interface RuleHistoryDisplayAction {
   value?: number
 }
 
+export type RuleHistoryExecutionNodeType =
+  | 'start'
+  | 'end'
+  | 'switch'
+  | 'change'
+  | 'calculation'
+  | 'periodDelta'
+  | 'unknown'
+
+export type RuleHistoryExecutionNodeStatus = 'executed' | 'skipped' | 'failed'
+
+export interface RuleHistoryExecutionGraphNode {
+  id: string
+  type: RuleHistoryExecutionNodeType
+  label: string
+  status: RuleHistoryExecutionNodeStatus
+  terminal?: boolean
+  terminal_kind?: string
+  terminal_reason?: string
+  conditions?: RuleHistoryConditionDetail[]
+  assignments?: RuleHistoryAssignmentDetail[]
+  calculations?: RuleHistoryCalculationDetail[]
+  period?: string
+  input?: RuleHistoryPointSnapshot
+  output?: RuleHistoryPointSnapshot
+  delta?: number
+}
+
+export interface RuleHistoryExecutionGraphEdge {
+  source: string
+  target: string
+  port?: string
+  label?: string
+}
+
+export interface RuleHistoryExecutionGraph {
+  nodes: RuleHistoryExecutionGraphNode[]
+  edges: RuleHistoryExecutionGraphEdge[]
+}
+
 export interface RuleHistoryDisplay {
   summary?: string
   trigger_reason?: string
   variables?: RuleHistoryDisplayVariable[]
   execution_steps?: RuleHistoryDisplayStep[]
   actions?: RuleHistoryDisplayAction[]
+  execution_graph?: RuleHistoryExecutionGraph
 }
 
 export interface RuleExecutionResult {
   success?: boolean
   display?: RuleHistoryDisplay
   actions_executed?: unknown[]
+  execution_graph?: RuleHistoryExecutionGraph
   /** May contain multiple branch paths (fan-out); treat as a set of visited nodes */
   execution_path?: string[]
 }

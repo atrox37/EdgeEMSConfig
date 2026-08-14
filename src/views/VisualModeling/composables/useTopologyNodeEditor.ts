@@ -11,16 +11,24 @@ export interface TopologyNodeDraft {
 
 export function useTopologyNodeEditor(
   props: { id: string; data: ModelNodeData },
-  options: { allowBinding: MaybeRefOrGetter<boolean> } = { allowBinding: true },
+  options: {
+    allowBinding: MaybeRefOrGetter<boolean>
+    instanceProductNames?: MaybeRefOrGetter<string[]>
+  } = { allowBinding: true },
 ) {
   const editorCtx = inject(MODELING_EDITOR_KEY, null)
-  const expanded = ref(Boolean(props.data.uiExpanded))
+  // Input details are intentionally collapsed for every node on first render.
+  // The expanded state is a transient UI state and should not be restored from
+  // persisted topology data.
+  const expanded = ref(false)
   const editing = ref(false)
   const allowBinding = computed(() => toValue(options.allowBinding))
+  const instanceProductNames = computed(() => toValue(options.instanceProductNames))
 
   const boundInstances = computed(() => normalizeNodeInstances(props.data))
   const boundInstance = computed(() => boundInstances.value[0] ?? null)
   const boundLabel = computed(() => boundInstance.value?.instanceName || 'Not Bound')
+  const boundValue = computed(() => boundInstance.value?.instanceName || '')
   const draft = reactive<TopologyNodeDraft>({
     label: props.data.label || '',
     description: props.data.description || '',
@@ -31,7 +39,20 @@ export function useTopologyNodeEditor(
     if (!allowBinding.value) return []
     const productName = props.data.productName ?? ''
     const all = editorCtx?.instances?.value ?? []
-    const matches = all.filter((item) => item.product_name === productName)
+    const allowedProductNames = instanceProductNames.value?.length
+      ? instanceProductNames.value
+      : [productName]
+    const occupiedIds = editorCtx?.getBoundInstanceIdsExcluding?.(props.id) ?? new Set<number>()
+    const matches = all.filter((item) =>
+      allowedProductNames.includes(item.product_name) && !occupiedIds.has(item.instance_id),
+    )
+    if (boundInstance.value && !matches.some((item) => item.instance_id === boundInstance.value?.instanceId)) {
+      matches.push({
+        instance_id: boundInstance.value.instanceId,
+        instance_name: boundInstance.value.instanceName,
+        product_name: boundInstance.value.productName ?? productName,
+      })
+    }
     return matches.length ? matches : boundInstance.value ? [{
       instance_id: boundInstance.value.instanceId,
       instance_name: boundInstance.value.instanceName,
@@ -49,6 +70,12 @@ export function useTopologyNodeEditor(
     if (editing.value) return
     resetDraft()
   }, { deep: true })
+
+  // Switching between view and edit mode starts with a compact topology view.
+  // This also resets product/component cards whose state is local to the node.
+  watch(() => editorCtx?.isViewMode.value, () => {
+    expanded.value = false
+  })
 
   function startEditing() {
     editing.value = true
@@ -92,6 +119,7 @@ export function useTopologyNodeEditor(
     boundInstances,
     boundInstance,
     boundLabel,
+    boundValue,
     availableInstances,
     startEditing,
     cancelEditing,

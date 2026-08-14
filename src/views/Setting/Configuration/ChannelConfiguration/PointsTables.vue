@@ -531,8 +531,10 @@ const handleBeforeLeave = async (newName: TabPaneName, oldName: TabPaneName) => 
                 'Confirm Switch',
                 {
                     confirmButtonText: 'Switch',
-                    cancelButtonText: 'Stay',
-                    type: 'warning',
+                        cancelButtonText: 'Stay',
+                        type: 'warning',
+                        center: true,
+                        showClose: false,
                 },
             )
             // 用户确认切换：清空当前 tab 的发布值并退出批量发布
@@ -563,6 +565,8 @@ const togglePublishMode = async () => {
                         confirmButtonText: 'Discard',
                         cancelButtonText: 'Cancel',
                         type: 'warning',
+                        center: true,
+                        showClose: false,
                     },
                 )
                 // 用户确认放弃
@@ -652,6 +656,8 @@ const handleBack = async () => {
                     confirmButtonText: 'Discard',
                     cancelButtonText: 'Cancel',
                     type: 'warning',
+                    center: true,
+                    showClose: false,
                 },
             )
         } catch {
@@ -677,6 +683,8 @@ const handleCancelEdit = async () => {
                     confirmButtonText: 'Discard',
                     cancelButtonText: 'Cancel',
                     type: 'warning',
+                    center: true,
+                    showClose: false,
                 },
             )
         } catch {
@@ -861,7 +869,7 @@ watch(
     .points-tables-page__content {
         flex: 1;
         overflow: hidden;
-        padding: 20px 20px 10px 20px;
+        // padding: 20px 20px 10px 20px;
         display: flex;
         flex-direction: column;
     }

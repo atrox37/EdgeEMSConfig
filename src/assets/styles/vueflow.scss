@@ -1,34 +1,9 @@
-// Warm theme overrides for Vue Flow
-.vue-flow {
-  // Edges
-  .vue-flow__edge-path {
-    stroke: #ff8a00 !important;
-    stroke-width: 2.5px;
-  }
-  //   .vue-flow__edge.selected .vue-flow__edge-path {
-  //     stroke: #ff6f00 !important;
-  //   }
-
-  //   // Handles
-  //   .vue-flow__handle {
-  //     background-color: #ff8a00 !important;
-  //     border-color: #fff !important;
-  //   }
-
-  //   // Selection/viewport helpers
-  //   .vue-flow__selection {
-  //     border-color: rgba(255, 138, 0, 0.6) !important;
-  //     background-color: rgba(255, 138, 0, 0.08) !important;
-  //   }
-
-  //   // Nodes default background (fallback)
-  //   .vue-flow__node {
-  //     background-color: #fff7e6;
-  //     border-color: rgba(255, 138, 0, 0.35);
-  //   }
+/* Shared Vue Flow overrides used by topology and rule canvases. */
+.modeling-editor__flow,
+.rule-editor__flow {
   .vue-flow__minimap {
     top: 0;
-    right:0;
+    right: 0;
     margin: 20px;
     width: 200px;
     height: 200px;
@@ -52,67 +27,174 @@
     stroke-width: 1px;
   }
 
-  .modeling-editor__flow-controls {
+  .vue-flow__edge-path {
+    fill: none !important;
+    stroke: #b3cefa !important;
+    stroke-width: 3px !important;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .vue-flow__edge {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  .vue-flow__edge-labels {
+    position: absolute !important;
+    z-index: 100 !important;
+    pointer-events: none !important;
+    isolation: isolate;
+  }
+
+  .deletable-edge__delete {
+    position: relative !important;
+    z-index: 101 !important;
+    pointer-events: all !important;
+  }
+
+  .vue-flow__handle {
+    z-index: 50 !important;
+  }
+
+  &:not(.modeling-editor__flow--view) .vue-flow__handle.connecting {
+    opacity: 1 !important;
+  }
+
+  &.modeling-editor__flow--view .vue-flow__handle {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  &.modeling-editor__flow--view .node-connection-handle--connected {
+    opacity: 1 !important;
+  }
+
+  &.modeling-editor__flow--view .vue-flow__edge.selected .vue-flow__edge-path {
+    stroke-width: 3px !important;
+    stroke: #b3cefa !important;
+    filter: none !important;
+  }
+
+  .vue-flow__edge.selected .vue-flow__edge-path {
+    stroke-width: 6px !important;
+    stroke: #035def !important;
+    filter: none;
+  }
+}
+
+.modeling-editor__canvas {
+  .modeling-editor__fixed-bindings {
     position: absolute;
-    right: 20px;
-    bottom: 16px;
-    z-index: 5;
+    top: 16px;
+    left: 378px;
+    z-index: 12;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    pointer-events: auto;
+  }
+
+  &.modeling-editor__canvas--view {
+    .modeling-editor__fixed-bindings {
+      left: 16px;
+    }
+  }
+
+  .modeling-editor__flow {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+  }
+
+  .modeling-editor__floating-actions {
+    position: absolute;
+    right: auto;
+    bottom: 48px;
+    left: 50%;
+    z-index: 10;
+    display: flex;
+    gap: 16px;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .modeling-editor__floating-actions .floating-btn {
     display: flex;
     align-items: center;
-    width: 200px;
-    height: 44px;
-    // padding: 0 4px;
-    background: #ffffff;
-    border: 1px solid #EEEEEE;
-    border-radius: 10px;
-    box-shadow: 0px 6px 12px 0px #0000000D;
-
-  }
-
-  .flow-control-button {
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #333333;
-    cursor: pointer;
+    width: auto !important;
+    min-width: 96px;
+    height: 36px !important;
+    gap: 6px;
+    padding: 0 16px !important;
+    border-radius: 4px !important;
+    // box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
   }
 
-  .flow-control-button:hover {
-    background: #F7F7FD;
+  .modeling-editor__floating-actions .floating-btn span {
+    font-size: 14px;
   }
 
-  .flow-control-button.is-active {
-    background: #E8E8F3;
-  }
+  // .modeling-editor__floating-actions .floating-btn--submit.is-dirty:not(:disabled) {
+  //   box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
+  // }
+}
 
-  .flow-control-button:active {
-    background: #E8E8F3;
-  }
+.modeling-editor__flow-controls,
+.rule-editor__flow-controls {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  width: 200px;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  box-shadow: 0 6px 12px 0 #0000000d;
+}
 
-  .flow-control-button__icon {
-    display: block;
-    width: 16px;
-    height: 16px;
-  }
+.flow-control-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #333333;
+  cursor: pointer;
+}
 
-  .flow-control-divider {
-    width: 1px;
-    height: 24px;
-    margin: 0 4px;
-    background: #e5e7eb;
-  }
+.flow-control-button:hover,
+.flow-control-button:active,
+.flow-control-button.is-active {
+  background: #e8e8f3;
+}
 
-  .flow-control-zoom {
-    min-width: 48px;
-    color: #333333;
-    font-size: 16px;
-    line-height: 1;
-    text-align: center;
-  }
+.flow-control-button__icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.flow-control-divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: #e5e7eb;
+}
+
+.flow-control-zoom {
+  min-width: 48px;
+  color: #333333;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
 }

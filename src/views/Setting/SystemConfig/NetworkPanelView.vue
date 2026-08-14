@@ -266,6 +266,8 @@ const handleSave = async () => {
       type: 'warning',
       confirmButtonText: 'Apply',
       cancelButtonText: 'Later',
+      center: true,
+      showClose: false,
     })
   } catch {
     return

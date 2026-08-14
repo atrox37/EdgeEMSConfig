@@ -1,39 +1,43 @@
 import type { Connection, Edge as FlowEdge, Node as FlowNode } from '@vue-flow/core'
 import type { ProductListItem } from '@/types/deviceConfiguration'
-import { DEFAULT_DEVICE_PRODUCTS, isContainerProduct, mergeWithDefaultProducts } from '@/constants/deviceProducts'
 
-function productParentMap(products: ProductListItem[]): Map<string, string | null> {
-  const map = new Map<string, string | null>()
-  for (const p of products) {
-    map.set(p.product_name, p.parent_name)
-  }
-  return map
+let parentMap = new Map<string, string | null>()
+let connectableProductPairs = new Set<string>()
+
+function connectionPairKey(productA: string, productB: string): string {
+  return [productA, productB].sort().join('::')
 }
 
-let parentMap = productParentMap(DEFAULT_DEVICE_PRODUCTS)
-
-/** 用 API / 默认合并后的产品列表刷新父子规则 */
+/** Refreshes all topology rules from the products API response. */
 export function setModelFlowProductRules(products?: ProductListItem[] | null) {
-  parentMap = productParentMap(mergeWithDefaultProducts(products))
+  const apiProducts = products ?? []
+  parentMap = new Map(apiProducts.map((product) => [product.product_name, product.parent_name]))
+  connectableProductPairs = new Set()
+
+  const topologyProductNames = new Set(
+    apiProducts
+      .filter((product) => product.topology?.enabled)
+      .map((product) => product.product_name),
+  )
+
+  // An edge has no direction in the current topology model. Therefore a rule
+  // declared by either product is normalized into one undirected pair.
+  for (const product of apiProducts) {
+    if (!topologyProductNames.has(product.product_name)) continue
+    for (const targetName of product.topology?.connectableProducts ?? []) {
+      if (targetName !== product.product_name && topologyProductNames.has(targetName)) {
+        connectableProductPairs.add(connectionPairKey(product.product_name, targetName))
+      }
+    }
+  }
 }
 
 export function getProductParentName(productName?: string): string | null | undefined {
-  if (!productName) return undefined
-  return parentMap.get(productName)
+  return productName ? parentMap.get(productName) : undefined
 }
 
-export function canPlaceInContainer(
-  childProductName: string,
-  containerProductName: string,
-): boolean {
+export function canPlaceInContainer(childProductName: string, containerProductName: string): boolean {
   return getProductParentName(childProductName) === containerProductName
-}
-
-export function mustBeTopLevel(productName?: string): boolean {
-  if (!productName) return true
-  if (productName === 'Station') return true
-  if (isContainerProduct(productName)) return true
-  return getProductParentName(productName) === 'Station'
 }
 
 export function getNodeProductName(node?: FlowNode | null): string | undefined {
@@ -41,71 +45,25 @@ export function getNodeProductName(node?: FlowNode | null): string | undefined {
 }
 
 export function isDirectChildNode(parent?: FlowNode | null, child?: FlowNode | null): boolean {
-  if (!parent || !child?.parentNode) return false
-  return child.parentNode === parent.id
+  return !!parent && child?.parentNode === parent.id
 }
 
 export function isContainerNode(node?: FlowNode | null): boolean {
   if (!node) return false
-  if (node.type === 'group') return true
-  const data = node.data as { isContainer?: boolean; productName?: string } | undefined
-  return !!data?.isContainer || isContainerProduct(data?.productName)
+  const data = node.data as { isContainer?: boolean; topologyType?: string } | undefined
+  return node.type === 'group' || !!data?.isContainer || data?.topologyType === 'container'
 }
 
-type ConnectionRuleKey =
-  | 'pv-group'
-  | 'battery'
-  | 'hybrid-inverter'
-  | 'ac-inverter'
-  | 'pcs'
-  | 'diesel'
-  | 'distribution-board'
-  | 'load'
-  | 'other'
-
-function getConnectionRuleKey(node?: FlowNode | null): ConnectionRuleKey {
-  const productName = getNodeProductName(node)?.trim().toLowerCase() ?? ''
-  const compactName = productName.replace(/[\s_-]+/g, '')
-  if (compactName === 'pvgroup') return 'pv-group'
-  if (compactName === 'battery') return 'battery'
-  if (compactName === 'hybridinverter') return 'hybrid-inverter'
-  if (compactName === 'acinverter') return 'ac-inverter'
-  if (compactName === 'pcs') return 'pcs'
-  if (compactName === 'diesel') return 'diesel'
-  if (compactName === 'distributionboard') return 'distribution-board'
-  if (['load', 'threephaseload', 'evchargingload', 'hvacload'].includes(compactName)) return 'load'
-  return 'other'
-}
-
-/** 拓扑连接白名单；Load 代表所有负载产品。 */
-export const MODEL_FLOW_CONNECTION_RULES: Readonly<Record<ConnectionRuleKey, readonly ConnectionRuleKey[]>> = {
-  'pv-group': ['hybrid-inverter', 'ac-inverter'],
-  battery: ['hybrid-inverter', 'pcs'],
-  'hybrid-inverter': ['distribution-board', 'battery'],
-  'ac-inverter': [],
-  pcs: ['battery', 'distribution-board'],
-  diesel: ['distribution-board'],
-  'distribution-board': ['load'],
-  load: [],
-  other: [],
-}
-
-export function canConnectNodes(
-  source?: FlowNode | null,
-  target?: FlowNode | null,
-): boolean {
+export function canConnectNodes(source?: FlowNode | null, target?: FlowNode | null): boolean {
   if (!source || !target || source.id === target.id) return false
-
-  const sourceKey = getConnectionRuleKey(source)
-  const targetKey = getConnectionRuleKey(target)
-  return MODEL_FLOW_CONNECTION_RULES[sourceKey].includes(targetKey)
+  const sourceProductName = getNodeProductName(source)
+  const targetProductName = getNodeProductName(target)
+  return !!sourceProductName
+    && !!targetProductName
+    && connectableProductPairs.has(connectionPairKey(sourceProductName, targetProductName))
 }
 
-/** 仅允许白名单方向；拖拽方向可以反向，最终会规范为表格方向。 */
-export function isStrictParentChildConnection(
-  source?: FlowNode | null,
-  target?: FlowNode | null,
-): boolean {
+export function isStrictParentChildConnection(source?: FlowNode | null, target?: FlowNode | null): boolean {
   return canConnectNodes(source, target)
 }
 
@@ -114,10 +72,9 @@ export function hasEdgeBetweenNodes(
   sourceId: string,
   targetId: string,
 ): boolean {
-  return edges.some((e) => e.source === sourceId && e.target === targetId)
+  return edges.some((edge) => edge.source === sourceId && edge.target === targetId)
 }
 
-/** 两节点之间是否已有连线（任意方向） */
 export function hasEdgeBetweenNodesEitherDirection(
   edges: Array<Pick<FlowEdge, 'source' | 'target'>>,
   nodeA: string,
@@ -130,8 +87,6 @@ export function toSourceHandle(handle?: string | null): string {
   if (!handle) return 'bottom-source'
   if (handle.endsWith('-source')) return handle
   if (handle.endsWith('-target')) return handle.replace('-target', '-source')
-  if (handle === 'bottom') return 'bottom-source'
-  if (handle === 'top') return 'top-source'
   return `${handle}-source`
 }
 
@@ -139,76 +94,36 @@ export function toTargetHandle(handle?: string | null): string {
   if (!handle) return 'top-target'
   if (handle.endsWith('-target')) return handle
   if (handle.endsWith('-source')) return handle.replace('-source', '-target')
-  if (handle === 'bottom') return 'bottom-target'
-  if (handle === 'top') return 'top-target'
   return `${handle}-target`
 }
 
-function normalizeHandleId(
-  handle: string | null | undefined,
-  kind: 'source' | 'target',
-): string {
+function normalizeHandleId(handle: string | null | undefined, kind: 'source' | 'target'): string {
   return kind === 'source' ? toSourceHandle(handle) : toTargetHandle(handle)
 }
 
-/** 解析连线端点：允许从任意方向拖线，统一规范为父→子 */
-export function resolveConnectionEndpoints(
-  connection: Connection,
-  nodes: FlowNode[],
-): {
-  source: FlowNode
-  target: FlowNode
-  sourceHandle: string
-  targetHandle: string
-} | null {
+/** Keeps the drag order because topology edges are currently undirected. */
+export function resolveConnectionEndpoints(connection: Connection, nodes: FlowNode[]) {
   if (!connection.source || !connection.target) return null
-  const a = nodes.find((n) => n.id === connection.source)
-  const b = nodes.find((n) => n.id === connection.target)
-  if (!a || !b) return null
-
-  if (canConnectNodes(a, b)) {
-    return {
-      source: a,
-      target: b,
-      sourceHandle: normalizeHandleId(connection.sourceHandle, 'source'),
-      targetHandle: normalizeHandleId(connection.targetHandle, 'target'),
-    }
+  const source = nodes.find((node) => node.id === connection.source)
+  const target = nodes.find((node) => node.id === connection.target)
+  if (!canConnectNodes(source, target)) return null
+  return {
+    source: source!,
+    target: target!,
+    sourceHandle: normalizeHandleId(connection.sourceHandle, 'source'),
+    targetHandle: normalizeHandleId(connection.targetHandle, 'target'),
   }
-  if (canConnectNodes(b, a)) {
-    return {
-      source: b,
-      target: a,
-      sourceHandle: normalizeHandleId(connection.targetHandle, 'source'),
-      targetHandle: normalizeHandleId(connection.sourceHandle, 'target'),
-    }
-  }
-  return null
 }
 
-/** 修正反方向的边（子→父 转为 父→子） */
+/** Edge orientation is retained for rendering only; it has no business meaning. */
 export function correctEdgeDirection<T extends {
-  id: string
-  source: string
-  target: string
   sourceHandle?: string | null
   targetHandle?: string | null
-}>(edge: T, nodes: FlowNode[]): T {
-  const sourceNode = nodes.find((n) => n.id === edge.source)
-  const targetNode = nodes.find((n) => n.id === edge.target)
-  if (canConnectNodes(sourceNode, targetNode)) {
-    return {
-      ...edge,
-      sourceHandle: toSourceHandle(edge.sourceHandle),
-      targetHandle: toTargetHandle(edge.targetHandle),
-    }
-  }
-  if (!canConnectNodes(targetNode, sourceNode)) return edge
+}>(edge: T, _nodes: FlowNode[]): T {
   return {
     ...edge,
-    source: edge.target,
-    target: edge.source,
-    sourceHandle: toSourceHandle(edge.targetHandle),
-    targetHandle: toTargetHandle(edge.sourceHandle),
+    sourceHandle: toSourceHandle(edge.sourceHandle),
+    targetHandle: toTargetHandle(edge.targetHandle),
   }
 }
 
@@ -217,10 +132,12 @@ export function isValidModelConnection(
   nodes: FlowNode[],
   edges: Array<Pick<FlowEdge, 'source' | 'target'>> = [],
 ): boolean {
-  const source = nodes.find((n) => n.id === connection.source)
-  const target = nodes.find((n) => n.id === connection.target)
-  if (!isStrictParentChildConnection(source, target)) return false
-  return !hasEdgeBetweenNodesEitherDirection(edges, source!.id, target!.id)
+  const source = nodes.find((node) => node.id === connection.source)
+  const target = nodes.find((node) => node.id === connection.target)
+  return !!source
+    && !!target
+    && canConnectNodes(source, target)
+    && !hasEdgeBetweenNodesEitherDirection(edges, source.id, target.id)
 }
 
 export function getConnectionRuleHint(
@@ -229,26 +146,7 @@ export function getConnectionRuleHint(
   edges: Array<Pick<FlowEdge, 'source' | 'target'>> = [],
 ): string {
   if (!source || !target) return 'Invalid connection'
-
-  if (!isStrictParentChildConnection(source, target)) {
-    if (isStrictParentChildConnection(target, source)) {
-      return 'Connection direction will be normalized according to the topology rules'
-    }
-    return 'This connection is not allowed by the topology rules'
-  }
-
-  if (!isStrictParentChildConnection(source, target)) {
-    if (isStrictParentChildConnection(target, source)) {
-      return 'Connect parent to child (drag direction is flexible; edges are normalized parent → child)'
-    }
-    if (source.parentNode || target.parentNode) {
-      return 'Connect from parent container to child device (e.g. ESS → Battery)'
-    }
-    return 'Connect parent to child (e.g. Station → Generator; any device may connect directly to Station)'
-  }
-
-  if (hasEdgeBetweenNodes(edges, source.id, target.id) || hasEdgeBetweenNodes(edges, target.id, source.id)) {
-    return 'An edge already exists between these two nodes'
-  }
-  return 'Invalid connection'
+  if (!canConnectNodes(source, target)) return 'This connection is not allowed by the product topology configuration'
+  if (hasEdgeBetweenNodesEitherDirection(edges, source.id, target.id)) return 'An edge already exists between these two nodes'
+  return ''
 }

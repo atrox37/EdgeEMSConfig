@@ -1,13 +1,38 @@
 <template>
-  <div class="fixed-binding-card" :class="`fixed-binding-card--${kind}`">
+  <div
+    class="fixed-binding-card"
+    :class="[
+      `fixed-binding-card--${kind}`,
+      readonly ? 'fixed-binding-card--readonly' : 'fixed-binding-card--editable',
+    ]"
+  >
     <div class="fixed-binding-card__icon">
-      <AppIcon :name="kind === 'station' ? 'i-tabler-antenna-bars-5' : 'i-tabler-box'" />
+      <img
+        class="fixed-binding-card__icon-image"
+        :src="iconImage"
+        alt=""
+        aria-hidden="true"
+      />
     </div>
     <div class="fixed-binding-card__content">
       <div class="fixed-binding-card__title">{{ label }}</div>
       <div class="fixed-binding-card__binding">
-        <span>Bound to</span>
-        <span class="fixed-binding-card__value">{{ modelValue?.instanceName || 'Not Bound' }}</span>
+        <img
+          v-if="readonly"
+          class="fixed-binding-card__binding-icon"
+          :src="topologyLinkIcon"
+          alt=""
+          aria-hidden="true"
+        />
+        <span v-if="readonly" class="fixed-binding-card__value">{{
+          modelValue?.instanceName || "Not Bound"
+        }}</span>
+        <template v-else>
+          <span class="fixed-binding-card__binding-label">Bound to</span>
+          <span class="fixed-binding-card__selected-value">{{
+            modelValue?.instanceName || "Not Bound"
+          }}</span>
+        </template>
         <el-dropdown
           v-if="!readonly"
           trigger="click"
@@ -16,17 +41,31 @@
           popper-class="fixed-binding-card-popper"
           @command="onCommand"
         >
-          <button type="button" class="fixed-binding-card__dropdown-trigger" :aria-label="`Bind ${label}`">
-            <AppIcon name="i-tabler-chevron-down" class="fixed-binding-card__arrow" />
+          <button
+            type="button"
+            class="fixed-binding-card__dropdown-trigger"
+            :aria-label="`Bind ${label}`"
+          >
+            <AppIcon
+              name="i-tabler-chevron-down"
+              class="fixed-binding-card__arrow"
+            />
           </button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="">Not Bound</el-dropdown-item>
               <el-dropdown-item
-                v-for="item in instances"
-                :key="item.instanceId"
+                command="__not-bound__"
+                :class="{ 'is-current': !modelValue }"
+              >
+                Not Bound
+              </el-dropdown-item>
+              <el-dropdown-item
+                v-for="item in selectableInstances"
+                :key="item.instance_id"
                 :command="String(item.instance_id)"
-                :class="{ 'is-current': item.instance_id === modelValue?.instanceId }"
+                :class="{
+                  'is-current': item.instance_id === modelValue?.instanceId,
+                }"
               >
                 {{ item.instance_name }}
               </el-dropdown-item>
@@ -39,35 +78,42 @@
 </template>
 
 <script setup lang="ts">
-import AppIcon from '@/components/AppIcon.vue'
-import type { DeviceInstanceBasic } from '@/types/deviceConfiguration'
-import type { ModelInstanceBinding } from '@/types/visualModeling'
+import { computed } from "vue";
+import AppIcon from "@/components/AppIcon.vue";
+import topologyLinkIcon from "@/assets/icons/topology-link.svg";
+import type { DeviceInstanceBasic } from "@/types/deviceConfiguration";
+import type { ModelInstanceBinding } from "@/types/visualModeling";
 
 const props = defineProps<{
-  kind: 'station' | 'environment'
-  label: string
-  instances: DeviceInstanceBasic[]
-  modelValue?: ModelInstanceBinding | null
-  readonly?: boolean
-}>()
+  kind: "station" | "environment";
+  label: string;
+  iconImage: string;
+  instances: DeviceInstanceBasic[];
+  modelValue?: ModelInstanceBinding | null;
+  readonly?: boolean;
+}>();
+
+const selectableInstances = computed(() => props.instances);
 
 const emit = defineEmits<{
-  'update:modelValue': [value: ModelInstanceBinding | null]
-}>()
+  "update:modelValue": [value: ModelInstanceBinding | null];
+}>();
 
 function onCommand(rawValue: string | number) {
-  const value = String(rawValue)
-  if (!value) {
-    emit('update:modelValue', null)
-    return
+  const value = String(rawValue);
+  if (value === "__not-bound__") {
+    emit("update:modelValue", null);
+    return;
   }
-  const item = props.instances.find((instance) => String(instance.instance_id) === value)
-  if (!item) return
-  emit('update:modelValue', {
+  const item = props.instances.find(
+    (instance) => String(instance.instance_id) === value,
+  );
+  if (!item) return;
+  emit("update:modelValue", {
     instanceId: item.instance_id,
     instanceName: item.instance_name,
     productName: item.product_name,
-  })
+  });
 }
 </script>
 
@@ -75,30 +121,31 @@ function onCommand(rawValue: string | number) {
 .fixed-binding-card {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 230px;
-  padding: 10px 14px;
-  border: 1px solid #e3e7ef;
+  padding: 8px 16px 8px 8px;
+  border: 1px solid #e3e6e9;
   border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 4px 14px rgba(15, 31, 61, 0.12);
+  box-shadow: 0px 6px 12px 0px rgba(0, 0, 0, 0.05);
 }
 
 .fixed-binding-card__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #f0f3fb;
   color: #0b61e8;
 }
 
-.fixed-binding-card__icon :deep(svg) {
-  width: 24px;
-  height: 24px;
+.fixed-binding-card__icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .fixed-binding-card__content {
@@ -110,27 +157,45 @@ function onCommand(rawValue: string | number) {
 }
 
 .fixed-binding-card__title {
-  color: #111111;
-  font-size: 16px;
+  color: #000000;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: normal;
 }
 
 .fixed-binding-card__binding {
   display: flex;
   align-items: center;
   gap: 4px;
-  // margin-top: 4px;
   color: #666666;
   font-size: 12px;
+  font-weight: 450;
+  line-height: 1;
   white-space: nowrap;
+}
+
+.fixed-binding-card__binding-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
 }
 
 .fixed-binding-card__value {
   max-width: 150px;
   overflow: hidden;
-  color: #0b61e8;
-  font-weight: 600;
+  color: #666666;
+  text-overflow: ellipsis;
+}
+
+.fixed-binding-card__binding-label {
+  color: #666666;
+}
+
+.fixed-binding-card__selected-value {
+  max-width: 150px;
+  overflow: hidden;
+  color: #035def;
+  font-weight: 700;
   text-overflow: ellipsis;
 }
 
@@ -140,18 +205,32 @@ function onCommand(rawValue: string | number) {
   justify-content: center;
   width: 12px;
   height: 12px;
- 
+
   background: transparent;
-  color: #666666; 
+  color: #035def;
   cursor: pointer;
 }
 
 .fixed-binding-card__arrow {
   width: 14px;
   height: 14px;
-  color: #666666;
+  color: #035def;
   pointer-events: none;
 }
+
+.fixed-binding-card--readonly .fixed-binding-card__binding {
+  gap: 5px;
+  color: #666666;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.fixed-binding-card--readonly .fixed-binding-card__value {
+  color: inherit;
+}
+
+/* Edit mode follows the Figma control: "Bound to" + selected instance. */
 
 :global(.fixed-binding-card-popper) {
   min-width: 136px;

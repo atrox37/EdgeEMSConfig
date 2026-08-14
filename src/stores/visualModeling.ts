@@ -1,55 +1,25 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { STATION_TOPOLOGY_ID } from '@/mock/stationTopologyMock'
-import type { VisualModel, ModelFlowData } from '@/types/visualModeling'
+import { computed, ref } from 'vue'
+import { getAllInstances, getProducts } from '@/api/devicesManagement'
+import { getChannelBindings, getStationTopology, saveStationTopology } from '@/api/stationTopology'
+import type { DeviceInstanceBasic, DeviceInstanceListItem, ProductListItem } from '@/types/deviceConfiguration'
 import type { NodeChannelBinding, StationTopology } from '@/types/stationTopology'
-import type { DeviceInstanceBasic, ProductListItem } from '@/types/deviceConfiguration'
-import { DEFAULT_DEVICE_PRODUCTS } from '@/constants/deviceProducts'
+import type { ModelFlowData, VisualModel } from '@/types/visualModeling'
 import { setModelFlowProductRules } from '@/utils/modelFlowRules'
-import { createDefaultModelFlow, isEmptyFlow } from '@/utils/defaultModelFlow'
-import {
-  getFrontendChannelBindings,
-  getFrontendInstances,
-  getFrontendProducts,
-  getFrontendTopology,
-  saveFrontendTopology,
-  VISUAL_MODELING_CACHE_ONLY,
-} from '@/mock/visualModelingCache'
+import { createDefaultModelFlow } from '@/utils/defaultModelFlow'
 
-/** 编辑器路由使用的固定站点 ID */
+export const STATION_TOPOLOGY_ID = 'station'
+
 export const STATION_EDITOR_ID = STATION_TOPOLOGY_ID
 
-const LEGACY_STORAGE_KEY = 'visual_models'
-
-function topologyToVisualModel(t: StationTopology): VisualModel {
+function topologyToVisualModel(topology: StationTopology): VisualModel {
   return {
     id: STATION_EDITOR_ID,
-    name: t.station_name,
-    description: t.description ?? '',
-    createdAt: t.created_at,
-    updatedAt: t.updated_at,
-    flowJson: t.flow_json,
-  }
-}
-
-function tryMigrateLegacyTopology(): StationTopology | null {
-  try {
-    const raw = localStorage.getItem(LEGACY_STORAGE_KEY)
-    if (!raw) return null
-    const list = JSON.parse(raw) as VisualModel[]
-    const first = Array.isArray(list) ? list[0] : null
-    if (!first?.flowJson) return null
-    const now = new Date().toISOString()
-    return {
-      station_id: STATION_EDITOR_ID,
-      station_name: first.name || 'Edge Station',
-      description: first.description ?? '',
-      flow_json: first.flowJson,
-      created_at: first.createdAt ?? now,
-      updated_at: first.updatedAt ?? now,
-    }
-  } catch {
-    return null
+    name: topology.station_name,
+    description: topology.description ?? '',
+    createdAt: topology.created_at ?? '',
+    updatedAt: topology.updated_at ?? '',
+    flowJson: topology.flow_json,
   }
 }
 
@@ -57,27 +27,21 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   const stationTopology = ref<StationTopology | null>(null)
   const topologyLoading = ref(false)
   const topologyLoaded = ref(false)
-
   const currentModelId = ref<string | null>(null)
   const hasUnsavedChanges = ref(false)
-
   const instances = ref<DeviceInstanceBasic[]>([])
   const instancesLoaded = ref(false)
   const instancesLoading = ref(false)
-
-  const products = ref<ProductListItem[]>([...DEFAULT_DEVICE_PRODUCTS])
+  const products = ref<ProductListItem[]>([])
   const productsLoaded = ref(false)
   const productsLoading = ref(false)
-
   const channelBindings = ref<NodeChannelBinding[]>([])
   const channelBindingsLoaded = ref(false)
   const channelBindingsLoading = ref(false)
 
-  /** 兼容列表页：单站点包装为数组 */
   const models = computed<VisualModel[]>(() =>
     stationTopology.value ? [topologyToVisualModel(stationTopology.value)] : [],
   )
-
   const currentModel = computed(() =>
     currentModelId.value === STATION_EDITOR_ID && stationTopology.value
       ? topologyToVisualModel(stationTopology.value)
@@ -88,38 +52,12 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     if (topologyLoaded.value && !force) return
     topologyLoading.value = true
     try {
-      let data = await getFrontendTopology()
-      if (!data?.flow_json || isEmptyFlow(data.flow_json)) {
-        const migrated = tryMigrateLegacyTopology()
-        if (migrated) {
-          data = migrated
-          await saveFrontendTopology({
-            flow_json: migrated.flow_json,
-            station_name: migrated.station_name,
-            description: migrated.description,
-          }).catch(() => {})
-        }
-      }
-      if (data) {
-        stationTopology.value = data
-      }
+      const response = await getStationTopology()
+      stationTopology.value = response?.data ?? null
       topologyLoaded.value = true
-    } catch (e) {
-      console.error('[VisualModeling] 加载站点拓扑失败', e)
-      const migrated = tryMigrateLegacyTopology()
-      if (migrated) {
-        stationTopology.value = migrated
-      } else {
-        const now = new Date().toISOString()
-        stationTopology.value = {
-          station_id: STATION_EDITOR_ID,
-          station_name: 'Edge Station',
-          description: '',
-          flow_json: createDefaultModelFlow(),
-          created_at: now,
-          updated_at: now,
-        }
-      }
+    } catch (error) {
+      console.error('[VisualModeling] 加载站点拓扑失败', error)
+      stationTopology.value = null
       topologyLoaded.value = true
     } finally {
       topologyLoading.value = false
@@ -130,10 +68,12 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     if (productsLoaded.value && !force) return
     productsLoading.value = true
     try {
-      products.value = getFrontendProducts()
+      const response = await getProducts({ topology_enabled: true })
+      products.value = response?.data?.products ?? []
       productsLoaded.value = true
-    } catch {
-      products.value = [...DEFAULT_DEVICE_PRODUCTS]
+    } catch (error) {
+      console.error('[VisualModeling] 加载产品列表失败', error)
+      products.value = []
       productsLoaded.value = true
     } finally {
       setModelFlowProductRules(products.value)
@@ -141,53 +81,25 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     }
   }
 
-  function mapInstanceRow(item: Record<string, unknown>): DeviceInstanceBasic {
-    const instanceId = Number(item.instance_id ?? item.id ?? 0)
-    const productRaw = item.product_name ?? item.product ?? item.productName
-    let productName = ''
-    if (typeof productRaw === 'string') {
-      productName = productRaw
-    } else if (productRaw && typeof productRaw === 'object') {
-      const p = productRaw as Record<string, unknown>
-      productName = String(p.product_name ?? p.name ?? '')
-    }
+  function mapInstance(item: DeviceInstanceListItem): DeviceInstanceBasic {
     return {
-      instance_id: instanceId,
-      instance_name: String(item.instance_name ?? item.name ?? ''),
-      product_name: productName,
+      instance_id: item.id,
+      instance_name: item.name,
+      product_name: item.product_name,
     }
   }
 
   async function loadInstances(force = false) {
     if (instancesLoaded.value && !force) return
     instancesLoading.value = true
-    if (VISUAL_MODELING_CACHE_ONLY) {
-      instances.value = getFrontendInstances()
-      instancesLoaded.value = true
-      instancesLoading.value = false
-      return
-    }
     try {
-      let raw: Record<string, unknown>[] = []
-
-      // 分页列表含 product_name，优先用于绑定筛选
-      const pageRes = { data: { list: [] } }
-      if (Array.isArray(pageRes?.data?.list) && pageRes.data.list.length) {
-        raw = pageRes.data.list as Record<string, unknown>[]
-      }
-
-      if (!raw.length) {
-        const listRes = { data: { list: [] } }
-        if (Array.isArray(listRes?.data?.list)) {
-          raw = listRes.data.list as Record<string, unknown>[]
-        }
-      }
-
-      instances.value = raw
-        .map(mapInstanceRow)
+      const response = await getAllInstances()
+      const list = Array.isArray(response?.data?.list) ? response.data.list : []
+      instances.value = list.map((item) => mapInstance(item))
         .filter((item) => item.instance_id > 0)
       instancesLoaded.value = true
-    } catch {
+    } catch (error) {
+      console.error('[VisualModeling] 加载设备实例失败', error)
       instances.value = []
       instancesLoaded.value = true
     } finally {
@@ -198,17 +110,12 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   async function loadChannelBindings(force = false) {
     if (channelBindingsLoaded.value && !force) return
     channelBindingsLoading.value = true
-    if (VISUAL_MODELING_CACHE_ONLY) {
-      channelBindings.value = getFrontendChannelBindings()
-      channelBindingsLoaded.value = true
-      channelBindingsLoading.value = false
-      return
-    }
     try {
-      const res = { data: { bindings: [] } }
-      channelBindings.value = Array.isArray(res?.data?.bindings) ? res.data.bindings : []
+      const response = await getChannelBindings()
+      channelBindings.value = response?.data?.bindings ?? []
       channelBindingsLoaded.value = true
-    } catch {
+    } catch (error) {
+      console.error('[VisualModeling] 加载通道绑定失败', error)
       channelBindings.value = []
       channelBindingsLoaded.value = true
     } finally {
@@ -217,20 +124,15 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   }
 
   function getLiveChannelIds(nodeId: string, instanceId: number): number[] {
-    const binding = channelBindings.value.find((item) => item.nodeId === nodeId)
-    const inst = binding?.instances.find((item) => item.instanceId === instanceId)
-    return inst?.channelIds ? [...inst.channelIds] : []
+    const node = channelBindings.value.find((item) => item.nodeId === nodeId)
+    const instance = node?.instances.find((item) => item.instanceId === instanceId)
+    return instance?.channelIds ? [...instance.channelIds] : []
   }
 
-  function getModels(): VisualModel[] {
-    return models.value
+  function getModels() { return models.value }
+  function getModelById(id: string) {
+    return id === STATION_EDITOR_ID && stationTopology.value ? topologyToVisualModel(stationTopology.value) : null
   }
-
-  function getModelById(id: string): VisualModel | null {
-    if (id !== STATION_EDITOR_ID || !stationTopology.value) return null
-    return topologyToVisualModel(stationTopology.value)
-  }
-
   function updateModelInfo(_id: string, name: string, description: string) {
     if (!stationTopology.value) return
     stationTopology.value.station_name = name
@@ -238,58 +140,34 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     stationTopology.value.updated_at = new Date().toISOString()
   }
 
-  async function saveFlowJson(
-    _id: string,
-    flowJson: ModelFlowData,
-  ): Promise<boolean> {
+  async function saveFlowJson(_id: string, flowJson: ModelFlowData) {
     if (!stationTopology.value) return false
     try {
-      const res = await saveFrontendTopology({
+      const response = await saveStationTopology({
         station_name: stationTopology.value.station_name,
-        description: stationTopology.value.description,
+        description: stationTopology.value.description ?? undefined,
         flow_json: flowJson,
       })
-      if (res?.data) {
-        stationTopology.value = res.data
-      } else {
-        stationTopology.value.flow_json = flowJson
-        stationTopology.value.updated_at = new Date().toISOString()
-      }
+      if (!response?.data) return false
+      stationTopology.value = response.data
       hasUnsavedChanges.value = false
       return true
-    } catch (e) {
-      console.error('[VisualModeling] 保存站点拓扑失败', e)
+    } catch (error) {
+      console.error('[VisualModeling] 保存站点拓扑失败', error)
       return false
     }
   }
 
-  function setCurrentModel(id: string | null) {
-    currentModelId.value = id
-    hasUnsavedChanges.value = false
-  }
-
-  function markUnsaved() {
-    hasUnsavedChanges.value = true
-  }
-
-  function exportModel(id: string): string | null {
+  function setCurrentModel(id: string | null) { currentModelId.value = id; hasUnsavedChanges.value = false }
+  function markUnsaved() { hasUnsavedChanges.value = true }
+  function exportModel(id: string) {
     const model = getModelById(id)
-    if (!model) return null
-    return JSON.stringify(
-      {
-        ...model,
-        station_id: stationTopology.value?.station_id,
-        gateway_id: stationTopology.value?.gateway_id,
-      },
-      null,
-      2,
-    )
+    return model ? JSON.stringify(model, null, 2) : null
   }
-
   function importModel(json: string): VisualModel | null {
     try {
-      const parsed = JSON.parse(json) as VisualModel & { flow_json?: ModelFlowData; flowJson?: ModelFlowData }
-      const flow = parsed.flowJson ?? parsed.flow_json
+      const parsed = JSON.parse(json) as VisualModel
+      const flow = parsed.flowJson
       if (!flow) return null
       const now = new Date().toISOString()
       stationTopology.value = {
@@ -301,75 +179,22 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
         updated_at: now,
       }
       return topologyToVisualModel(stationTopology.value)
-    } catch {
-      return null
-    }
+    } catch { return null }
   }
-
-  /** @deprecated 单站模式请使用 loadStationTopology */
   function createModel(name: string, description = ''): VisualModel {
     const now = new Date().toISOString()
-    stationTopology.value = {
-      station_id: STATION_EDITOR_ID,
-      station_name: name,
-      description,
-      flow_json: createDefaultModelFlow(),
-      created_at: now,
-      updated_at: now,
-    }
+    stationTopology.value = { station_id: STATION_EDITOR_ID, station_name: name, description, flow_json: createDefaultModelFlow(), created_at: now, updated_at: now }
     return topologyToVisualModel(stationTopology.value)
   }
-
-  function deleteModel(_id: string) {
-    const now = new Date().toISOString()
-    stationTopology.value = {
-      station_id: STATION_EDITOR_ID,
-      station_name: stationTopology.value?.station_name ?? 'Edge Station',
-      description: '',
-      flow_json: createDefaultModelFlow(),
-      created_at: stationTopology.value?.created_at ?? now,
-      updated_at: now,
-    }
-  }
-
-  async function resetTopology() {
-    deleteModel(STATION_EDITOR_ID)
-    if (!stationTopology.value) return false
-    return saveFlowJson(STATION_EDITOR_ID, stationTopology.value.flow_json)
-  }
+  function deleteModel(_id: string) { stationTopology.value = null }
+  async function resetTopology() { deleteModel(STATION_EDITOR_ID); return false }
 
   return {
-    stationTopology,
-    topologyLoading,
-    topologyLoaded,
-    models,
-    currentModelId,
-    currentModel,
-    hasUnsavedChanges,
-    instances,
-    instancesLoaded,
-    instancesLoading,
-    products,
-    productsLoaded,
-    productsLoading,
-    channelBindings,
-    channelBindingsLoaded,
-    channelBindingsLoading,
-    loadStationTopology,
-    loadProducts,
-    loadInstances,
-    loadChannelBindings,
-    getLiveChannelIds,
-    getModels,
-    getModelById,
-    createModel,
-    updateModelInfo,
-    saveFlowJson,
-    deleteModel,
-    resetTopology,
-    setCurrentModel,
-    markUnsaved,
-    exportModel,
-    importModel,
+    stationTopology, topologyLoading, topologyLoaded, models, currentModelId, currentModel,
+    hasUnsavedChanges, instances, instancesLoaded, instancesLoading, products, productsLoaded,
+    productsLoading, channelBindings, channelBindingsLoaded, channelBindingsLoading,
+    loadStationTopology, loadProducts, loadInstances, loadChannelBindings, getLiveChannelIds,
+    getModels, getModelById, createModel, updateModelInfo, saveFlowJson, deleteModel, resetTopology,
+    setCurrentModel, markUnsaved, exportModel, importModel,
   }
 })

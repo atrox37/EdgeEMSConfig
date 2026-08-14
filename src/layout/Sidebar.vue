@@ -14,7 +14,7 @@
           <el-sub-menu v-if="item.meta?.isSubMenu" :index="(item.meta?.activeNav as string) || item.path"
             class="sidebar__subMenu">
             <template #title>
-              <component v-if="item.meta?.icon" :is="item.meta.icon" class="sidebar__subMenu-img"
+              <img v-if="item.meta?.icon" :src="item.meta.icon as string" class="sidebar__subMenu-img"
                 :class="{ collapse: globalStore.isCollapse }" />
               <span v-show="!globalStore.isCollapse" class="sidebar__subMenu-title">{{ item.meta?.title || '' }}</span>
             </template>
@@ -24,7 +24,7 @@
             </el-menu-item>
           </el-sub-menu>
           <el-menu-item v-else :index="(item.meta?.activeNav as string) || item.path" class="sidebar__menu-item">
-            <component v-if="item.meta?.icon" :is="item.meta.icon" class="sidebar__subMenu-img"
+            <img v-if="item.meta?.icon" :src="item.meta.icon as string" class="sidebar__subMenu-img"
               :class="{ collapse: globalStore.isCollapse }" />
             <span v-show="!globalStore.isCollapse" class="sidebar__menu-text">{{ item.meta?.title || '' }}</span>
           </el-menu-item>

@@ -203,6 +203,10 @@ export function useTableData<T = any>(config: TableConfig) {
             confirmButtonText: 'Confirm',
             cancelButtonText: 'Cancel',
             type: 'warning',
+            center: true,
+            showClose: false,
+            cancelButtonType: 'text',
+            confirmButtonType: 'danger',
             appendTo: appendTo || 'body',
           },
         ).then(async () => {
@@ -244,6 +248,10 @@ export function useTableData<T = any>(config: TableConfig) {
         confirmButtonText: 'Confirm',
         cancelButtonText: 'Cancel',
         type: 'warning',
+        center: true,
+        showClose: false,
+        cancelButtonType: 'text',
+        confirmButtonType: 'danger',
       },
     ).then(async () => {
       loading.value = true

@@ -327,6 +327,8 @@ const handleDialogBeforeClose = async (done: () => void) => {
             confirmButtonText: 'Discard',
             cancelButtonText: 'Cancel',
             type: 'warning',
+            center: true,
+            showClose: false,
           },
         )
         isEditing.value = false
@@ -393,6 +395,8 @@ async function handleCancel() {
             confirmButtonText: 'Discard',
             cancelButtonText: 'Cancel',
             type: 'warning',
+            center: true,
+            showClose: false,
           },
         )
         isEditing.value = false
@@ -519,7 +523,7 @@ const togglePublishMode = async () => {
         await ElMessageBox.confirm(
           'You have unsaved publish values. Do you want to discard them?',
           'Unsaved Changes',
-          { confirmButtonText: 'Discard', cancelButtonText: 'Cancel', type: 'warning' },
+          { confirmButtonText: 'Discard', cancelButtonText: 'Cancel', type: 'warning', center: true, showClose: false },
         )
         isPublish.value = false
         publishDirty.value = false

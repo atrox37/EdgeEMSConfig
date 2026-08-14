@@ -1,10 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router'
-import ChannelIcon from '@/components/icons/ChannelIcon.vue'
-import InstanceIcon from '@/components/icons/InstanceIcon.vue'
-import RuleIcon from '@/components/icons/RuleIcon.vue'
-import SystemConfigIcon from '@/components/icons/SystemConfigIcon.vue'
-import HomeConfigIcon from '@/components/icons/HomeConfigIcon.vue'
-import ModelingIcon from '@/components/icons/ModelingIcon.vue'
+import ChannelIcon from '@/assets/icons/sidebar-channel.svg'
+import InstanceIcon from '@/assets/icons/sidebar-model.svg'
+import RuleIcon from '@/assets/icons/sidebar-rule.svg'
+import SystemConfigIcon from '@/assets/icons/sidebar-system.svg'
+import HomeConfigIcon from '@/assets/icons/sidebar-home.svg'
+import ModelingIcon from '@/assets/icons/sidebar-topology.svg'
 
 export const staticRoutes: RouteRecordRaw[] = [
   {

@@ -452,7 +452,7 @@ defineExpose({
     display: flex;
     gap: 15px;
     align-items: center;
-    justify-content: center;
+    // justify-content: center;
 
     :deep(.point-table__op-icon) {
       width: 16px;

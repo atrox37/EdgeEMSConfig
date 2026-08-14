@@ -407,7 +407,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 20px;
+    // padding: 20px;
   }
 
   .rule-management__expand-content {

@@ -1,5 +1,11 @@
 <template>
-  <FormDialog width="960px" ref="dialogRef" :title="dialogTitle" append-to-body>
+  <FormDialog
+    width="90%"
+    ref="dialogRef"
+    :title="dialogTitle"
+    dialog-class="rule-history-dialog-wrapper"
+    style="height: 80%;"
+  >
     <template #dialog-body>
       <div class="rule-history-dialog">
         <div class="rule-history-dialog__toolbar">
@@ -33,11 +39,11 @@
           </div>
         </div>
 
-        <div class="rule-history-dialog__body" v-loading="loading">
+        <div class="rule-history-dialog__body">
           <el-table
+            v-loading="loading"
             :data="historyList"
             class="rule-history-dialog__table"
-            height="420"
             table-layout="fixed"
             align="left"
           >
@@ -57,32 +63,29 @@
                     </div>
                   </div>
 
-                  <div class="rule-history-dialog__detail-item">
-                    <span class="rule-history-dialog__detail-label">Trigger Reason:</span>
-                    <span class="rule-history-dialog__detail-value">
-                      {{ getTriggerReason(row) }}
-                    </span>
-                  </div>
-
-                  <div class="rule-history-dialog__detail-item">
-                    <span class="rule-history-dialog__detail-label">Variables:</span>
-                    <div class="rule-history-dialog__tag-list">
-                      <template v-if="getDisplayVariables(row).length">
-                        <span
-                          v-for="item in getDisplayVariables(row)"
-                          :key="`${item.key}-${item.instance_id ?? ''}-${item.point_id ?? ''}`"
-                          class="rule-history-dialog__tag"
-                        >
-                          {{ formatDisplayVariable(item) }}
-                        </span>
-                      </template>
-                      <span v-else class="rule-history-dialog__detail-value">-</span>
+                  <div class="rule-history-dialog__trigger-reason">
+                    <div class="rule-history-dialog__trigger-title">
+                      <AppIcon name="i-tabler-bolt" className="rule-history-dialog__trigger-icon" />
+                      <span>Trigger Reason</span>
+                    </div>
+                    <div class="rule-history-dialog__trigger-value">
+                      <span>{{ getTriggerReason(row) }}</span>
+                      <span
+                        v-if="getTriggerReason(row) !== '-'"
+                        class="rule-history-dialog__matched-tag"
+                      >
+                        <span class="rule-history-dialog__matched-dot" />
+                        Matched
+                      </span>
                     </div>
                   </div>
 
                   <div class="rule-history-dialog__detail-item">
-                    <span class="rule-history-dialog__detail-label">Execution Tree:</span>
-                    <div
+                    <span class="rule-history-dialog__detail-label">Execution Steps </span>
+                    <div v-if="getExecutionGraph(row)?.nodes.length" class="rule-history-dialog__flow">
+                      <RuleHistoryExecutionFlow :graph="getExecutionGraph(row)!" />
+                    </div>
+                    <!-- <div
                       v-if="getFlattenedExecutionTree(row).length"
                       class="rule-history-dialog__steps"
                     >
@@ -91,13 +94,19 @@
                         :key="`${item.node.step.node_id}-${index}`"
                         class="rule-history-dialog__step-card"
                         :class="{
-                          'is-terminal': item.node.step.terminal,
+                          [`is-${getExecutionStepStatus(item.node.step)}`]: true,
                           'is-branch': item.siblingCount > 1,
                         }"
                         :style="{ marginLeft: `${item.depth * 16}px` }"
                       >
                         <div class="rule-history-dialog__step-title">
-                          <span class="rule-history-dialog__step-label">
+                          <span class="rule-history-dialog__step-name">
+                            <span
+                              v-if="getExecutionStepStatus(item.node.step) !== 'default'"
+                              class="rule-history-dialog__step-status"
+                            >
+                              • {{ getExecutionStepStatus(item.node.step) === 'error' ? 'Error' : 'Interrupt' }}
+                            </span>
                             <span
                               v-if="item.siblingCount > 1"
                               class="rule-history-dialog__branch-mark"
@@ -106,91 +115,22 @@
                             </span>
                             {{ formatExecutionStep(item.node.step) }}
                           </span>
-                          <span class="rule-history-dialog__step-badges">
-                            <span
-                              v-if="item.node.step.node_kind"
-                              class="rule-history-dialog__step-kind"
-                            >
-                              {{ item.node.step.node_kind }}
-                            </span>
-                            <span
-                              v-if="item.node.step.terminal"
-                              class="rule-history-dialog__terminal-badge"
-                            >
-                              terminal
-                            </span>
-                          </span>
                         </div>
 
                         <div
-                          v-if="item.node.step.terminal && item.node.step.terminal_reason"
-                          class="rule-history-dialog__terminal-reason"
+                          v-if="formatExecutionStepDescription(item.node.step)"
+                          class="rule-history-dialog__step-description"
                         >
-                          {{ item.node.step.terminal_reason }}
+                          {{ formatExecutionStepDescription(item.node.step) }}
                         </div>
 
-                        <ul
-                          v-if="
-                            item.node.step.node_kind === 'switch' &&
-                            item.node.step.conditions?.length
-                          "
-                          class="rule-history-dialog__step-list"
-                        >
-                          <li
-                            v-for="(condition, cIdx) in item.node.step.conditions"
-                            :key="`${item.node.step.node_id}-c-${cIdx}`"
-                            :class="{ 'is-matched': condition.result }"
-                          >
-                            {{ formatConditionDetail(condition) }}
-                          </li>
-                        </ul>
-
-                        <ul
-                          v-else-if="
-                            item.node.step.node_kind === 'change' &&
-                            item.node.step.assignments?.length
-                          "
-                          class="rule-history-dialog__step-list"
-                        >
-                          <li
-                            v-for="(assignment, aIdx) in item.node.step.assignments"
-                            :key="`${item.node.step.node_id}-a-${aIdx}`"
-                            :class="{ 'is-failed': assignment.success === false }"
-                          >
-                            {{ formatAssignmentDetail(assignment) }}
-                          </li>
-                        </ul>
-
-                        <ul
-                          v-else-if="
-                            item.node.step.node_kind === 'calculation' &&
-                            item.node.step.calculations?.length
-                          "
-                          class="rule-history-dialog__step-list"
-                        >
-                          <li
-                            v-for="(calc, calcIdx) in item.node.step.calculations"
-                            :key="`${item.node.step.node_id}-calc-${calcIdx}`"
-                            :class="{ 'is-failed': calc.success === false }"
-                          >
-                            {{ formatCalculationDetail(calc) }}
-                          </li>
-                        </ul>
-
-                        <div
-                          v-else-if="item.node.step.node_kind === 'periodDelta'"
-                          class="rule-history-dialog__step-text"
-                          :class="{ 'is-failed': item.node.step.success === false }"
-                        >
-                          {{ formatPeriodDeltaDetail(item.node.step) }}
-                        </div>
                       </div>
-                    </div>
+                    </div> -->
                     <span v-else class="rule-history-dialog__detail-value">-</span>
                   </div>
 
                   <div v-if="getDisplayActions(row).length" class="rule-history-dialog__detail-item">
-                    <span class="rule-history-dialog__detail-label">Actions Executed:</span>
+                    <span class="rule-history-dialog__detail-label">Actions Excuted</span>
                     <div class="rule-history-dialog__actions-list">
                       <div
                         v-for="(action, index) in getDisplayActions(row)"
@@ -229,13 +169,7 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="Trigger Reason" min-width="220" show-overflow-tooltip>
-              <template #default="{ row }">
-                <span>{{ getTriggerReason(row) }}</span>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="Result" width="100">
+            <el-table-column label="Result" width="120">
               <template #default="{ row }">
                 <span
                   class="rule-history-dialog__status"
@@ -268,28 +202,20 @@
       </div>
     </template>
 
-    <template #dialog-footer>
-      <el-button @click="close">Close</el-button>
-    </template>
   </FormDialog>
 </template>
 
 <script setup lang="ts">
 import FormDialog from '@/components/dialog/FormDialog.vue'
+import AppIcon from '@/components/AppIcon.vue'
+import RuleHistoryExecutionFlow from './RuleHistoryExecutionFlow.vue'
 import { listRuleHistoryRecords } from '@/api/rulesManagement'
 import type { Rule } from '@/types/ruleConfiguration'
 import type { RuleHistoryItem } from '@/types/controlRule'
 import { formatDateTime } from '@/utils/date'
 import {
-  formatAssignmentDetail,
-  formatCalculationDetail,
-  formatConditionDetail,
-  formatDisplayVariable,
-  formatExecutionStep,
-  formatPeriodDeltaDetail,
   getDisplayActions,
-  getDisplayVariables,
-  getFlattenedExecutionTree,
+  getExecutionGraph,
   getHistoryErrors,
   getHistorySummary,
   getTriggerReason,
@@ -317,10 +243,7 @@ const historyFilters = reactive({
 const startTimeDisplay = ref<Date | null>(null)
 const endTimeDisplay = ref<Date | null>(null)
 
-const dialogTitle = computed(() => {
-  const name = currentRule.value?.name || ''
-  return name ? `Trigger Records: ${name}` : 'Trigger Records'
-})
+const dialogTitle = 'Trigger Records'
 
 const resetHistoryFilters = () => {
   historyFilters.start_time = null
@@ -435,17 +358,31 @@ const open = async (rule: Pick<Rule, 'id' | 'name'>) => {
   await fetchHistory()
 }
 
-const close = () => {
-  if (dialogRef.value) {
-    dialogRef.value.dialogVisible = false
-  }
-}
-
-defineExpose({ open, close })
+defineExpose({ open })
 </script>
 
 <style scoped lang="scss">
+:global(.rule-history-dialog-wrapper.el-dialog) {
+  height: 80%;
+  max-height: 88%;
+  max-width: 960px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+:global(.rule-history-dialog-wrapper .el-dialog__body) {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+
 .rule-history-dialog {
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
   .rule-history-dialog__toolbar {
     display: flex;
     align-items: flex-start;
@@ -466,16 +403,39 @@ defineExpose({ open, close })
   .rule-history-dialog__toolbar-actions {
     display: flex;
     align-items: center;
-    gap: var(--vt-space-2);
     flex-shrink: 0;
   }
 
   .rule-history-dialog__body {
-    min-height: 480px;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .rule-history-dialog__flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    min-height: 120px;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    background: #f5f6fa;
+  }
+
+  .rule-history-dialog__steps {
+    display: none;
   }
 
   .rule-history-dialog__table {
     width: 100%;
+    height: calc(100% - 72px);
+    flex: 0 0 calc(100% - 72px);
   }
 
   .rule-history-dialog__status {
@@ -498,13 +458,11 @@ defineExpose({ open, close })
   }
 
   .rule-history-dialog__pagination {
-    padding-top: var(--vt-space-4);
+    height: 72px;
+    flex: 0 0 72px;
     display: flex;
+    align-items: center;
     justify-content: flex-end;
-  }
-
-  .rule-history-dialog__detail {
-    padding: var(--vt-space-2) var(--vt-space-4) var(--vt-space-4) 48px;
   }
 
   .rule-history-dialog__error-banner {
@@ -525,13 +483,65 @@ defineExpose({ open, close })
   .rule-history-dialog__detail-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: var(--vt-space-2);
+    gap: 10px;
   }
 
   .rule-history-dialog__detail-label {
-    color: var(--vt-text-secondary);
-    font-size: var(--vt-font-size-sm);
+    margin-top: 20px;
+    color: #333333;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .rule-history-dialog__trigger-reason {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--vt-border-color-soft);
+  }
+
+  .rule-history-dialog__trigger-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #333333;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .rule-history-dialog__trigger-icon {
+    width: 14px;
+    height: 14px;
+    color: #3b82f6;
+  }
+
+  .rule-history-dialog__trigger-value {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+    margin-top: 16px;
+    color: var(--vt-text-primary);
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .rule-history-dialog__matched-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 6px;
+    border: 1px solid #fadc19;
+    border-radius: 999px;
+    background: #feffe8;
+    color: #cfaf0f;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .rule-history-dialog__matched-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fadc19;
   }
 
   .rule-history-dialog__detail-value {
@@ -570,12 +580,23 @@ defineExpose({ open, close })
     border: 1px solid color-mix(in srgb, var(--vt-color-primary) 12%, transparent);
     border-left-width: 3px;
 
-    &.is-branch {
-      border-left-color: var(--vt-color-warning);
+    &.is-default {
+      border-color: color-mix(in srgb, var(--vt-color-primary) 28%, transparent);
+      background: color-mix(in srgb, var(--vt-color-primary) 5%, transparent);
     }
 
-    &.is-terminal {
-      border-left-color: var(--vt-color-success);
+    &.is-error {
+      border-color: color-mix(in srgb, var(--vt-color-danger) 24%, transparent);
+      background: color-mix(in srgb, var(--vt-color-danger) 10%, transparent);
+    }
+
+    &.is-interrupt {
+      border-color: color-mix(in srgb, var(--vt-color-warning) 28%, transparent);
+      background: color-mix(in srgb, var(--vt-color-warning) 10%, transparent);
+    }
+
+    &.is-branch {
+      border-left-color: var(--vt-color-warning);
     }
   }
 
@@ -588,12 +609,24 @@ defineExpose({ open, close })
     margin-bottom: 6px;
   }
 
-  .rule-history-dialog__step-label {
+  .rule-history-dialog__step-name {
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     min-width: 0;
+  }
+
+  .rule-history-dialog__step-status {
+    font-weight: var(--vt-font-weight-bold);
+
+    .is-error & {
+      color: var(--vt-color-danger);
+    }
+
+    .is-interrupt & {
+      color: var(--vt-color-warning);
+    }
   }
 
   .rule-history-dialog__branch-mark {
@@ -607,89 +640,54 @@ defineExpose({ open, close })
     font-weight: var(--vt-font-weight-normal);
   }
 
-  .rule-history-dialog__step-badges {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .rule-history-dialog__step-kind {
-    color: var(--vt-text-secondary);
-    font-size: var(--vt-font-size-sm);
-    font-weight: var(--vt-font-weight-normal);
-  }
-
-  .rule-history-dialog__terminal-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 6px;
-    border-radius: var(--vt-radius-sm);
-    background: color-mix(in srgb, var(--vt-color-success) 12%, transparent);
-    color: var(--vt-color-success);
-    font-size: var(--vt-font-size-sm);
-    font-weight: var(--vt-font-weight-normal);
-  }
-
-  .rule-history-dialog__terminal-reason {
-    margin-bottom: 6px;
+  .rule-history-dialog__step-description {
+    margin-top: 4px;
     color: var(--vt-text-secondary);
     font-size: var(--vt-font-size-sm);
     line-height: 1.4;
     word-break: break-word;
   }
 
-  .rule-history-dialog__step-list {
-    margin: 0;
-    padding-left: 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    li.is-matched {
-      color: var(--vt-color-success);
-    }
-
-    li.is-failed {
-      color: var(--vt-color-danger);
-    }
-  }
-
-  .rule-history-dialog__step-text {
-    font-size: var(--vt-font-size-base);
-    word-break: break-word;
-
-    &.is-failed {
-      color: var(--vt-color-danger);
-    }
-  }
-
   .rule-history-dialog__actions-list {
     display: flex;
     flex-direction: column;
-    gap: var(--vt-space-1);
+    border-radius: 8px;
+    background: #F5F6FA;
+    // gap: var(--vt-space-1);
   }
 
   .rule-history-dialog__action-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--vt-space-2);
-    padding: var(--vt-space-1) var(--vt-space-2);
-    border-radius: var(--vt-radius-sm);
-    background: color-mix(in srgb, var(--vt-color-primary) 4%, transparent);
+    gap: var(--vt-space-2); 
+    padding: 9px 20px;
+    // border-radius: var(--vt-radius-sm);
+    // background: color-mix(in srgb, var(--vt-color-primary) 4%, transparent);
+    border-bottom: 1px solid #ECEDF6;
+    line-height: 22px;
+    color: #333333;
+    &:last-child {
+      border-bottom: 0;
+    }
   }
 
   .rule-history-dialog__action-status {
     white-space: nowrap;
-    font-size: var(--vt-font-size-sm);
+    font-size: var(--vt-font-size-xs);
+    line-height: 1.3;
+    padding: 2px 6px;
+    border-radius: 10px; 
+
 
     &.is-success {
       color: var(--vt-color-success);
+      background-color: #E8FFEA;
     }
 
     &.is-failed {
       color: var(--vt-color-danger);
+      background-color: #FFEBEB;
     }
   }
 }

@@ -5,7 +5,6 @@ export interface StationTopology {
   station_id: string
   station_name: string
   description: string | null
-  gateway_id?: string | null
   flow_json: ModelFlowData
   /** 未配置时后端返回 null */
   created_at: string | null
@@ -15,7 +14,6 @@ export interface StationTopology {
 export interface StationTopologySavePayload {
   station_name?: string
   description?: string
-  gateway_id?: string
   flow_json: ModelFlowData
 }
 

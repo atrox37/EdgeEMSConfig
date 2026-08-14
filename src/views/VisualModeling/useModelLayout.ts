@@ -1,5 +1,5 @@
 import { Position, type Edge as FlowEdge, type GraphNode, type Node as FlowNode } from '@vue-flow/core'
-import { CONTAINER_DISPLAY_ORDER, isContainerProduct } from '@/constants/deviceProducts'
+import dagre from '@dagrejs/dagre'
 import { normalizeNodeInstances } from '@/utils/visualModeling'
 import type { ModelNodeData } from '@/types/visualModeling'
 
@@ -82,18 +82,6 @@ function compareChildNodes(a: FlowNode, b: FlowNode): number {
   return labelA.localeCompare(labelB, undefined, { sensitivity: 'base' })
 }
 
-function sortContainerGroups(groups: FlowNode[]): FlowNode[] {
-  return [...groups].sort((a, b) => {
-    const pa = (a.data as { productName?: string })?.productName ?? ''
-    const pb = (b.data as { productName?: string })?.productName ?? ''
-    const ia = CONTAINER_DISPLAY_ORDER.indexOf(pa as (typeof CONTAINER_DISPLAY_ORDER)[number])
-    const ib = CONTAINER_DISPLAY_ORDER.indexOf(pb as (typeof CONTAINER_DISPLAY_ORDER)[number])
-    const rankA = ia === -1 ? CONTAINER_DISPLAY_ORDER.length : ia
-    const rankB = ib === -1 ? CONTAINER_DISPLAY_ORDER.length : ib
-    return rankA - rankB
-  })
-}
-
 export function getGroupContentLayout(
   children: FlowNode[],
   expanded: boolean,
@@ -104,7 +92,7 @@ export function getGroupContentLayout(
   const groupBaseWidth = DEFAULT_NODE_SIZE.group.width
   const groupCollapsedHeight = DEFAULT_NODE_SIZE.group.height
 
-  const cols = Math.max(1, Math.min(3, Math.ceil(Math.sqrt(sortedChildren.length))))
+  const cols = Math.max(1, Math.min(2, Math.ceil(Math.sqrt(sortedChildren.length))))
   const rowHeights: number[] = []
 
   sortedChildren.forEach((child, index) => {
@@ -162,89 +150,89 @@ export function getGroupContentLayout(
  */
 export function layoutModelGraph(
   nodes: FlowNode[],
-  _edges: FlowEdge[],
+  edges: FlowEdge[],
   direction: 'TB' | 'LR' = 'TB',
 ): FlowNode[] {
+  const graph = new dagre.graphlib.Graph()
+  graph.setDefaultEdgeLabel(() => ({}))
+  graph.setGraph({ rankdir: direction })
+
+  const topLevelNodes = nodes.filter((node) => !node.parentNode)
+  const topLevelIds = new Set(topLevelNodes.map((node) => node.id))
   const isHorizontal = direction === 'LR'
   const sourcePosition = isHorizontal ? Position.Right : Position.Bottom
   const targetPosition = isHorizontal ? Position.Left : Position.Top
 
-  const positions = new Map<string, { x: number; y: number }>()
-  const sizeUpdates = new Map<string, { width: number; height: number }>()
-
-  const station = nodes.find((n) => n.type === 'station' && !n.parentNode)
-  const topLevel = nodes.filter((n) => !n.parentNode && n.id !== station?.id)
-
-  const groups = sortContainerGroups(
-    topLevel.filter(
-      (n) => n.type === 'group' || isContainerProduct((n.data as { productName?: string })?.productName),
-    ),
-  )
-  const topProducts = topLevel
-    .filter((n) => !groups.includes(n))
-    .sort(compareChildNodes)
-
-  const rowItems = [...groups, ...topProducts]
-  const rowWidths = rowItems.map((n) => getNodeSize(n).width)
-  const rowTotalW =
-    rowWidths.reduce((sum, w) => sum + w, 0) + Math.max(0, rowItems.length - 1) * LAYOUT.topGapX
-
-  let rowX = LAYOUT.canvasCenterX - rowTotalW / 2
-  const rowY = LAYOUT.stationY + (station ? getNodeSize(station).height + LAYOUT.rowGapY : 0)
-
-  if (station) {
-    const { width } = getNodeSize(station)
-    positions.set(station.id, {
-      x: LAYOUT.canvasCenterX - width / 2,
-      y: LAYOUT.stationY,
-    })
-  }
-
-  rowItems.forEach((node) => {
-    const { width } = getNodeSize(node)
-    positions.set(node.id, { x: rowX, y: rowY })
-    rowX += width + LAYOUT.topGapX
-
-    const children = nodes
-      .filter((n) => n.parentNode === node.id)
-      .sort(compareChildNodes)
-    if (!children.length) return
-
-    const data = node.data as { uiExpanded?: boolean; topologyType?: string; productName?: string }
-    const expanded = data.uiExpanded === true
-    const isContainer = data.topologyType === 'container' || /container|distribution board/i.test(data.productName ?? '')
-    const groupLayout = getGroupContentLayout(children, expanded, isContainer)
-    sizeUpdates.set(node.id, groupLayout.size)
-
-    const childPositions = groupLayout.positions
-    childPositions.forEach((pos, id) => positions.set(id, pos))
+  topLevelNodes.forEach((node) => {
+    const { width, height } = getNodeSize(node)
+    graph.setNode(node.id, { width, height })
   })
 
+  edges.forEach((edge) => {
+    if (topLevelIds.has(edge.source) && topLevelIds.has(edge.target)) {
+      graph.setEdge(edge.source, edge.target)
+    }
+  })
+
+  dagre.layout(graph)
+
   return nodes.map((node) => {
-    const pos = positions.get(node.id)
-    const size = sizeUpdates.get(node.id)
+    const layoutNode = graph.node(node.id)
     const base = {
       ...node,
       sourcePosition,
       targetPosition,
       ...(node.parentNode ? { hidden: true } : {}),
-      ...(pos ? { position: { x: pos.x, y: pos.y } } : {}),
     }
 
-    if (!size) return base
+    if (!layoutNode) return base
 
     return {
       ...base,
-      data: {
-        ...node.data,
-        width: size.width,
-        height: size.height,
+      position: {
+        x: layoutNode.x - layoutNode.width / 2,
+        y: layoutNode.y - layoutNode.height / 2,
       },
-      style: {
-        ...(node.style as Record<string, string | number>),
-        width: `${size.width}px`,
-        height: `${size.height}px`,
-      },
+    }
+  })
+}
+
+function getLayoutCenter(node: FlowNode): { x: number; y: number } {
+  const { width, height } = getNodeSize(node)
+  return {
+    x: node.position.x + width / 2,
+    y: node.position.y + height / 2,
+  }
+}
+
+/** Align edge handles with the relative positions produced by auto layout. */
+export function alignEdgeHandlesToLayout(nodes: FlowNode[], edges: FlowEdge[]): FlowEdge[] {
+  const nodeMap = new Map(nodes.filter((node) => !node.parentNode).map((node) => [node.id, node]))
+
+  return edges.map((edge) => {
+    const source = nodeMap.get(edge.source)
+    const target = nodeMap.get(edge.target)
+    if (!source || !target) return edge
+
+    const sourceCenter = getLayoutCenter(source)
+    const targetCenter = getLayoutCenter(target)
+    const dx = targetCenter.x - sourceCenter.x
+    const dy = targetCenter.y - sourceCenter.y
+
+    let sourceSide: 'top' | 'right' | 'bottom' | 'left'
+    let targetSide: 'top' | 'right' | 'bottom' | 'left'
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      sourceSide = dx >= 0 ? 'right' : 'left'
+      targetSide = dx >= 0 ? 'left' : 'right'
+    } else {
+      sourceSide = dy >= 0 ? 'bottom' : 'top'
+      targetSide = dy >= 0 ? 'top' : 'bottom'
+    }
+
+    return {
+      ...edge,
+      sourceHandle: `${sourceSide}-source`,
+      targetHandle: `${targetSide}-target`,
     }
   })
 }

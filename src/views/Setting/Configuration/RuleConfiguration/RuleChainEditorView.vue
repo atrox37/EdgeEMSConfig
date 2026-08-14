@@ -265,6 +265,8 @@ import { updateRule } from '@/api/rulesManagement'
 import wsManager from '@/utils/websocket'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 import { layoutRuleChain } from '@/utils/ruleChainLayout'
+import { useFlowHistory } from '@/composables/flow/useFlowHistory'
+import { useFlowViewport } from '@/composables/flow/useFlowViewport'
 const {
   updateNode,
   toObject,
@@ -317,51 +319,37 @@ const edges = computed(() => {
 const isFullscreen = computed(() => ruleChainStore.isFullscreen)
 const hasUnsavedChanges = computed(() => ruleChainStore.hasUnsavedChanges)
 
-type FlowSnapshot = { nodes: FlowNode[]; edges: FlowEdge[] }
-const editSnapshots = ref<FlowSnapshot[]>([])
-const editSnapIdx = ref(-1)
 let isRestoringEditHistory = false
-const canUndoEdit = computed(() => editSnapIdx.value > 0)
-const canRedoEdit = computed(() => editSnapIdx.value < editSnapshots.value.length - 1)
+const editHistory = useFlowHistory({
+  enabled: () => !isMonitorMode.value && !isRestoringEditHistory,
+  capture: () => {
+    const flowObj = toObject()
+    return {
+      nodes: flowObj.nodes as FlowNode[],
+      edges: flowObj.edges as FlowEdge[],
+    }
+  },
+  restore: async (snapshot) => {
+    isRestoringEditHistory = true
+    setNodes(ensureStartEndNodesUndeletable(snapshot.nodes))
+    setEdges(snapshot.edges)
+    ruleChainStore.hasUnsavedChanges = true
+    await nextTick()
+    isRestoringEditHistory = false
+  },
+})
+const { snapshots: editSnapshots, snapIdx: editSnapIdx, canUndo: canUndoEdit, canRedo: canRedoEdit } = editHistory
 
 function saveEditSnapshot() {
-  if (isRestoringEditHistory || isMonitorMode.value) return
-  const flowObj = toObject()
-  const s: FlowSnapshot = {
-    nodes: JSON.parse(JSON.stringify(flowObj.nodes)),
-    edges: JSON.parse(JSON.stringify(flowObj.edges)),
-  }
-  const next = editSnapshots.value.slice(0, editSnapIdx.value + 1)
-  next.push(s)
-  while (next.length > 50) {
-    next.shift()
-    editSnapIdx.value = Math.max(0, editSnapIdx.value - 1)
-  }
-  editSnapshots.value = next
-  editSnapIdx.value = next.length - 1
+  editHistory.saveSnapshot()
 }
 
-function applyEditSnapshot(snapshot: FlowSnapshot) {
-  isRestoringEditHistory = true
-  const protectedNodes = ensureStartEndNodesUndeletable(snapshot.nodes)
-  setNodes(protectedNodes)
-  setEdges(snapshot.edges)
-  ruleChainStore.hasUnsavedChanges = true
-  nextTick(() => {
-    isRestoringEditHistory = false
-  })
+async function undoEdit() {
+  await editHistory.undo()
 }
 
-function undoEdit() {
-  if (!canUndoEdit.value) return
-  editSnapIdx.value--
-  applyEditSnapshot(editSnapshots.value[editSnapIdx.value])
-}
-
-function redoEdit() {
-  if (!canRedoEdit.value) return
-  editSnapIdx.value++
-  applyEditSnapshot(editSnapshots.value[editSnapIdx.value])
+async function redoEdit() {
+  await editHistory.redo()
 }
 
 async function handleAutoLayout() {
@@ -573,26 +561,12 @@ onEdgesChange((changes: any[]) => {
   applyEdgeChanges && applyEdgeChanges(changes)
 })
 
-const fitFlowToViewport = () => {
-  const flowObj = toObject()
-  if ((flowObj.nodes as FlowNode[] | undefined)?.length) {
-    fitView({
-      includeHiddenNodes: true,
-      padding: 0.2,
-      duration: 0,
-    })
-  }
-}
-
-let resizeTimer: number | null = null
-const handleWindowResize = () => {
-  if (resizeTimer) {
-    window.clearTimeout(resizeTimer)
-  }
-  resizeTimer = window.setTimeout(() => {
-    fitFlowToViewport()
-  }, 160)
-}
+const { fitFlowToViewport, handleWindowResize } = useFlowViewport({
+  fitView,
+  getNodes: () => nodes.value,
+  padding: 0.2,
+  resizeDelay: 160,
+})
 
 function exitMonitorMode() {
   isMonitorMode.value = true
@@ -617,6 +591,8 @@ const handleExitEdit = async () => {
         confirmButtonText: 'Discard',
         cancelButtonText: 'Keep Editing',
         type: 'warning',
+        center: true,
+        showClose: false,
       },
     )
     handleCancel()
@@ -639,6 +615,8 @@ async function handleRestoreToSaved() {
         confirmButtonText: 'Restore',
         cancelButtonText: 'Cancel',
         type: 'warning',
+        center: true,
+        showClose: false,
       },
     )
     handleCancel()
@@ -767,8 +745,7 @@ const handleSave = async () => {
     await updateRule(payload)
     ruleChainStore.saveChanges(newNodes, newEdges)
     ruleChainStore.hasUnsavedChanges = false
-    editSnapshots.value = []
-    editSnapIdx.value = -1
+    editHistory.clear()
     nextTick(() => saveEditSnapshot())
     ElMessage.success('Submitted successfully')
     nextTick(() => {
@@ -924,8 +901,7 @@ function enterEditMode() {
   clearSimulation()
   resetRuntimeVisuals()
   visibleVarsNodes.value.clear()
-  editSnapshots.value = []
-  editSnapIdx.value = -1
+  editHistory.clear()
   nextTick(() => saveEditSnapshot())
 }
 
@@ -1390,19 +1366,19 @@ watch(
         flex-wrap: wrap;
       }
 
-      .rule-chain-editor__save-btn.is-dirty:not(:disabled) {
-        box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.55);
-      }
-      :deep(.el-button) {
-        height: 24px;
-        padding: 0 8px;
-        font-size: 11px;
-      }
-      :deep(.rule-chain-editor__toolbar-icon) {
-        width: 12px;
-        height: 12px;
-        flex-shrink: 0;
-      }
+      // .rule-chain-editor__save-btn.is-dirty:not(:disabled) {
+      //   box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.55);
+      // }
+      // :deep(.el-button) {
+      //   height: 24px;
+      //   padding: 0 8px;
+      //   font-size: 11px;
+      // }
+      // :deep(.rule-chain-editor__toolbar-icon) {
+      //   width: 12px;
+      //   height: 12px;
+      //   flex-shrink: 0;
+      // }
     }
 
     .rule-chain-editor__content {
@@ -1720,28 +1696,28 @@ watch(
       }
     }
 
-    .rule-chain-editor__floating-actions {
-      position: fixed;
-      right: 100px;
-      bottom: 24px;
-      display: flex;
-      gap: 16px;
-      z-index: 10;
-      .floating-btn {
-        width: 48px !important;
-        height: 48px !important;
-        font-size: 18px !important;
-        border-radius: 50% !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    // .rule-chain-editor__floating-actions {
+    //   position: fixed;
+    //   right: 100px;
+    //   bottom: 24px;
+    //   display: flex;
+    //   gap: 16px;
+    //   z-index: 10;
+    //   .floating-btn {
+    //     width: 48px !important;
+    //     height: 48px !important;
+    //     font-size: 18px !important;
+    //     border-radius: 50% !important;
+    //     display: flex;
+    //     align-items: center;
+    //     justify-content: center;
+    //     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 
-        .floating-btn--submit.is-dirty:not(:disabled) {
-          box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
-        }
-      }
-    }
+    //     // .floating-btn--submit.is-dirty:not(:disabled) {
+    //     //   box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
+    //     // }
+    //   }
+    // }
   }
   :deep(.custom-button .rule-chain-editor__toolbar-icon) {
     margin-right: 8px;

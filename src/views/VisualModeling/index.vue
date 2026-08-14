@@ -3,232 +3,59 @@
     class="voltage-class rule-management modeling-editor"
     :class="{ 'is-fullscreen': isFullscreen, 'is-editing': !isViewMode }"
   >
-    <div class="modeling-editor__header">
-      <PageTitle title="Topology Config" />
-      <div class="modeling-editor__toolbar">
-        <el-button size="small" type="primary" class="custom-button" @click="toggleFullscreen">
-          <img
-            :src="fullscreenIcon"
-            class="modeling-editor__toolbar-icon"
-          />
-          {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
-        </el-button>
-
-        <el-dropdown
-          v-if="isViewMode"
-          trigger="click"
-          :disabled="exportLoading"
-          @command="handleExportCommand"
-          placement="bottom-end"
-          :show-arrow="false"
-        >
-          <el-button size="small" type="primary" class="custom-button" :loading="exportLoading">
-            <img :src="exportIcon" class="modeling-editor__toolbar-icon" />
-            Export
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="json">File(.json)</el-dropdown-item>
-              <el-dropdown-item command="png">Image(.png)</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-
-        <el-button
-          v-if="isViewMode"
-          v-permission="'engineer'"
-          size="small"
-          type="primary"
-          class="custom-button"
-          @click="enterEditMode"
-        >
-          <img :src="editIcon" class="modeling-editor__toolbar-icon" />
-          Edit
-        </el-button>
-
-        <template v-if="!isViewMode">
-          <el-button
-            v-permission="'engineer'"
-            size="small"
-            class="custom-button"
-            @click="handleAutoLayout"
-          >
-            <AppIcon name="i-tabler-layout-distribute-vertical" class="modeling-editor__toolbar-icon" />
-            Auto Layout
-          </el-button>
-          <el-button
-            v-permission="'engineer'"
-            size="small"
-            type="primary"
-            class="custom-button"
-            @click="handleImportClick"
-          >
-            <AppIcon name="i-tabler-upload" class="modeling-editor__toolbar-icon" />
-            Import
-          </el-button>
-          <el-button
-            v-permission="'engineer'"
-            size="small"
-            type="primary"
-            class="custom-button"
-            @click="handleExitEdit"
-          >
-            <AppIcon name="i-tabler-arrow-left" class="modeling-editor__toolbar-icon" />
-            Exit Edit
-          </el-button>
-        </template>
-      </div>
-    </div>
+    <ModelingToolbar
+      :is-view-mode="isViewMode"
+      :is-fullscreen="isFullscreen"
+      :export-loading="exportLoading"
+      @toggle-fullscreen="toggleFullscreen"
+      @export="handleExportCommand"
+      @enter-edit="enterEditMode"
+      @auto-layout="handleAutoLayout"
+      @import="handleImportClick"
+      @exit-edit="handleExitEdit"
+    />
 
     <div class="modeling-editor__body">
       <div v-if="!isViewMode" class="modeling-editor__left-panel">
         <LeftPanel />
       </div>
 
-      <div
-        ref="canvasRef"
-        class="modeling-editor__canvas"
+      <ModelingCanvas
+        ref="modelingCanvasRef"
+        v-model:nodes="nodes"
+        v-model:edges="edges"
+        :node-types="nodeTypes"
+        :edge-types="edgeTypes"
+        :is-view-mode="isViewMode"
+        :is-canvas-loading="isCanvasLoading"
+        :has-unsaved-changes="hasUnsavedChanges"
+        :fixed-station-binding="fixedStationBinding"
+        :fixed-environment-binding="fixedEnvironmentBinding"
+        :station-label="primaryTopLevelProduct?.product_name ?? ''"
+        :environment-label="secondaryTopLevelProduct?.product_name ?? ''"
+        :show-environment="!!secondaryTopLevelProduct"
+        :station-instances="stationInstances"
+        :environment-instances="environmentInstances"
+        :viewport="viewport"
+        :mini-map-node-color="miniMapNodeColor"
+        :mini-map-node-stroke-color="miniMapNodeStrokeColor"
+        :fit-view="fitView"
+        :zoom-in="zoomIn"
+        :zoom-out="zoomOut"
         @dragover="onDragOver"
         @dragleave="onDragLeave"
         @drop="onDrop"
-      >
-        <LoadingBg :loading="isCanvasLoading" text="Loading topology..." />
-        <div class="modeling-editor__fixed-bindings">
-          <FixedBindingCard
-            kind="station"
-            label="Station"
-            :instances="stationInstances"
-            :readonly="isViewMode"
-            :model-value="fixedStationBinding"
-            @update:model-value="updateFixedBinding('station', $event)"
-          />
-          <FixedBindingCard
-            kind="environment"
-            label="Environment"
-            :instances="environmentInstances"
-            :readonly="isViewMode"
-            :model-value="fixedEnvironmentBinding"
-            @update:model-value="updateFixedBinding('environment', $event)"
-          />
-        </div>
-        <VueFlow
-          :nodes="nodes"
-          :edges="edges"
-          :node-types="nodeTypes"
-          :connection-mode="ConnectionMode.Loose"
-          :connection-radius="48"
-          :connect-on-click="false"
-          :connection-line-style="{ stroke: '#B3CEFA', strokeWidth: 1 }"
-          :min-zoom="0.1"
-          :max-zoom="4"
-          :snap-to-grid="true"
-          :snap-grid="[10, 10]"
-          :nodes-draggable="true"
-          :nodes-connectable="!isViewMode"
-          :nodes-deletable="!isViewMode"
-          :edges-deletable="!isViewMode"
-          :delete-key-code="null"
-          :elements-selectable="!isViewMode"
-          :edges-focusable="!isViewMode"
-          :elevate-edges-on-select="!isViewMode"
-          :elevate-nodes-on-select="!isViewMode"
-          :class="['modeling-editor__flow', { 'modeling-editor__flow--view': isViewMode }]"
-          @connect="handleConnectGuard"
-          @node-click="handleNodeClick"
-          @edge-click="handleEdgeClickGuard"
-          @pane-click="handlePaneClick"
-          @edge-double-click="handleEdgeDoubleClickGuard"
-        >
-          <Background variant="lines" :gap="10" color="rgba(220, 226, 238, 0.78)" />
-          <MiniMap
-            v-show="showMiniMap"
-            class="modeling-editor__minimap"
-            :width="200"
-            :height="200"
-            :node-color="miniMapNodeColor"
-            :node-stroke-color="miniMapNodeStrokeColor"
-            :node-stroke-width="1.5"
-            :node-border-radius="4"
-            :mask-color="'rgba(255, 105, 0, 0.06)'"
-            mask-stroke-color="#ff6900"
-            :mask-stroke-width="2"
-            :pannable="true"
-            :zoomable="true"
-            aria-label="Topology minimap"
-          />
-          <div class="modeling-editor__flow-controls" aria-label="Canvas controls">
-            <button type="button" class="flow-control-button" aria-label="Fit view" @click="fitView()">
-              <img class="flow-control-button__icon" :src="fitViewIcon" alt="" aria-hidden="true" />
-            </button>
-            <span class="flow-control-divider" aria-hidden="true"></span>
-            <button type="button" class="flow-control-button" aria-label="Zoom out" @click="zoomOut()">
-              <img class="flow-control-button__icon" :src="zoomOutIcon" alt="" aria-hidden="true" />
-            </button>
-            <span class="flow-control-zoom">{{ Math.round(viewport.zoom * 100) }}%</span>
-            <button type="button" class="flow-control-button" aria-label="Zoom in" @click="zoomIn()">
-              <img class="flow-control-button__icon" :src="zoomInIcon" alt="" aria-hidden="true" />
-            </button>
-            <span class="flow-control-divider" aria-hidden="true"></span>
-            <button type="button" class="flow-control-button" :class="{ 'is-active': showMiniMap }" aria-label="Toggle minimap" @click="showMiniMap = !showMiniMap">
-              <img class="flow-control-button__icon" :src="toggleMinimapIcon" alt="" aria-hidden="true" />
-            </button>
-          </div>
-        </VueFlow>
-
-        <Transition name="edge-toolbar">
-          <div v-if="!isViewMode && selectedEdgeId" class="modeling-editor__edge-toolbar">
-            <button class="edge-toolbar__btn edge-toolbar__btn--label" title="Edit label" @click="openEdgeLabelEdit">
-              <AppIcon name="i-tabler-tag" />
-              <span>Label</span>
-            </button>
-            <button class="edge-toolbar__btn edge-toolbar__btn--del" title="Delete edge" @click="deleteSelectedEdge">
-              <AppIcon name="i-tabler-trash" />
-              <span>Delete</span>
-            </button>
-          </div>
-        </Transition>
-
-        <div v-if="!isViewMode" v-permission="'engineer'" class="modeling-editor__floating-actions">
-          <el-button
-            class="floating-btn floating-btn--cancel"
-            title="Restore to last saved"
-            :disabled="!hasUnsavedChanges"
-            @click="handleRestoreToSaved"
-          >
-            <AppIcon name="i-tabler-rotate-2" />
-            <span>Restart</span>
-            ×
-          </el-button>
-          <el-button
-            type="primary"
-            class="floating-btn floating-btn--submit"
-            :class="{ 'is-dirty': hasUnsavedChanges }"
-            :disabled="!hasUnsavedChanges"
-            title="Save"
-            @click="handleSave"
-          >
-            <AppIcon name="i-tabler-device-floppy" />
-            <span>Save</span>
-            √
-          </el-button>
-        </div>
-      </div>
+        @connect="handleConnectGuard"
+        @node-click="handleNodeClick"
+        @edge-click="handleEdgeClickGuard"
+        @pane-click="handlePaneClick"
+        @update:fixed-station-binding="updateFixedBinding('station', $event)"
+        @update:fixed-environment-binding="updateFixedBinding('environment', $event)"
+        @restore="handleRestoreToSaved"
+        @save="handleSave"
+      />
 
     </div>
-
-    <!-- 边标签编辑对话框 -->
-    <el-dialog
-      v-model="edgeLabelDialogVisible"
-      title="Edit Edge Label"
-      width="340px"
-      destroy-on-close
-    >
-      <el-input v-model="editingEdgeLabel" placeholder="Edge label (e.g. contains, relates)" clearable />
-      <template #footer>
-        <el-button @click="edgeLabelDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="confirmEdgeLabel">OK</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 隐藏的 import input -->
     <input
@@ -245,12 +72,14 @@
 
 <script setup lang="ts">
 import LeftPanel from './components/LeftPanel.vue'
-import { ref, markRaw, computed, onMounted, onUnmounted, nextTick, provide } from 'vue'
+import ModelingToolbar from './components/ModelingToolbar.vue'
+import ModelingCanvas from './components/ModelingCanvas.vue'
+import { useFlowHistory } from '@/composables/flow/useFlowHistory'
+import { useFlowViewport } from '@/composables/flow/useFlowViewport'
+import { ref, markRaw, computed, onMounted, onUnmounted, nextTick, provide, defineComponent, h } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  VueFlow,
-  ConnectionMode,
   useVueFlow,
   type Connection,
   type Node as FlowNode,
@@ -258,19 +87,17 @@ import {
   type NodeChange,
   type EdgeChange,
   type NodeTypesObject,
+  type EdgeTypesObject,
 } from '@vue-flow/core'
-import { Background } from '@vue-flow/background'
-import { MiniMap } from '@vue-flow/minimap'
-import '@vue-flow/minimap/dist/style.css'
-
-import AppIcon from '@/components/AppIcon.vue'
-import PageTitle from '@/components/common/PageTitle.vue'
-import FixedBindingCard from './components/FixedBindingCard.vue'
 import TopologyNode from './components/customNodes/TopologyNode.vue'
+import DeletableSmoothStepEdge from './components/customEdges/DeletableSmoothStepEdge.vue'
 import useModelDnd from './useModelDnd'
+import { normalizeTopologyEdges } from './composables/useTopologyEdges'
+import { topologyMiniMapColor, topologyMiniMapStrokeColor } from './composables/useTopologyMinimap'
+import { useTopologyPersistence } from './composables/useTopologyPersistence'
 
 import { useVisualModelingStore, STATION_EDITOR_ID } from '@/stores/visualModeling'
-import { getGroupContentLayout, layoutModelGraph } from './useModelLayout'
+import { alignEdgeHandlesToLayout, getGroupContentLayout, layoutModelGraph } from './useModelLayout'
 import {
   createDefaultModelFlow,
   createFlowEdgeId,
@@ -280,49 +107,69 @@ import {
 import type { ModelFlowData, ModelInstanceBinding } from '@/types/visualModeling'
 import {
   getConnectionRuleHint,
-  canConnectNodes,
   hasEdgeBetweenNodesEitherDirection,
   resolveConnectionEndpoints,
-  correctEdgeDirection,
-  toSourceHandle,
-  toTargetHandle,
 } from '@/utils/modelFlowRules'
-import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
+import { toPng } from 'html-to-image'
 import type { ModelFlowNode } from '@/types/visualModeling'
 import { MODELING_EDITOR_KEY } from './modelingEditorContext'
 import { collectBoundInstanceIds, collectNodesToDelete, normalizeNodeInstances } from '@/utils/visualModeling'
-import { normalizeTopology } from '@/utils/topologyNormalize'
+import { normalizeTopology, validateTopologyForPersistence, validateTopologyImport } from '@/utils/topologyNormalize'
 import { setModelFlowProductRules } from '@/utils/modelFlowRules'
 import TopologyIssuesDialog from './components/dialogs/TopologyIssuesDialog.vue'
 import { isFlowSnapshotEqual } from '@/utils/flowSnapshot'
 import { enrichFlowWithLiveChannelBindings } from '@/utils/topologyChannelBindings'
+import messageWarningIcon from '@/assets/icons/message-warning.svg'
 
-import fullscreenIcon from '@/assets/icons/button-fullscreen.svg'
-import editIcon from '@/assets/icons/button-edit.svg'
-import exportIcon from '@/assets/icons/button-download.svg'
-import fitViewIcon from '@/assets/icons/tuopu-fitView.svg'
-import toggleMinimapIcon from '@/assets/icons/tuopu-toggleMinimap.svg'
-import zoomInIcon from '@/assets/icons/tuopu-zoomIn.svg'
-import zoomOutIcon from '@/assets/icons/tuopu-zoomOut.svg'
+const MessageWarningIcon = defineComponent({
+  name: 'MessageWarningIcon',
+  setup() {
+    return () => h('img', {
+      src: messageWarningIcon,
+      alt: '',
+      'aria-hidden': 'true',
+      style: 'width: 24px; height: 24px; object-fit: contain;',
+    })
+  },
+})
 
 const store = useVisualModelingStore()
 const modelId = STATION_EDITOR_ID
-const showMiniMap = ref(true)
 const isCanvasLoading = ref(true)
+
+const waitForCanvasLayout = async () => {
+  await nextTick()
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+}
 const { onDragOver, onDragLeave, onDrop } = useModelDnd()
 const fixedStationBinding = ref<ModelInstanceBinding | null>(null)
 const fixedEnvironmentBinding = ref<ModelInstanceBinding | null>(null)
-const stationInstances = computed(() => store.instances.filter((item) => item.product_name === 'Station'))
-const environmentInstances = computed(() =>
-  store.instances.filter((item) => ['Env', 'Environment'].includes(item.product_name)),
+const topLevelProducts = computed(() =>
+  store.products.filter((product) => product.topology?.enabled && product.topology?.type === 'top-level'),
 )
+const primaryTopLevelProduct = computed(() =>
+  topLevelProducts.value.find((product) => product.parent_name === null) ?? topLevelProducts.value[0],
+)
+const secondaryTopLevelProduct = computed(() =>
+  topLevelProducts.value.find((product) => product.product_name !== primaryTopLevelProduct.value?.product_name),
+)
+const stationInstances = computed(() => store.instances.filter(
+  (item) => item.product_name === primaryTopLevelProduct.value?.product_name
+    && (item.instance_id !== fixedEnvironmentBinding.value?.instanceId
+      || item.instance_id === fixedStationBinding.value?.instanceId),
+))
+const environmentInstances = computed(() => store.instances.filter(
+  (item) => item.product_name === secondaryTopLevelProduct.value?.product_name
+    && (item.instance_id !== fixedStationBinding.value?.instanceId
+      || item.instance_id === fixedEnvironmentBinding.value?.instanceId),
+))
 
 const {
   setNodes,
   setEdges,
   addEdges,
-  removeEdges,
   applyEdgeChanges,
   onNodesChange,
   onEdgesChange,
@@ -333,8 +180,7 @@ const {
   viewport,
   getNodes,
   updateNode,
-  findNode,
-  setViewport,
+  updateNodeInternals,
 } = useVueFlow()
 
 // ---- 节点类型注册（markRaw 避免 Vue Flow 节点被深度响应式包装）----
@@ -344,67 +190,11 @@ const nodeTypes = {
   group: markRaw(TopologyNode),
 } as unknown as NodeTypesObject
 
+const edgeTypes = {
+  'deletable-smoothstep': markRaw(DeletableSmoothStepEdge),
+} as unknown as EdgeTypesObject
+
 // ---- 连线类型定义 ----
-type EdgeVariantKey = 'hierarchy' | 'association' | 'dataflow'
-
-interface EdgeVariantDef {
-  value: EdgeVariantKey
-  label: string
-  icon: string
-  color: string
-  strokeDasharray?: string
-  animated: boolean
-  bidirectional: boolean
-}
-
-const EDGE_VARIANTS: EdgeVariantDef[] = [
-  {
-    value: 'hierarchy',
-    label: 'Hierarchy',
-    icon: 'i-tabler-git-branch',
-    color: '#6F3381',
-    animated: false,
-    bidirectional: false,
-  },
-  {
-    value: 'association',
-    label: 'Association',
-    icon: 'i-tabler-arrows-exchange',
-    color: '#4a90d9',
-    strokeDasharray: '6 4',
-    animated: false,
-    bidirectional: true,
-  },
-  {
-    value: 'dataflow',
-    label: 'Data Flow',
-    icon: 'i-tabler-wave-sine',
-    color: '#43a047',
-    strokeDasharray: '16 10',
-    animated: true,
-    bidirectional: false,
-  },
-]
-
-function buildEdgeStyle(
-  variant: EdgeVariantKey,
-  options?: { dataFlowActive?: boolean },
-): Partial<FlowEdge> {
-  const def = EDGE_VARIANTS.find((v) => v.value === variant) ?? EDGE_VARIANTS[0]
-  const animated =
-    variant === 'dataflow' ? (options?.dataFlowActive ?? true) : def.animated
-  return {
-    type: 'smoothstep',
-    animated,
-    zIndex: 1001,
-    style: {
-      stroke: '#B3CEFA',
-      strokeWidth: 1,
-    },
-    data: { edgeVariant: variant, dataFlowActive: variant === 'dataflow' ? animated : undefined },
-  }
-}
-
 // ---- 基础状态 ----
 const nodes = ref<FlowNode[]>([])
 const edges = ref<FlowEdge[]>([])
@@ -414,32 +204,13 @@ const hasUnsavedChanges = ref(false)
 const selectedNode = ref<ModelFlowNode | null>(null)
 const selectedEdgeId = ref<string | null>(null)
 const expandedNodeIds = ref(new Set<string>())
-const EDIT_SIDEBAR_OFFSET = 381
-const edgeLabelDialogVisible = ref(false)
-const editingEdgeLabel = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
+const modelingCanvasRef = ref<InstanceType<typeof ModelingCanvas> | null>(null)
 const exportLoading = ref(false)
 const topologyIssuesDialogRef = ref<InstanceType<typeof TopologyIssuesDialog> | null>(null)
 
-const miniMapNodeColor = (node: FlowNode) => {
-  const data = node.data as { topologyType?: string; isContainer?: boolean; productName?: string; label?: string }
-  const productName = `${data.productName ?? ''} ${data.label ?? ''}`
-  if (node.type === 'group' && (data.topologyType === 'container' || data.isContainer === true || /container|distribution board/i.test(productName))) {
-    return '#e7f0fb'
-  }
-  if (node.type === 'group') return '#fff0e9'
-  return '#edf4ff'
-}
-
-const miniMapNodeStrokeColor = (node: FlowNode) => {
-  const data = node.data as { topologyType?: string; isContainer?: boolean; productName?: string; label?: string }
-  const productName = `${data.productName ?? ''} ${data.label ?? ''}`
-  if (node.type === 'group' && (data.topologyType === 'container' || data.isContainer === true || /container|distribution board/i.test(productName))) {
-    return '#1d5fbf'
-  }
-  if (node.type === 'group') return '#f05a00'
-  return '#2878ff'
-}
+const miniMapNodeColor = topologyMiniMapColor
+const miniMapNodeStrokeColor = topologyMiniMapStrokeColor
 
 function setNodeExpanded(nodeId: string, expanded: boolean) {
   const next = new Set(expandedNodeIds.value)
@@ -450,20 +221,73 @@ function setNodeExpanded(nodeId: string, expanded: boolean) {
   const group = getFlowNodes().find((node) => node.id === nodeId)
   if (!group) return
   const children = getFlowNodes().filter((node) => node.parentNode === nodeId)
-  const productName = String((group.data as { productName?: string })?.productName ?? '')
   const topologyType = String((group.data as { topologyType?: string })?.topologyType ?? '')
-  const isContainer = topologyType === 'container' || /container|distribution board/i.test(productName)
+  const isContainer = topologyType === 'container' || (group.data as { isContainer?: boolean }).isContainer === true
   const layout = getGroupContentLayout(children, expanded, isContainer)
+  const groupWidth = Number((group.data as { width?: number }).width ?? 280)
+  const groupHeight = Number(
+    (group.data as { height?: number }).height
+      ?? (parseFloat(String((group.style as Record<string, unknown> | undefined)?.height ?? '254')) || 254),
+  )
+  const nextGroupBottom = group.position.y + layout.size.height
+  const previousGroupBottom = group.position.y + groupHeight
+  const expansionDelta = Math.max(0, nextGroupBottom - previousGroupBottom)
 
-  updateNode(nodeId, {
-    data: { ...group.data, uiExpanded: expanded, width: layout.size.width, height: layout.size.height },
-    style: { ...(group.style as Record<string, string | number>), width: `${layout.size.width}px`, height: `${layout.size.height}px` },
+  function getNodeWidth(node: FlowNode): number {
+    return Number(
+      (node.data as { width?: number }).width
+        ?? (parseFloat(String((node.style as Record<string, unknown> | undefined)?.width ?? '280')) || 280),
+    )
+  }
+
+  const shouldMoveBelowExpandedGroup = (node: FlowNode) => {
+    if (!expanded || !expansionDelta || node.id === nodeId || node.parentNode) return false
+    const nodeRight = node.position.x + getNodeWidth(node)
+    const groupRight = group.position.x + groupWidth
+    const overlapsHorizontally = node.position.x < groupRight && nodeRight > group.position.x
+    const startsBelowPreviousGroup = node.position.y >= previousGroupBottom - 12
+    const overlapsNewGroup = node.position.y < nextGroupBottom
+    return overlapsHorizontally && startsBelowPreviousGroup && overlapsNewGroup
+  }
+
+  // Keep the parent size and all child visibility/positions in one state update.
+  // Calling updateNode separately can be overwritten by the controlled nodes
+  // prop during an expand, leaving a child rendered outside its group.
+  const nextNodes = getFlowNodes().map((node) => {
+    if (node.id === nodeId) {
+      return {
+        ...node,
+        data: { ...node.data, uiExpanded: expanded, width: layout.size.width, height: layout.size.height },
+        style: {
+          ...(node.style as Record<string, string | number>),
+          width: `${layout.size.width}px`,
+          height: `${layout.size.height}px`,
+        },
+      }
+    }
+
+    if (shouldMoveBelowExpandedGroup(node)) {
+      return {
+        ...node,
+        position: { ...node.position, y: node.position.y + expansionDelta + 24 },
+      }
+    }
+
+    if (node.parentNode !== nodeId) return node
+
+    return {
+      ...node,
+      position: layout.positions.get(node.id) ?? node.position,
+      // Child cards are rendered inside the group card. Keep their Vue Flow
+      // nodes hidden so they cannot escape the group's visual bounds.
+      hidden: true,
+    }
   })
-  layout.positions.forEach((position, childId) => {
-    updateNode(childId, { position, hidden: true })
-  })
-  children.forEach((child) => {
-    if (!layout.positions.has(child.id)) updateNode(child.id, { hidden: true })
+
+  setNodes(nextNodes)
+  nodes.value = nextNodes
+  void nextTick().then(() => {
+    requestAnimationFrame(() => updateNodeInternals([nodeId]))
   })
 }
 
@@ -475,7 +299,7 @@ function collapseAllGroups() {
 
 provide(MODELING_EDITOR_KEY, {
   isViewMode,
-  instances: store.instances,
+  instances: computed(() => store.instances),
   expandedNodeIds,
   setNodeExpanded,
   notifyFlowChanged: () => {
@@ -486,8 +310,16 @@ provide(MODELING_EDITOR_KEY, {
       saveSnapshot()
     })
   },
-  getBoundInstanceIdsExcluding: (nodeId: string) =>
-    collectBoundInstanceIds(getFlowNodes(), nodeId),
+  getBoundInstanceIdsExcluding: (nodeId: string) => {
+    const ids = collectBoundInstanceIds(getFlowNodes(), nodeId)
+    if (fixedStationBinding.value?.instanceId && nodeId !== 'fixed-station') {
+      ids.add(fixedStationBinding.value.instanceId)
+    }
+    if (fixedEnvironmentBinding.value?.instanceId && nodeId !== 'fixed-environment') {
+      ids.add(fixedEnvironmentBinding.value.instanceId)
+    }
+    return ids
+  },
   updateNodeData: (nodeId, data) => {
     const current = getFlowNodes().find((node) => node.id === nodeId)
     if (!current) return
@@ -505,14 +337,43 @@ function topologyValidationOptions() {
   }
 }
 
+
+function persistenceValidationOptions(useCurrentFixedBindings = true) {
+  return {
+    ...topologyValidationOptions(),
+    ...(useCurrentFixedBindings
+      ? {
+          fixedBindings: {
+            station: fixedStationBinding.value,
+            environment: fixedEnvironmentBinding.value,
+          },
+        }
+      : {}),
+    instances: store.instances,
+    stationProductName: primaryTopLevelProduct.value?.product_name,
+    environmentProductName: secondaryTopLevelProduct.value?.product_name,
+    requireEnvironmentBinding: !!secondaryTopLevelProduct.value,
+  }
+}
+
+async function refreshTopologyValidationData() {
+  await Promise.all([
+    store.loadProducts(true),
+    store.loadInstances(true),
+  ])
+}
+
+function buildPersistedFlow() {
+  return enrichFlowWithLiveChannelBindings(exportCurrentFlow(), store.channelBindings)
+}
+
+function validatePersistedFlow(flow: ModelFlowData) {
+  return validateTopologyForPersistence(flow, store.products, persistenceValidationOptions())
+}
 // ---- 撤销/重做 ----
-type Snapshot = { nodes: any[]; edges: any[] }
-const MAX_HISTORY = 50
-const snapshots = ref<Snapshot[]>([])
-const snapIdx = ref(-1)
 let isRestoringHistory = false
 /** 上次已保存/加载时的画布基线（× 恢复目标） */
-const savedSnapshot = ref<Snapshot | null>(null)
+const savedSnapshot = ref<{ nodes: FlowNode[]; edges: FlowEdge[] } | null>(null)
 
 function markDirty() {
   if (isViewMode.value) return
@@ -534,33 +395,29 @@ function getFlowEdges(): FlowEdge[] {
   return JSON.parse(JSON.stringify(pick)) as FlowEdge[]
 }
 
-/** 将 Vue Flow 内部边同步到本地 ref（单向绑定时以内部状态为准） */
-async function syncEdgesFromFlow() {
-  await nextTick()
-  const latest = (toObject().edges ?? []) as FlowEdge[]
-  const normalized = normalizeFlowEdges(JSON.parse(JSON.stringify(latest)))
-  edges.value = normalized
-  setEdges(normalized)
-}
+const flowHistory = useFlowHistory({
+  enabled: () => !isViewMode.value && !isRestoringHistory,
+  capture: () => ({ nodes: getFlowNodes(), edges: getFlowEdges() }),
+  restore: async (snapshot) => {
+    await applyFlowState(snapshot.nodes as FlowNode[], snapshot.edges as FlowEdge[])
+    selectedNode.value = null
+    selectedEdgeId.value = null
+    markDirty()
+  },
+})
+// const { snapshots, snapIdx, canUndo, canRedo } = flowHistory
 
-/** 导出当前画布（保存/持久化必须用此函数，避免 toObject 丢边） */
-function exportCurrentFlow(): ModelFlowData {
-  const flowObj = toObject()
-  const flowNodes = JSON.parse(JSON.stringify(getFlowNodes())) as FlowNode[]
-  let flowEdges = getFlowEdges()
-  const objectEdges = (flowObj.edges ?? []) as FlowEdge[]
-  if (objectEdges.length > flowEdges.length) {
-    flowEdges = JSON.parse(JSON.stringify(objectEdges)) as FlowEdge[]
-  }
-  return {
-    nodes: flowNodes as unknown as ModelFlowData['nodes'],
-    edges: flowEdges as unknown as ModelFlowData['edges'],
-    fixedBindings: {
-      station: fixedStationBinding.value,
-      environment: fixedEnvironmentBinding.value,
-    },
-  }
-}
+/** 将 Vue Flow 内部边同步到本地 ref（单向绑定时以内部状态为准） */
+const { syncEdgesFromFlow, exportCurrentFlow } = useTopologyPersistence({
+  toObject,
+  getNodes: getFlowNodes,
+  getEdges: getFlowEdges,
+  normalizeEdges: normalizeFlowEdges,
+  setEdges,
+  updateEdges: (next) => { edges.value = next as FlowEdge[] },
+  fixedBindings: () => ({ station: fixedStationBinding.value, environment: fixedEnvironmentBinding.value }),
+  saveFlow: (flow) => store.saveFlowJson(modelId, flow),
+})
 
 function updateFixedBinding(
   kind: 'station' | 'environment',
@@ -579,7 +436,6 @@ async function captureSavedSnapshot(): Promise<boolean> {
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
   const flowNodes = getFlowNodes()
   const flowEdges = getFlowEdges()
-  if (!flowNodes.length) return false
   savedSnapshot.value = {
     nodes: JSON.parse(JSON.stringify(flowNodes)),
     edges: JSON.parse(JSON.stringify(flowEdges)),
@@ -588,7 +444,7 @@ async function captureSavedSnapshot(): Promise<boolean> {
 }
 
 function isSameAsSavedSnapshot(): boolean {
-  if (!savedSnapshot.value?.nodes?.length) return true
+  if (!savedSnapshot.value) return false
   return isFlowSnapshotEqual(
     { nodes: getFlowNodes(), edges: getFlowEdges() },
     { nodes: savedSnapshot.value.nodes as FlowNode[], edges: savedSnapshot.value.edges as FlowEdge[] },
@@ -596,49 +452,11 @@ function isSameAsSavedSnapshot(): boolean {
 }
 
 function pushUndoSnapshot() {
-  if (isRestoringHistory || isViewMode.value) return
-  const s: Snapshot = {
-    nodes: JSON.parse(JSON.stringify(getFlowNodes())),
-    edges: JSON.parse(JSON.stringify(getFlowEdges())),
-  }
-  const next = snapshots.value.slice(0, snapIdx.value + 1)
-  next.push(s)
-  while (next.length > MAX_HISTORY) {
-    next.shift()
-    snapIdx.value = Math.max(0, snapIdx.value - 1)
-  }
-  snapshots.value = next
-  snapIdx.value = next.length - 1
+  flowHistory.saveSnapshot()
 }
 
 function saveSnapshot() {
   pushUndoSnapshot()
-  markDirty()
-}
-
-async function undo() {
-  if (!canUndo.value) return
-  snapIdx.value--
-  const s = snapshots.value[snapIdx.value]
-  await applyFlowState(
-    JSON.parse(JSON.stringify(s.nodes)) as FlowNode[],
-    JSON.parse(JSON.stringify(s.edges)) as FlowEdge[],
-  )
-  selectedNode.value = null
-  selectedEdgeId.value = null
-  markDirty()
-}
-
-async function redo() {
-  if (!canRedo.value) return
-  snapIdx.value++
-  const s = snapshots.value[snapIdx.value]
-  await applyFlowState(
-    JSON.parse(JSON.stringify(s.nodes)) as FlowNode[],
-    JSON.parse(JSON.stringify(s.edges)) as FlowEdge[],
-  )
-  selectedNode.value = null
-  selectedEdgeId.value = null
   markDirty()
 }
 
@@ -666,7 +484,7 @@ function removeSelectedElements() {
   const currentNodes = getNodes.value as FlowNode[]
   const currentEdges = getFlowEdges()
   const selectedNodeIds = currentNodes
-    .filter((node) => node.selected)
+    .filter((node) => (node as FlowNode & { selected?: boolean }).selected)
     .map((node) => node.id)
 
   if (selectedNodeIds.some((id) => currentNodes.find((node) => node.id === id)?.type === 'station')) {
@@ -679,7 +497,7 @@ function removeSelectedElements() {
     for (const childId of collectNodesToDelete(id, currentNodes)) nodeIds.add(childId)
   }
   const edgeIds = new Set(
-    currentEdges.filter((edge) => edge.selected).map((edge) => edge.id),
+    currentEdges.filter((edge) => (edge as FlowEdge & { selected?: boolean }).selected).map((edge) => edge.id),
   )
 
   if (!nodeIds.size && !edgeIds.size) return
@@ -801,11 +619,23 @@ onNodesChange(onNodesChangeHandler)
 onEdgesChange(onEdgesChangeHandler)
 
 function enrichNodesWithImages(flowNodes: FlowNode[]): FlowNode[] {
+  const nodeById = new Map(flowNodes.map((node) => [node.id, node]))
   return flowNodes.map((node) => {
-    const data = node.data as { productName?: string; imageUrl?: string }
-    const imageUrl = getProductInstanceImageUrl(data.productName)
-    if (!imageUrl || data.imageUrl === imageUrl) return node
-    return { ...node, data: { ...node.data, imageUrl } }
+    if (!node.parentNode) return node
+    const parentProductName = (nodeById.get(node.parentNode)?.data as { productName?: string } | undefined)?.productName
+    const parentProduct = store.products.find((product) => product.product_name === parentProductName)
+    const componentName = (node.data as { productName?: string } | undefined)?.productName
+    const component = parentProduct?.topology?.components?.find(
+      (item) => (item.productName ?? item.name) === componentName,
+    )
+    if (!component) return node
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        selectableProductTypes: component.selectableProductTypes ?? [],
+      },
+    }
   })
 }
 
@@ -821,13 +651,14 @@ async function hydrateCanvasFromFlow(
   const fixedNodeIds = new Set<string>()
   const topologyNodes = (flow.nodes as FlowNode[]).filter((node) => {
     const productName = String((node.data as { productName?: string })?.productName ?? '')
-    const isEnvironment = productName === 'Env' || productName === 'Environment'
-    const isFixed = node.type === 'station' || isEnvironment
+    const isPrimaryTopLevel = productName === primaryTopLevelProduct.value?.product_name
+    const isSecondaryTopLevel = productName === secondaryTopLevelProduct.value?.product_name
+    const isFixed = isPrimaryTopLevel || isSecondaryTopLevel
     if (isFixed) {
       fixedNodeIds.add(node.id)
       const binding = normalizeNodeInstances(node.data as ModelFlowNode['data'])[0] ?? null
-      if (node.type === 'station') fixedStationBinding.value = binding
-      if (isEnvironment) fixedEnvironmentBinding.value = binding
+      if (isPrimaryTopLevel) fixedStationBinding.value = binding
+      if (isSecondaryTopLevel) fixedEnvironmentBinding.value = binding
     }
     return !isFixed
   })
@@ -861,22 +692,16 @@ async function restoreToSavedSnapshot() {
     return false
   }
   const model = store.getModelById(modelId)
-  if (!model?.flowJson?.nodes?.length) {
+  if (!model?.flowJson) {
     ElMessage.warning('No saved baseline to restore')
     hasUnsavedChanges.value = false
     return false
   }
   await hydrateCanvasFromFlow(model.flowJson, { autoLayout: false })
   collapseAllGroups()
-  if (!getFlowNodes().length) {
-    ElMessage.error('Restore failed')
-    hasUnsavedChanges.value = false
-    return false
-  }
   selectedNode.value = null
   selectedEdgeId.value = null
-  snapshots.value = []
-  snapIdx.value = -1
+  flowHistory.clear()
   hasUnsavedChanges.value = false
   store.hasUnsavedChanges = false
   await captureSavedSnapshot()
@@ -884,45 +709,44 @@ async function restoreToSavedSnapshot() {
 }
 
 async function enterEditMode() {
-  if (!savedSnapshot.value?.nodes?.length) {
-    await captureSavedSnapshot()
+  isCanvasLoading.value = true
+  try {
+    const restored = await restoreToSavedSnapshot()
+    if (!restored) return
+    await store.loadChannelBindings(true)
+    collapseAllGroups()
+    isViewMode.value = false
+    selectedNode.value = null
+    selectedEdgeId.value = null
+    flowHistory.clear()
+    hasUnsavedChanges.value = false
+    store.hasUnsavedChanges = false
+    await waitForCanvasLayout()
+    pushUndoSnapshot()
+  } finally {
+    isCanvasLoading.value = false
   }
-  await store.loadChannelBindings(true)
-  collapseAllGroups()
-  isViewMode.value = false
-  selectedNode.value = null
-  selectedEdgeId.value = null
-  snapshots.value = []
-  snapIdx.value = -1
-  hasUnsavedChanges.value = false
-  store.hasUnsavedChanges = false
-  await nextTick()
-  const currentViewport = viewport.value
-  setViewport(
-    {
-      x: currentViewport.x + EDIT_SIDEBAR_OFFSET,
-      y: currentViewport.y,
-      zoom: currentViewport.zoom,
-    },
-    { duration: 0 },
-  )
-  pushUndoSnapshot()
 }
 
-function exitEditMode() {
-  collapseAllGroups()
-  isViewMode.value = true
-  selectedNode.value = null
-  selectedEdgeId.value = null
-  nextTick(() => fitFlowToViewport(true))
+async function exitEditMode() {
+  isCanvasLoading.value = true
+  await nextTick()
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  try {
+    collapseAllGroups()
+    isViewMode.value = true
+    selectedNode.value = null
+    selectedEdgeId.value = null
+    await waitForCanvasLayout()
+    fitFlowToViewport(true)
+  } finally {
+    isCanvasLoading.value = false
+  }
 }
 
 async function handleExitEdit() {
-  if (!hasUnsavedChanges.value) {
-    exitEditMode()
-    return
-  }
   try {
+    if (hasUnsavedChanges.value) {
     await ElMessageBox.confirm(
       'You have unsaved changes. Discard them and exit edit mode?',
       'Unsaved Changes',
@@ -930,12 +754,15 @@ async function handleExitEdit() {
         confirmButtonText: 'Discard',
         cancelButtonText: 'Keep Editing',
         type: 'warning',
+        center: true,
+        showClose: false,
         appendTo: document.body,
         customClass: 'visual-modeling-confirm-box',
       },
     )
-    await restoreToSavedSnapshot()
-    exitEditMode()
+    }
+    const restored = await restoreToSavedSnapshot()
+    if (restored) await exitEditMode()
   } catch {
     // keep editing
   }
@@ -954,6 +781,8 @@ async function handleRestoreToSaved() {
         confirmButtonText: 'Restore',
         cancelButtonText: 'Cancel',
         type: 'warning',
+        center: true,
+        showClose: false,
         appendTo: document.body,
         customClass: 'visual-modeling-confirm-box',
       },
@@ -987,8 +816,8 @@ function onKeydown(e: KeyboardEvent) {
   }
 
   if ((e.key === 'Backspace' || e.key === 'Delete') && !isEditableTarget) {
-    const hasSelectedElements = getNodes.value.some((node) => node.selected)
-      || getFlowEdges().some((edge) => edge.selected)
+    const hasSelectedElements = getNodes.value.some((node) => (node as FlowNode & { selected?: boolean }).selected)
+      || getFlowEdges().some((edge) => (edge as FlowEdge & { selected?: boolean }).selected)
     if (hasSelectedElements) {
       e.preventDefault()
       e.stopPropagation()
@@ -1010,11 +839,6 @@ function handleConnectGuard(connection: Connection) {
 function handleEdgeClickGuard(event: any) {
   if (isViewMode.value) return
   handleEdgeClick(event)
-}
-
-function handleEdgeDoubleClickGuard(event: any) {
-  if (isViewMode.value) return
-  handleEdgeDoubleClick(event)
 }
 
 // ---- 连线（父→子；允许从任意方向拖线并自动纠正）----
@@ -1045,10 +869,6 @@ function handleConnect(connection: Connection) {
     target: resolved.target.id,
     sourceHandle: resolved.sourceHandle,
     targetHandle: resolved.targetHandle,
-    labelStyle: { fontSize: '11px', fontWeight: 600, fill: '#4a5568' },
-    labelBgStyle: { fill: '#ffffff', fillOpacity: 0.85 },
-    labelBgPadding: [4, 6],
-    labelBgBorderRadius: 4,
   } as FlowEdge], flowNodes)[0]
 
   addEdges(newEdge)
@@ -1091,63 +911,7 @@ function handlePaneClick() {
   selectedEdgeId.value = null
 }
 
-// ---- 边双击 → 编辑标签 ----
-function handleEdgeDoubleClick(event: any) {
-  const edge = event.edge ?? event
-  if (!edge?.id) return
-  selectedEdgeId.value = edge.id
-  editingEdgeLabel.value = typeof edge.label === 'string' ? edge.label : ''
-  edgeLabelDialogVisible.value = true
-}
-
-function openEdgeLabelEdit() {
-  if (!selectedEdgeId.value) return
-  const edge = edges.value.find((e) => e.id === selectedEdgeId.value)
-  editingEdgeLabel.value = typeof edge?.label === 'string' ? edge.label : ''
-  edgeLabelDialogVisible.value = true
-}
-
-function confirmEdgeLabel() {
-  if (!selectedEdgeId.value) return
-  const edgeId = selectedEdgeId.value
-  const label = editingEdgeLabel.value.trim() || undefined
-  const nextEdges = getFlowEdges().map((e) => (e.id === edgeId ? { ...e, label } : e))
-  const normalized = normalizeFlowEdges(nextEdges, getFlowNodes())
-  setEdges(normalized)
-  edges.value = normalized
-  edgeLabelDialogVisible.value = false
-  markDirty()
-  saveSnapshot()
-}
-
-// ---- 删除选中边 ----
-function deleteSelectedEdge() {
-  if (!selectedEdgeId.value) return
-  const edgeId = selectedEdgeId.value
-  removeEdges([edgeId])
-  edges.value = edges.value.filter((e) => e.id !== edgeId)
-  selectedEdgeId.value = null
-  markDirty()
-  nextTick(() => saveSnapshot())
-}
-
-// ---- 右侧面板：更新节点 ----
-function handleUpdateNode(updated: ModelFlowNode) {
-  updateNode(updated.id, {
-    data: JSON.parse(JSON.stringify(updated.data)),
-  })
-  selectedNode.value = JSON.parse(JSON.stringify(updated))
-  markDirty()
-  saveSnapshot()
-}
-
-async function persistFlowJson() {
-  await syncEdgesFromFlow()
-  const flow = exportCurrentFlow()
-  await store.saveFlowJson(modelId, flow)
-}
-
-// ---- 右侧面板：删除节点 ----
+// ---- 删除节点 ----
 function handleDeleteNode(id: string) {
   if (isViewMode.value) return
   const target = getFlowNodes().find((n) => n.id === id)
@@ -1163,8 +927,9 @@ function handleDeleteNode(id: string) {
     cancelButtonText: 'Cancel',
     center: true,
     showClose: false,
-    cancelButtonClass:'el-button--cancel',
-    confirmButtonClass:'el-button--confirm',
+    icon: MessageWarningIcon,
+    cancelButtonType : 'text',
+    confirmButtonType : 'danger'
   })
     .then(() => {
       removeNodesByIds(collectNodesToDelete(id, getFlowNodes()))
@@ -1173,58 +938,7 @@ function handleDeleteNode(id: string) {
 }
 
 function normalizeFlowEdges(raw: FlowEdge[], flowNodes?: FlowNode[]): FlowEdge[] {
-  const nodes = flowNodes ?? getFlowNodes()
-  return raw
-    .filter((edge) => Boolean(edge?.id && edge?.source && edge?.target))
-    .filter((edge) => {
-      if (!nodes.length) return true
-      const source = nodes.find((node) => node.id === edge.source)
-      const target = nodes.find((node) => node.id === edge.target)
-      return canConnectNodes(source, target) || canConnectNodes(target, source)
-    })
-    .map((edge) => {
-      const corrected = nodes.length
-        ? correctEdgeDirection({ ...edge }, nodes)
-        : edge
-      let variant = corrected.data?.edgeVariant as EdgeVariantKey | 'classification' | undefined
-      if (variant === 'classification' || !variant) variant = 'hierarchy'
-      const isDataflow = variant === 'dataflow'
-      const flowActive = isDataflow ? corrected.animated !== false : undefined
-      const styled = buildEdgeStyle(
-        variant,
-        isDataflow ? { dataFlowActive: flowActive } : undefined,
-      )
-      const hasLabel = corrected.label != null && String(corrected.label).trim() !== ''
-      const defaultLabelStyle = { fontSize: '11px', fontWeight: 600, fill: '#4a5568' }
-      const defaultLabelBgStyle = { fill: '#ffffff', fillOpacity: 0.92 }
-      return {
-        id: corrected.id,
-        source: corrected.source,
-        target: corrected.target,
-        sourceHandle: toSourceHandle(corrected.sourceHandle),
-        targetHandle: toTargetHandle(corrected.targetHandle),
-        type: corrected.type ?? styled.type,
-        animated: isDataflow ? flowActive : (corrected.animated ?? styled.animated),
-        zIndex: corrected.zIndex ?? styled.zIndex,
-        label: hasLabel ? String(corrected.label).trim() : corrected.label,
-        labelStyle: hasLabel
-          ? { ...defaultLabelStyle, ...(corrected.labelStyle ?? {}) }
-          : corrected.labelStyle,
-        labelBgStyle: hasLabel
-          ? { ...defaultLabelBgStyle, ...(corrected.labelBgStyle ?? {}) }
-          : corrected.labelBgStyle,
-        labelBgPadding: corrected.labelBgPadding ?? (hasLabel ? [4, 6] : undefined),
-        labelBgBorderRadius: corrected.labelBgBorderRadius ?? (hasLabel ? 4 : undefined),
-        style: {
-          ...(corrected.style ?? {}),
-          stroke: '#B3CEFA',
-          strokeWidth: 1,
-        },
-        markerEnd: undefined,
-        markerStart: undefined,
-        data: { ...styled.data, ...corrected.data, edgeVariant: variant },
-      } as FlowEdge
-    })
+  return normalizeTopologyEdges(raw, flowNodes ?? getFlowNodes()) as FlowEdge[]
 }
 
 async function applyFlowState(
@@ -1268,10 +982,13 @@ async function runAutoLayout(options?: {
 
   const laidOut = layoutModelGraph(currentNodes, currentEdges, 'TB')
   const clonedNodes = JSON.parse(JSON.stringify(laidOut)) as FlowNode[]
+  const clonedEdges = JSON.parse(JSON.stringify(alignEdgeHandlesToLayout(clonedNodes, currentEdges))) as FlowEdge[]
   isRestoringHistory = true
   setNodes(clonedNodes)
+  setEdges(clonedEdges)
   await nextTick()
   nodes.value = (toObject().nodes ?? clonedNodes) as FlowNode[]
+  edges.value = normalizeFlowEdges((toObject().edges ?? clonedEdges) as FlowEdge[], clonedNodes)
   isRestoringHistory = false
 
   if (options?.markDirty) {
@@ -1301,8 +1018,15 @@ async function handleAutoLayout() {
 
 // ---- 保存 ----
 async function handleSave() {
+  await refreshTopologyValidationData()
   await syncEdgesFromFlow()
-  const flow = enrichFlowWithLiveChannelBindings(exportCurrentFlow(), store.channelBindings)
+  const flow = buildPersistedFlow()
+
+  const validation = validatePersistedFlow(flow)
+  if (!validation.canSave) {
+    await topologyIssuesDialogRef.value?.open({ mode: 'save-blocked', issues: validation.issues })
+    return
+  }
 
   const ok = await store.saveFlowJson(modelId, flow)
   if (!ok) {
@@ -1314,12 +1038,12 @@ async function handleSave() {
   await captureSavedSnapshot()
   ElMessage.success('Saved successfully')
 }
-
 async function handleExportCommand(cmd: string) {
   if (exportLoading.value) return
   exportLoading.value = true
   try {
     if (cmd === 'json') await handleExportJson()
+    if (cmd === 'png') await handleExportPng()
   } finally {
     exportLoading.value = false
   }
@@ -1335,6 +1059,57 @@ async function handleExportJson() {
   ElMessage.success(`JSON exported: ${saveResult.displayPath}`)
 }
 
+async function handleExportPng() {
+  const model = store.getModelById(modelId)
+  const canvas = modelingCanvasRef.value?.getExportElement()
+  if (!model || !canvas) {
+    ElMessage.error('PNG export failed: canvas is not ready')
+    return
+  }
+
+  const edgePaths = Array.from(canvas.querySelectorAll<SVGPathElement>(
+    '.vue-flow__edge path, .vue-flow__edge-path',
+  ))
+  const originalEdgeStyles = edgePaths.map((path) => ({
+    path,
+    style: path.getAttribute('style'),
+  }))
+
+  // html-to-image does not reliably retain Vue Flow's stylesheet rule that
+  // clears SVG path fills. Without an explicit fill, the cloned edge paths
+  // use the SVG default (black) and turn into large opaque polygons.
+  edgePaths.forEach((path) => {
+    path.style.setProperty('fill', 'none', 'important')
+    path.style.setProperty('stroke', '#B3CEFA', 'important')
+    path.style.setProperty('stroke-width', '3', 'important')
+  })
+
+  try {
+    const dataUrl = await toPng(canvas, {
+      backgroundColor: '#fbfcff',
+      cacheBust: true,
+      pixelRatio: 2,
+      filter: (node) => !(node instanceof HTMLElement && (
+        node.classList.contains('modeling-editor__flow-controls')
+        || node.classList.contains('modeling-editor__minimap')
+        || node.classList.contains('modeling-editor__floating-actions')
+      )),
+    })
+    const response = await fetch(dataUrl)
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    const saveResult = await saveBytesWithPreferredPath(bytes, `${model.name}.png`, 'image/png')
+    ElMessage.success(`PNG exported: ${saveResult.displayPath}`)
+  } catch (error) {
+    console.error('[VisualModeling] PNG export failed', error)
+    ElMessage.error('PNG export failed')
+  } finally {
+    originalEdgeStyles.forEach(({ path, style }) => {
+      if (style === null) path.removeAttribute('style')
+      else path.setAttribute('style', style)
+    })
+  }
+}
+
 // ---- 导入 ----
 function handleImportClick() { importInput.value?.click() }
 
@@ -1342,7 +1117,7 @@ function handleImportChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
   const reader = new FileReader()
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const parsed = JSON.parse(reader.result as string)
       const flow = parsed.flowJson || parsed
@@ -1353,10 +1128,18 @@ function handleImportChange(e: Event) {
         return
       }
 
+      await refreshTopologyValidationData()
+      const importOptions = persistenceValidationOptions(false)
+      const strictValidation = validateTopologyImport(flow, store.products, importOptions)
+      if (!strictValidation.canSave) {
+        void topologyIssuesDialogRef.value?.open({ mode: 'import', issues: strictValidation.issues })
+        return
+      }
+
       const normalized = normalizeTopology(
-        { nodes: rawNodes, edges: rawEdges },
+        flow as ModelFlowData,
         store.products,
-        topologyValidationOptions(),
+        importOptions,
       )
 
       void (async () => {
@@ -1397,28 +1180,19 @@ function handleImportChange(e: Event) {
 }
 
 // ---- 视口适配（避免 fit-view-on-init + 多次 fitView 导致首次打开画面缩放跳动）----
-function fitFlowToViewport(animated = false) {
-  if (!getNodes.value.length) return
-  fitView({
-    includeHiddenNodes: true,
-    padding: 0.15,
-    duration: animated ? 300 : 0,
-  })
-}
-
-// ---- 窗口 resize ----
-let resizeTimer: number | null = null
-function onWindowResize() {
-  if (resizeTimer) clearTimeout(resizeTimer)
-  resizeTimer = window.setTimeout(() => fitFlowToViewport(true), 150)
-}
+const { fitFlowToViewport, handleWindowResize: onWindowResize } = useFlowViewport({
+  fitView,
+  getNodes: () => getNodes.value,
+  padding: 0.15,
+  resizeDelay: 150,
+})
 
 async function initEditorCanvas() {
   try {
     await Promise.all([
       store.loadStationTopology(true),
       store.loadInstances(true),
-      store.loadProducts(),
+      store.loadProducts(true),
       store.loadChannelBindings(true),
     ])
   } catch (err) {
@@ -1426,22 +1200,6 @@ async function initEditorCanvas() {
     ElMessage.error('Failed to load station topology')
     return
   }
-
-  fixedStationBinding.value ??= stationInstances.value[0]
-    ? {
-        instanceId: stationInstances.value[0].instance_id,
-        instanceName: stationInstances.value[0].instance_name,
-        productName: stationInstances.value[0].product_name,
-      }
-    : null
-  fixedEnvironmentBinding.value ??= environmentInstances.value[0]
-    ? {
-        instanceId: environmentInstances.value[0].instance_id,
-        instanceName: environmentInstances.value[0].instance_name,
-        productName: environmentInstances.value[0].product_name,
-      }
-    : null
-
   const model = store.getModelById(modelId)
   if (!model) {
     ElMessage.warning('Station topology not loaded')
@@ -1453,19 +1211,14 @@ async function initEditorCanvas() {
   const hadLegacyEdgeIds = (flow.edges ?? []).some((e) => !/^edge-\d+$/.test(e.id))
 
   if (isNewFlow) {
-    const instanceInputs = store.instances.map((item) => ({
-      instance_id: item.instance_id,
-      instance_name: item.instance_name,
-      product_name: item.product_name,
-    }))
-    flow = createDefaultModelFlow(instanceInputs)
+    flow = { nodes: [], edges: [], fixedBindings: flow.fixedBindings }
   }
 
   flow = repairMissingFlowEdges(flow)
 
   store.setCurrentModel(modelId)
   setModelFlowProductRules(store.products)
-  await hydrateCanvasFromFlow(flow, { autoLayout: true })
+  await hydrateCanvasFromFlow(flow, { autoLayout: false })
   collapseAllGroups()
 
   isRestoringHistory = true
@@ -1473,7 +1226,11 @@ async function initEditorCanvas() {
   isRestoringHistory = false
 
   if (isNewFlow || hadLegacyEdgeIds) {
-    await persistFlowJson()
+    await syncEdgesFromFlow()
+    const flowToPersist = buildPersistedFlow()
+    if (validatePersistedFlow(flowToPersist).canSave) {
+      await store.saveFlowJson(modelId, flowToPersist)
+    }
   }
 
   await captureSavedSnapshot()
@@ -1496,6 +1253,8 @@ onBeforeRouteLeave(async () => {
         confirmButtonText: 'Leave',
         cancelButtonText: 'Stay',
         type: 'warning',
+        center: true,
+        showClose: false,
         appendTo: document.body,
         customClass: 'visual-modeling-confirm-box',
       },
@@ -1550,73 +1309,6 @@ onUnmounted(() => {
       background: #ffffff;
     }
 
-    .modeling-editor__header {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #DCDFE6;
-    }
-
-    .modeling-editor__toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      flex-wrap: wrap;
-
-
-
-    }
-
-    .modeling-editor__toolbar-icon {
-      margin-right: 6px;
-      :deep(svg) {
-        width: 12px;
-        height: 12px;
-      }
-    }
-
-    .modeling-editor__canvas .modeling-editor__floating-actions {
-      position: absolute;
-      right: auto;
-      bottom: 48px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 16px;
-      z-index: 10;
-      pointer-events: none;
-
-      .floating-btn {
-        pointer-events: auto;
-        width: auto !important;
-        min-width: 96px;
-        height: 36px !important;
-        padding: 0 16px !important;
-        font-size: 0 !important;
-        border-radius: 4px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-
-        span {
-          font-size: 14px;
-        }
-
-        :deep(svg) {
-          width: 15px;
-          height: 15px;
-        }
-
-        .floating-btn--submit.is-dirty:not(:disabled) {
-          box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.35);
-        }
-      }
-    }
-
     // ---- 主体 ----
     .modeling-editor__body {
       position: relative;
@@ -1631,16 +1323,15 @@ onUnmounted(() => {
       position: absolute;
       top: 16px;
       bottom: 16px;
-      left: 0;
-      z-index: 20;
+      left: 16px;
+      z-index: 10;
       display: flex;
-      flex: 0 0 348px;
       width: 348px;
       min-width: 348px;
       height: auto;
       min-height: 0;
-      overflow: hidden;
-      background-color: transparent;
+      overflow: visible;
+      pointer-events: none;
     }
 
     .modeling-editor__left-panel :deep(.left-panel-shell) {
@@ -1648,6 +1339,7 @@ onUnmounted(() => {
       width: 100%;
       min-width: 0;
       height: 100%;
+      pointer-events: auto;
     }
 
     // ---- 画布 ----
@@ -1659,198 +1351,18 @@ onUnmounted(() => {
       background: #fbfcff;
     }
 
-    // .modeling-editor__flow :deep(.vue-flow__minimap) {
-    //   top: 20px;
-    //   right: 20px;
-    //   bottom: auto;
-    //   z-index: 5;
-    //   width: 200px;
-    //   height: 200px;
-    //   padding: 10px;
-    //   overflow: hidden;
-    //   background: rgba(255, 255, 255, 0.94);
-    //   border: 1px solid rgba(15, 31, 61, 0.1);
-    //   border-radius: 8px;
-    //   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    //   box-sizing: border-box;
-    // }
-
-    // .modeling-editor__flow :deep(.vue-flow__minimap-mask) {
-    //   fill: rgba(255, 105, 0, 0.06);
-    //   stroke: #ff6900;
-    //   stroke-width: 2;
-    // }
-
-    .modeling-editor__fixed-bindings {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      z-index: 12;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      pointer-events: auto;
-    }
-
-    &.is-editing .modeling-editor__fixed-bindings {
-      left: 381px;
-    }
-
     @media (max-width: 900px) {
-      .modeling-editor__fixed-bindings {
+      .modeling-editor__canvas .modeling-editor__fixed-bindings {
         gap: 8px;
         transform: scale(0.86);
         transform-origin: top left;
       }
     }
 
-    .modeling-editor__flow {
-      width: 100%;
-      height: 100%;
-      min-height: 320px;
-    }
-
-    // ---- 边工具栏 ----
-    .modeling-editor__edge-toolbar {
-      position: absolute;
-      bottom: 52px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: #ffffff;
-      border: 1px solid #dce4f0;
-      border-radius: 8px;
-      padding: 8px 12px;
-      box-shadow: 0 6px 18px rgba(31, 57, 100, 0.16);
-      z-index: 50;
-      pointer-events: all;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__label {
-      font-size: 11px;
-      color: #767d8a;
-      margin-right: 2px;
-      white-space: nowrap;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__sep {
-      width: 1px;
-      height: 22px;
-      background: #e5eaf2;
-      margin: 0 2px;
-      flex-shrink: 0;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: #f7f9fd;
-      border: 1px solid #dce4f0;
-      border-radius: 6px;
-      padding: 5px 10px;
-      color: #395583;
-      font-size: 11px;
-      line-height: 1.2;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      white-space: nowrap;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn :deep(svg) {
-      width: 14px;
-      height: 14px;
-      color: inherit !important;
-      flex-shrink: 0;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn:hover {
-      background: #edf4ff;
-      color: #2878ff;
-      border-color: #8bb5ff;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn.active {
-      background: var(--ec, #6f3381);
-      border-color: var(--ec, #6f3381);
-      color: #ffffff;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn--del:hover {
-      background: rgba(229, 57, 53, 0.28);
-      color: #ffcdd2;
-      border-color: rgba(229, 57, 53, 0.45);
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn--label:hover {
-      background: rgba(255, 255, 255, 0.14);
-    }
-
-    :deep(.vue-flow__handle) {
-      z-index: 50 !important;
-    }
-
-    .modeling-editor__flow:not(.modeling-editor__flow--view) :deep(.vue-flow__handle.connecting) {
-      opacity: 1 !important;
-    }
-
-    .modeling-editor__flow--view :deep(.vue-flow__handle) {
-      opacity: 0 !important;
-      pointer-events: none !important;
-    }
-
-    .modeling-editor__flow--view :deep(.node-connection-handle--connected) {
-      opacity: 1 !important;
-    }
-
-    .modeling-editor__flow--view :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-      stroke-width: 1px !important;
-      stroke: #B3CEFA !important;
-      filter: none !important;
-    }
-
-    .modeling-editor__edge-toolbar .edge-toolbar__btn--dim {
-      background: rgba(67, 160, 71, 0.18);
-      border-color: rgba(67, 160, 71, 0.35);
-      color: rgba(255, 255, 255, 0.65);
-    }
-
     // VueFlow 样式覆盖
-    :deep(.vue-flow__edge-path) {
-      fill: none !important;
-      stroke: #B3CEFA !important;
-      stroke-width: 1px !important;
-      stroke-linejoin: round;
-      stroke-linecap: round;
+    :deep(.el-button.el-button + .el-button.el-button){
+      margin-left: 0;
     }
-
-    :deep(.vue-flow__edge) {
-      backface-visibility: hidden;
-      transform: translateZ(0);
-    }
-
-    :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-      stroke-width: 1px !important;
-      stroke: #B3CEFA !important;
-      filter: none;
-    }
-
-
-    :deep(.vue-flow__edge-label),
-    :deep(.vue-flow__edge-text) {
-      font-size: 11px !important;
-      fill: #4f5561 !important;
-      font-weight: 600;
-    }
-
-    :deep(.vue-flow__edge-textwrapper),
-    :deep(.vue-flow__edge-textbg) {
-      fill: #ffffff !important;
-      fill-opacity: 0.92 !important;
-    }
-
   }
 }
 
@@ -1866,14 +1378,6 @@ onUnmounted(() => {
 .el-button--confirm {
   background: #F53F3F;
   color: #F7F8FA;
-}
-// 边工具栏出现动画
-.edge-toolbar-enter-active, .edge-toolbar-leave-active {
-  transition: opacity 0.15s, transform 0.15s;
-}
-.edge-toolbar-enter-from, .edge-toolbar-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(6px);
 }
 /* 全屏编辑器的确认框需高于编辑器层 */
 :global(.visual-modeling-confirm-box) {

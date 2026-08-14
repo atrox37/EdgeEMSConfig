@@ -126,7 +126,7 @@ watch(
     border-radius: 8px;
     // box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    padding: 0 20px 22px; 
+    //padding: 0 20px 22px; 
     background: #ffffff;
   }
 }

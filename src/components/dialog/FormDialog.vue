@@ -28,7 +28,7 @@
     </template>
 
     <!-- dialog-footer插槽，默认显示底部按钮 -->
-    <template #footer>
+    <template v-if="hasFooter" #footer>
       <slot name="dialog-footer"> </slot>
     </template>
   </el-dialog>
@@ -50,6 +50,9 @@ const props = withDefaults(defineProps<{
   closeOnPressEscape: true,
   showClose: true,
 })
+
+const slots = useSlots()
+const hasFooter = computed(() => Boolean(slots['dialog-footer']?.().length))
 
 const emit = defineEmits<{
   (e: 'close'): void

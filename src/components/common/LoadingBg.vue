@@ -14,7 +14,7 @@ withDefaults(
   }>(),
   {
     loading: false,
-    text: '',
+    text: 'Loading......',
   },
 )
 </script>
@@ -29,7 +29,7 @@ withDefaults(
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(251, 252, 255, 0.86);
+  background: #fbfcff;
   color: #395583;
   font-size: 13px;
   letter-spacing: 0.02em;

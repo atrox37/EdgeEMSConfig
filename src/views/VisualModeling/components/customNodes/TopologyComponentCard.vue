@@ -3,6 +3,7 @@
     :label="data.label || label"
     :caption="caption || label"
     :binding-label="boundLabel"
+    :binding-display-value="boundValue"
     :image-url="imageUrl"
     variant="component"
     type-label="Component"
@@ -10,10 +11,10 @@
     :view-mode="viewMode"
     :editing="editing"
     :allow-binding="true"
+    :allow-delete="false"
     :draft="draft"
     :available-instances="availableInstances"
     @toggle="toggleExpanded"
-    @delete="editorCtx?.deleteNode?.(id)"
     @edit="startEditing"
     @cancel="cancelEditing"
     @save="saveEditing"
@@ -48,11 +49,15 @@ const {
   editing,
   draft,
   boundLabel,
+  boundValue,
   availableInstances,
   startEditing,
   cancelEditing,
   saveEditing,
-} = useTopologyNodeEditor(props);
+} = useTopologyNodeEditor(props, {
+  allowBinding: true,
+  instanceProductNames: () => props.data.selectableProductTypes ?? [],
+});
 
 const viewMode = computed(() => editorCtx?.isViewMode.value ?? false);
 

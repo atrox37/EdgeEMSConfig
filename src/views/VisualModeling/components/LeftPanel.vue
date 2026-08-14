@@ -10,7 +10,10 @@
               <div class="left-panel__image-grid">
                 <div v-for="tpl in group.templates" :key="tpl.id" class="left-panel__image-item" draggable="true"
                   :title="tpl.label" @dragstart="onDragStart($event, tpl)">
-                  <div class="left-panel__image-type">{{ tpl.description }}</div>
+                  <div
+                    class="left-panel__image-type"
+                    :class="`left-panel__image-type--${tpl.topologyType || 'standalone'}`"
+                  >{{ tpl.description }}</div>
                   <div class="left-panel__image-content">
                     <img v-if="tpl.imageUrl" :src="tpl.imageUrl" :alt="tpl.label" class="left-panel__image-thumb"
                       draggable="false" />
@@ -30,13 +33,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getTopologyPanelGroups } from '@/constants/deviceProducts'
+import { useVisualModelingStore } from '@/stores/visualModeling'
 import useModelDnd from '../useModelDnd'
 
 const { onDragStart } = useModelDnd()
-const activeGroups = ref(['generation', 'storage', 'load'])
-const panelGroups = getTopologyPanelGroups()
+const activeGroups = ref<string[]>([])
+const hasInitializedActiveGroup = ref(false)
+const modelingStore = useVisualModelingStore()
+const panelGroups = computed(() => getTopologyPanelGroups(modelingStore.products))
+
+watch(
+  panelGroups,
+  (groups) => {
+    if (hasInitializedActiveGroup.value || !groups.length) return
+    activeGroups.value = [groups[0].key]
+    hasInitializedActiveGroup.value = true
+  },
+  { immediate: true },
+)
 
 </script>
 
@@ -306,23 +322,37 @@ const panelGroups = getTopologyPanelGroups()
   }
 
   .left-panel__image-type {
-    height: 20px;
-    width: 75px;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 1;
     padding: 4px 6px;
-    font-size: 12px;
-    color: #035DEF;
-    background: rgba(3, 93, 239, 0.1);
-    line-height: 1;
     border-radius: 4px;
+    background: rgba(3, 93, 239, 0.1);
+    color: #035def;
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .left-panel__image-type--composite {
+    background: #fff0e9;
+    color: #f05a00;
+  }
+
+  .left-panel__image-type--container {
+    background: #e7f0fb;
+    color: #1d5fbf;
   }
 
   .left-panel__image-content {
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    // justify-content: center;
 
     .left-panel__image-thumb {
+      margin-top: 28px;
       width: 72px;
       height: 72px;
       object-fit: contain;
@@ -331,6 +361,7 @@ const panelGroups = getTopologyPanelGroups()
     }
 
     .left-panel__image-fallback {
+      margin-top: 28px;
       width: 72px;
       height: 72px;
       display: flex;

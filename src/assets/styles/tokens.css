@@ -180,8 +180,8 @@
   --vt-table-cell-inner-height: calc(
     var(--vt-table-row-height) - var(--vt-table-cell-padding-y) * 2
   );
-  --vt-field-width: 240px;
-  --vt-select-width: 240px;
+  --vt-field-width: 218px;
+  --vt-select-width: 218px;
   --vt-width-scrollbar: 6px;
   --vt-width-menu-collapse: 48px;
   --vt-border-width-base: 1px;

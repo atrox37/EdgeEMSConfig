@@ -90,4 +90,41 @@
       line-height: var(--vt-control-height);
     }
   }
+
+  &.el-select--small {
+    .el-select__wrapper {
+      height: 22px;
+      min-height: 22px;
+      padding: 0 8px;
+      line-height: 20px;
+      font-size: 12px;
+
+      .el-select__input {
+        height: 20px;
+        line-height: 20px;
+        font-size: 12px;
+      }
+
+      .el-select__selected-item,
+      .el-select__placeholder {
+        line-height: 20px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  &.el-select--small.el-select--filterable,
+  &.el-select--small.el-select--remote {
+    .el-input__wrapper {
+      height: 22px;
+      min-height: 22px;
+      padding: 0 8px !important;
+    }
+
+    .el-input__inner {
+      height: 20px;
+      line-height: 20px;
+      font-size: 12px;
+    }
+  }
 }

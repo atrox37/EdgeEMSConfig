@@ -6,20 +6,11 @@ import type {
   ChannelBindingsData,
   InstanceChannelSummary,
 } from '@/types/stationTopology'
-import {
-  mockGetStationTopology,
-  mockSaveStationTopology,
-  useStationTopologyMock,
-} from '@/mock/stationTopologyMock'
 
 /** 获取当前站点拓扑，未配置时返回空 nodes/edges，不返回 404 */
 export async function getStationTopology(
   config?: RequestConfig,
 ): Promise<ApiResponse<StationTopology>> {
-  if (useStationTopologyMock()) {
-    const topology = await mockGetStationTopology()
-    return { success: true, code: 0, message: 'ok (mock)', data: topology }
-  }
   return Request.get('/modApi/api/station/topology', undefined, config)
 }
 
@@ -27,14 +18,6 @@ export async function getStationTopology(
 export async function saveStationTopology(
   payload: StationTopologySavePayload,
 ): Promise<ApiResponse<StationTopology>> {
-  if (useStationTopologyMock()) {
-    const topology = await mockSaveStationTopology({
-      station_name: payload.station_name,
-      description: payload.description,
-      flow_json: payload.flow_json,
-    })
-    return { success: true, code: 0, message: 'ok (mock)', data: topology }
-  }
   return Request.put('/modApi/api/station/topology', payload)
 }
 

@@ -24,14 +24,19 @@
   // -- Size variants --
   &.el-input--small {
     width: 100%;
+    min-height: 22px;
 
     .el-input__wrapper {
-      min-height: var(--vt-control-height-sm);
-      padding: 0 var(--vt-space-1) !important;
+      height: 22px;
+      min-height: 22px;
+      padding: 0 8px;
     }
 
-    .el-input__inner {
-      font-size: var(--vt-font-size-sm);
+    .el-input__inner,
+    .el-range-input {
+      height: 20px;
+      font-size: 12px;
+      line-height: 20px;
     }
   }
 

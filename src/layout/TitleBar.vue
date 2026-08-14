@@ -130,6 +130,8 @@ const closeWindow = async () => {
           confirmButtonText: 'Exit Anyway',
           cancelButtonText: 'Stay',
           type: 'warning',
+          center: true,
+          showClose: false,
         },
       )
     } catch {

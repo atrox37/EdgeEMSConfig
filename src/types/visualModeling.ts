@@ -52,6 +52,8 @@ export interface ModelNodeData {
   isContainer?: boolean
   /** 拓扑节点展示类型；用于区分 Standalone / Composite / Container。 */
   topologyType?: TopologyNodeKind
+  /** Instance product types permitted by this component, supplied by product topology.components. */
+  selectableProductTypes?: string[]
   /** @deprecated 属性改由点位配置页维护 */
   properties?: Record<string, string | number>
   width?: number
@@ -120,4 +122,10 @@ export interface ModelNodeTemplate {
   instanceName?: string
   imageUrl?: string
   topologyType?: TopologyNodeKind
+  components?: Array<{
+    productName: string
+    label: string
+    imageUrl?: string
+    selectableProductTypes?: string[]
+  }>
 }

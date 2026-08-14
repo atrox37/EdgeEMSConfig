@@ -603,8 +603,10 @@ const handleBeforeLeave = async (_newName: TabPaneName, _oldName: TabPaneName) =
         'Confirm Switch',
         {
           confirmButtonText: 'Switch',
-          cancelButtonText: 'Stay',
-          type: 'warning',
+         cancelButtonText: 'Stay',
+         type: 'warning',
+          center: true,
+          showClose: false,
         },
       )
       // 用户确认切换：清空当前 tab 的发布值并退出批量发布
@@ -653,8 +655,10 @@ const handleDialogBeforeClose = async (done: () => void) => {
           'Unsaved Changes',
           {
             confirmButtonText: 'Discard',
-            cancelButtonText: 'Cancel',
-            type: 'warning',
+           cancelButtonText: 'Cancel',
+           type: 'warning',
+            center: true,
+            showClose: false,
           },
         )
         isEditing.value = false
@@ -693,8 +697,10 @@ const handleDialogBeforeClose = async (done: () => void) => {
         'Unsaved Changes',
         {
           confirmButtonText: 'Submit',
-          cancelButtonText: 'Discard',
-          type: 'warning',
+         cancelButtonText: 'Discard',
+         type: 'warning',
+          center: true,
+          showClose: false,
         },
       )
       // 用户选择提交
@@ -732,8 +738,10 @@ const togglePublishMode = async () => {
           'Unsaved Changes',
           {
             confirmButtonText: 'Discard',
-            cancelButtonText: 'Cancel',
-            type: 'warning',
+         cancelButtonText: 'Cancel',
+         type: 'warning',
+          center: true,
+          showClose: false,
           },
         )
         // 用户确认放弃
@@ -1029,6 +1037,8 @@ const handleClose = async () => {
             confirmButtonText: 'Discard',
             cancelButtonText: 'Cancel',
             type: 'warning',
+            center: true,
+            showClose: false,
           },
         )
         isEditing.value = false
@@ -1068,8 +1078,10 @@ const handleClose = async () => {
         'Unsaved Changes',
         {
           confirmButtonText: 'Submit',
-          cancelButtonText: 'Discard',
-          type: 'warning',
+            cancelButtonText: 'Discard',
+            type: 'warning',
+            center: true,
+            showClose: false,
         },
       )
       // 用户选择提交

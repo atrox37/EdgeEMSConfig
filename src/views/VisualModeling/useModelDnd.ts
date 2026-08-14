@@ -2,9 +2,7 @@ import { useVueFlow, type Node as FlowNode } from '@vue-flow/core'
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { ModelNodeTemplate } from '@/types/visualModeling'
-import { isContainerProduct } from '@/constants/deviceProducts'
 import { canPlaceInContainer } from '@/utils/modelFlowRules'
-import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
 import {
   evaluateContainerDropTarget,
   findContainerAtPosition,
@@ -90,7 +88,7 @@ export default function useModelDnd() {
       isDragOver.value = true
       if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
       const productName = template.productName || ''
-      if (productName && template.type !== 'group' && productName !== 'Station') {
+      if (productName && template.type !== 'group' && template.type !== 'station') {
         const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
         updateDropTargetForProduct(productName, position, getNodes.value)
       } else {
@@ -124,8 +122,7 @@ export default function useModelDnd() {
     const productName = template.productName || ''
 
     let templateType = template.type
-    if (productName === 'Station') templateType = 'station'
-    else if (template.type === 'group' || isContainerProduct(productName)) templateType = 'group'
+    if (template.type === 'group') templateType = 'group'
 
     const isGroup = templateType === 'group'
     const isStation = templateType === 'station'
@@ -166,10 +163,13 @@ export default function useModelDnd() {
     }
 
     const id = genId()
-    const defaultW = 380
-    const defaultH = 260
+    const componentCount = template.components?.length ?? 0
+    const componentColumns = Math.max(1, Math.min(2, Math.ceil(Math.sqrt(componentCount))))
+    const componentRows = Math.max(1, Math.ceil(componentCount / componentColumns))
+    const defaultW = isGroup ? Math.max(280, 24 + componentColumns * 280 + (componentColumns - 1) * 12) : 280
+    const defaultH = isGroup ? 268 + componentRows * 274 : 260
     const imageUrl =
-      template.imageUrl || getProductInstanceImageUrl(productName) || undefined
+      template.imageUrl
 
     const newNode: any = {
       id,
@@ -177,21 +177,13 @@ export default function useModelDnd() {
       position: relativePosition,
       data: {
         label: template.label,
-        description: template.description || '',
+        description: '',
         productName,
         parentName: template.parentName || '',
         imageUrl,
-        isContainer: isGroup,
+        isContainer: template.topologyType === 'container' || (!template.topologyType && isGroup),
         topologyType: template.topologyType ?? (isGroup ? 'container' : 'standalone'),
-        instances: template.instances?.length
-          ? template.instances.map((item) => ({ ...item }))
-          : template.instanceId
-            ? [{
-                instanceId: template.instanceId,
-                instanceName: template.instanceName || '',
-                productName,
-              }]
-            : [],
+        instances: [],
         ...(isGroup ? { width: defaultW, height: defaultH } : {}),
       },
       ...(isGroup
@@ -205,6 +197,30 @@ export default function useModelDnd() {
         : {}),
     }
 
+    const componentNodes = isGroup
+      ? (template.components ?? []).map((component, index) => ({
+          id: genId(),
+          type: 'product',
+          parentNode: id,
+          extent: 'parent' as const,
+          position: {
+            x: 12 + (index % componentColumns) * 292,
+            y: 268 + Math.floor(index / componentColumns) * 274,
+          },
+          data: {
+            label: component.label,
+            description: '',
+            productName: component.productName,
+            imageUrl: component.imageUrl,
+            topologyType: 'standalone',
+            selectableProductTypes: component.selectableProductTypes ?? [],
+            instances: [],
+            width: 280,
+            height: 262,
+          },
+        }))
+      : []
+
     if (!isGroup && !isStation) {
       const { off } = onNodesInitialized(() => {
         updateNode(id, (node) => ({
@@ -217,7 +233,7 @@ export default function useModelDnd() {
       })
     }
 
-    addNodes(newNode)
+    addNodes([newNode, ...componentNodes])
     onDragEnd()
   }
 

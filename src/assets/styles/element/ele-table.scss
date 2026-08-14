@@ -100,6 +100,14 @@
       .cell {
         @include table-row.vt-table-cell-inner;
       }
+
+      .cell:has(.inline-edit-container) {
+        height: auto;
+        min-height: 22px;
+        max-height: none;
+        overflow: visible;
+        line-height: normal;
+      }
     }
   }
 
@@ -130,9 +138,9 @@
     }
   }
 
-  .el-table__expanded-cell.el-table__expanded-cell {
+  .el-table__cell.el-table__expanded-cell {
     height: auto !important;
-    padding: 0;
+    padding: 20px 60px;
     background-color: transparent;
 
     .cell {
@@ -154,6 +162,52 @@
     .el-table__empty-text {
       color: var(--vt-text-empty);
       font-size: 14px;
+    }
+  }
+
+  // ---------- Loading ----------
+  // Keep the table loading state aligned with the topology canvas loader.
+  .el-loading-mask {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fbfcff;
+    pointer-events: all;
+  }
+
+  .el-loading-spinner {
+    position: static;
+    top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: auto;
+    margin: 0;
+    transform: none;
+    color: #395583;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+
+    .circular {
+      display: none;
+    }
+
+    &::before {
+      display: block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #dce8fb;
+      border-top-color: #2878ff;
+      border-radius: 50%;
+      content: '';
+      animation: vt-table-loading-spin 0.8s linear infinite;
+    }
+
+    &::after {
+      content: 'Loading......';
+      white-space: nowrap;
     }
   }
 
@@ -246,5 +300,11 @@
           contrast(104%);
       }
     }
+  }
+}
+
+@keyframes vt-table-loading-spin {
+  to {
+    transform: rotate(360deg);
   }
 }

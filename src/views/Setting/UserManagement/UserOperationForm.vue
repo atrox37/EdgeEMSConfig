@@ -262,9 +262,9 @@ defineExpose({ open, close })
     display: flex;
   }
 
-  :deep(.el-input__inner) {
-    width: 240px;
-  }
+  // :deep(.el-input__inner) {
+  //   width: 240px;
+  // }
 
   .user-form__status-row {
     // width: 100%;

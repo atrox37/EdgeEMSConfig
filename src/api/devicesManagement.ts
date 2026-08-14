@@ -7,6 +7,7 @@ import type {
   AddDeviceInstanceDetail,
   InstancePointList,
   InstanceMappingList,
+  DeviceInstanceListResponse,
 } from '@/types/deviceConfiguration'
 
 export const getInstanceDetail = (
@@ -17,8 +18,15 @@ export const getInstanceDetail = (
 /*
 获取产品列表
 */
-export const getProducts = (): Promise<ApiResponse<ProductListResponse>> => {
-  return Request.get('/modApi/api/products')
+export interface ProductListQuery {
+  can_create_instance?: boolean
+  topology_enabled?: boolean
+}
+
+export const getProducts = (
+  params?: ProductListQuery,
+): Promise<ApiResponse<ProductListResponse>> => {
+  return Request.get('/modApi/api/products', params)
 }
 export const createInstance = (data: AddDeviceInstanceDetail) => {
   return Request.post('/modApi/api/instances', data)
@@ -87,8 +95,8 @@ export const updateInstanceRouting = (
   return Request.put(`/ruleApi/api/instances/${instanceId}/routing`, data)
 }
 
-export const getAllInstances = (config?: RequestConfig) => {
-  return Request.get('/modApi/api/instances/list', undefined, config)
+export const getAllInstances = (config?: RequestConfig): Promise<ApiResponse<DeviceInstanceListResponse>> => {
+  return Request.get('/modApi/api/instances/list', { page: 1, page_size: 1000 }, config)
 }
 
 /** 批量获取实例信息（用于回显优化） */

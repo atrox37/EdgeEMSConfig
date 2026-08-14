@@ -11,8 +11,8 @@
   --el-button-bg-color: var(--vt-color-secondary);
   --el-button-text-color: #ffffff;
   --el-button-disabled-text-color: var(--vt-text-disabled);
-  --el-button-disabled-bg-color: var(--vt-bg-muted);
-  --el-button-disabled-border-color: transparent;
+  --el-button-disabled-bg-color: var(--vt-bg-disabled);
+  --el-button-disabled-border-color: var(--vt-border-color-disabled);
   --el-button-hover-text-color: #ffffff;
   --el-button-hover-bg-color: var(--vt-color-secondary-hover);
   --el-button-hover-border-color: transparent;
@@ -20,6 +20,65 @@
   --el-button-active-bg-color: var(--vt-color-secondary-active);
   --el-button-active-border-color: transparent;
   --el-border-radius-base: 4px;
+  --el-button-bg-color: var(--vt-color-secondary);
+
+  // Interaction tokens are kept with the button base/type styles.
+  &.el-button--default,
+  &.el-button-default {
+    --el-button-hover-text-color: var(--vt-text-primary);
+    --el-button-hover-bg-color: var(--vt-color-hover);
+    --el-button-hover-border-color: var(--vt-border-color);
+    --el-button-active-text-color: var(--vt-text-primary);
+    --el-button-active-bg-color: var(--vt-bg-hover);
+    --el-button-active-border-color: var(--vt-border-color-strong);
+  }
+
+  &.el-button--primary {
+    --el-button-hover-text-color: #ffffff;
+    --el-button-hover-bg-color: var(--vt-color-primary-hover);
+    --el-button-hover-border-color: var(--vt-color-primary-hover);
+    --el-button-active-text-color: #ffffff;
+    --el-button-active-bg-color: var(--vt-color-primary-active);
+    --el-button-active-border-color: var(--vt-color-primary-active);
+  }
+
+  &.el-button--success {
+    --el-button-hover-text-color: #ffffff;
+    --el-button-hover-bg-color: var(--vt-color-success-hover);
+    --el-button-hover-border-color: var(--vt-color-success-hover);
+    --el-button-active-text-color: #ffffff;
+    --el-button-active-bg-color: var(--vt-color-success-active);
+    --el-button-active-border-color: var(--vt-color-success-active);
+  }
+
+  &.el-button--danger,
+  &.el-button-danger {
+    --el-button-hover-text-color: #ffffff;
+    --el-button-hover-bg-color: var(--vt-color-danger-hover);
+    --el-button-hover-border-color: var(--vt-color-danger-hover);
+    --el-button-active-text-color: #ffffff;
+    --el-button-active-bg-color: var(--vt-color-danger-active);
+    --el-button-active-border-color: var(--vt-color-danger-active);
+  }
+
+  &.el-button--info {
+    --el-button-hover-text-color: #ffffff;
+    --el-button-hover-bg-color: var(--vt-color-info-hover);
+    --el-button-hover-border-color: var(--vt-color-info-hover);
+    --el-button-active-text-color: #ffffff;
+    --el-button-active-bg-color: var(--vt-color-info-active);
+    --el-button-active-border-color: var(--vt-color-info-active);
+  }
+
+  &.is-text {
+    --el-button-hover-bg-color: var(--vt-bg-hover);
+    --el-button-active-bg-color: var(--vt-bg-muted);
+    --el-button-hover-border-color: transparent;
+    --el-button-active-border-color: transparent;
+  }
+}
+
+.el-button.el-button {
   // ---- Base ----
   min-height: var(--vt-control-height);
   padding: var(--vt-button-padding);
@@ -35,13 +94,12 @@
   font-weight: var(--vt-font-weight-normal);
   line-height: var(--vt-button-line-height);
   color: #ffffff;
-  background: var(--vt-color-secondary);
-  transition:
-    background-color var(--vt-transition-fast),
-    border-color var(--vt-transition-fast),
-    color var(--vt-transition-fast),
-    box-shadow var(--vt-transition-fast),
-    transform var(--vt-transition-fast);
+  // transition:
+  //   background-color var(--vt-transition-fast),
+  //   border-color var(--vt-transition-fast),
+  //   color var(--vt-transition-fast),
+  //   box-shadow var(--vt-transition-fast),
+  //   transform var(--vt-transition-fast);
 
   // ---- Pseudo states ----
   &:hover {
@@ -65,7 +123,7 @@
   }
 
   // ---- Modifier: type ----
-  &--primary {
+  &.el-button--primary {
     // --el-button-text-color: var(--el-color-white);
     // --el-button-bg-color: var(--el-color-primary);
     // --el-button-border-color: var(--el-color-primary);
@@ -100,7 +158,7 @@
     }
   }
 
-  &--warning {
+  &.el-button-warning {
     background: var(--vt-color-warning);
     color: #ffffff;
 
@@ -110,28 +168,59 @@
     }
   }
 
-  &--danger {
+  &.el-button--success {
+    &:hover:not(.is-disabled) {
+      background: var(--vt-color-success-hover);
+      color: #ffffff;
+    }
+
+    &:active:not(.is-disabled) {
+      background: var(--vt-color-success-active);
+      color: #ffffff;
+    }
+  }
+
+  &.el-button-danger,
+  &.el-button--danger {
     background: var(--vt-color-danger);
     color: #ffffff;
+
+    &:hover:not(.is-disabled) {
+      background: var(--vt-color-danger-hover);
+    }
+
+    &:active:not(.is-disabled) {
+      background: var(--vt-color-danger-active);
+    }
   }
 
-  &--default {
+  &.el-button-default {
     border: none;
+
+    &:hover:not(.is-disabled) {
+      background: var(--vt-color-hover);
+      color: var(--vt-text-primary);
+    }
+
+    &:active:not(.is-disabled) {
+      background: var(--vt-bg-hover);
+      color: var(--vt-text-primary);
+    }
   }
 
-  &--info {
+  &.el-button-info {
     background: linear-gradient(135deg, var(--vt-color-info) 0%, #096dd9 100%);
     box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
     color: #ffffff;
 
     &:hover {
-      background: linear-gradient(135deg, var(--vt-color-info-hover) 0%, #0050b3 100%);
+      background: var(--vt-color-info-hover);
       box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
       transform: translateY(-0.100px);
     }
 
     &:active {
-      background: linear-gradient(135deg, var(--vt-color-info-active) 0%, #003a8c 100%);
+      background: var(--vt-color-info-active);
       box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
       transform: translateY(0);
     }
@@ -139,24 +228,27 @@
 
   // ---- State: is-* ----
   &.is-text {
-    background: var(--vt-color-secondary);
-    color: #ffffff;
+    background: #F7F8FA;
+    color: #272E3B;
 
     &:hover {
-      background: var(--vt-color-secondary-hover);
-      color: #ffffff;
+      background: var(--vt-bg-hover);
+    }
+
+    &:active {
+      background: var(--vt-bg-muted);
     }
   }
 
   &.is-link {
     padding: 5px 8px;
-    background: transparent;
+    background: #ffffff;
     border: none;
     text-decoration: underline;
 
     &:hover,
     &:active {
-      background: transparent;
+      background: #ffffff;
     }
   }
 
@@ -189,13 +281,13 @@
   // ---- State: is-loading ----
   &.is-loading {
     pointer-events: none;
-    opacity: var(--vt-opacity-loading);
+    // opacity: var(--vt-opacity-loading);
   }
 
   // ---- State: is-disabled ----
   &.is-disabled {
     cursor: not-allowed;
-    opacity: var(--vt-opacity-disabled);
+    // opacity: var(--vt-opacity-disabled);
     box-shadow: none;
 
     &:hover,
@@ -236,3 +328,4 @@
   //   font-size: var(--vt-font-size-base);
   // }
 }
+

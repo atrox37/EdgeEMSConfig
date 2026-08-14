@@ -162,6 +162,10 @@ const handleDelete = async (row: UserManagementInfo) => {
     confirmButtonText: 'Confirm',
     cancelButtonText: 'Cancel',
     type: 'warning',
+    center: true,
+    showClose: false,
+    cancelButtonType: 'text',
+    confirmButtonType: 'danger',
   }).then(async () => {
     await deleteRow(row.id)
   })

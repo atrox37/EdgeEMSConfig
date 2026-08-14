@@ -11,7 +11,7 @@
       <div class="topology-card__header-copy">
         <div class="topology-card__title">{{ label }}</div>
         <div v-if="showBinding" class="topology-card__binding">
-          <AppIcon name="i-tabler-link" />
+          <img class="topology-card__binding-icon" :src="topologyLinkIcon" alt="" aria-hidden="true" />
           <span>{{ bindingLabel }}</span>
         </div>
       </div>
@@ -24,7 +24,8 @@
     </div>
 
     <el-form v-if="expanded" :model="draft" label-position="left" label-width="88"
-      class="topology-card__details nodrag">
+      class="topology-card__details nodrag"
+      :class="{ 'topology-card__details--editing': editing && !viewMode }">
       <el-form-item label="Display Name">
         <el-input v-model="draft.label" :readonly="viewMode || !editing" />
       </el-form-item>
@@ -33,8 +34,8 @@
           :readonly="viewMode || !editing" />
       </el-form-item>
       <el-form-item v-if="allowBinding" label="Bind Instance">
-        <el-input v-if="viewMode || !editing" :model-value="bindingLabel" readonly />
-        <el-select v-else v-model="draft.instanceId" clearable placeholder="Not Bound">
+        <el-input v-if="viewMode || !editing" :model-value="bindingDisplayValue" readonly />
+        <el-select v-else v-model="draft.instanceId" clearable placeholder="">
           <el-option v-for="item in availableInstances" :key="item.instance_id" :label="item.instance_name"
             :value="item.instance_id" />
         </el-select>
@@ -46,7 +47,7 @@
 
     <footer v-if="expanded && !viewMode" class="topology-card__footer nodrag">
       <template v-if="!editing">
-        <button type="button" class="topology-card__footer-button topology-card__footer-button--danger"
+        <button v-if="allowDelete" type="button" class="topology-card__footer-button topology-card__footer-button--danger"
           @click.stop="$emit('delete')">
           <AppIcon name="i-tabler-trash" /> Delete
         </button>
@@ -69,6 +70,7 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
+import topologyLinkIcon from "@/assets/icons/topology-link.svg";
 import type { DeviceInstanceBasic } from "@/types/deviceConfiguration";
 import type { TopologyNodeDraft } from "../../composables/useTopologyNodeEditor";
 
@@ -77,6 +79,7 @@ withDefaults(
     label: string;
     caption?: string;
     bindingLabel: string;
+    bindingDisplayValue?: string;
     showBinding?: boolean;
     imageUrl?: string;
     variant?: "standalone" | "component" | "composite" | "container";
@@ -86,6 +89,7 @@ withDefaults(
     selected?: boolean;
     editing: boolean;
     allowBinding: boolean;
+    allowDelete?: boolean;
     draft: TopologyNodeDraft;
     availableInstances: DeviceInstanceBasic[];
   }>(),
@@ -95,6 +99,7 @@ withDefaults(
     variant: "standalone",
     typeLabel: "Standalone",
     selected: false,
+    allowDelete: true,
   },
 );
 
@@ -197,9 +202,10 @@ defineEmits<{
   line-height: 1.2;
 }
 
-.topology-card__binding :deep(svg) {
+.topology-card__binding-icon {
   width: 15px;
   height: 15px;
+  flex: 0 0 15px;
 }
 
 .topology-card__preview {
@@ -298,6 +304,23 @@ defineEmits<{
 .topology-card__details :deep(.el-select) {
   min-width: 0 !important;
   width: 100%;
+}
+
+.topology-card__details--editing :deep(.el-input__wrapper),
+.topology-card__details--editing :deep(.el-textarea__inner),
+.topology-card__details--editing :deep(.el-select__wrapper) {
+  border: 1px solid #035def !important;
+  // box-shadow: 0 0 0 1px #035def inset !important;
+}
+
+.topology-card__details--editing :deep(.el-input__wrapper:hover),
+.topology-card__details--editing :deep(.el-input__wrapper.is-focus),
+.topology-card__details--editing :deep(.el-select__wrapper:hover),
+.topology-card__details--editing :deep(.el-select__wrapper.is-focused),
+.topology-card__details--editing :deep(.el-textarea__inner:hover),
+.topology-card__details--editing :deep(.el-textarea__inner:focus) {
+  border-color: 1px solid #035def !important;
+  // box-shadow: 0 0 0 1px #035def inset !important;
 }
 
 .topology-card__footer {

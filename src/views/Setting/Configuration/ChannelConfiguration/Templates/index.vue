@@ -54,7 +54,7 @@
         <el-table-column prop="description" label="Description" min-width="220" show-overflow-tooltip />
         <el-table-column prop="protocol" label="Protocol" width="130" />
         <el-table-column prop="created_at" label="Created At" min-width="180" />
-        <el-table-column label="Action" min-width="390" fixed="right">
+        <el-table-column label="Action" width="390" fixed="right">
           <template #default="{ row }">
             <div class="rule-management__operation">
               <div class="rule-management__operation-item" @click="openEditDialog(row)">
@@ -226,6 +226,10 @@ const handleDelete = async (row: ChannelTemplateListItem) => {
         type: 'warning',
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
+        center: true,
+        showClose: false,
+        cancelButtonType: 'text',
+        confirmButtonType: 'danger',
       },
     )
   } catch {
@@ -254,6 +258,8 @@ const submitApply = async (payload: { template_id: number; channel_id: number })
         type: 'warning',
         confirmButtonText: 'Apply',
         cancelButtonText: 'Cancel',
+        center: true,
+        showClose: false,
       },
     )
   } catch {
@@ -369,9 +375,6 @@ onMounted(async () => {
     :deep(.el-form-item) {
       margin-bottom: 0;
     }
-    :deep(.el-select) {
-      width: 180px;
-    }
   }
 
   .channel-templates-page__toolbar-actions {
@@ -403,9 +406,9 @@ onMounted(async () => {
   .channel-templates-page__pagination {
     display: flex;
     justify-content: flex-end;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #dcdfe6;
+    // margin-top: 12px;
+    // padding-top: 12px;
+    // border-top: 1px solid #dcdfe6;
   }
 
   .rule-management__operation {
@@ -463,4 +466,3 @@ onMounted(async () => {
   }
 }
 </style>
-

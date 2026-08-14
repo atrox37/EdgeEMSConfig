@@ -55,7 +55,7 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="Action" min-width="280" fixed="right">
+            <el-table-column label="Action" width="380" fixed="right">
               <template #default="{ row }">
                 <div class="rule-management__operation">
                   <div class="rule-management__operation-item" @click="openDetail(row)">
@@ -237,8 +237,8 @@ watch(
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 10px;
-      padding-bottom: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
       border-bottom: 1px solid #dcdfe6;
       //   padding-bottom: 20px;
       :deep(.el-form-item) {

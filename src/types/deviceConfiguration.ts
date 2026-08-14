@@ -78,6 +78,17 @@ export interface DeviceInstanceBasic {
   instance_name: string
   product_name: string
 }
+
+/** GET /api/instances/list 返回的实例条目。 */
+export interface DeviceInstanceListItem {
+  id: number
+  name: string
+  product_name: string
+}
+
+export interface DeviceInstanceListResponse {
+  list: DeviceInstanceListItem[]
+}
 export interface AddDeviceInstanceDetail {
   instance_name: string
   product_name: string
@@ -138,9 +149,27 @@ export interface ProductOption {
 }
 
 // 产品列表
+export interface ProductTopologyComponent {
+  productName?: string
+  name?: string
+  image?: string
+  selectableProductTypes?: string[]
+}
+
+export interface ProductTopology {
+  enabled: boolean
+  type?: 'standalone' | 'composite' | 'container' | 'top-level'
+  image?: string
+  /** 当前产品可连接的产品名；消费端将单侧声明归一化为无向关系。 */
+  connectableProducts?: string[]
+  components?: ProductTopologyComponent[]
+}
+
 export interface ProductListItem {
   product_name: string
   parent_name: string | null
+  can_create_instance?: boolean
+  topology?: ProductTopology
 }
 export interface ProductListResponse {
   count: number

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeTopology, validateTopology } from '@/utils/topologyNormalize'
+import { normalizeTopology, validateTopology, validateTopologyForPersistence, validateTopologyImport } from '@/utils/topologyNormalize'
 import type { ModelFlowData } from '@/types/visualModeling'
 
 function baseFlow(): ModelFlowData {
@@ -29,6 +29,21 @@ function baseFlow(): ModelFlowData {
       { id: 'e1', source: 'station-1', target: 'ess-1' },
     ],
   }
+}
+
+const persistenceProducts = [
+  { product_name: 'Station', parent_name: null },
+  { product_name: 'ESS', parent_name: null },
+  { product_name: 'Battery', parent_name: 'ESS', can_create_instance: true },
+]
+const persistenceInstances = [
+  { instance_id: 1, instance_name: 'station_01', product_name: 'Station' },
+  { instance_id: 2, instance_name: 'battery_01', product_name: 'Battery' },
+]
+const persistenceOptions = {
+  instances: persistenceInstances,
+  fixedBindings: { station: { instanceId: 1, instanceName: 'station_01', productName: 'Station' } },
+  stationProductName: 'Station',
 }
 
 describe('validateTopology', () => {
@@ -82,4 +97,57 @@ describe('normalizeTopology', () => {
     expect(result.appliedFixes.length).toBeGreaterThan(0)
     expect(result.errors.some((e) => e.code === 'duplicate_instance_binding')).toBe(false)
   })
+
+
+describe('strict topology persistence validation', () => {
+  it('blocks an isolated node before saving', () => {
+    const flow = baseFlow()
+    flow.nodes.push({
+      id: 'orphan-1',
+      type: 'product',
+      position: { x: 300, y: 0 },
+      data: { label: 'Orphan', productName: 'Orphan' },
+    })
+    flow.fixedBindings = { station: { instanceId: 1, instanceName: 'station_01' } }
+
+    const result = validateTopologyForPersistence(flow)
+
+    expect(result.errors.some((issue) => issue.code === 'isolated_node')).toBe(true)
+  })
+
+  it('rejects unknown fields before import normalization', () => {
+    const result = validateTopologyImport({ ...baseFlow(), unexpected: true })
+
+    expect(result.canSave).toBe(false)
+    expect(result.errors.some((issue) => issue.code === 'unknown_field')).toBe(true)
+  })
+
+
+  it('rejects a node whose product no longer exists', () => {
+    const flow = baseFlow()
+    flow.nodes.find((node) => node.id === 'battery-1')!.data.productName = 'Removed Battery'
+
+    const result = validateTopologyForPersistence(flow, persistenceProducts, persistenceOptions)
+
+    expect(result.errors.some((issue) => issue.code === 'unknown_product')).toBe(true)
+  })
+
+  it('rejects an instance ID that no longer exists', () => {
+    const flow = baseFlow()
+    flow.nodes.find((node) => node.id === 'battery-1')!.data.instances = [{ instanceId: 999, instanceName: 'deleted' }]
+
+    const result = validateTopologyForPersistence(flow, persistenceProducts, persistenceOptions)
+
+    expect(result.errors.some((issue) => issue.code === 'unknown_instance')).toBe(true)
+  })
+
+  it('rejects an instance belonging to a different product', () => {
+    const flow = baseFlow()
+    flow.nodes.find((node) => node.id === 'battery-1')!.data.instances = [{ instanceId: 1, instanceName: 'station_01' }]
+
+    const result = validateTopologyForPersistence(flow, persistenceProducts, persistenceOptions)
+
+    expect(result.errors.some((issue) => issue.code === 'instance_product_mismatch')).toBe(true)
+  })
+})
 })

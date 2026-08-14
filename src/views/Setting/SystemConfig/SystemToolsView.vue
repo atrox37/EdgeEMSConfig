@@ -421,6 +421,8 @@ const handleUpgradeUpload = async () => {
         confirmButtonText: 'Upload',
         cancelButtonText: 'Cancel',
         type: 'warning',
+        center: true,
+        showClose: false,
       },
     )
 

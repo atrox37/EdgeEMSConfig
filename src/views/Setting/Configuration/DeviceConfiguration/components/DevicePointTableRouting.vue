@@ -61,6 +61,7 @@
                 <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_channel_id')">
                   <div class="inline-edit-container">
                     <el-select
+                       size="small"
                       v-model="row.routing.channel_id"
                       :fit-input-width="true"
                       placeholder="Select channel"
@@ -96,6 +97,7 @@
                 <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_channel_type')">
                   <div class="inline-edit-container">
                     <el-select
+                       size="small"
                       v-model="row.routing.channel_type"
                       :fit-input-width="true"
                       :disabled="!row.routing?.channel_id"
@@ -131,6 +133,7 @@
                 <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_channel_point_id')">
                   <div class="inline-edit-container">
                     <el-select
+                       size="small"
                       v-model="row.routing.channel_point_id"
                       :fit-input-width="true"
                       placeholder="Select point"
@@ -167,6 +170,7 @@
                 <div class="point-table-cell-content" :class="getFieldClass(row, 'routing_enabled')">
                   <div class="inline-edit-container">
                     <el-select
+                       size="small"
                       v-model="row.routing.enabled"
                       :fit-input-width="true"
                       placeholder="Select"
@@ -1050,13 +1054,13 @@ defineExpose({
       position: relative;
       height: 32px;
     }
-    :deep(.point-table-cell-wrapper) {
-      position: static;
-      display: flex;
-      align-items: center;
-      min-height: 32px;
-      width: 100%;
-    }
+    // :deep(.point-table-cell-wrapper) {
+    //   position: static;
+    //   display: flex;
+    //   align-items: center;
+    //   min-height: 32px;
+    //   width: 100%;
+    // }
     :deep(.point-table-cell-content) {
       flex: 1;
       // padding-bottom: 9px;
@@ -1070,7 +1074,7 @@ defineExpose({
     :deep(.point-table-cell-wrapper .field-error) {
       position: absolute;
       bottom: 0;
-      left: 12px;
+      left: 34px;
       right: 0;
       height: 9px;
       line-height: 9px;
@@ -1095,7 +1099,7 @@ defineExpose({
     display: flex;
     gap: 15px;
     align-items: center;
-    justify-content: center;
+    // justify-content: center;
 
     .point-table__edit-btn,
     .point-table__setting-btn,

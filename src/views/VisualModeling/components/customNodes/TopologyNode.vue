@@ -4,11 +4,13 @@
     :class="{
       'topology-node--group': isGroup,
       'topology-node--product': !isGroup,
+      'topology-node--nested': isNested,
     }"
     :style="nodeStyle"
   >
     <NodeConnectionHandles
       v-if="isGroup || !isNested"
+      :node-id="props.id"
       :view-mode="viewMode"
       :border-color="connectionBorderColor"
     />
@@ -17,6 +19,7 @@
       :label="nodeLabel"
       :caption="nodeCaption"
       :binding-label="boundLabel"
+      :binding-display-value="boundValue"
       :show-binding="allowBinding"
       :image-url="data.imageUrl"
       :variant="variant"
@@ -54,9 +57,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted } from "vue";
+import { computed, nextTick, onMounted, watch } from "vue";
 import { useVueFlow, type Node as FlowNode } from "@vue-flow/core";
-import { getProductMeta } from "@/constants/deviceProducts";
 import type {
   ModelNodeData,
   ModelNodeType,
@@ -81,7 +83,7 @@ const props = withDefaults(
   },
 );
 
-const { findNode, getNodes } = useVueFlow();
+const { findNode, getNodes, updateNodeInternals } = useVueFlow();
 const isGroup = computed(() => props.type === "group");
 const parentNode = computed(() => {
   const parentId = props.parentNode || findNode(props.id)?.parentNode;
@@ -94,17 +96,11 @@ const isNested = computed(
       String(parentNode.value?.data?.topologyType ?? ""),
     ),
 );
-const productMeta = computed(() =>
-  getProductMeta(props.data.productName ?? ""),
-);
 const isContainer = computed(() => {
   if (!isGroup.value) return false;
-  const productName = `${props.data.productName ?? ""} ${props.data.label ?? ""}`;
-  return (
-    props.data.topologyType === "container" ||
-    props.data.isContainer === true ||
-    /container|distribution board/i.test(productName)
-  );
+  if (props.data.topologyType === "composite") return false;
+  if (props.data.topologyType === "container") return true;
+  return props.data.isContainer === true;
 });
 const allowBinding = computed(() => !isContainer.value);
 const variant = computed<TopologyNodeKind | "component">(() => {
@@ -123,7 +119,6 @@ const typeLabel = computed(() => {
 const productLabel = computed(
   () =>
     props.data.label ||
-    productMeta.value.label ||
     props.data.productName ||
     "Device",
 );
@@ -150,11 +145,7 @@ function getChildLabel(child: FlowNode): string {
 
 function getChildCaption(child: FlowNode): string {
   const data = child.data as ModelNodeData;
-  return (
-    getProductMeta(data.productName ?? "").label ||
-    data.productName ||
-    getChildLabel(child)
-  );
+  return data.productName || getChildLabel(child);
 }
 
 const {
@@ -163,6 +154,7 @@ const {
   editing,
   draft,
   boundLabel,
+  boundValue,
   availableInstances,
   startEditing,
   cancelEditing,
@@ -170,6 +162,18 @@ const {
 } = useTopologyNodeEditor(props, { allowBinding });
 
 const viewMode = computed(() => editorCtx?.isViewMode.value ?? false);
+
+function refreshNodeInternals() {
+  void nextTick().then(() => {
+    requestAnimationFrame(() => updateNodeInternals([props.id]));
+  });
+}
+
+watch(viewMode, () => {
+  if (isGroup.value) editorCtx?.setNodeExpanded?.(props.id, false);
+  refreshNodeInternals();
+});
+
 const connectionBorderColor = computed(() => {
   if (props.selected) {
     if (variant.value === "composite") return "#FF6900";
@@ -194,6 +198,7 @@ const nodeStyle = computed(() =>
 function toggleExpanded() {
   expanded.value = !expanded.value;
   if (isGroup.value) editorCtx?.setNodeExpanded?.(props.id, expanded.value);
+  refreshNodeInternals();
 }
 
 function handleChildToggle(childId: string, childExpanded: boolean) {
@@ -215,6 +220,11 @@ onMounted(() => {
   overflow: visible;
 }
 
+/* Nested devices are rendered by the parent group's component list. */
+.topology-node--nested {
+  display: none;
+}
+
 .topology-node--product {
   width: 280px;
   min-width: 280px;
@@ -224,7 +234,8 @@ onMounted(() => {
 .topology-node__components {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
+  align-items: start;
+  gap: 6px;
   padding: 0 12px 12px;
 }
 </style>

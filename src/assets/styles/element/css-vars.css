@@ -26,7 +26,7 @@
   /* ===== Surface / fill ===== */
   --el-bg-color: var(--vt-bg-page);
   --el-bg-color-page: var(--vt-bg-body);
-  --el-bg-color-overlay: var(--vt-bg-overlay);
+  --el-bg-color-overlay: var(--vt-bg-page);
   --el-fill-color: var(--vt-bg-muted);
   --el-fill-color-light: var(--vt-bg-input);
   --el-fill-color-lighter: var(--vt-bg-muted);
