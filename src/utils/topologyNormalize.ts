@@ -36,6 +36,45 @@ function buildParentMap(products: ProductListItem[]): Map<string, string | null>
   return map
 }
 
+/** 容器自定义组件的元信息，key 为组件名（components[].name 或 productName）。 */
+export interface ContainerComponentInfo {
+  containerProductName: string
+  selectableProductTypes: string[]
+}
+
+/**
+ * 建立「组件名 → 所属容器 + 可选产品类型」的映射。
+ * 组件来自产品 topology.components（例如 Distribution_Board 的 Meter 组件），
+ * 它们不是独立产品，不应按 parent_name / products 列表校验。
+ */
+function buildContainerComponents(products: ProductListItem[]): Map<string, ContainerComponentInfo> {
+  const map = new Map<string, ContainerComponentInfo>()
+  for (const product of products) {
+    const components = product.topology?.components ?? []
+    for (const component of components) {
+      const name = component.name ?? component.productName
+      if (!name) continue
+      map.set(name, {
+        containerProductName: product.product_name,
+        selectableProductTypes: component.selectableProductTypes ?? [],
+      })
+    }
+  }
+  return map
+}
+
+/** 判断一个节点是否为容器内的自定义组件节点（而非独立产品节点）。 */
+function isComponentNode(
+  data: ModelNodeData,
+  containerComponents: Map<string, ContainerComponentInfo>,
+): boolean {
+  const name = data.productName?.trim()
+  if (!name) return false
+  // 组件节点的典型标志：selectableProductTypes 非空，或 productName 命中某容器的组件定义。
+  if (Array.isArray(data.selectableProductTypes) && data.selectableProductTypes.length) return true
+  return containerComponents.has(name)
+}
+
 function nodeLabel(node: ModelFlowNode): string {
   const data = node.data as ModelNodeData
   return data.label?.trim() || data.productName || node.id
@@ -91,6 +130,7 @@ export function validateTopology(
   const edges = flow.edges ?? []
   const nodeById = new Map(nodes.map((n) => [n.id, n]))
   const parentMap = buildParentMap(products)
+  const containerComponents = buildContainerComponents(products)
 
   const stations = nodes.filter((n) => n.type === 'station')
   if (options?.requireStationNode !== false && !stations.length) {
@@ -138,8 +178,25 @@ export function validateTopology(
       continue
     }
     if (!isContainerGroupNode(parent)) continue
-    const childProduct = (node.data as ModelNodeData).productName?.trim()
+    const childData = node.data as ModelNodeData
+    const childProduct = childData.productName?.trim()
     const containerProduct = (parent.data as ModelNodeData).productName?.trim()
+
+    // 容器内的自定义组件（如 Distribution_Board 的 Meter）不按 parent_name 校验，
+    // 而是校验其是否属于该容器的 components 定义。
+    if (isComponentNode(childData, containerComponents)) {
+      const componentInfo = containerComponents.get(childProduct ?? '')
+      if (componentInfo && componentInfo.containerProductName !== containerProduct) {
+        issues.push({
+          level: 'error',
+          code: 'container_component_mismatch',
+          message: `Component "${nodeLabel(node)}" belongs to "${componentInfo.containerProductName}", not "${nodeLabel(parent)}".`,
+          nodeId: node.id,
+        })
+      }
+      continue
+    }
+
     if (
       childProduct
       && containerProduct
@@ -314,6 +371,7 @@ export function validateTopologyForPersistence(
   const edges = flow.edges ?? []
   const nodeById = new Map(nodes.map((node) => [node.id, node]))
   const productsByName = new Map(products.map((product) => [product.product_name, product]))
+  const containerComponents = buildContainerComponents(products)
   const instancesById = new Map((options?.instances ?? []).map((instance) => [instance.instance_id, instance]))
   const connectedIds = new Set<string>()
   const seenPairs = new Set<string>()
@@ -369,6 +427,39 @@ export function validateTopologyForPersistence(
     }
     const data = node.data as ModelNodeData
     const productName = data.productName?.trim()
+
+    // 容器自定义组件节点：productName 是组件名而非产品名，不按 products 列表校验，
+    // 改为校验组件仍被某容器定义，且绑定的实例产品类型在 selectableProductTypes 内。
+    if (isComponentNode(data, containerComponents)) {
+      const componentInfo = containerComponents.get(productName ?? '')
+      if (!componentInfo) {
+        issues.push({
+          level: 'error',
+          code: 'unknown_component',
+          message: `Node \"${nodeLabel(node)}\" references a container component that no longer exists.`,
+          nodeId: node.id,
+        })
+        continue
+      }
+      const selectable = new Set(componentInfo.selectableProductTypes)
+      for (const binding of normalizeNodeInstances(data)) {
+        const instance = instancesById.get(binding.instanceId)
+        if (!instance) {
+          issues.push({ level: 'error', code: 'unknown_instance', message: `Node \"${nodeLabel(node)}\" references an instance that no longer exists.`, nodeId: node.id })
+          continue
+        }
+        if (selectable.size && !selectable.has(instance.product_name)) {
+          issues.push({
+            level: 'error',
+            code: 'component_instance_product_mismatch',
+            message: `Component \"${nodeLabel(node)}\" cannot bind an instance of ${instance.product_name}; allowed: ${[...selectable].join(', ')}.`,
+            nodeId: node.id,
+          })
+        }
+      }
+      continue
+    }
+
     const product = productName ? productsByName.get(productName) : undefined
     if (!product) {
       issues.push({ level: 'error', code: 'unknown_product', message: `Node \"${nodeLabel(node)}\" references a product that no longer exists.`, nodeId: node.id })

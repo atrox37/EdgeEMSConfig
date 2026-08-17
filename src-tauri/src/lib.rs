@@ -26,8 +26,8 @@ pub fn run() {
             // 强制窗口尺寸与居中（避免平台默认行为覆盖）
             // 强制窗口尺寸与居中（避免平台默认行为覆盖）
             let _ = window.set_size(Size::Logical(LogicalSize {
-                width: 1050.0,
-                height: 630.0,
+                width: 1270.0,
+                height: 650.0,
             }));
             let _ = window.center();
             let _ = window.show();

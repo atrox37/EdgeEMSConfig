@@ -95,6 +95,7 @@ defineEmits<{
 <style scoped lang="scss">
 .modeling-editor__header {
   height: 64px;
+  padding:0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;

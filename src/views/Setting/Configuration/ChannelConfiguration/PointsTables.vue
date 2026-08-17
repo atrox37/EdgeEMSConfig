@@ -895,6 +895,7 @@ watch(
 
         .config-section__tabs {
             width: 100%;
+            padding: 0 20px 22px;
             flex: 1;
             display: flex;
             flex-direction: column;

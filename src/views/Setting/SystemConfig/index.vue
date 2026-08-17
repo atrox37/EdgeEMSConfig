@@ -98,12 +98,14 @@ const handleTabChange = (name: string | number) => {
 
 .system-config-shell__header {
   height: 64px;
+  padding:0 20px;
   display: flex;
   align-items: center;
 }
 
 .system-config-shell__tabs {
   flex-shrink: 0;
+  padding:0 20px;
   margin-bottom: 16px;
 }
 
@@ -112,6 +114,7 @@ const handleTabChange = (name: string | number) => {
   min-height: 0;
   min-width: 0;
   width: 100%;
+  padding: 0 20px 22px;
 }
 
 .system-config-shell__content.is-tools {

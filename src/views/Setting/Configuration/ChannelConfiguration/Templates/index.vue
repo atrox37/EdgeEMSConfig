@@ -370,7 +370,7 @@ onMounted(async () => {
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 12px;
-    padding-bottom: 12px;
+    padding: 0 20px 12px;
     border-bottom: 1px solid #dcdfe6;
     :deep(.el-form-item) {
       margin-bottom: 0;
@@ -388,6 +388,8 @@ onMounted(async () => {
     justify-content: flex-end;
     gap: 12px;
     margin-bottom: 12px;
+    padding:0 20px;
+    
   }
 
   .channel-templates-page__table {
@@ -395,6 +397,7 @@ onMounted(async () => {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    padding: 0 20px 22px;
   }
 
   .channel-templates-page__table-content {

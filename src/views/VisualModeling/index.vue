@@ -965,7 +965,7 @@ async function applyFlowState(
     hasUnsavedChanges.value = false
   }
 }
-
+ 
 async function runAutoLayout(options?: {
   markDirty?: boolean
   fitView?: boolean
@@ -1026,6 +1026,12 @@ async function handleSave() {
   if (!validation.canSave) {
     await topologyIssuesDialogRef.value?.open({ mode: 'save-blocked', issues: validation.issues })
     return
+  }
+
+  // 无 error 但有 warning 时，仍弹窗让用户确认后再保存。
+  if (validation.warnings.length) {
+    const proceed = await topologyIssuesDialogRef.value?.open({ mode: 'save-confirm', issues: validation.issues })
+    if (!proceed) return
   }
 
   const ok = await store.saveFlowJson(modelId, flow)

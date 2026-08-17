@@ -40,15 +40,14 @@ defineProps<{
   cursor: grab;
   transition: all 0.2s ease;
   min-width: 200px;
-  border-left: 4px solid rgba(255, 138, 0, 0.4);
-  border-top: 2px solid rgba(255, 138, 0, 0.4);
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(179, 206, 250, 0.9);
+  box-shadow: none;
   position: relative;
 }
 
 .end-node:hover {
-  border-color: #ff8a00;
-  box-shadow: 4px 4px 12px rgba(255, 138, 0, 0.25);
+  border-color: #035def;
+  box-shadow: none;
 }
 
 .end-node:active {
@@ -56,10 +55,11 @@ defineProps<{
 }
 
 .end-node__handle {
-  width: 12px;
-  height: 12px;
-  background-color: #ff8a00;
-  border: 2px solid white;
+  width: 15px;
+  height: 15px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border: 1px solid #b3cefa;
   border-radius: 50%;
   position: absolute;
   top: 50%;
@@ -69,12 +69,16 @@ defineProps<{
 }
 
 .end-node__handle--left {
-  left: -6px;
+  left: -7px;
 }
 
 .end-node__handle:hover {
-  background-color: #ffb74d;
+  background-color: #035def;
   transform: translateY(-50%) scale(1.2);
+}
+
+.end-node__handle.connecting {
+  background-color: #035def;
 }
 
 .end-node__content {

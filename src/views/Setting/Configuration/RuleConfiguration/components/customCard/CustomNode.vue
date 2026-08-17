@@ -230,11 +230,9 @@ watch(
 
   width: 250px;
 
-  border-left: 4px solid rgba(255, 138, 0, 0.4);
+  border: 1px solid rgba(179, 206, 250, 0.9);
 
-  border-top: 2px solid rgba(255, 138, 0, 0.4);
-
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 
   position: relative;
 
@@ -244,9 +242,9 @@ watch(
 
 .custom-node:hover {
 
-  border-color: #ff8a00;
+  border-color: #035def;
 
-  box-shadow: 4px 4px 12px rgba(255, 138, 0, 0.25);
+  box-shadow: none;
 
 }
 
@@ -328,13 +326,15 @@ watch(
 
 .custom-node__handle {
 
-  width: 12px;
+  width: 15px;
 
-  height: 12px;
+  height: 15px;
 
-  background-color: #ff8a00;
+  box-sizing: border-box;
 
-  border: 2px solid white;
+  background-color: #ffffff;
+
+  border: 1px solid #b3cefa;
 
   border-radius: 50%;
 
@@ -354,7 +354,7 @@ watch(
 
 .custom-node__handle--left {
 
-  left: -6px;
+  left: -7px;
 
 }
 
@@ -362,7 +362,7 @@ watch(
 
 .custom-node__handle--right {
 
-  right: -6px;
+  right: -7px;
 
 }
 
@@ -372,7 +372,7 @@ watch(
 
   font-size: 10px;
 
-  color: rgba(255, 105, 0, 1);
+  color: #035def;
 
   position: absolute;
 
@@ -390,9 +390,15 @@ watch(
 
 .custom-node__handle:hover {
 
-  background-color: #ffb74d;
+  background-color: #035def;
 
   transform: translateY(-50%) scale(1.2);
+
+}
+
+.custom-node__handle.connecting {
+
+  background-color: #035def;
 
 }
 

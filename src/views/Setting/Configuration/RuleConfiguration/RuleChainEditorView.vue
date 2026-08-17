@@ -72,7 +72,11 @@
       <div v-if="!isMonitorMode" class="rule-chain-editor__left-panel">
         <div class="rule-chain-editor__left-title">Function Nodes</div>
         <div class="rule-chain-editor__card-categories">
-          <el-collapse v-model="activeCategories">
+          <el-collapse
+            v-model="activeCategories"
+            expand-icon-position="left"
+            class="rule-chain-editor__collapse"
+          >
             <el-collapse-item
               v-for="category in cardCategories"
               :key="category.type"
@@ -121,14 +125,14 @@
           :only-render-visible-elements="true"
           :nodes="nodes"
           :edges="edges"
-          class="rule-chain-editor__flow"
+          class="rule-chain-editor__flow rule-editor__flow"
           :default-viewport="{ zoom: 1, x: 0, y: 0 }"
           :min-zoom="0.1"
           :max-zoom="4"
           :snap-to-grid="true"
           :snap-grid="[1, 1]"
           :node-types="nodeTypes"
-          :connection-line-style="{ stroke: '#ff8a00', strokeWidth: 2.5 }"
+          :connection-line-style="{ stroke: '#B3CEFA', strokeWidth: 1 }"
           :nodes-draggable="true"
           :nodes-connectable="!isMonitorMode"
           :elements-selectable="!isMonitorMode"
@@ -151,14 +155,44 @@
           </template>
           <Background variant="lines" :gap="20" color="rgba(180, 180, 180, 0.35)" />
           <MiniMap
+            v-show="showMiniMap"
             class="rf-minimap-custom"
-            :node-stroke-color="'#74b9ff'"
-            :node-color="'#ddd'"
-            :node-border-radius="2"
+            :width="200"
+            :height="200"
+            :node-stroke-color="'#2878ff'"
+            :node-color="'#edf4ff'"
+            :node-stroke-width="1.5"
+            :node-border-radius="4"
+            mask-color="rgba(255, 105, 0, 0.06)"
+            mask-stroke-color="#ff6900"
+            :mask-stroke-width="2"
+            :pannable="true"
+            :zoomable="true"
             position="top-right"
           />
-
-          <Controls position="bottom-right" />
+          <div class="rule-editor__flow-controls" aria-label="Canvas controls">
+            <button type="button" class="flow-control-button" aria-label="Fit view" @click="fitFlowToViewport()">
+              <img class="flow-control-button__icon" :src="fitViewIcon" alt="" aria-hidden="true" />
+            </button>
+            <span class="flow-control-divider" aria-hidden="true"></span>
+            <button type="button" class="flow-control-button" aria-label="Zoom out" @click="zoomOut()">
+              <img class="flow-control-button__icon" :src="zoomOutIcon" alt="" aria-hidden="true" />
+            </button>
+            <span class="flow-control-zoom">{{ Math.round((viewport?.zoom ?? 1) * 100) }}%</span>
+            <button type="button" class="flow-control-button" aria-label="Zoom in" @click="zoomIn()">
+              <img class="flow-control-button__icon" :src="zoomInIcon" alt="" aria-hidden="true" />
+            </button>
+            <span class="flow-control-divider" aria-hidden="true"></span>
+            <button
+              type="button"
+              class="flow-control-button"
+              :class="{ 'is-active': showMiniMap }"
+              aria-label="Toggle minimap"
+              @click="showMiniMap = !showMiniMap"
+            >
+              <img class="flow-control-button__icon" :src="toggleMinimapIcon" alt="" aria-hidden="true" />
+            </button>
+          </div>
         </VueFlow>
         <Teleport to="body">
           <template v-for="nodeId in Array.from(visibleVarsNodes)" :key="nodeId">
@@ -190,15 +224,14 @@
 
     <div v-if="!isMonitorMode" v-permission="'engineer'" class="rule-chain-editor__floating-actions">
       <el-button
-        circle
         class="floating-btn floating-btn--cancel"
         title="Restore to last saved"
         @click="handleRestoreToSaved"
       >
-        ×
+        <AppIcon name="i-tabler-rotate-2" />
+        <span>Restart</span>
       </el-button>
       <el-button
-        circle
         type="primary"
         class="floating-btn floating-btn--submit"
         :class="{ 'is-dirty': hasUnsavedChanges }"
@@ -206,7 +239,8 @@
         :disabled="!hasUnsavedChanges"
         title="Submit"
       >
-        √
+        <AppIcon name="i-tabler-device-floppy" />
+        <span>Save</span>
       </el-button>
     </div>
 
@@ -233,8 +267,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRuleDetail } from '@/api/rulesManagement'
 import { Background } from '@vue-flow/background'
-import { Controls } from '@vue-flow/controls'
 import AppIcon from '@/components/AppIcon.vue'
+import fitViewIcon from '@/assets/icons/tuopu-fitView.svg'
+import toggleMinimapIcon from '@/assets/icons/tuopu-toggleMinimap.svg'
+import zoomInIcon from '@/assets/icons/tuopu-zoomIn.svg'
+import zoomOutIcon from '@/assets/icons/tuopu-zoomOut.svg'
 import {
   VueFlow,
   ConnectionMode,
@@ -281,6 +318,8 @@ const {
   applyEdgeChanges,
   removeEdges,
   fitView,
+  zoomIn,
+  zoomOut,
   viewport,
   findNode,
 } = useVueFlow()
@@ -297,6 +336,7 @@ const activeCategories = ref(['function', 'action'])
 const cardEditDialogVisible = ref(false)
 const editingCard = ref<RuleCard | null>(null)
 const importFileInput = ref<HTMLInputElement | null>(null)
+const showMiniMap = ref(true)
 const subscriptionId = ref<string>('')
 const visibleVarsNodes = ref<Set<string>>(new Set())
 const lastActiveNodeIds = ref<Set<string>>(new Set())
@@ -1348,23 +1388,23 @@ watch(
       height: 64px;
       display: flex;
       align-items: center;
-      padding: 0 10px;
       background-color: transparent;
       border-bottom: 1px solid rgba(15, 31, 61, 0.08);
       :deep(.el-page-header__left) {
         font-weight: 600;
       }
-      :deep(.el-page-header__content) {
-        color: #0f1f3d;
-        font-weight: 600;
-        font-size: 14px;
-      }
-      :deep(.el-page-header__extra) {
+      :deep(.el-page-header__header) {
+        width: 100%;
         display: flex;
         align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
+        justify-content: space-between;
       }
+      // :deep(.el-page-header__extra) {
+      //   display: flex;
+      //   align-items: center;
+      //   gap: 6px;
+      //   flex-wrap: wrap;
+      // }
 
       // .rule-chain-editor__save-btn.is-dirty:not(:disabled) {
       //   box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.55);
@@ -1388,24 +1428,25 @@ watch(
       background-color: transparent;
 
       .rule-chain-editor__left-panel {
-        width: 240px;
-        background-color: rgba(19, 44, 84, 0.08);
-        border-top-left-radius: 10px;
-        border-bottom-left-radius: 10px;
+        width: 348px;
+        background: #ffffff;
+        border: 2px solid #e3e6e9;
+        border-radius: 4px;
         display: flex;
         flex-direction: column;
         transition: width 0.3s ease;
-        box-shadow: 6px 0 12px rgba(15, 31, 61, 0.12);
+        box-shadow: 6px 0 12px rgba(15, 31, 61, 0.08);
 
         .rule-chain-editor__left-title {
-          padding: 12px 12px 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #0f1f3d;
+          padding: 14px 16px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #354c7b;
+          background: #ededf6;
         }
 
         .rule-chain-editor__chain-selector {
-          padding: 16px;
+          padding: 16px 12px;
           position: relative;
         }
 
@@ -1417,48 +1458,16 @@ watch(
           :deep(.el-collapse-item__content) {
             padding: 8px 8px 10px;
             border-radius: 0 0 8px 8px;
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 138, 0, 0.12);
+            background: #ffffff;
+            border: 0;
           }
           :deep(.el-collapse) {
             border: none;
           }
           :deep(.el-collapse-item__wrap) {
+            border-bottom: none;
             border-bottom-left-radius: 8px;
             border-bottom-right-radius: 8px;
-          }
-          :deep(.el-collapse-item__header) {
-            height: auto;
-            min-height: 36px;
-            line-height: 1.4;
-            padding: 0 4px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--vt-color-secondary);
-            background: color-mix(in srgb, var(--vt-color-secondary) 12%, transparent);
-            border: 1px solid color-mix(in srgb, var(--vt-color-secondary) 35%, transparent);
-            border-radius: 6px;
-          }
-          :deep(.el-collapse-item__header.is-active) {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            color: var(--vt-color-primary);
-            background: color-mix(in srgb, var(--vt-color-primary) 20%, transparent);
-            border-color: color-mix(in srgb, var(--vt-color-primary) 35%, transparent);
-          }
-          :deep(.el-collapse-item__header.is-active .el-collapse-item__arrow) {
-            color: var(--vt-color-primary);
-          }
-          :deep(.el-collapse-item__content) {
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-          }
-          :deep(.el-collapse-item__arrow) {
-            font-size: 12px;
-            color: var(--vt-color-secondary);
-          }
-          :deep(.el-collapse-item__title) {
-            padding-left: 4px;
           }
 
           .rule-chain-editor__category-title {
@@ -1482,17 +1491,22 @@ watch(
 
           .rule-chain-editor__card {
             width: 100%;
+            min-height: 72px;
+            box-sizing: border-box;
             display: flex;
             align-items: center;
-            padding: 6px 10px;
+            padding: 10px;
             border-radius: 8px;
+            border: 1px solid #eeeeee;
+            background: #ffffff;
             cursor: grab;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
           }
 
           .rule-chain-editor__card:hover {
-            transform: translateZ(0);
+            border-color: #b3cefa;
+            background: #f8f9fb;
           }
 
           .rule-chain-editor__card:active {
@@ -1501,17 +1515,17 @@ watch(
 
           .rule-chain-editor__card[data-type='function-switch'] {
             background-color: #81c784;
-            box-shadow: 0 4px 12px rgba(129, 199, 132, 0.35);
+            box-shadow: none;
           }
 
           .rule-chain-editor__card[data-type='action-changeValue'] {
             background-color: #4fc3f7;
-            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.35);
+            box-shadow: none;
           }
 
           .rule-chain-editor__card[data-type='action-periodDelta'] {
             background-color: #9c27b0;
-            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.35);
+            box-shadow: none;
           }
 
           .rule-chain-editor__card[data-type='function-switch'] .rule-chain-editor__card-name,
@@ -1594,7 +1608,7 @@ watch(
         height: 100%;
         position: relative;
         z-index: 1;
-        background-color: transparent;
+        background-color: #fbfcff;
         border-top-right-radius: 10px;
         border-bottom-right-radius: 10px;
 
@@ -1630,16 +1644,13 @@ watch(
         }
 
         :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-          stroke-width: 4.5 !important;
-          stroke: #ff5722 !important;
-          filter: drop-shadow(0 0 8px rgba(255, 87, 34, 0.9));
+          stroke-width: 6px !important;
+          stroke: #035def !important;
+          filter: none;
         }
 
         :deep(.vue-flow__node.selected) {
-          box-shadow:
-            0 0 16px rgba(255, 87, 34, 0.7),
-            0 0 24px rgba(255, 87, 34, 0.5),
-            2px 2px 8px rgba(0, 0, 0, 0.15) !important;
+          box-shadow: none !important;
         }
 
         @keyframes active-node-pulse {
@@ -1693,6 +1704,33 @@ watch(
           color: #fff;
           opacity: 0.95;
         }
+      }
+    }
+
+    .rule-chain-editor__floating-actions {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      z-index: 10;
+      display: flex;
+      gap: 16px;
+      transform: translateX(-50%);
+      pointer-events: none;
+
+      .floating-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 96px;
+        height: 36px !important;
+        gap: 6px;
+        padding: 0 16px !important;
+        border-radius: 4px !important;
+        pointer-events: auto;
+      }
+
+      .floating-btn span {
+        font-size: 14px;
       }
     }
 
