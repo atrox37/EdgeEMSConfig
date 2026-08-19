@@ -422,15 +422,16 @@ export function validateTopologyForPersistence(
 
   for (const node of nodes) {
     if (node.parentNode && nodeById.has(node.parentNode)) {
+      // A valid parent relationship connects the component itself, but it
+      // must not make the top-level Composite/Container externally connected.
       connectedIds.add(node.id)
-      connectedIds.add(node.parentNode)
     }
     const data = node.data as ModelNodeData
     const productName = data.productName?.trim()
 
     // 容器自定义组件节点：productName 是组件名而非产品名，不按 products 列表校验，
     // 改为校验组件仍被某容器定义，且绑定的实例产品类型在 selectableProductTypes 内。
-    if (isComponentNode(data, containerComponents)) {
+    if (node.parentNode && isComponentNode(data, containerComponents)) {
       const componentInfo = containerComponents.get(productName ?? '')
       if (!componentInfo) {
         issues.push({
@@ -442,12 +443,22 @@ export function validateTopologyForPersistence(
         continue
       }
       const selectable = new Set(componentInfo.selectableProductTypes)
-      for (const binding of normalizeNodeInstances(data)) {
+      const bindings = normalizeNodeInstances(data)
+      if (!bindings.length) {
+        issues.push({
+          level: 'error',
+          code: 'missing_instance_binding',
+          message: `Component \"${nodeLabel(node)}\" requires an instance binding.`,
+          nodeId: node.id,
+        })
+      }
+      for (const binding of bindings) {
+        const expectedProductName = selectable.size || !productsByName.has(productName ?? '')
+          ? undefined
+          : productName
+        validateBinding(binding, expectedProductName, `Component \"${nodeLabel(node)}\"`, node.id)
         const instance = instancesById.get(binding.instanceId)
-        if (!instance) {
-          issues.push({ level: 'error', code: 'unknown_instance', message: `Node \"${nodeLabel(node)}\" references an instance that no longer exists.`, nodeId: node.id })
-          continue
-        }
+        if (!instance) continue
         if (selectable.size && !selectable.has(instance.product_name)) {
           issues.push({
             level: 'error',
@@ -466,7 +477,11 @@ export function validateTopologyForPersistence(
       continue
     }
     const ids = instanceIds(data)
-    if (product.can_create_instance === true && !ids.length) {
+    // Topology semantics are stricter than the catalog capability flag:
+    // every standalone/composite node represents a concrete device, while
+    // only Container nodes are structural and may remain unbound.
+    const requiresInstanceBinding = !isContainerGroupNode(node)
+    if (requiresInstanceBinding && !ids.length) {
       issues.push({ level: 'error', code: 'missing_instance_binding', message: `Node \"${nodeLabel(node)}\" requires an instance binding.`, nodeId: node.id })
     }
     for (const binding of normalizeNodeInstances(data)) {
@@ -505,9 +520,96 @@ const IMPORT_NODE_FIELDS = new Set(['id', 'type', 'position', 'data', 'parentNod
 const IMPORT_EDGE_FIELDS = new Set(['id', 'source', 'target', 'sourceHandle', 'targetHandle', 'label', 'type', 'style', 'markerEnd', 'selected', 'animated', 'data', 'labelStyle', 'labelShowBg', 'labelBgStyle'])
 const IMPORT_NODE_DATA_FIELDS = new Set(['label', 'description', 'productName', 'parentName', 'instances', 'instanceId', 'instanceName', 'color', 'icon', 'imageUrl', 'isContainer', 'topologyType', 'selectableProductTypes', 'properties', 'width', 'height', 'uiExpanded'])
 const IMPORT_BINDING_FIELDS = new Set(['instanceId', 'instanceName', 'productName', 'channelIds', 'overviewPoints'])
+const VUE_FLOW_NODE_RUNTIME_FIELDS = [
+  'computedPosition',
+  'handleBounds',
+  'resizing',
+  'initialized',
+  'isParent',
+  'events',
+] as const
+const VUE_FLOW_EDGE_RUNTIME_FIELDS = [
+  'events',
+  'zIndex',
+  'sourceNode',
+  'targetNode',
+  'sourceX',
+  'sourceY',
+  'targetX',
+  'targetY',
+] as const
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
+function pickImportFields(
+  value: Record<string, unknown>,
+  allowed: Set<string>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([key]) => allowed.has(key)),
+  )
+}
+
+/**
+ * Convert Vue Flow graph objects into the stable topology DTO.
+ * Runtime geometry and cached node references must never be persisted.
+ */
+export function createPersistedTopologyFlow(flow: ModelFlowData): ModelFlowData {
+  const nodes = (flow.nodes ?? []).map((node) => {
+    const source = node as unknown as Record<string, unknown>
+    const persisted = pickImportFields(source, IMPORT_NODE_FIELDS)
+    persisted.data = isRecord(source.data)
+      ? pickImportFields(source.data, IMPORT_NODE_DATA_FIELDS)
+      : {}
+    delete persisted.selected
+    delete persisted.dragging
+    return cloneJson(persisted) as unknown as ModelFlowNode
+  })
+  const edges = (flow.edges ?? []).map((edge) => {
+    const persisted = pickImportFields(
+      edge as unknown as Record<string, unknown>,
+      IMPORT_EDGE_FIELDS,
+    )
+    delete persisted.selected
+    return cloneJson(persisted) as unknown as ModelFlowData['edges'][number]
+  })
+
+  return {
+    nodes,
+    edges,
+    fixedBindings: flow.fixedBindings ? cloneJson(flow.fixedBindings) : undefined,
+  }
+}
+
+/**
+ * Backward compatibility for files previously exported from raw Vue Flow state.
+ * Only known framework-owned fields are removed; arbitrary unknown fields still
+ * reach strict validation and remain rejected.
+ */
+export function stripKnownTopologyRuntimeFields(value: unknown): unknown {
+  if (!isRecord(value)) return value
+  const cleaned = cloneJson(value)
+
+  if (Array.isArray(cleaned.nodes)) {
+    for (const node of cleaned.nodes) {
+      if (!isRecord(node)) continue
+      for (const key of VUE_FLOW_NODE_RUNTIME_FIELDS) delete node[key]
+    }
+  }
+  if (Array.isArray(cleaned.edges)) {
+    for (const edge of cleaned.edges) {
+      if (!isRecord(edge)) continue
+      for (const key of VUE_FLOW_EDGE_RUNTIME_FIELDS) delete edge[key]
+    }
+  }
+
+  return cleaned
+}
 
 function addUnknownImportFields(value: Record<string, unknown>, allowed: Set<string>, path: string, issues: TopologyIssue[]) {
   for (const key of Object.keys(value)) {

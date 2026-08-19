@@ -99,7 +99,6 @@ import { useTopologyPersistence } from './composables/useTopologyPersistence'
 import { useVisualModelingStore, STATION_EDITOR_ID } from '@/stores/visualModeling'
 import { alignEdgeHandlesToLayout, getGroupContentLayout, layoutModelGraph } from './useModelLayout'
 import {
-  createDefaultModelFlow,
   createFlowEdgeId,
   isEmptyFlow,
   repairMissingFlowEdges,
@@ -111,11 +110,18 @@ import {
   resolveConnectionEndpoints,
 } from '@/utils/modelFlowRules'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
-import { toPng } from 'html-to-image'
+import { sanitizeFileNamePart } from '@/utils/csvExport'
+import { getProductInstanceImageUrl } from '@/utils/productInstanceImages'
+import { toBlob } from 'html-to-image'
 import type { ModelFlowNode } from '@/types/visualModeling'
 import { MODELING_EDITOR_KEY } from './modelingEditorContext'
 import { collectBoundInstanceIds, collectNodesToDelete, normalizeNodeInstances } from '@/utils/visualModeling'
-import { normalizeTopology, validateTopologyForPersistence, validateTopologyImport } from '@/utils/topologyNormalize'
+import {
+  normalizeTopology,
+  stripKnownTopologyRuntimeFields,
+  validateTopologyForPersistence,
+  validateTopologyImport,
+} from '@/utils/topologyNormalize'
 import { setModelFlowProductRules } from '@/utils/modelFlowRules'
 import TopologyIssuesDialog from './components/dialogs/TopologyIssuesDialog.vue'
 import { isFlowSnapshotEqual } from '@/utils/flowSnapshot'
@@ -341,6 +347,8 @@ function topologyValidationOptions() {
 function persistenceValidationOptions(useCurrentFixedBindings = true) {
   return {
     ...topologyValidationOptions(),
+    // Station/Environment are fixed binding cards, not Vue Flow nodes.
+    requireStationNode: false,
     ...(useCurrentFixedBindings
       ? {
           fixedBindings: {
@@ -620,20 +628,39 @@ onEdgesChange(onEdgesChangeHandler)
 
 function enrichNodesWithImages(flowNodes: FlowNode[]): FlowNode[] {
   const nodeById = new Map(flowNodes.map((node) => [node.id, node]))
+  const productsByName = new Map(store.products.map((product) => [product.product_name, product]))
+
   return flowNodes.map((node) => {
-    if (!node.parentNode) return node
-    const parentProductName = (nodeById.get(node.parentNode)?.data as { productName?: string } | undefined)?.productName
-    const parentProduct = store.products.find((product) => product.product_name === parentProductName)
-    const componentName = (node.data as { productName?: string } | undefined)?.productName
-    const component = parentProduct?.topology?.components?.find(
-      (item) => (item.productName ?? item.name) === componentName,
-    )
-    if (!component) return node
+    const data = node.data as { productName?: string; imageUrl?: string; selectableProductTypes?: string[] }
+    const productName = data.productName
+    const product = productName ? productsByName.get(productName) : undefined
+    let imageUrl = getProductInstanceImageUrl(product?.topology?.image)
+    let selectableProductTypes = data.selectableProductTypes
+    let hasCurrentProductMetadata = !!product
+
+    if (node.parentNode) {
+      const parentProductName = (
+        nodeById.get(node.parentNode)?.data as { productName?: string } | undefined
+      )?.productName
+      const parentProduct = parentProductName ? productsByName.get(parentProductName) : undefined
+      const component = parentProduct?.topology?.components?.find(
+        (item) => (item.productName ?? item.name) === productName,
+      )
+      if (component) {
+        hasCurrentProductMetadata = true
+        imageUrl = getProductInstanceImageUrl(component.image) ?? imageUrl
+        selectableProductTypes = component.selectableProductTypes ?? []
+      }
+    }
+
+    if (!productName || !hasCurrentProductMetadata) return node
+
     return {
       ...node,
       data: {
         ...node.data,
-        selectableProductTypes: component.selectableProductTypes ?? [],
+        imageUrl,
+        selectableProductTypes,
       },
     }
   })
@@ -946,7 +973,10 @@ async function applyFlowState(
   nextEdges: FlowEdge[],
   options?: { resetDirty?: boolean },
 ) {
-  const clonedNodes = JSON.parse(JSON.stringify(nextNodes)) as FlowNode[]
+  const clonedNodes = (JSON.parse(JSON.stringify(nextNodes)) as FlowNode[]).map((node) => ({
+    ...node,
+    selected: false,
+  }))
   const clonedEdges = normalizeFlowEdges(
     JSON.parse(JSON.stringify(nextEdges)) as FlowEdge[],
     clonedNodes,
@@ -1055,13 +1085,32 @@ async function handleExportCommand(cmd: string) {
   }
 }
 
+function buildExportFilename(name: string, extension: 'json' | 'png'): string {
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const timestamp = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+    '_',
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds()),
+  ].join('')
+  return `${sanitizeFileNamePart(name, 'topology')}_${timestamp}.${extension}`
+}
+
 async function handleExportJson() {
   const model = store.getModelById(modelId)
   if (!model) return
   await syncEdgesFromFlow()
   const exportData = { ...model, flowJson: exportCurrentFlow() }
   const bytes = new TextEncoder().encode(JSON.stringify(exportData, null, 2))
-  const saveResult = await saveBytesWithPreferredPath(bytes, `${model.name}.json`, 'application/json')
+  const saveResult = await saveBytesWithPreferredPath(
+    bytes,
+    buildExportFilename(model.name, 'json'),
+    'application/json',
+  )
   ElMessage.success(`JSON exported: ${saveResult.displayPath}`)
 }
 
@@ -1091,9 +1140,9 @@ async function handleExportPng() {
   })
 
   try {
-    const dataUrl = await toPng(canvas, {
+    const blob = await toBlob(canvas, {
       backgroundColor: '#fbfcff',
-      cacheBust: true,
+      cacheBust: false,
       pixelRatio: 2,
       filter: (node) => !(node instanceof HTMLElement && (
         node.classList.contains('modeling-editor__flow-controls')
@@ -1101,9 +1150,13 @@ async function handleExportPng() {
         || node.classList.contains('modeling-editor__floating-actions')
       )),
     })
-    const response = await fetch(dataUrl)
-    const bytes = new Uint8Array(await response.arrayBuffer())
-    const saveResult = await saveBytesWithPreferredPath(bytes, `${model.name}.png`, 'image/png')
+    if (!blob) throw new Error('Failed to create topology PNG blob')
+    const bytes = new Uint8Array(await blob.arrayBuffer())
+    const saveResult = await saveBytesWithPreferredPath(
+      bytes,
+      buildExportFilename(model.name, 'png'),
+      'image/png',
+    )
     ElMessage.success(`PNG exported: ${saveResult.displayPath}`)
   } catch (error) {
     console.error('[VisualModeling] PNG export failed', error)
@@ -1126,7 +1179,7 @@ function handleImportChange(e: Event) {
   reader.onload = async () => {
     try {
       const parsed = JSON.parse(reader.result as string)
-      const flow = parsed.flowJson || parsed
+      const flow = stripKnownTopologyRuntimeFields(parsed.flowJson || parsed) as ModelFlowData
       const rawNodes = Array.isArray(flow.nodes) ? flow.nodes : []
       const rawEdges = Array.isArray(flow.edges) ? flow.edges : []
       if (!rawNodes.length && !rawEdges.length) {

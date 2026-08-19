@@ -7,7 +7,8 @@
                     <span v-if="channelName" class="points-tables-page__channel-name">
                         {{ channelName }} -&nbsp;
                     </span>
-                    <el-dropdown v-if="!isEditing" trigger="click" class="points-tables-page__view-mode-dropdown"
+                    <el-dropdown v-if="!isEditing" trigger="click" :show-arrow="false"
+                        class="points-tables-page__view-mode-dropdown"
                         @command="handleDropdownCommand">
                         <span class="points-tables-page__dropdown-trigger">
                             {{ viewMode === 'points' ? 'Points Table' : 'Mappings Table' }}
@@ -895,7 +896,7 @@ watch(
 
         .config-section__tabs {
             width: 100%;
-            padding: 0 20px 22px;
+            padding: 0 20px;
             flex: 1;
             display: flex;
             flex-direction: column;

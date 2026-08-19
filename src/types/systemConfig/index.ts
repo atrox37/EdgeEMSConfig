@@ -57,6 +57,8 @@ export type StorageConnectionState = 'unknown' | 'connected' | 'disconnected'
 export interface MqttConfigPayload {
   alarmsrv_url: string
   broker_host: string
+  username: string
+  password: string
   broker_keepalive_secs: number
   broker_port: number
   client_id: string

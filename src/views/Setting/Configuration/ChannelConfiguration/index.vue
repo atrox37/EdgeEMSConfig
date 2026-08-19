@@ -285,6 +285,7 @@
                   v-permission="'engineer'"
                   trigger="click"
                   placement="bottom-end"
+                  :show-arrow="false"
                   :teleported="true"
                 >
                   <div

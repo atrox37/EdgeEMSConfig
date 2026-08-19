@@ -645,7 +645,7 @@ watch(
 
         .config-section__tabs {
           width: 100%;
-
+          padding: 0 20px;
           // 确保 tab header 有相对定位，以便 Status 筛选器可以相对于它定位
           :deep(.el-tabs__header) {
             position: relative;

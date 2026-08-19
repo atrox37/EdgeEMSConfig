@@ -1,5 +1,6 @@
 import type { Edge, Node } from '@vue-flow/core'
 import type { ModelFlowData, ModelInstanceBinding } from '@/types/visualModeling'
+import { createPersistedTopologyFlow } from '@/utils/topologyNormalize'
 
 type PersistenceOptions = {
   toObject: () => { nodes?: Node[]; edges?: Edge[] }
@@ -31,11 +32,11 @@ export function useTopologyPersistence(options: PersistenceOptions) {
     if (objectEdges.length > flowEdges.length) {
       flowEdges = JSON.parse(JSON.stringify(objectEdges)) as Edge[]
     }
-    return {
+    return createPersistedTopologyFlow({
       nodes: flowNodes as ModelFlowData['nodes'],
       edges: flowEdges as ModelFlowData['edges'],
       fixedBindings: options.fixedBindings(),
-    }
+    })
   }
 
   async function persistFlow() {

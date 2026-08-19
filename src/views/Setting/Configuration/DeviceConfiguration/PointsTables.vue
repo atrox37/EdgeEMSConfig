@@ -10,6 +10,7 @@
           <el-dropdown
             v-if="!isEditing"
             trigger="click"
+            :show-arrow="false"
             class="points-tables-page__view-mode-dropdown"
             @command="handleDropdownCommand"
           >
@@ -726,6 +727,7 @@ watch(
 
     .config-section__tabs {
       width: 100%;
+      padding: 0 20px;
       flex: 1;
       display: flex;
       flex-direction: column;

@@ -15,7 +15,7 @@
       />
     </div>
     <div class="fixed-binding-card__content">
-      <div class="fixed-binding-card__title">{{ label }}</div>
+      <div class="fixed-binding-card__title" :title="label">{{ label }}</div>
       <div class="fixed-binding-card__binding">
         <img
           v-if="readonly"
@@ -24,12 +24,19 @@
           alt=""
           aria-hidden="true"
         />
-        <span v-if="readonly" class="fixed-binding-card__value">{{
+        <span
+          v-if="readonly"
+          class="fixed-binding-card__value"
+          :title="modelValue?.instanceName || 'Not Bound'"
+        >{{
           modelValue?.instanceName || "Not Bound"
         }}</span>
         <template v-else>
           <span class="fixed-binding-card__binding-label">Bound to</span>
-          <span class="fixed-binding-card__selected-value">{{
+          <span
+            class="fixed-binding-card__selected-value"
+            :title="modelValue?.instanceName || 'Not Bound'"
+          >{{
             modelValue?.instanceName || "Not Bound"
           }}</span>
         </template>
@@ -66,6 +73,7 @@
                 :class="{
                   'is-current': item.instance_id === modelValue?.instanceId,
                 }"
+                :title="item.instance_name"
               >
                 {{ item.instance_name }}
               </el-dropdown-item>

@@ -48,6 +48,8 @@
       :nodes-deletable="!isViewMode"
       :edges-deletable="!isViewMode"
       :delete-key-code="null"
+      :selection-key-code="null"
+      :multi-selection-key-code="null"
       :elements-selectable="!isViewMode"
       :edges-focusable="!isViewMode"
       :elevate-edges-on-select="!isViewMode"

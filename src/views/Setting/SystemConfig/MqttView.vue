@@ -36,6 +36,13 @@
               <el-form-item label="SSL Enabled:" prop="ssl_enabled" required>
                 <el-switch v-model="form.ssl_enabled" :disabled="isBusy" />
               </el-form-item>
+              <el-form-item label="Username:" prop="username">
+                <el-input v-model="form.username" :disabled="isBusy" placeholder="MQTT username" />
+              </el-form-item>
+              <el-form-item label="Password:" prop="password">
+                <el-input v-model="form.password" :disabled="isBusy" type="password" show-password
+                  placeholder="MQTT password" />
+              </el-form-item>
             </LightCollapseCard>
 
             <!-- ② Device Info -->
@@ -182,7 +189,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { CircleCheckFilled, Delete, InfoFilled, Loading, Upload, WarningFilled } from '@element-plus/icons-vue'
 import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
@@ -249,6 +255,8 @@ const form = reactive<MqttFormModel>({
   alarmsrv_url: '',
   modsrv_url: '',
   broker_host: '',
+  username: '',
+  password: '',
   broker_keepalive_secs: 60,
   broker_port: 1883,
   client_id: '',
@@ -350,6 +358,8 @@ const sectionFieldMap: Record<string, () => void> = {
   broker_port: () => { openBasic.value = true },
   broker_keepalive_secs: () => { openBasic.value = true },
   ssl_enabled: () => { openBasic.value = true },
+  username: () => { openBasic.value = true },
+  password: () => { openBasic.value = true },
   client_id: () => { openDevice.value = true },
   device_sn: () => { openDevice.value = true },
   product_sn: () => { openDevice.value = true },
@@ -369,6 +379,8 @@ const buildPayload = (): MqttConfigPayload => ({
   broker_host: form.broker_host.trim(),
   broker_keepalive_secs: Number(form.broker_keepalive_secs),
   broker_port: Number(form.broker_port),
+  username: form.username.trim(),
+  password: form.password,
   client_id: form.client_id.trim(),
   device_sn: form.device_sn.trim(),
   exclude_patterns: splitPatterns(form.exclude_patterns_text),
@@ -392,6 +404,8 @@ const loadMqttConfig = async () => {
     form.alarmsrv_url = String(payload.alarmsrv_url || '')
     form.modsrv_url = String(payload.modsrv_url || '')
     form.broker_host = String(payload.broker_host || '')
+    form.username = String(payload.username || '')
+    form.password = String(payload.password || '')
     form.broker_keepalive_secs = Number(payload.broker_keepalive_secs ?? 60)
     form.broker_port = Number(payload.broker_port ?? 1883)
     form.client_id = String(payload.client_id || '')

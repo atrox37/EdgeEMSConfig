@@ -9,10 +9,13 @@
         <AppIcon :name="expanded ? 'i-tabler-chevron-down' : 'i-tabler-chevron-right'" />
       </button>
       <div class="topology-card__header-copy">
-        <div class="topology-card__title">{{ label }}</div>
+        <div class="topology-card__title" :title="label">{{ label }}</div>
         <div v-if="showBinding" class="topology-card__binding">
           <img class="topology-card__binding-icon" :src="topologyLinkIcon" alt="" aria-hidden="true" />
-          <span>{{ bindingLabel }}</span>
+          <span
+            class="topology-card__binding-name"
+            :title="bindingDisplayValue || bindingLabel"
+          >{{ bindingLabel }}</span>
         </div>
       </div>
     </header>
@@ -20,7 +23,7 @@
     <div class="topology-card__preview">
       <div class="topology-card__type-badge">{{ typeLabel }}</div>
       <img v-if="imageUrl" :src="imageUrl" :alt="label" />
-      <div class="topology-card__caption">{{ caption || label }}</div>
+      <div class="topology-card__caption" :title="caption || label">{{ caption || label }}</div>
     </div>
 
     <el-form v-if="expanded" :model="draft" label-position="left" label-width="88"
@@ -34,7 +37,12 @@
           :readonly="viewMode || !editing" />
       </el-form-item>
       <el-form-item v-if="allowBinding" label="Bind Instance">
-        <el-input v-if="viewMode || !editing" :model-value="bindingDisplayValue" readonly />
+        <el-input
+          v-if="viewMode || !editing"
+          :model-value="bindingDisplayValue"
+          :title="bindingDisplayValue"
+          readonly
+        />
         <el-select v-else v-model="draft.instanceId" clearable placeholder="">
           <el-option v-for="item in availableInstances" :key="item.instance_id" :label="item.instance_name"
             :value="item.instance_id" />
@@ -208,6 +216,14 @@ defineEmits<{
   flex: 0 0 15px;
 }
 
+.topology-card__binding-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .topology-card__preview {
   position: relative;
   display: flex;
@@ -270,6 +286,9 @@ defineEmits<{
   color: #000000;
   font-size: 14px;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topology-card--composite>.topology-card__preview>.topology-card__caption {
