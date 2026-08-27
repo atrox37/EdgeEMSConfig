@@ -184,6 +184,10 @@ defineEmits<{
   background: #ffffff;
   color: #000000;
   cursor: pointer;
+  &:hover,
+  &:active {
+    border: 1px solid #B3CEFA;
+  }
 }
 
 .topology-card__header-copy {

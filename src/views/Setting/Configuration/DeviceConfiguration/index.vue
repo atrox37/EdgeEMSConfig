@@ -98,7 +98,6 @@
           align="left"
           row-key="instance_id"
         >
-          <el-table-column prop="instance_id" label="ID" width="100" />
           <el-table-column
             prop="instance_name"
             label="Instance Name"

@@ -65,11 +65,13 @@ export const useUserStore = defineStore(
         }
       } catch (error: any) {
         console.error('Login failed:', error)
-        return Promise.reject({
+        // 返回失败对象而非 reject，让调用方用 if (!loginResult.success) 统一处理，
+        // 避免 await userStore.login(...) 未捕获时变成 Uncaught (in promise)。
+        return {
           success: false,
           message: error.message || 'Login failed',
           statusCode: error?.response?.status,
-        })
+        }
       }
     }
 

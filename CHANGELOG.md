@@ -19,21 +19,27 @@ Each version should follow this structure:
 - Improvement description
 ```
 
-## [Unreleased] - 2026-05-12
+## [1.2.0] - 2026-08-27
 
 ### Added
 - Implemented the visual modeling module foundation, including model list management, a canvas-based editor, custom node types, edge editing, undo/redo, auto layout, fullscreen mode, and JSON/PNG import/export support.
 - Added persisted visual modeling store/types and supporting dependencies for node resizing and canvas image export to prepare the new modeling workflow.
 - Added instance sync API support and history service configuration API/types to extend device and storage related backend integration.
+- Added rule trigger configuration, execution history, and visual execution-flow details for easier troubleshooting.
+- Added role-based page and operation permission checks.
 
 ### Fixed
 - Added loading states to channel, device, publish, execute, and user operation dialogs to reduce duplicate submissions during asynchronous actions.
 - Corrected MQTT status wording from "Prodict SN" to "Product SN" and aligned several submit/apply flows with safer request lifecycle handling.
+- Improved request and login error handling so failure messages remain readable in exceptional cases.
+- Added validation for custom components and bindings in topology containers before persistence.
 
 ### Optimized
 - Refactored MQTT and storage configuration pages into collapsible sections with clearer left-right layouts, sticky status panels, and improved action placement.
 - Extended system configuration forms with `modsrv_url`, history service settings, and subscribe pattern interval controls for more complete service-side configuration.
 - Enhanced shared UI components such as `IconButton` and `LightCollapseCard` to support loading feedback and footer actions for more consistent interaction behavior.
+- Upgraded Element Plus and unified the light-theme styling for tables, forms, dialogs, pagination, navigation, and layout components.
+- Hidden the ID column in channel, model, and rule main lists to reduce redundant information.
 
 ## [0.2.0] - 2026-04-20
 

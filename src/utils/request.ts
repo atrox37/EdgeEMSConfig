@@ -563,7 +563,15 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
       throw error
     }
 
-    const wrappedError: any = new Error(error?.message || 'Network request failed')
+    // 兜底：某些 Tauri command 报错（如 Command not found）会把信息放在
+    // error.message 等非标准字段，这里尽量提取出可读文案，避免抛出无意义的
+    // "undefined" 或未捕获的 promise。
+    const rawMessage =
+      error?.message ||
+      error?.toString?.() ||
+      (typeof error === 'string' ? error : '') ||
+      'Network request failed'
+    const wrappedError: any = new Error(rawMessage)
     wrappedError.config = config
     wrappedError.request = { responseType: config.responseType }
     throw wrappedError

@@ -52,12 +52,6 @@
           row-key="id"
         >
           <el-table-column
-            prop="id"
-            label="ID"
-            show-overflow-tooltip
-            min-width="100"
-          />
-          <el-table-column
             prop="name"
             label="Name"
             min-width="140"

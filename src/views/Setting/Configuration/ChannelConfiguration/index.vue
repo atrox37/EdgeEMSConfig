@@ -194,7 +194,6 @@
           :expand-row-keys="expandedRows.map(String)"
           row-key="id"
         >
-          <el-table-column prop="id" label="ID" min-width="80" />
           <el-table-column
             prop="name"
             label="Name"
