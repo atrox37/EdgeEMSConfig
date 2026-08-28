@@ -11,6 +11,8 @@ jobs:
     environment: prod
     runs-on: ${{ matrix.os }}
     strategy:
+      # Keep independent platform builds running to expose every failure.
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest, ubuntu-22.04-arm]
         include:
@@ -24,12 +26,12 @@ jobs:
             bundle_subdir: appimage
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -54,7 +56,7 @@ jobs:
             xdg-utils
 
       - name: Install frontend deps
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Update version from tag
         shell: bash
@@ -129,12 +131,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
