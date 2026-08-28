@@ -126,6 +126,16 @@ jobs:
           name: ${{ matrix.os }}-bundle
           path: src-tauri/target/release/bundle/${{ matrix.bundle_subdir }}/
 
+      - name: Upload macOS updater artifact
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-latest-updater
+          path: |
+            src-tauri/target/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/release/bundle/macos/*.sig
+          if-no-files-found: error
+
   publish:
     name: Publish to S3
     environment: prod
@@ -191,6 +201,15 @@ jobs:
             echo "✓ macOS artifacts copied"
           else
             echo "⚠ macOS artifacts not found"
+          fi
+
+          # macOS updater bundle (.app.tar.gz and its signature)
+          if [ -d "artifacts/macos-latest-updater" ]; then
+            mkdir -p dist/macos
+            cp -R artifacts/macos-latest-updater/* dist/macos/
+            echo "✓ macOS updater artifacts copied"
+          else
+            echo "⚠ macOS updater artifacts not found"
           fi
           
           echo ""
