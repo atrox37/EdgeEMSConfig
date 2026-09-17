@@ -16,15 +16,6 @@ export interface UserInfo {
   role: UserRole
 }
 
-// 用户管理表格用户信息接口（根据后端结构调整）
-export interface UserManagementInfo {
-  id: number
-  username: string
-  is_active: boolean
-  last_login: string
-  created_at: string
-  role: UserRole
-}
 //用户新增
 export interface UserAddParams {
   username: string
