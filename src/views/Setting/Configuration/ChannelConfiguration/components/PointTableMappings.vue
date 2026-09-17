@@ -241,7 +241,6 @@ const {
   getFieldError: getMappingFieldError,
   refreshFieldErrorsForRow: refreshMappingFieldErrorsForRow,
   refreshFieldErrorsForList: refreshMappingFieldErrorsForList,
-  validateAndSetField: validateAndSetMappingField,
 } = useFieldErrors<PointInfo>({
   listRef: editPoints,
   validateField: validateMappingFieldOnly,

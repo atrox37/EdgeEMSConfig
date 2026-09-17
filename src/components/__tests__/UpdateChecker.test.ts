@@ -172,6 +172,12 @@ describe('UpdateChecker', () => {
     await Promise.resolve()
 
     expect(mocks.installUpdateMock).toHaveBeenCalledTimes(1)
-    expect((dialog.vm.$.exposed as { dialogVisible: boolean }).dialogVisible).toBe(false)
+    // 组件成功后延迟 800ms 关闭对话框（用于展示成功状态），轮询等待其关闭
+    await vi.waitFor(
+      () => {
+        expect((dialog.vm.$.exposed as { dialogVisible: boolean }).dialogVisible).toBe(false)
+      },
+      { timeout: 2000 },
+    )
   })
 })

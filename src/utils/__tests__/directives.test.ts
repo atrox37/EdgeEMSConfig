@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { permissionDirective } from '../directives'
 
+// 指令通过 userStore.userInfo?.role?.name_en 读取角色，mock 需与之对齐
 vi.mock('@/stores/user', () => ({
   useUserStore: vi.fn(() => ({
-    roles: ['Admin'],
+    userInfo: { role: { name_en: 'Admin' } },
   })),
 }))
 

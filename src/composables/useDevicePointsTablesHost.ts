@@ -124,8 +124,6 @@ export function useDevicePointsTablesHost(options: UseDevicePointsTablesHostOpti
     },
   )
 
-  const getCurrentPointsRef = () => deviceTabsRef.value?.getPointsTable(activeTab.value)
-
   const getHasChanges = (): boolean =>
     !!(
       deviceTabsRef.value?.getMeasurementRouting()?.hasChanges?.() ||

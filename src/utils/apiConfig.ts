@@ -62,7 +62,7 @@ export async function saveApiConfig(config: ApiConfig): Promise<void> {
  */
 export async function getApiConfig(): Promise<ApiConfig | null> {
   try {
-    const result = await getItem<ApiConfig>(API_CONFIG_KEY, { asJson: true })
+    const result = await getItem<ApiConfig>(API_CONFIG_KEY)
     // 确保返回的是 ApiConfig 类型
     if (result && typeof result === 'object' && 'ipAddress' in result) {
       return result as ApiConfig

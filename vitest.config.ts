@@ -1,9 +1,18 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig, configDefaults } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
+import AutoImport from 'unplugin-auto-import/vite'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    // 与 vite.config.ts 保持一致：源码大量使用 auto-import（ref/computed 等），
+    // 测试环境不启用的话，直接挂载组件/调用 store 会报 "ref is not defined"
+    AutoImport({
+      imports: ['vue', 'vue-router', 'pinia'],
+      dts: false,
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

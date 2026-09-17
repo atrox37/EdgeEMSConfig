@@ -17,6 +17,8 @@ vi.mock('crypto-js/md5', () => ({
 describe('User API', () => {
   it('should login user', async () => {
     const mockData = {
+      code: 200,
+      message: 'success',
       success: true,
       data: { access_token: 'test-token', refresh_token: 'refresh-token' },
     }
@@ -33,7 +35,7 @@ describe('User API', () => {
   })
 
   it('should logout user', async () => {
-    const mockData = { success: true }
+    const mockData = { code: 200, message: 'success', success: true, data: null }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.post).mockResolvedValue(mockData)
 
@@ -45,7 +47,12 @@ describe('User API', () => {
   })
 
   it('should get user info', async () => {
-    const mockData = { success: true, data: { id: 1, username: 'test', email: 'test@example.com' } }
+    const mockData = {
+      code: 200,
+      message: 'success',
+      success: true,
+      data: { id: 1, username: 'test', email: 'test@example.com' },
+    }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockData)
 
@@ -55,22 +62,33 @@ describe('User API', () => {
   })
 
   it('should add user', async () => {
-    const mockData = { success: true, data: { id: 1, username: 'newuser' } }
+    const mockData = {
+      code: 200,
+      message: 'success',
+      success: true,
+      data: { id: 1, username: 'newuser' },
+    }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.post).mockResolvedValue(mockData)
 
-    const userData = { username: 'newuser', password: 'password', email: 'new@example.com' }
+    // 修复：入参需符合 UserAddParams 类型结构（username/password?/role_id）
+    const userData = { username: 'newuser', password: 'password', role_id: 1 }
     const result = await userApi.addUser(userData)
     expect(result).toEqual(mockData)
     expect(Request.post).toHaveBeenCalledWith('/api/v1/auth/register', {
       username: 'newuser',
       password: expect.any(String),
-      email: 'new@example.com',
+      role_id: 1,
     })
   })
 
   it('should update user', async () => {
-    const mockData = { success: true, data: { id: 1, username: 'updated' } }
+    const mockData = {
+      code: 200,
+      message: 'success',
+      success: true,
+      data: { id: 1, username: 'updated' },
+    }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.put).mockResolvedValue(mockData)
 
@@ -81,7 +99,7 @@ describe('User API', () => {
   })
 
   it('should delete user', async () => {
-    const mockData = { success: true }
+    const mockData = { code: 200, message: 'success', success: true, data: null }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.delete).mockResolvedValue(mockData)
 

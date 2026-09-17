@@ -7,6 +7,7 @@ import {
   enableRule,
   disableRule,
 } from '../alarm'
+import type { RuleFormModel } from '@/types/ruleManagement'
 
 vi.mock('@/utils/request', () => ({
   Request: {
@@ -45,7 +46,18 @@ describe('Alarm API', () => {
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.post).mockResolvedValue(mockData)
 
-    const ruleData = { name: 'new rule', condition: 'test' }
+    // 修复：入参需符合 RuleFormModel 类型结构
+    const ruleData: RuleFormModel = {
+      rule_name: 'new rule',
+      service_type: 'modbus',
+      channel_id: 1,
+      point_id: 1,
+      data_type: 'T',
+      warning_level: 1,
+      operator: '>',
+      value: 100,
+      enabled: true,
+    }
     const result = await createRule(ruleData)
     expect(result).toEqual(mockData)
     expect(Request.post).toHaveBeenCalledWith('/alarmApi/rules', ruleData)

@@ -70,7 +70,7 @@ function positiveInteger(value: unknown): number | null {
 }
 
 export function normalizeTopologyFixedBindings(flow: ModelFlowData): ModelFlowData {
-  const bindings = isRecord(flow.fixedBindings) ? flow.fixedBindings : {}
+  const bindings: Record<string, unknown> = isRecord(flow.fixedBindings) ? flow.fixedBindings : {}
   return {
     ...flow,
     fixedBindings: {

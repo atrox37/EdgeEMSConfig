@@ -101,7 +101,6 @@ const deviceTabsRef = ref<InstanceType<typeof DevicePointsTablesTabs>>()
 
 const {
   viewMode,
-  viewModeSwitch,
   editFilters,
   statusCheckboxValue,
   invalidChecked,

@@ -132,8 +132,8 @@ describe('useChannelPointsTablesHost', () => {
       signal: [],
       control: [],
       adjustment: [],
-    }
-    result.originalPointsData.value = samplePointsData as typeof result.originalPointsData.value
+    } as unknown as typeof result.pointsData.value
+    result.originalPointsData.value = samplePointsData as unknown as typeof result.originalPointsData.value
     result.isEditing.value = true
 
     result.performDiscardEdit()
@@ -151,10 +151,10 @@ describe('useChannelPointsTablesHost', () => {
       signal: [],
       control: [],
       adjustment: [],
-    }
+    } as unknown as typeof result.pointsData.value
 
     result.pointsData.value = edited
-    result.originalPointsData.value = samplePointsData as typeof result.originalPointsData.value
+    result.originalPointsData.value = samplePointsData as unknown as typeof result.originalPointsData.value
     result.isEditing.value = true
 
     result.performDiscardEdit()

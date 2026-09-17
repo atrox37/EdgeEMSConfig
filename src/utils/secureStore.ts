@@ -67,7 +67,7 @@ export async function setEncryptedItem(key: string, value: unknown, opts?: { asJ
 }
 
 // 通用：读取
-export async function getItem<T = any>(key: string, opts?: { asJson?: boolean }): Promise<T | string | null> {
+export async function getItem<T = any>(key: string): Promise<T | string | null> {
   const store = await getStore()
   const data = await store.get<T | string | null>(key)
   if (data === undefined || data === null) return null

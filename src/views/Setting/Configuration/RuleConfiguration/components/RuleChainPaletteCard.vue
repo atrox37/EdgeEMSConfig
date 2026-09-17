@@ -124,7 +124,7 @@ const tooltipVisible = ref(false)
 
 const tooltipSuppressed = ref(false)
 
-let suppressTimer: ReturnType<typeof window.setTimeout> | undefined
+let suppressTimer: number | undefined
 
 
 

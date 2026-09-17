@@ -90,7 +90,7 @@ import DevicePointsTablesTabs from './DevicePointsTablesTabs.vue'
 import { useGlobalStore } from '@/stores/global'
 import { useDevicePointsTablesHost } from '@/composables/useDevicePointsTablesHost'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     width?: string
     dialogClass?: string

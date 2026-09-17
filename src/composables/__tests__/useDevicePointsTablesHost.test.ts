@@ -146,7 +146,7 @@ describe('useDevicePointsTablesHost', () => {
         signal_name: 'edited',
         routing: { channel_id: 1, channel_point_id: 1, enabled: true },
       },
-    ] as typeof result.measurementRows.value
+    ] as unknown as typeof result.measurementRows.value
     result.isEditing.value = true
 
     result.performDiscardEdit()

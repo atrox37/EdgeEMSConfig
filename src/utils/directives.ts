@@ -64,24 +64,6 @@ function getObserveMode(binding: DirectiveBinding<FitColumnsBinding>): 'data' | 
   return val && (val.observe === 'layout' || val.observe === 'data') ? val.observe : 'data'
 }
 
-function remToPx(value: string): number | null {
-  // 兼容处理：如果还有遗留的 rem 值，转换为 px（基准：100px = 1rem）
-  if (!value) return null
-  const trimmed = value.trim()
-  if (trimmed.endsWith('rem')) {
-    const n = parseFloat(trimmed.replace('rem', ''))
-    if (Number.isFinite(n)) {
-      return Math.round(n * 100) // 100px = 1rem
-    }
-  }
-  if (trimmed.endsWith('px')) {
-    const n = parseFloat(trimmed.replace('px', ''))
-    return Number.isFinite(n) ? Math.round(n) : null
-  }
-  const n = parseFloat(trimmed)
-  return Number.isFinite(n) ? Math.round(n) : null
-}
-
 function pxToString(px: number): string {
   // 直接返回 px 字符串
   return `${px}px`
@@ -340,6 +322,14 @@ const debounceDirective = {
         timer = setTimeout(() => fn(...args), delay)
       }
     }
+
+    // 与 throttleDirective 对齐：绑定并记录 handler，卸载时移除
+    ;(el as any).__actionHandler__ = handler
+    el.addEventListener(event, handler)
+  },
+
+  beforeUnmount(el: HTMLElement, binding: DirectiveBinding<any>) {
+    el.removeEventListener(binding.arg || 'click', (el as any).__actionHandler__)
   },
 }
 export { throttleDirective, debounceDirective, fitColumnsDirective, permissionDirective }

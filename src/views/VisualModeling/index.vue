@@ -42,7 +42,7 @@
         :fit-view="fitView"
         :zoom-in="zoomIn"
         :zoom-out="zoomOut"
-        :connection-line-options="topologyConnectionHint.connectionLineOptions"
+        :connection-line-options="connectionLineOptions"
         @dragover="onDragOver"
         @dragleave="onDragLeave"
         @drop="onDrop"
@@ -78,7 +78,7 @@ import ModelingCanvas from './components/ModelingCanvas.vue'
 import { useFlowHistory } from '@/composables/flow/useFlowHistory'
 import { useFlowViewport } from '@/composables/flow/useFlowViewport'
 import { ref, markRaw, computed, onMounted, onUnmounted, nextTick, provide, defineComponent, h, type Ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import {
   useVueFlow,
   type Node as FlowNode,
@@ -258,6 +258,9 @@ const topologyConnectionHint = useTopologyConnectionHint({
   getFlowEdges,
 })
 provide(TOPOLOGY_CONNECTION_HINT_KEY, topologyConnectionHint)
+
+// composable 返回的是普通对象，嵌套的 computed 在模板中不会自动解包，这里提升为顶层 computed
+const connectionLineOptions = computed(() => topologyConnectionHint.connectionLineOptions.value)
 
 const connections = useVisualModelingConnections({
   isViewMode,

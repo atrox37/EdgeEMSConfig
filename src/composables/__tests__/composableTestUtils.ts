@@ -1,6 +1,6 @@
 import { effectScope, type EffectScope } from 'vue'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h, type Component } from 'vue'
+import { defineComponent, h } from 'vue'
 
 export function withComposableScope<T>(fn: () => T): T {
   const scope = effectScope(true)

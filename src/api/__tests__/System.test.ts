@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+﻿import { describe, it, expect, vi } from 'vitest'
 import {
   getMqttConfig,
   updateMqttConfig,
@@ -16,7 +16,7 @@ vi.mock('@/utils/request', () => ({
 
 describe('System API', () => {
   it('should get MQTT config', async () => {
-    const mockData = { mqtt_connection: { broker: {} } }
+    const mockData = { code: 200, message: 'success', data: { mqtt_connection: { broker: {} } }, success: true }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockData)
 
@@ -26,7 +26,7 @@ describe('System API', () => {
   })
 
   it('should update MQTT config', async () => {
-    const mockData = { success: true }
+    const mockData = { code: 200, message: 'success', data: null, success: true }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.post).mockResolvedValue(mockData)
 
@@ -37,7 +37,7 @@ describe('System API', () => {
   })
 
   it('should disconnect MQTT', async () => {
-    const mockData = { status: 'disconnected' }
+    const mockData = { code: 200, message: 'success', data: { status: 'disconnected' }, success: true }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.post).mockResolvedValue(mockData)
 
@@ -47,7 +47,7 @@ describe('System API', () => {
   })
 
   it('should reconnect MQTT', async () => {
-    const mockData = { status: 'connected' }
+    const mockData = { code: 200, message: 'success', data: { status: 'connected' }, success: true }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.post).mockResolvedValue(mockData)
 
@@ -57,7 +57,7 @@ describe('System API', () => {
   })
 
   it('should get MQTT status', async () => {
-    const mockData = { connected: true }
+    const mockData = { code: 200, message: 'success', data: { connected: true }, success: true }
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockData)
 
@@ -66,3 +66,4 @@ describe('System API', () => {
     expect(Request.get).toHaveBeenCalledWith('/netApi/mqtt/status')
   })
 })
+

@@ -11,7 +11,7 @@
     <el-checkbox-group
       v-model="statusCheckboxValue"
       class="status-checkbox-group"
-      @change="(val) => emit('statusCheckboxChange', val as string[])"
+      @change="(val: unknown) => emit('statusCheckboxChange', val as string[])"
     >
       <el-checkbox v-if="viewMode === 'points'" label="modified">modified</el-checkbox>
       <el-checkbox v-if="viewMode === 'points'" label="added">added</el-checkbox>

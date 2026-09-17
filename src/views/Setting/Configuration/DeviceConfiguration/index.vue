@@ -222,8 +222,6 @@ const {
 filters.product_name = "";
 
 const levelSelectRef = ref<HTMLElement | null>(null);
-const filterTriggerRef = ref<HTMLElement | null>(null);
-const showFilterPopover = ref(false);
 const router = useRouter();
 const ruleManagementRef = ref<HTMLElement | null>(null);
 // 筛选标签管
@@ -297,22 +295,6 @@ const handleSyncInstances = async () => {
   }
 };
 
-// 移除筛选标签
-const removeFilterTag = (key: string) => {
-  if (key === "product_name") {
-    filters.product_name = "";
-  }
-  updateFilterTags();
-  fetchTableData(true);
-};
-
-// 应用筛选
-const applyFilters = () => {
-  updateFilterTags();
-  showFilterPopover.value = false;
-  fetchTableData(true);
-};
-
 // 监听筛选变
 watch(
   () => filters.product_name,
@@ -336,14 +318,6 @@ onMounted(() => getProductOptions());
 const instanceDetailDialogRef = ref();
 // const MappingsDialogRef = ref()
 
-// 配置弹窗相关数据
-const configDialogVisible = ref(false);
-const currentConfigRow = ref<any>(null);
-const currentConfigData = ref({
-  channelName: "",
-  channelType: "",
-  point: "",
-});
 
 // 添加规则
 const handleAddUser = () => {

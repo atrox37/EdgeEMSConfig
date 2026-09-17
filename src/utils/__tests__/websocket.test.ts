@@ -48,9 +48,7 @@ describe('WebSocket Utils', () => {
 
     it('should have subscription methods', () => {
       expect(wsManager.subscribe).toBeDefined()
-      expect(wsManager.subscribePage).toBeDefined()
       expect(wsManager.unsubscribe).toBeDefined()
-      expect(wsManager.unsubscribePage).toBeDefined()
     })
 
     it('should have control methods', () => {

@@ -33,14 +33,13 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import { publishPointValue } from '@/api/channelsManagement'
-import { ChannelIdKey, ChannelNameKey } from '@/utils/key'
+import { ChannelIdKey } from '@/utils/key'
 interface OpenPayload {
   pointId: number
   dataType: string
   category: 'C' | 'A' | 'T' | 'S'
   signalName?: string
 }
-const channelName = inject(ChannelNameKey)
 const channelId = inject(ChannelIdKey)
 const dialogRef = ref()
 const formRef = ref()

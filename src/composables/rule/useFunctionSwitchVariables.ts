@@ -1,4 +1,4 @@
-import { ref, computed, type ComputedRef, type Ref } from 'vue'
+import { ref, computed, type Ref } from 'vue'
 import { getInstancePoints, getAllInstances, getInstancesByIds } from '@/api/devicesManagement'
 
 export interface VariableOption {

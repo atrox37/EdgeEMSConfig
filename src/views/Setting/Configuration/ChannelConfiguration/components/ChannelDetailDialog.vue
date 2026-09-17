@@ -313,7 +313,7 @@ interface Props {
   channelData?: ChannelDetail
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   channelData: () => ({
     id: 0,
     name: '',

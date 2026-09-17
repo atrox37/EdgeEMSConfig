@@ -2,8 +2,6 @@
 import { ref, watch } from 'vue'
 import type { RuleCard } from '@/types/ruleConfiguration'
 
-let id = 0
-
 // 运行状态常量（供监视/运行态可视化使用）
 export const ProcessStatus = {
   ERROR: 'error',
@@ -12,14 +10,6 @@ export const ProcessStatus = {
   FINISHED: 'finished',
   RUNNING: 'running',
 } as const
-
-/**
- * 生成唯一节点ID
- * @returns {string} - 返回唯一的节点ID字符串
- */
-function getId() {
-  return `dndnode_${id++}`
-}
 
 /**
  * 拖拽相关的全局响应式状态
@@ -198,16 +188,6 @@ export function useRunProcess({ graph: dagreGraph, cancelOnError = true }: any) 
     updateNode(nodeId, (node: any) => ({
       data: { ...(node?.data || {}), status },
     }))
-  }
-  async function until(condition: () => boolean) {
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (condition()) {
-          clearInterval(interval)
-          resolve(true)
-        }
-      }, 100)
-    })
   }
   async function runNode(nodeId: string, isStart = false) {
     if (executedNodes.has(nodeId)) return

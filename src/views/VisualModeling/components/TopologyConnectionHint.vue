@@ -1,23 +1,29 @@
 <template>
   <div
-    v-if="hint?.hintVisible"
+    v-if="hintVisible"
     class="topology-connection-hint nodrag nopan"
-    :style="hint.hintStyle"
+    :style="hintStyle"
   >
     <div
       class="topology-connection-hint__bubble"
-      :class="`topology-connection-hint__bubble--${hint.hintTone}`"
+      :class="`topology-connection-hint__bubble--${hintTone}`"
     >
-      {{ hint.hintMessage }}
+      {{ hintMessage }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
+import { computed, inject } from 'vue'
 import { TOPOLOGY_CONNECTION_HINT_KEY } from '../composables/useTopologyConnectionHint'
 
 const hint = inject(TOPOLOGY_CONNECTION_HINT_KEY, null)
+
+// inject 拿到的是普通对象，嵌套的 computed 需要显式解包（否则 v-if 恒真、插值显示对象）
+const hintVisible = computed(() => hint?.hintVisible.value ?? false)
+const hintMessage = computed(() => hint?.hintMessage.value ?? '')
+const hintTone = computed(() => hint?.hintTone.value ?? 'neutral')
+const hintStyle = computed(() => hint?.hintStyle.value ?? {})
 </script>
 
 <style lang="scss" scoped>

@@ -12,13 +12,6 @@ const DEFAULT_NODE_SIZE: Record<string, { width: number; height: number }> = {
 const INSTANCE_BADGE_EXTRA_HEIGHT = 34
 const COMPONENT_DETAILS_EXTRA_HEIGHT = 260
 
-const LAYOUT = {
-  stationY: 24,
-  rowGapY: 100,
-  topGapX: 36,
-  canvasCenterX: 520,
-}
-
 function parsePx(val: string | number | undefined, fallback: number): number {
   if (val === undefined || val === null) return fallback
   if (typeof val === 'number') return val

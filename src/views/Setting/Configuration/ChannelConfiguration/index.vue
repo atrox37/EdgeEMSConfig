@@ -448,11 +448,6 @@ const updateFilterTags = () => {
 // 防抖定时器
 let debounceTimer: any = null;
 
-// 处理筛选变化（移动端）
-const handleFilterChange = (_key?: string, _value?: any) => {
-  // 移动端筛选仅在点击 Apply 后生效
-};
-
 // 处理桌面端筛选变化（带防抖）
 const handleDesktopFilterChange = (_key?: string, _value?: any) => {
   updateFilterTags();

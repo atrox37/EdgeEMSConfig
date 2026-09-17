@@ -178,7 +178,7 @@ defineProps<{
   fitView: () => void
   zoomIn: () => void
   zoomOut: () => void
-  connectionLineOptions?: ConnectionLineOptions | null
+  connectionLineOptions?: ConnectionLineOptions
 }>()
 
 const canvasRef = ref<HTMLElement | null>(null)

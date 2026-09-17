@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useTableData } from '../useTableData'
+import type { ApiResponse } from '@/utils/request'
 
 vi.mock('@/utils/request', () => ({
   Request: {
@@ -20,6 +21,11 @@ vi.mock('element-plus', () => ({
     confirm: vi.fn(),
   },
 }))
+
+// 构造符合 ApiResponse 结构的 mock 响应
+function mockApiResponse<T>(data: T, success = true): ApiResponse<T> {
+  return { code: success ? 200 : 500, message: success ? 'ok' : 'error', data, success }
+}
 
 describe('useTableData', () => {
   const mockConfig = {
@@ -44,13 +50,10 @@ describe('useTableData', () => {
   })
 
   it('should fetch table data successfully', async () => {
-    const mockResponse = {
-      success: true,
-      data: {
-        list: [{ id: 1, name: 'test' }],
-        total: 1,
-      },
-    }
+    const mockResponse = mockApiResponse({
+      list: [{ id: 1, name: 'test' }],
+      total: 1,
+    })
 
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockResponse)
@@ -63,17 +66,15 @@ describe('useTableData', () => {
     expect(Request.get).toHaveBeenCalledWith('/test/list', expect.any(Object))
   })
 
-  it('should handle search data', async () => {
-    const mockResponse = {
-      success: true,
-      data: { list: [], total: 0 },
-    }
+  it('should fetch with keyword filter', async () => {
+    const mockResponse = mockApiResponse({ list: [], total: 0 })
 
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockResponse)
 
-    const { searchData } = useTableData(mockConfig)
-    await searchData('test keyword')
+    const { filters, fetchTableData } = useTableData(mockConfig)
+    filters.keyword = 'test keyword'
+    await fetchTableData(true)
 
     expect(Request.get).toHaveBeenCalledWith(
       '/test/list',
@@ -85,10 +86,7 @@ describe('useTableData', () => {
   })
 
   it('should handle pagination changes', async () => {
-    const mockResponse = {
-      success: true,
-      data: { list: [], total: 0 },
-    }
+    const mockResponse = mockApiResponse({ list: [], total: 0 })
 
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockResponse)
@@ -105,29 +103,30 @@ describe('useTableData', () => {
     )
   })
 
-  it('should handle delete row', async () => {
-    const mockResponse = { success: true }
+  it('should handle delete row after confirmation', async () => {
+    const mockResponse = mockApiResponse(null)
     const { Request } = await import('@/utils/request')
+    const { ElMessageBox } = await import('element-plus')
     vi.mocked(Request.delete).mockResolvedValue(mockResponse)
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as never)
 
     const { deleteRow } = useTableData(mockConfig)
-    const result = await deleteRow('1')
-
-    expect(result).toBe(true)
-    expect(Request.delete).toHaveBeenCalledWith('/test/delete/1')
+    await deleteRow('1')
+    // 删除发生在确认框 resolve 后的异步回调里，等待微任务队列清空
+    await vi.waitFor(() => {
+      expect(Request.delete).toHaveBeenCalledWith('/test/delete/1')
+    })
   })
 
-  it('should handle set filter', async () => {
-    const mockResponse = {
-      success: true,
-      data: { list: [], total: 0 },
-    }
+  it('should fetch with custom filter', async () => {
+    const mockResponse = mockApiResponse({ list: [], total: 0 })
 
     const { Request } = await import('@/utils/request')
     vi.mocked(Request.get).mockResolvedValue(mockResponse)
 
-    const { setFilter } = useTableData(mockConfig)
-    await setFilter('status', 'active')
+    const { filters, fetchTableData } = useTableData(mockConfig)
+    filters.status = 'active'
+    await fetchTableData(true)
 
     expect(Request.get).toHaveBeenCalledWith(
       '/test/list',

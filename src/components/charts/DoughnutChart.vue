@@ -147,7 +147,7 @@ function getGridConfig() {
   }
 }
 
-function getChartOption({ chartWidth = 600 }: { chartWidth?: number } = {}) {
+function getChartOption() {
   // 获取配置参数，使用默认值
   const title = props.title || ''
   const radius = props.radius || ['40%', '70%']
@@ -257,7 +257,7 @@ function getChartOption({ chartWidth = 600 }: { chartWidth?: number } = {}) {
       },
       animationType: 'scale',
       animationEasing: 'elasticOut',
-      animationDelay: (idx: number) => Math.random() * 200,
+      animationDelay: () => Math.random() * 200,
     },
   ]
 
@@ -276,9 +276,8 @@ const initChart = () => {
   if (chartInstance) {
     chartInstance.dispose()
   }
-  const chartWidth = chartRef.value.clientWidth || 600
   chartInstance = echarts.init(chartRef.value, { renderer: 'svg' })
-  chartInstance.setOption(getChartOption({ chartWidth }))
+  chartInstance.setOption(getChartOption())
 }
 
 // 监听侧边栏折叠状态变化
