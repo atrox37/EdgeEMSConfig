@@ -6,6 +6,11 @@ export type FlowSnapshot = {
   edges: Edge[]
 }
 
+type StoredSnapshot = {
+  nodes: unknown[]
+  edges: unknown[]
+}
+
 type UseFlowHistoryOptions = {
   enabled?: Ref<boolean> | (() => boolean)
   maxHistory?: number
@@ -13,7 +18,7 @@ type UseFlowHistoryOptions = {
   restore: (snapshot: FlowSnapshot) => Promise<void> | void
 }
 
-function cloneSnapshot(snapshot: FlowSnapshot): FlowSnapshot {
+function cloneSnapshot(snapshot: StoredSnapshot): FlowSnapshot {
   return JSON.parse(JSON.stringify(snapshot)) as FlowSnapshot
 }
 
@@ -23,7 +28,7 @@ function isEnabled(enabled?: UseFlowHistoryOptions['enabled']) {
 }
 
 export function useFlowHistory(options: UseFlowHistoryOptions) {
-  const snapshots = ref<FlowSnapshot[]>([])
+  const snapshots = ref<StoredSnapshot[]>([])
   const snapIdx = ref(-1)
   const isRestoring = ref(false)
   const maxHistory = options.maxHistory ?? 50
@@ -34,8 +39,13 @@ export function useFlowHistory(options: UseFlowHistoryOptions) {
   function saveSnapshot() {
     if (isRestoring.value || !isEnabled(options.enabled)) return
 
+    const captured = options.capture()
+    const cloned: StoredSnapshot = {
+      nodes: JSON.parse(JSON.stringify(captured.nodes)),
+      edges: JSON.parse(JSON.stringify(captured.edges)),
+    }
     const next = snapshots.value.slice(0, snapIdx.value + 1)
-    next.push(cloneSnapshot(options.capture()))
+    next.push(cloned)
     while (next.length > maxHistory) {
       next.shift()
     }

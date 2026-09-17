@@ -1,5 +1,5 @@
 import type { Edge as FlowEdge, Node as FlowNode } from '@vue-flow/core'
-import { instanceIds, normalizeNodeInstances } from '@/utils/visualModeling'
+import { getNodeInstanceId } from '@/utils/visualModeling'
 import type { ModelNodeData } from '@/types/visualModeling'
 
 export interface FlowSnapshot {
@@ -15,13 +15,6 @@ function roundNum(value: unknown): number {
 
 function normalizeNodeForCompare(node: FlowNode) {
   const data = node.data as ModelNodeData
-  const instances = normalizeNodeInstances(data).map((item) => ({
-    instanceId: item.instanceId,
-    instanceName: item.instanceName ?? '',
-    productName: item.productName ?? '',
-    channelIds: [...(item.channelIds ?? [])].sort((a, b) => a - b),
-  }))
-
   const style = node.style as Record<string, string | number> | undefined
   const styleWidth = style?.width != null ? String(style.width) : undefined
   const styleHeight = style?.height != null ? String(style.height) : undefined
@@ -43,7 +36,7 @@ function normalizeNodeForCompare(node: FlowNode) {
       isContainer: !!(data as { isContainer?: boolean }).isContainer,
       width: data.width ?? null,
       height: data.height ?? null,
-      instances,
+      instanceId: getNodeInstanceId(data),
     },
     style: {
       width: styleWidth ?? null,
@@ -100,5 +93,5 @@ export function isFlowTopologyEqual(a: FlowSnapshot, b: FlowSnapshot): boolean {
 }
 
 export function nodeHasBoundInstance(node: FlowNode): boolean {
-  return instanceIds(node.data as ModelNodeData).length > 0
+  return getNodeInstanceId(node.data as ModelNodeData) !== null
 }

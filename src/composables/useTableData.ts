@@ -106,7 +106,6 @@ export function useTableData<T = any>(config: TableConfig) {
         ...queryParams,
         ...filters,
       }
-      console.log('fetchTableData', resetPage, pagination)
       // 过滤空值参数
       const filteredParams: Record<string, any> = {}
       for (const key in params) {
@@ -128,7 +127,6 @@ export function useTableData<T = any>(config: TableConfig) {
       }
     } catch (error) {
       console.error('获取表格数据失败:', error)
-      // ElMessage.error('获取数据失败，请重试')
       tableData.value = []
       pagination.total = 0
       return false
@@ -313,8 +311,7 @@ export function useTableData<T = any>(config: TableConfig) {
       )
       return true
     } catch (error) {
-      // console.error('导出失败:', error)
-      // ElMessage.error('导出失败，请重试')
+      console.error('导出失败:', error)
       return false
     } finally {
       loading.value = false

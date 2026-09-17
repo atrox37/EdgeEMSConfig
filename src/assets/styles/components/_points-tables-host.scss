@@ -1,0 +1,334 @@
+// points-tables-host — Channel/Device PointsTables 页与 Dialog 共用布局
+// Block: points-tables-page / config-section (tabs host)
+// 编辑态筛选器样式见 PointsTablesStatusFilter.vue
+
+@use '@/assets/styles/variables' as *;
+@use '@/assets/styles/components/point-table' as pt;
+
+@mixin points-tables-page-shell() {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .points-tables-page__header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+  }
+
+  @include points-tables-header-content();
+
+  .points-tables-page__content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .points-tables-page__footer {
+    padding: $spacing-lg;
+    border-top: 1px solid $border-color-white-10;
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-md;
+  }
+}
+
+@mixin points-tables-header-content() {
+  .points-tables-page__header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .points-tables-page__header-title,
+  .points-tables-page__dropdown-trigger,
+  .points-tables-page__channel-name {
+    font-size: var(--vt-font-size-lg);
+    font-weight: var(--vt-font-weight-semibold);
+    color: var(--vt-text-primary);
+  }
+
+  .points-tables-page__dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    :deep(.el-icon--right) {
+      margin-left: $spacing-xs;
+      width: 1em;
+      height: 1em;
+    }
+  }
+
+  .points-tables-page__channel-name {
+    flex-shrink: 0;
+    margin-left: $spacing-xs;
+  }
+}
+
+@mixin points-tables-point-table-overrides() {
+  :deep(.point-table__table) {
+    td.el-table__cell {
+      padding: 9px 12px;
+    }
+  }
+
+  :deep(.point-table--editing .point-table__table) {
+    .cell {
+      height: 32px;
+      line-height: 32px;
+    }
+
+    .cell:has(.point-table__cell-edit) {
+      height: auto;
+      min-height: 32px;
+      max-height: none;
+      overflow: visible;
+      line-height: normal;
+    }
+  }
+}
+
+@mixin points-tables-page-tabs-host() {
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .config-section__tabs-wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .config-section__tabs {
+    width: 100%;
+    padding: 0 $spacing-lg;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    :deep(.el-tabs__header) {
+      position: relative;
+      flex-shrink: 0;
+      margin-bottom: 0;
+    }
+
+    :deep(.el-tabs__content) {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    :deep(.el-tab-pane) {
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      @include pt.point-table-host-layout();
+    }
+  }
+
+  @include points-tables-point-table-overrides();
+}
+
+@mixin points-tables-tabs-content-static() {
+  // 保留空 mixin，避免各页 scoped 引用报错；高度链已收口在 page-tabs-host
+}
+
+@mixin points-tables-dialog-footer() {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@mixin points-tables-dialog-top-actions() {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+@mixin points-tables-dialog-controls() {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-bottom: 10px;
+
+  .view-mode-switch {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    .switch-label {
+      font-size: $font-size-large;
+      color: #fff;
+    }
+  }
+
+  .edit-filters {
+    :deep(.el-checkbox-group) {
+      display: flex;
+      gap: $spacing-sm;
+    }
+
+    :deep(.el-checkbox) {
+      color: #fff;
+
+      .el-checkbox__label {
+        font-size: $font-size-extra-small;
+      }
+    }
+  }
+}
+
+@mixin points-tables-dialog-config-section(
+  $tabs-min-height: 500px,
+  $include-host-layout-on-wrapper: true
+) {
+  .config-section__header {
+    position: relative;
+
+    .config-section__controls {
+      @include points-tables-dialog-controls();
+    }
+
+    .config-section__tabs-wrapper {
+      position: relative;
+      min-height: $tabs-min-height;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+
+      @if $include-host-layout-on-wrapper {
+        @include pt.point-table-host-layout();
+      }
+
+      .config-section__tabs {
+        width: 100%;
+        padding: 0 $spacing-lg;
+
+        :deep(.el-tabs__header) {
+          position: relative;
+        }
+      }
+
+      @include points-tables-point-table-overrides();
+    }
+  }
+}
+
+@mixin points-tables-device-dialog-global($root-selector: '.dc-points-dialog--responsive') {
+  #{$root-selector}.el-dialog {
+    width: 92% !important;
+    max-width: 92vw;
+    height: 82vh;
+    max-height: 82vh;
+    margin-top: 4vh !important;
+    margin-bottom: 4vh !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .el-dialog__header,
+  #{$root-selector} .el-dialog__footer {
+    flex-shrink: 0;
+  }
+
+  #{$root-selector} .el-dialog__body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    height: calc(82vh - 132px);
+    padding-top: $spacing-sm;
+    padding-bottom: $spacing-sm;
+  }
+
+  #{$root-selector} .dc-points-dialog {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .rule-management__config-section {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .config-section__header {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .config-section__controls {
+    flex-shrink: 0;
+  }
+
+  #{$root-selector} .config-section__tabs-wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 0 !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .config-section__tabs {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .config-section__tabs .el-tabs__header {
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  #{$root-selector} .config-section__tabs .el-tabs__content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #{$root-selector} .config-section__tabs .el-tab-pane {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  @include pt.point-table-host-layout-global($root-selector, 'device', auto);
+  @include points-tables-point-table-overrides();
+}
+
+@mixin points-tables-device-dialog-scoped() {
+  .rule-management__config-section {
+    @include points-tables-dialog-config-section(
+      $tabs-min-height: 0,
+      $include-host-layout-on-wrapper: false
+    );
+
+    .config-section__tabs-wrapper {
+      position: relative;
+    }
+  }
+}

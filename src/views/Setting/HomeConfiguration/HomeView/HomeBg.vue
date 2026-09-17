@@ -873,7 +873,7 @@ const { pv, ess, load, diesel } = toRefs(props.data)
   right: 0px;
   width: 30px;
   height: 30px;
-  background-image: url('../../assets/icons/card-alarm.svg');
+  background-image: url('@/assets/icons/alarm-current.svg');
   background-size: 100% 100%;
   background-repeat: no-repeat;
   z-index: 999;

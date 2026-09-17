@@ -1,376 +1,211 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import type { ProductListItem } from '@/types/deviceConfiguration'
+import type { ModelFlowData } from '@/types/visualModeling'
+import { canPreviewNodePair, setModelFlowProductRules } from '@/utils/modelFlowRules'
 import {
   createPersistedTopologyFlow,
-  normalizeTopology,
-  stripKnownTopologyRuntimeFields,
-  validateTopology,
+  normalizeTopologyFixedBindings,
   validateTopologyForPersistence,
   validateTopologyImport,
 } from '@/utils/topologyNormalize'
-import type { ModelFlowData } from '@/types/visualModeling'
 
-function baseFlow(): ModelFlowData {
+const products = [
+  {
+    product_name: 'Station',
+    type: 'Station',
+    topology: null,
+  },
+  {
+    product_name: 'Battery',
+    type: 'ESS',
+    topology: { connections: [{ products: ['Meter'], min: 1, max: 1 }] },
+  },
+  {
+    product_name: 'Meter',
+    type: 'Meter',
+    topology: { connections: [{ products: ['Battery'], min: 0, max: null }] },
+  },
+] as ProductListItem[]
+
+const instances = [
+  { instance_id: 1, instance_name: 'station-01', product_name: 'Station' },
+  { instance_id: 10, instance_name: 'battery-01', product_name: 'Battery' },
+  { instance_id: 11, instance_name: 'meter-01', product_name: 'Meter' },
+]
+
+function canonicalFlow(): ModelFlowData {
   return {
     nodes: [
       {
-        id: 'station-1',
-        type: 'station',
-        position: { x: 0, y: 0 },
-        data: { label: 'Station', productName: 'Station', instances: [{ instanceId: 1, instanceName: 'station_01' }] },
-      },
-      {
-        id: 'ess-1',
-        type: 'group',
-        position: { x: 0, y: 100 },
-        data: { label: 'ESS', productName: 'ESS', isContainer: true, instances: [] },
-      },
-      {
-        id: 'battery-1',
+        id: 'battery',
         type: 'product',
-        position: { x: 10, y: 10 },
-        parentNode: 'ess-1',
-        data: { label: 'Battery', productName: 'Battery', instances: [{ instanceId: 2, instanceName: 'battery_01' }] },
+        position: { x: 10, y: 20 },
+        data: { label: 'Battery', description: '', productName: 'Battery', instanceId: 10 },
+      },
+      {
+        id: 'meter',
+        type: 'product',
+        position: { x: 300, y: 20 },
+        data: { label: 'Meter', description: '', productName: 'Meter', instanceId: 11 },
       },
     ],
     edges: [
-      { id: 'e1', source: 'station-1', target: 'ess-1' },
+      {
+        id: 'edge-battery-meter',
+        type: 'deletable-smoothstep',
+        source: 'battery',
+        target: 'meter',
+        sourceHandle: 'right',
+        targetHandle: 'left',
+      },
     ],
+    fixedBindings: { stationInstanceId: 1, environmentInstanceId: null },
   }
 }
 
-const persistenceProducts = [
-  { product_name: 'Station', parent_name: null },
-  { product_name: 'ESS', parent_name: null },
-  { product_name: 'Battery', parent_name: 'ESS', can_create_instance: true },
-]
-const persistenceInstances = [
-  { instance_id: 1, instance_name: 'station_01', product_name: 'Station' },
-  { instance_id: 2, instance_name: 'battery_01', product_name: 'Battery' },
-]
-const persistenceOptions = {
-  instances: persistenceInstances,
-  fixedBindings: { station: { instanceId: 1, instanceName: 'station_01', productName: 'Station' } },
+const validationOptions = {
+  instances,
   stationProductName: 'Station',
 }
 
-describe('validateTopology', () => {
-  it('reports error when Station node is missing', () => {
-    const flow = baseFlow()
-    flow.nodes = flow.nodes.filter((n) => n.type !== 'station')
-    const result = validateTopology(flow)
-    expect(result.canSave).toBe(false)
-    expect(result.errors.some((e) => e.code === 'missing_station')).toBe(true)
+describe('canonical topology persistence', () => {
+  beforeEach(() => setModelFlowProductRules(products))
+
+  it('accepts the flat single-instance schema', () => {
+    const result = validateTopologyForPersistence(canonicalFlow(), products, validationOptions)
+    expect(result.canSave).toBe(true)
   })
 
-  it('reports error for duplicate instance bindings', () => {
-    const flow = baseFlow()
-    flow.nodes.push({
-      id: 'battery-2',
-      type: 'product',
-      position: { x: 20, y: 20 },
-      data: { label: 'Battery 2', productName: 'Battery', instances: [{ instanceId: 2, instanceName: 'battery_01' }] },
-    })
-    const result = validateTopology(flow)
-    expect(result.errors.some((e) => e.code === 'duplicate_instance_binding')).toBe(true)
-  })
-
-  it('reports error when device is in wrong container', () => {
-    const flow = baseFlow()
-    flow.nodes.push({
-      id: 'gen-1',
-      type: 'group',
-      position: { x: 200, y: 100 },
-      data: { label: 'Generator', productName: 'Generator', isContainer: true, instances: [] },
-    })
-    const battery = flow.nodes.find((n) => n.id === 'battery-1')!
-    battery.parentNode = 'gen-1'
-    const result = validateTopology(flow)
-    expect(result.errors.some((e) => e.code === 'container_product_mismatch')).toBe(true)
-  })
-})
-
-describe('normalizeTopology', () => {
-  it('removes dangling edges and dedupes instance bindings', () => {
-    const flow = baseFlow()
-    flow.edges.push({ id: 'bad', source: 'missing', target: 'ess-1' })
-    flow.nodes.push({
-      id: 'battery-2',
-      type: 'product',
-      position: { x: 30, y: 30 },
-      data: { label: 'Battery 2', productName: 'Battery', instances: [{ instanceId: 2, instanceName: 'battery_01' }] },
-    })
-    const result = normalizeTopology(flow)
-    expect(result.flow.edges).toHaveLength(1)
-    expect(result.appliedFixes.length).toBeGreaterThan(0)
-    expect(result.errors.some((e) => e.code === 'duplicate_instance_binding')).toBe(false)
-  })
-
-  it('does not require a Station flow node when fixed bindings are used', () => {
-    const flow = baseFlow()
-    flow.nodes = flow.nodes.filter((node) => node.type !== 'station')
-    flow.edges = []
-    flow.fixedBindings = {
-      station: { instanceId: 1, instanceName: 'station_01', productName: 'Station' },
+  it('allows Station and Env bindings to be cleared', () => {
+    const flow: ModelFlowData = {
+      nodes: [],
+      edges: [],
+      fixedBindings: { stationInstanceId: null, environmentInstanceId: null },
     }
 
-    const result = normalizeTopology(flow, persistenceProducts, {
-      ...persistenceOptions,
-      requireStationNode: false,
-    })
+    const result = validateTopologyForPersistence(flow, products, validationOptions)
 
-    expect(result.errors.some((issue) => issue.code === 'missing_station')).toBe(false)
+    expect(result.canSave).toBe(true)
   })
 
+  it('normalizes flat fixed bindings', () => {
+    const flow: ModelFlowData = {
+      nodes: [],
+      edges: [],
+      fixedBindings: { stationInstanceId: 1, environmentInstanceId: 2 },
+    }
 
-describe('strict topology persistence validation', () => {
-  it('blocks an isolated node before saving', () => {
-    const flow = baseFlow()
-    flow.nodes.push({
-      id: 'orphan-1',
+    expect(normalizeTopologyFixedBindings(flow).fixedBindings).toEqual({
+      stationInstanceId: 1,
+      environmentInstanceId: 2,
+    })
+  })
+
+  it('persists only the approved node, edge, and fixed-binding fields', () => {
+    const runtimeFlow = canonicalFlow()
+    Object.assign(runtimeFlow.nodes[0], {
+      selected: true,
+      sourcePosition: 'right',
+      style: { width: '280px' },
+      parentNode: 'ignored',
+    })
+    Object.assign(runtimeFlow.nodes[0].data, {
+      imageUrl: '/battery.png',
+      topologyType: 'standalone',
+      instanceName: 'ignored',
+      channelIds: [1, 2],
+    })
+    Object.assign(runtimeFlow.edges[0], {
+      animated: true,
+      style: { stroke: '#fff' },
+      data: { edgeVariant: 'dataflow' },
+    })
+
+    const persisted = createPersistedTopologyFlow(runtimeFlow)
+
+    expect(persisted.nodes[0]).toEqual({
+      id: 'battery',
       type: 'product',
-      position: { x: 300, y: 0 },
-      data: { label: 'Orphan', productName: 'Orphan' },
+      position: { x: 10, y: 20 },
+      data: { label: 'Battery', description: '', productName: 'Battery', instanceId: 10 },
     })
-    flow.fixedBindings = { station: { instanceId: 1, instanceName: 'station_01' } }
-
-    const result = validateTopologyForPersistence(flow)
-
-    expect(result.errors.some((issue) => issue.code === 'isolated_node')).toBe(true)
+    expect(persisted.edges[0]).toEqual({
+      id: 'edge-battery-meter',
+      type: 'deletable-smoothstep',
+      source: 'battery',
+      target: 'meter',
+      sourceHandle: 'right',
+      targetHandle: 'left',
+    })
+    expect(persisted.fixedBindings).toEqual({ stationInstanceId: 1, environmentInstanceId: null })
   })
 
-  it('rejects unknown fields before import normalization', () => {
-    const result = validateTopologyImport({ ...baseFlow(), unexpected: true })
+  it('rejects duplicate instance bindings and suffixed runtime handles', () => {
+    const flow = canonicalFlow()
+    flow.nodes[1].data.instanceId = 10
+    flow.edges[0].sourceHandle = 'right-source' as never
+
+    const result = validateTopologyForPersistence(flow, products, validationOptions)
+
+    expect(result.errors.some((issue) => issue.code === 'duplicate_instance_binding')).toBe(true)
+    expect(result.errors.some((issue) => issue.code === 'invalid_edge_handle')).toBe(true)
+  })
+
+  it('rejects edges with unknown handle ids', () => {
+    const flow = canonicalFlow()
+    flow.edges[0].sourceHandle = 'north' as never
+
+    const result = validateTopologyForPersistence(flow, products, validationOptions)
+
+    expect(result.errors.some((issue) => issue.code === 'invalid_edge_handle')).toBe(true)
+  })
+
+  it('rejects fields outside the canonical import schema', () => {
+    const flow = canonicalFlow()
+    Object.assign(flow.nodes[0].data, { imageUrl: '/battery.png' })
+
+    const result = validateTopologyImport(flow, products, validationOptions)
 
     expect(result.canSave).toBe(false)
     expect(result.errors.some((issue) => issue.code === 'unknown_field')).toBe(true)
   })
 
-  it('strips known Vue Flow runtime fields from legacy imports only', () => {
-    const flow = baseFlow() as ModelFlowData & Record<string, unknown>
-    Object.assign(flow.nodes[0], {
-      computedPosition: { x: 0, y: 0, z: 0 },
-      handleBounds: {},
-      initialized: true,
-      events: {},
-    })
-    Object.assign(flow.edges[0], {
-      sourceNode: flow.nodes[0],
-      targetNode: flow.nodes[1],
-      sourceX: 10,
-      targetX: 20,
-      events: {},
-    })
-    flow.unexpected = true
-
-    const cleaned = stripKnownTopologyRuntimeFields(flow) as ModelFlowData & Record<string, unknown>
-    expect(cleaned.nodes[0]).not.toHaveProperty('computedPosition')
-    expect(cleaned.edges[0]).not.toHaveProperty('sourceNode')
-    expect(cleaned.nodes[0].position).toEqual({ x: 0, y: 0 })
-    expect(cleaned).toHaveProperty('unexpected', true)
-    expect(validateTopologyImport(cleaned).errors.some((issue) => issue.code === 'unknown_field')).toBe(true)
-  })
-
-  it('exports a stable DTO without runtime geometry while preserving positions', () => {
-    const flow = baseFlow()
-    Object.assign(flow.nodes[2], {
-      computedPosition: { x: 10, y: 110, z: 0 },
-      handleBounds: {},
-      selected: true,
-      events: {},
-    })
-    Object.assign(flow.edges[0], {
-      sourceNode: flow.nodes[0],
-      targetNode: flow.nodes[1],
-      sourceX: 10,
-      targetX: 20,
-      selected: true,
-    })
-
-    const persisted = createPersistedTopologyFlow(flow)
-    expect(persisted.nodes[2].position).toEqual({ x: 10, y: 10 })
-    expect(persisted.nodes[2].parentNode).toBe('ess-1')
-    expect(persisted.nodes[2]).not.toHaveProperty('computedPosition')
-    expect(persisted.nodes[2]).not.toHaveProperty('selected')
-    expect(persisted.edges[0]).not.toHaveProperty('sourceNode')
-    expect(persisted.edges[0]).not.toHaveProperty('selected')
-  })
-
-
-  it('rejects a node whose product no longer exists', () => {
-    const flow = baseFlow()
-    flow.nodes.find((node) => node.id === 'battery-1')!.data.productName = 'Removed Battery'
-
-    const result = validateTopologyForPersistence(flow, persistenceProducts, persistenceOptions)
-
-    expect(result.errors.some((issue) => issue.code === 'unknown_product')).toBe(true)
-  })
-
-  it('rejects an instance ID that no longer exists', () => {
-    const flow = baseFlow()
-    flow.nodes.find((node) => node.id === 'battery-1')!.data.instances = [{ instanceId: 999, instanceName: 'deleted' }]
-
-    const result = validateTopologyForPersistence(flow, persistenceProducts, persistenceOptions)
-
-    expect(result.errors.some((issue) => issue.code === 'unknown_instance')).toBe(true)
-  })
-
-  it('requires standalone bindings independently of a stale catalog capability flag', () => {
-    const flow = baseFlow()
-    flow.nodes.find((node) => node.id === 'battery-1')!.data.instances = []
-    const productsWithStaleCapability = persistenceProducts.map((product) => (
-      product.product_name === 'Battery'
-        ? { ...product, can_create_instance: false }
+  it('requires reciprocal product connection declarations', () => {
+    const oneSidedProducts = products.map((product) => (
+      product.product_name === 'Meter'
+        ? { ...product, topology: { connections: [] } }
         : product
-    ))
+    )) as ProductListItem[]
+    setModelFlowProductRules(oneSidedProducts)
 
-    const result = validateTopologyForPersistence(
-      flow,
-      productsWithStaleCapability,
-      persistenceOptions,
-    )
+    const result = validateTopologyForPersistence(canonicalFlow(), oneSidedProducts, validationOptions)
 
-    expect(result.errors.some((issue) => issue.code === 'missing_instance_binding')).toBe(true)
+    expect(result.errors.some((issue) => issue.code === 'invalid_connection')).toBe(true)
   })
 
-  it('does not mistake a top-level product for a composite component', () => {
-    const flow = baseFlow()
-    const device = flow.nodes.find((node) => node.id === 'battery-1')!
-    delete device.parentNode
-    device.data = { label: 'PCS', productName: 'PCS', instances: [] }
-    const products = [
-      ...persistenceProducts,
-      {
-        product_name: 'PCS',
-        parent_name: 'ESS',
-        can_create_instance: true,
-        topology: { enabled: true, type: 'standalone' as const },
-      },
-      {
-        product_name: 'Hybrid_Inverter',
-        parent_name: 'Generator',
-        can_create_instance: true,
-        topology: {
-          enabled: true,
-          type: 'composite' as const,
-          components: [{ productName: 'PCS' }],
-        },
-      },
-    ]
+  it('enforces grouped minimum counts when saving', () => {
+    const flow = canonicalFlow()
+    flow.edges = []
 
-    const result = validateTopologyForPersistence(flow, products, persistenceOptions)
+    const result = validateTopologyForPersistence(flow, products, validationOptions)
 
-    expect(result.errors.some((issue) => issue.code === 'missing_instance_binding')).toBe(true)
+    expect(result.errors.some((issue) => issue.code === 'connection_rule_min')).toBe(true)
   })
 
-  it.each(['composite', 'container'] as const)(
-    'requires instance bindings for component nodes inside a %s',
-    (topologyType) => {
-      const flow = baseFlow()
-      const parent = flow.nodes.find((node) => node.id === 'ess-1')!
-      parent.data = {
-        label: 'Parent',
-        productName: 'Parent',
-        topologyType,
-        isContainer: topologyType === 'container',
-        instances: topologyType === 'composite'
-          ? [{ instanceId: 3, instanceName: 'parent_01', productName: 'Parent' }]
-          : [],
-      }
-      const component = flow.nodes.find((node) => node.id === 'battery-1')!
-      component.data = { label: 'Child', productName: 'Child', instances: [] }
-      const products = [
-        ...persistenceProducts,
-        {
-          product_name: 'Parent',
-          parent_name: null,
-          can_create_instance: topologyType === 'composite',
-          topology: {
-            enabled: true,
-            type: topologyType,
-            components: [{ name: 'Child', selectableProductTypes: ['Battery'] }],
-          },
-        },
-      ]
-      const instances = [
-        ...persistenceInstances,
-        { instance_id: 3, instance_name: 'parent_01', product_name: 'Parent' },
-      ]
+  it('blocks a new edge when either endpoint group reached max', () => {
+    const flow = canonicalFlow()
+    flow.nodes.push({
+      id: 'meter-2',
+      type: 'product',
+      position: { x: 300, y: 200 },
+      data: { label: 'Meter 2', description: '', productName: 'Meter', instanceId: 12 },
+    })
 
-      const result = validateTopologyForPersistence(flow, products, {
-        ...persistenceOptions,
-        instances,
-      })
-
-      expect(result.errors.some(
-        (issue) => issue.code === 'missing_instance_binding' && issue.nodeId === 'battery-1',
-      )).toBe(true)
-    },
-  )
-
-  it.each(['composite', 'container'] as const)(
-    'treats a disconnected %s as isolated even when it has a component',
-    (topologyType) => {
-      const flow = baseFlow()
-      flow.nodes = flow.nodes.filter((node) => node.type !== 'station')
-      flow.edges = []
-      flow.fixedBindings = {
-        station: { instanceId: 1, instanceName: 'station_01', productName: 'Station' },
-      }
-      const parent = flow.nodes.find((node) => node.id === 'ess-1')!
-      parent.data = {
-        label: 'Parent',
-        productName: 'Parent',
-        topologyType,
-        isContainer: topologyType === 'container',
-        instances: topologyType === 'composite'
-          ? [{ instanceId: 3, instanceName: 'parent_01', productName: 'Parent' }]
-          : [],
-      }
-      const component = flow.nodes.find((node) => node.id === 'battery-1')!
-      component.data = {
-        label: 'Child',
-        productName: 'Child',
-        instances: [{ instanceId: 2, instanceName: 'battery_01', productName: 'Battery' }],
-      }
-      const products = [
-        ...persistenceProducts,
-        {
-          product_name: 'Parent',
-          parent_name: null,
-          can_create_instance: topologyType === 'composite',
-          topology: {
-            enabled: true,
-            type: topologyType,
-            components: [{ name: 'Child', selectableProductTypes: ['Battery'] }],
-          },
-        },
-      ]
-      const instances = [
-        ...persistenceInstances,
-        { instance_id: 3, instance_name: 'parent_01', product_name: 'Parent' },
-      ]
-
-      const result = validateTopologyForPersistence(flow, products, {
-        ...persistenceOptions,
-        instances,
-      })
-
-      expect(result.errors.some(
-        (issue) => issue.code === 'isolated_node' && issue.nodeId === 'ess-1',
-      )).toBe(true)
-      expect(result.errors.some(
-        (issue) => issue.code === 'isolated_node' && issue.nodeId === 'battery-1',
-      )).toBe(false)
-    },
-  )
-
-  it('rejects an instance belonging to a different product', () => {
-    const flow = baseFlow()
-    flow.nodes.find((node) => node.id === 'battery-1')!.data.instances = [{ instanceId: 1, instanceName: 'station_01' }]
-
-    const result = validateTopologyForPersistence(flow, persistenceProducts, persistenceOptions)
-
-    expect(result.errors.some((issue) => issue.code === 'instance_product_mismatch')).toBe(true)
+    expect(canPreviewNodePair(
+      flow.nodes[0],
+      flow.nodes[2],
+      flow.nodes,
+      flow.edges,
+    )).toBe(false)
   })
-})
 })

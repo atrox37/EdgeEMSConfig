@@ -113,7 +113,7 @@
               <div class="rule-management__operation">
                 <div
                   class="rule-management__operation-item"
-                  @click="handleDetail(row)"
+                  @click="handleDetail(instanceRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-file-text"
@@ -123,7 +123,7 @@
                 </div>
                 <div
                   class="rule-management__operation-item"
-                  @click="openPointsDialog(row)"
+                  @click="openPointsDialog(instanceRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-transform-point"
@@ -197,6 +197,9 @@ import type {
 import { getProducts } from "@/api/devicesManagement";
 import { useTableData, type TableConfig } from "@/composables/useTableData";
 import { useRouter } from "vue-router";
+import { asTableRow } from "@/utils/tableRow";
+
+const instanceRow = (row: unknown): DeviceInstanceBasic => asTableRow<DeviceInstanceBasic>(row);
 
 const tableConfig: TableConfig = {
   listUrl: "/modApi/api/instances",
@@ -321,9 +324,8 @@ watch(
 
 const productOptions = ref<Array<{ label: string; value: string }>>([]);
 const getProductOptions = async () => {
-  const res = await getProducts({ can_create_instance: true });
+  const res = await getProducts();
   productOptions.value = (res?.data?.products || [])
-    .filter((it: ProductListItem) => it.can_create_instance !== false)
     .map((it: ProductListItem) => ({
       label: it.product_name,
       value: it.product_name,

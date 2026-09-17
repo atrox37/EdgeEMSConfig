@@ -7,6 +7,7 @@ import type { NodeChannelBinding, StationTopology } from '@/types/stationTopolog
 import type { ModelFlowData, VisualModel } from '@/types/visualModeling'
 import { setModelFlowProductRules } from '@/utils/modelFlowRules'
 import { createDefaultModelFlow } from '@/utils/defaultModelFlow'
+import { normalizeTopologyFixedBindings } from '@/utils/topologyNormalize'
 
 export const STATION_TOPOLOGY_ID = 'station'
 
@@ -19,7 +20,7 @@ function topologyToVisualModel(topology: StationTopology): VisualModel {
     description: topology.description ?? '',
     createdAt: topology.created_at ?? '',
     updatedAt: topology.updated_at ?? '',
-    flowJson: topology.flow_json,
+    flowJson: normalizeTopologyFixedBindings(topology.flow_json),
   }
 }
 
@@ -53,7 +54,9 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     topologyLoading.value = true
     try {
       const response = await getStationTopology()
-      stationTopology.value = response?.data ?? null
+      stationTopology.value = response?.data
+        ? { ...response.data, flow_json: normalizeTopologyFixedBindings(response.data.flow_json) }
+        : null
       topologyLoaded.value = true
     } catch (error) {
       console.error('[VisualModeling] 加载站点拓扑失败', error)
@@ -68,7 +71,8 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     if (productsLoaded.value && !force) return
     productsLoading.value = true
     try {
-      const response = await getProducts({ topology_enabled: true })
+      // Station/Env have topology=null but are still needed by the fixed binding cards.
+      const response = await getProducts()
       products.value = response?.data?.products ?? []
       productsLoaded.value = true
     } catch (error) {
@@ -144,12 +148,16 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
     if (!stationTopology.value) return false
     try {
       const response = await saveStationTopology({
-        station_name: stationTopology.value.station_name,
+        station_id: STATION_TOPOLOGY_ID,
+        station_name: 'Station',
         description: stationTopology.value.description ?? undefined,
         flow_json: flowJson,
       })
       if (!response?.data) return false
-      stationTopology.value = response.data
+      stationTopology.value = {
+        ...response.data,
+        flow_json: normalizeTopologyFixedBindings(response.data.flow_json),
+      }
       hasUnsavedChanges.value = false
       return true
     } catch (error) {
@@ -162,28 +170,32 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   function markUnsaved() { hasUnsavedChanges.value = true }
   function exportModel(id: string) {
     const model = getModelById(id)
-    return model ? JSON.stringify(model, null, 2) : null
+    return model ? JSON.stringify({
+      station_id: STATION_TOPOLOGY_ID,
+      station_name: 'Station',
+      flow_json: model.flowJson,
+    }, null, 2) : null
   }
   function importModel(json: string): VisualModel | null {
     try {
-      const parsed = JSON.parse(json) as VisualModel
-      const flow = parsed.flowJson
+      const parsed = JSON.parse(json) as Pick<StationTopology, 'station_id' | 'station_name' | 'flow_json'>
+      const flow = parsed.flow_json
       if (!flow) return null
       const now = new Date().toISOString()
       stationTopology.value = {
         station_id: STATION_EDITOR_ID,
-        station_name: parsed.name ?? 'Imported Station',
-        description: parsed.description ?? '',
-        flow_json: flow,
+        station_name: 'Station',
+        description: '',
+        flow_json: normalizeTopologyFixedBindings(flow),
         created_at: now,
         updated_at: now,
       }
       return topologyToVisualModel(stationTopology.value)
     } catch { return null }
   }
-  function createModel(name: string, description = ''): VisualModel {
+  function createModel(_name: string, description = ''): VisualModel {
     const now = new Date().toISOString()
-    stationTopology.value = { station_id: STATION_EDITOR_ID, station_name: name, description, flow_json: createDefaultModelFlow(), created_at: now, updated_at: now }
+    stationTopology.value = { station_id: STATION_EDITOR_ID, station_name: 'Station', description, flow_json: createDefaultModelFlow(), created_at: now, updated_at: now }
     return topologyToVisualModel(stationTopology.value)
   }
   function deleteModel(_id: string) { stationTopology.value = null }

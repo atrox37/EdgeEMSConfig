@@ -8,21 +8,12 @@
             <el-collapse-item v-for="group in panelGroups" :key="group.key" :name="group.key" :title="group.title"
               class="left-panel__collapse-item">
               <div class="left-panel__image-grid">
-                <div v-for="tpl in group.templates" :key="tpl.id" class="left-panel__image-item" draggable="true"
-                  :title="tpl.label" @dragstart="onDragStart($event, tpl)">
-                  <div
-                    class="left-panel__image-type"
-                    :class="`left-panel__image-type--${tpl.topologyType || 'standalone'}`"
-                  >{{ tpl.description }}</div>
-                  <div class="left-panel__image-content">
-                    <img v-if="tpl.imageUrl" :src="tpl.imageUrl" :alt="tpl.label" class="left-panel__image-thumb"
-                      draggable="false" />
-                    <div v-else class="left-panel__image-fallback">{{ tpl.label.slice(0, 2) }}</div>
-                    <div class="left-panel__image-label">{{ tpl.label }}</div>
-                  </div>
-
-
-                </div>
+                <LeftPanelTemplateCard
+                  v-for="tpl in group.templates"
+                  :key="tpl.id"
+                  :template="tpl"
+                  @dragstart="onDragStart($event, tpl)"
+                />
               </div>
             </el-collapse-item>
           </el-collapse>
@@ -36,6 +27,7 @@
 import { computed, ref, watch } from 'vue'
 import { getTopologyPanelGroups } from '@/constants/deviceProducts'
 import { useVisualModelingStore } from '@/stores/visualModeling'
+import LeftPanelTemplateCard from './LeftPanelTemplateCard.vue'
 import useModelDnd from '../useModelDnd'
 
 const { onDragStart } = useModelDnd()
@@ -294,98 +286,6 @@ watch(
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
-
-  .left-panel__image-item {
-    position: relative;
-    height: 140px;
-    display: flex;
-    flex-direction: column;
-    // align-items: center;
-    // gap: 4px;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: grab;
-    border: 1px solid #EEEEEE;
-    transition: all 300ms ease-out;
-  }
-
-  .left-panel__image-item:hover {
-    border-color: #B3CEFA;
-  }
-
-  .left-panel__image-item:active {
-    border-color: #B3CEFA;
-    box-shadow: 0px 6px 12px 0px #0000001A;
-    background-color: #F8F9FB;
-
-
-  }
-
-  .left-panel__image-type {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 1;
-    padding: 4px 6px;
-    border-radius: 4px;
-    background: rgba(3, 93, 239, 0.1);
-    color: #035def;
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .left-panel__image-type--composite {
-    background: #fff0e9;
-    color: #f05a00;
-  }
-
-  .left-panel__image-type--container {
-    background: #e7f0fb;
-    color: #1d5fbf;
-  }
-
-  .left-panel__image-content {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    // justify-content: center;
-
-    .left-panel__image-thumb {
-      margin-top: 28px;
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .left-panel__image-fallback {
-      margin-top: 28px;
-      width: 72px;
-      height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-      color: #4a90d9;
-      background: rgba(74, 144, 217, 0.08);
-      border-radius: 8px;
-    }
-
-    .left-panel__image-label {
-      font-size: 14px;
-      color: #333333;
-      text-align: center;
-      line-height: 1;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
-  }
-
 
   .left-panel__tips {
     display: flex;

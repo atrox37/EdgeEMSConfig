@@ -48,7 +48,7 @@ const submitLoading = ref(false)
 const form = ref<{
   pointId: number
   dataType: string
-  value: boolean | number | string | undefined
+  value: number | undefined
   category: 'C' | 'A' | 'T' | 'S' | ''
 }>({
   pointId: 0,

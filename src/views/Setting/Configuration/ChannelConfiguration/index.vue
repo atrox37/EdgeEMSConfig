@@ -220,7 +220,7 @@
             <template #default="{ row, $index }">
               <el-switch
                 :model-value="row.enabled"
-                @change="(val) => handleEnabledChange(!!val, row, $index)"
+                @change="(val) => handleEnabledChange(!!val, channelRow(row), $index)"
                 :loading="channelControlLoadings[$index][0]"
               />
             </template>
@@ -243,7 +243,7 @@
               <div class="rule-management__operation">
                 <div
                   class="rule-management__operation-item"
-                  @click="handleDetail(row)"
+                  @click="handleDetail(channelRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-file-text"
@@ -253,7 +253,7 @@
                 </div>
                 <div
                   class="rule-management__operation-item"
-                  @click="handlePointsTables(row)"
+                  @click="handlePointsTables(channelRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-transform-point"
@@ -297,10 +297,10 @@
                   </div>
                   <template #dropdown>
                     <el-dropdown-menu>
-                      <el-dropdown-item @click="openAssignTemplateDialog(row)">
+                      <el-dropdown-item @click="openAssignTemplateDialog(channelRow(row))">
                         Assign Template
                       </el-dropdown-item>
-                      <el-dropdown-item @click="openAsTemplateDialog(row)"
+                      <el-dropdown-item @click="openAsTemplateDialog(channelRow(row))"
                         >As Template</el-dropdown-item
                       >
                     </el-dropdown-menu>
@@ -358,6 +358,9 @@ import { useRouter } from "vue-router";
 import ChannelDetailDialog from "@/views/Setting/Configuration/ChannelConfiguration/components/ChannelDetailDialog.vue";
 import AssignTemplateDialog from "@/views/Setting/Configuration/ChannelConfiguration/components/AssignTemplateDialog.vue";
 import AsTemplateDialog from "@/views/Setting/Configuration/ChannelConfiguration/components/AsTemplateDialog.vue";
+import { asTableRow } from "@/utils/tableRow";
+
+const channelRow = (row: unknown): ChannelListItem => asTableRow<ChannelListItem>(row);
 
 const tableSearchIcon = "i-tabler-filter";
 const userAddIcon = "i-tabler-plus";

@@ -139,7 +139,7 @@ export default function useDragAndDrop() {
         id: `node-${time}`,
         cardId: sourceCard.id,
         label: sourceCard.name,
-        description: sourceCard.description,
+        description: '',
         type: sourceCard.type,
         // 使用深拷贝后的默认配置，来源于 RuleChainEditorView 中的 cardCategories
         config: sourceCard?.config,

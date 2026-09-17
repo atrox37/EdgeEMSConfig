@@ -4,6 +4,7 @@
  */
 
 import { setItem, getItem, removeItem } from '@/utils/secureStore'
+import { service, setApiConfigRef } from '@/utils/request'
 
 const API_CONFIG_KEY = 'api_config'
 
@@ -84,25 +85,17 @@ export async function clearApiConfig(): Promise<void> {
  * 设置HTTP的baseURL
  */
 export async function setAxiosBaseURL(config: ApiConfig): Promise<void> {
-  // 动态导入避免循环依赖
-  const requestModule = await import('@/utils/request')
-  const service = (requestModule as any).service
-  const setApiConfigRef = (requestModule as any).setApiConfigRef
-  
-  if (service && service.defaults) {
+  if (service?.defaults) {
     service.defaults.baseURL = config.baseURL
     console.log('[API配置] BaseURL已设置为:', config.baseURL)
   }
-  
-  // 设置配置引用，供请求拦截器使用
-  if (setApiConfigRef) {
-    setApiConfigRef(config)
-    console.log('[API配置] 配置引用已设置:', {
-      comApiURL: config.comApiURL,
-      modApiURL: config.modApiURL,
-      ruleApiURL: config.ruleApiURL,
-      hisApiURL: config.hisApiURL,
-      netApiURL: config.netApiURL,
-    })
-  }
+
+  setApiConfigRef(config)
+  console.log('[API配置] 配置引用已设置:', {
+    comApiURL: config.comApiURL,
+    modApiURL: config.modApiURL,
+    ruleApiURL: config.ruleApiURL,
+    hisApiURL: config.hisApiURL,
+    netApiURL: config.netApiURL,
+  })
 }

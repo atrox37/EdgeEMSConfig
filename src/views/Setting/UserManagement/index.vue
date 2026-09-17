@@ -63,11 +63,11 @@
           >
             <template #default="{ row }">
               <div class="user-management__operation">
-                <div class="user-management__operation-item" @click="handleEdit(row)">
+                <div class="user-management__operation-item" @click="handleEdit(userRow(row))">
                   <img :src="tableEditIcon" />
                   <span class="user-management__operation-text">Edit</span>
                 </div>
-                <div class="user-management__operation-item" @click="handleDelete(row)">
+                <div class="user-management__operation-item" @click="handleDelete(userRow(row))">
                   <img :src="tableDeleteIcon" />
                   <span class="user-management__operation-text">Delete</span>
                 </div>
@@ -100,7 +100,10 @@ import tableDeleteIcon from '@/assets/icons/table-delect.svg'
 
 import type { UserManagementInfo } from '@/types/user'
 import { useTableData, type TableConfig } from '@/composables/useTableData'
+import { asTableRow } from '@/utils/tableRow'
 import UserOperationForm from './UserOperationForm.vue'
+
+const userRow = (row: unknown): UserManagementInfo => asTableRow<UserManagementInfo>(row)
 
 // 表格配置
 const tableConfig: TableConfig = {

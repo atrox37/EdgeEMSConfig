@@ -38,7 +38,7 @@
       :connection-mode="ConnectionMode.Loose"
       :connection-radius="48"
       :connect-on-click="false"
-      :connection-line-style="{ stroke: '#B3CEFA', strokeWidth: 1 }"
+      :connection-line-options="connectionLineOptions"
       :min-zoom="0.1"
       :max-zoom="4"
       :snap-to-grid="true"
@@ -62,6 +62,7 @@
       @edge-click="$emit('edge-click', $event)"
       @pane-click="$emit('pane-click')"
     >
+      <TopologyConnectionHint />
       <Background variant="lines" :gap="10" color="rgba(220, 226, 238, 0.78)" />
       <MiniMap
         v-show="showMiniMap"
@@ -131,7 +132,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { VueFlow, ConnectionMode, type Connection, type Edge, type Node, type NodeTypesObject, type EdgeTypesObject } from '@vue-flow/core'
+import {
+  VueFlow,
+  ConnectionMode,
+  type Connection,
+  type ConnectionLineOptions,
+  type Edge,
+  type Node,
+  type NodeTypesObject,
+  type EdgeTypesObject,
+} from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
 import AppIcon from '@/components/AppIcon.vue'
@@ -139,6 +149,7 @@ import LoadingBg from '@/components/common/LoadingBg.vue'
 import type { DeviceInstanceBasic } from '@/types/deviceConfiguration'
 import type { ModelInstanceBinding } from '@/types/visualModeling'
 import FixedBindingCard from './FixedBindingCard.vue'
+import TopologyConnectionHint from './TopologyConnectionHint.vue'
 import topologyStationIcon from '@/assets/icons/topology-station.svg'
 import topologyEnvironmentIcon from '@/assets/icons/topology-environment.svg'
 import fitViewIcon from '@/assets/icons/tuopu-fitView.svg'
@@ -167,6 +178,7 @@ defineProps<{
   fitView: () => void
   zoomIn: () => void
   zoomOut: () => void
+  connectionLineOptions?: ConnectionLineOptions | null
 }>()
 
 const canvasRef = ref<HTMLElement | null>(null)

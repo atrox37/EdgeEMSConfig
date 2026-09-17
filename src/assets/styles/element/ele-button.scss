@@ -121,7 +121,9 @@
   &+& {
     margin-left: var(--vt-space-3);
   }
-
+  img{
+    margin-right: 8px !important;
+  }
   // ---- Modifier: type ----
   &.el-button--primary {
     // --el-button-text-color: var(--el-color-white);

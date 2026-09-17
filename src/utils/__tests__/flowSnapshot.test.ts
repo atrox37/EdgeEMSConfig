@@ -8,7 +8,7 @@ const base: FlowSnapshot = {
       id: 'n1',
       type: 'product',
       position: { x: 10.001, y: 20.002 },
-      data: { label: 'A', productName: 'Battery', instances: [{ instanceId: 1, instanceName: 'b1' }] },
+      data: { label: 'A', productName: 'Battery', instanceId: 1 },
     },
   ],
   edges: [{ id: 'e1', source: 's1', target: 'n1' }],
@@ -29,7 +29,7 @@ describe('isFlowSnapshotEqual', () => {
         ...base.nodes[0],
         data: {
           ...base.nodes[0].data,
-          instances: [{ instanceId: 2, instanceName: 'b2' }],
+          instanceId: 2,
         },
       }],
       edges: base.edges,

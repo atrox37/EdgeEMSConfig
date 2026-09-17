@@ -75,7 +75,7 @@
                 :model-value="row.enabled"
                 :loading="switchLoadings[$index]"
                 :before-change="
-                  () => handleEnabledBeforeChange(!row.enabled, row, $index)
+                  () => handleEnabledBeforeChange(!row.enabled, ruleRow(row), $index)
                 "
               />
             </template>
@@ -85,7 +85,7 @@
               <div class="rule-management__operation">
                 <div
                   class="rule-management__operation-item"
-                  @click="openDetail(row)"
+                  @click="openDetail(ruleRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-file-text"
@@ -95,7 +95,7 @@
                 </div>
                 <div
                   class="rule-management__operation-item"
-                  @click="openHistoryDialog(row)"
+                  @click="openHistoryDialog(ruleRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-history"
@@ -108,7 +108,7 @@
                 <div
                   v-permission="'engineer'"
                   class="rule-management__operation-item"
-                  @click="openEditDialog(row)"
+                  @click="openEditDialog(ruleRow(row))"
                 >
                   <AppIcon
                     name="i-tabler-edit"
@@ -168,6 +168,10 @@ import { enableRule, disableRule } from "@/api/rulesManagement";
 import { useRoute, useRouter } from "vue-router";
 import type { Rule } from "@/types/ruleConfiguration";
 import { useTableData, type TableConfig } from "@/composables/useTableData";
+import { asTableRow } from "@/utils/tableRow";
+
+const ruleRow = (row: unknown): Rule => asTableRow<Rule>(row);
+
 // 使用 useTableData 管理表格数据
 
 const tableConfig: TableConfig = {

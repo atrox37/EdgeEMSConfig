@@ -1,8 +1,11 @@
 // 可视化建模模块类型定义
 
+import type { ProductTopologyConnectionRule } from '@/types/deviceConfiguration'
+
 export type ModelNodeType = 'station' | 'product' | 'group'
 export type ModelEdgeType = 'hierarchy' | 'classification'
 export type TopologyNodeKind = 'standalone' | 'composite' | 'container'
+export type TopologyHandleSide = 'top' | 'right' | 'bottom' | 'left'
 
 /** 网页展示点位配置（运维在PCManagement中配置，由VoltageEMS apps读取） */
 export interface DisplayPointConfig {
@@ -36,12 +39,8 @@ export interface ModelNodeData {
   productName?: string
   /** 产品父级名称，来自物模型产品定义 */
   parentName?: string
-  /** 绑定的设备实例列表 */
-  instances?: ModelInstanceBinding[]
-  /** @deprecated 兼容旧数据，读取时请用 normalizeNodeInstances */
-  instanceId?: number
-  /** @deprecated 兼容旧数据 */
-  instanceName?: string
+  /** 当前节点绑定的唯一设备实例；null 表示尚未绑定。 */
+  instanceId?: number | null
   /** @deprecated 后续以图片展示，保留字段兼容 */
   color?: string
   /** @deprecated 后续以图片展示，保留字段兼容 */
@@ -77,10 +76,10 @@ export interface ModelFlowEdge {
   id: string
   source: string
   target: string
-  sourceHandle?: string
-  targetHandle?: string
+  sourceHandle: TopologyHandleSide
+  targetHandle: TopologyHandleSide
   label?: string
-  type?: string
+  type: 'deletable-smoothstep'
   style?: Record<string, string | number>
   markerEnd?: any
 }
@@ -90,8 +89,8 @@ export interface ModelFlowData {
   edges: ModelFlowEdge[]
   /** 固定在画布左上角的绑定，不属于拓扑节点或连线。 */
   fixedBindings?: {
-    station?: ModelInstanceBinding | null
-    environment?: ModelInstanceBinding | null
+    stationInstanceId: number | null
+    environmentInstanceId: number | null
   }
 }
 
@@ -112,20 +111,13 @@ export interface ModelNodeTemplate {
   description: string
   productName?: string
   parentName?: string
-  /** 拖入已配置实例时使用 */
-  instances?: ModelInstanceBinding[]
   /** @deprecated */
   color?: string
   /** @deprecated */
   icon?: string
   instanceId?: number
-  instanceName?: string
   imageUrl?: string
   topologyType?: TopologyNodeKind
-  components?: Array<{
-    productName: string
-    label: string
-    imageUrl?: string
-    selectableProductTypes?: string[]
-  }>
+  /** 拓扑连线规则，来自产品 topology.connections。 */
+  connections?: ProductTopologyConnectionRule[]
 }

@@ -1,45 +1,14 @@
-import type { ModelNodeData, ModelInstanceBinding } from '@/types/visualModeling'
+import type { ModelNodeData } from '@/types/visualModeling'
 
-/** 将旧版单实例字段迁移为 instances 数组 */
-function toInstanceId(value: unknown): number {
-  const n = Number(value)
-  return Number.isFinite(n) ? n : 0
-}
-
-export function normalizeNodeInstances(data: ModelNodeData): ModelInstanceBinding[] {
-  if (Array.isArray(data.instances) && data.instances.length) {
-    return data.instances
-      .map((item) => ({
-        instanceId: toInstanceId(item.instanceId),
-        instanceName: item.instanceName ?? '',
-        productName: item.productName ?? data.productName,
-      }))
-      .filter((item) => item.instanceId > 0)
-  }
-  if (data.instanceId) {
-    const instanceId = toInstanceId(data.instanceId)
-    if (!instanceId) return []
-    return [{
-      instanceId,
-      instanceName: data.instanceName ?? '',
-      productName: data.productName,
-    }]
-  }
-  return []
-}
-
-export function normalizeNodeData(data: ModelNodeData): ModelNodeData {
-  const instances = normalizeNodeInstances(data)
-  return {
-    ...data,
-    instances,
-    instanceId: instances[0]?.instanceId,
-    instanceName: instances[0]?.instanceName,
-  }
+export function getNodeInstanceId(data: ModelNodeData): number | null {
+  if (data.instanceId === null || data.instanceId === undefined) return null
+  const n = Number(data.instanceId)
+  return Number.isInteger(n) && n > 0 ? n : null
 }
 
 export function instanceIds(data: ModelNodeData): number[] {
-  return normalizeNodeInstances(data).map((i) => i.instanceId)
+  const instanceId = getNodeInstanceId(data)
+  return instanceId === null ? [] : [instanceId]
 }
 
 /** 收集某父节点下所有子节点 id（递归） */

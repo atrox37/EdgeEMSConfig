@@ -101,7 +101,7 @@
         @include table-row.vt-table-cell-inner;
       }
 
-      .cell:has(.inline-edit-container) {
+      .cell:has(.point-table__cell-edit) {
         height: auto;
         min-height: 22px;
         max-height: none;

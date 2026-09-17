@@ -31,6 +31,7 @@
           </LightCollapseCard>
 
           <LightCollapseCard
+            v-if="showPropertiesSection"
             v-model="isPropertiesOpen"
             title="Properties"
             auto-height
@@ -126,6 +127,10 @@ import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
 const props = defineProps<{
   productOptions: { label: string; value: string }[]
 }>()
+
+/** 暂时隐藏 Properties 区块，恢复时改为 true */
+const showPropertiesSection = false
+
 const formRef = ref<FormInstance>()
 const dialogRef = ref<any>()
 
@@ -222,7 +227,7 @@ const open = async (
       }
     })
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -271,12 +276,15 @@ const handleEdit = () => {
 const handleSubmit = () => {
   formRef.value?.validate(async (valid) => {
     if (valid) {
-      // 将编辑数据同步到表单数据（数组转对象，忽略空 key）
-      const newProps: Record<string, string | number> = {}
-      for (const item of editProperties.value) {
-        if (item.key !== '') newProps[item.key] = item.value
+      if (showPropertiesSection) {
+        const newProps: Record<string, string | number> = {}
+        for (const item of editProperties.value) {
+          if (item.key !== '') newProps[item.key] = item.value
+        }
+        form.value.properties = newProps
+      } else if (isCreateMode.value) {
+        form.value.properties = {}
       }
-      form.value.properties = newProps
       submitLoading.value = true
       try {
         if (isCreateMode.value) {

@@ -18,6 +18,7 @@
           >{{ bindingLabel }}</span>
         </div>
       </div>
+      <TopologyNodeStatusBadge v-if="status" :status="status" class="topology-card__header-status" />
     </header>
 
     <div class="topology-card__preview">
@@ -80,7 +81,9 @@
 import AppIcon from "@/components/AppIcon.vue";
 import topologyLinkIcon from "@/assets/icons/topology-link.svg";
 import type { DeviceInstanceBasic } from "@/types/deviceConfiguration";
+import type { TopologyNodeStatus } from "@/utils/topologyNodeStatus";
 import type { TopologyNodeDraft } from "../../composables/useTopologyNodeEditor";
+import TopologyNodeStatusBadge from "./TopologyNodeStatusBadge.vue";
 
 withDefaults(
   defineProps<{
@@ -100,6 +103,7 @@ withDefaults(
     allowDelete?: boolean;
     draft: TopologyNodeDraft;
     availableInstances: DeviceInstanceBasic[];
+    status?: TopologyNodeStatus | null;
   }>(),
   {
     caption: "",
@@ -193,6 +197,11 @@ defineEmits<{
 .topology-card__header-copy {
   min-width: 0;
   flex: 1;
+}
+
+.topology-card__header-status {
+  flex: 0 0 auto;
+  margin-left: 8px;
 }
 
 .topology-card__title {

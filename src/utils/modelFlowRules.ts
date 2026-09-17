@@ -1,57 +1,48 @@
 import type { Connection, Edge as FlowEdge, Node as FlowNode } from '@vue-flow/core'
-import type { ProductListItem } from '@/types/deviceConfiguration'
+import type {
+  ProductListItem,
+  ProductTopologyConnectionRule,
+} from '@/types/deviceConfiguration'
+import type { TopologyHandleSide } from '@/types/visualModeling'
 
-let parentMap = new Map<string, string | null>()
-let connectableProductPairs = new Set<string>()
-
-function connectionPairKey(productA: string, productB: string): string {
-  return [productA, productB].sort().join('::')
+export interface ProductConnectionRuleState {
+  nodeId: string
+  productName: string
+  products: string[]
+  min: number
+  max: number | null
+  count: number
 }
+
+let topologyProductsByName = new Map<string, ProductListItem>()
 
 /** Refreshes all topology rules from the products API response. */
 export function setModelFlowProductRules(products?: ProductListItem[] | null) {
-  const apiProducts = products ?? []
-  parentMap = new Map(apiProducts.map((product) => [product.product_name, product.parent_name]))
-  connectableProductPairs = new Set()
-
-  const topologyProductNames = new Set(
-    apiProducts
-      .filter((product) => product.topology?.enabled)
-      .map((product) => product.product_name),
+  topologyProductsByName = new Map(
+    (products ?? [])
+      .filter((product) => !!product.topology)
+      .map((product) => [product.product_name, product]),
   )
-
-  // An edge has no direction in the current topology model. Therefore a rule
-  // declared by either product is normalized into one undirected pair.
-  for (const product of apiProducts) {
-    if (!topologyProductNames.has(product.product_name)) continue
-    for (const targetName of product.topology?.connectableProducts ?? []) {
-      if (targetName !== product.product_name && topologyProductNames.has(targetName)) {
-        connectableProductPairs.add(connectionPairKey(product.product_name, targetName))
-      }
-    }
-  }
 }
 
-export function getProductParentName(productName?: string): string | null | undefined {
-  return productName ? parentMap.get(productName) : undefined
+function getConnectionRule(
+  productName: string,
+  peerProductName: string,
+): ProductTopologyConnectionRule | undefined {
+  return topologyProductsByName
+    .get(productName)
+    ?.topology
+    ?.connections
+    ?.find((rule) => rule.products.includes(peerProductName))
 }
 
-export function canPlaceInContainer(childProductName: string, containerProductName: string): boolean {
-  return getProductParentName(childProductName) === containerProductName
+function isProductPairAllowed(productA: string, productB: string): boolean {
+  if (productA === productB) return false
+  return !!getConnectionRule(productA, productB) && !!getConnectionRule(productB, productA)
 }
 
 export function getNodeProductName(node?: FlowNode | null): string | undefined {
   return (node?.data as { productName?: string } | undefined)?.productName
-}
-
-export function isDirectChildNode(parent?: FlowNode | null, child?: FlowNode | null): boolean {
-  return !!parent && child?.parentNode === parent.id
-}
-
-export function isContainerNode(node?: FlowNode | null): boolean {
-  if (!node) return false
-  const data = node.data as { isContainer?: boolean; topologyType?: string } | undefined
-  return node.type === 'group' || !!data?.isContainer || data?.topologyType === 'container'
 }
 
 export function canConnectNodes(source?: FlowNode | null, target?: FlowNode | null): boolean {
@@ -60,11 +51,61 @@ export function canConnectNodes(source?: FlowNode | null, target?: FlowNode | nu
   const targetProductName = getNodeProductName(target)
   return !!sourceProductName
     && !!targetProductName
-    && connectableProductPairs.has(connectionPairKey(sourceProductName, targetProductName))
+    && isProductPairAllowed(sourceProductName, targetProductName)
 }
 
-export function isStrictParentChildConnection(source?: FlowNode | null, target?: FlowNode | null): boolean {
-  return canConnectNodes(source, target)
+function getConnectedPeerNodes(
+  node: FlowNode,
+  nodes: FlowNode[],
+  edges: Array<Pick<FlowEdge, 'source' | 'target'>>,
+): FlowNode[] {
+  const nodesById = new Map(nodes.map((item) => [item.id, item]))
+  const peerIds = new Set<string>()
+  for (const edge of edges) {
+    if (edge.source === node.id) peerIds.add(edge.target)
+    else if (edge.target === node.id) peerIds.add(edge.source)
+  }
+  return Array.from(peerIds)
+    .map((id) => nodesById.get(id))
+    .filter((peer): peer is FlowNode => !!peer && canConnectNodes(node, peer))
+}
+
+export function getNodeConnectionRuleStates(
+  node: FlowNode,
+  nodes: FlowNode[],
+  edges: Array<Pick<FlowEdge, 'source' | 'target'>>,
+): ProductConnectionRuleState[] {
+  const productName = getNodeProductName(node)
+  if (!productName) return []
+  const peers = getConnectedPeerNodes(node, nodes, edges)
+  return (topologyProductsByName.get(productName)?.topology?.connections ?? []).map((rule) => ({
+    nodeId: node.id,
+    productName,
+    products: [...rule.products],
+    min: Math.max(0, Number(rule.min) || 0),
+    max: rule.max == null ? null : Math.max(0, Number(rule.max) || 0),
+    count: peers.filter((peer) => {
+      const peerProductName = getNodeProductName(peer)
+      return !!peerProductName && rule.products.includes(peerProductName)
+    }).length,
+  }))
+}
+
+function getConnectionLimitHint(
+  source: FlowNode,
+  target: FlowNode,
+  nodes: FlowNode[],
+  edges: Array<Pick<FlowEdge, 'source' | 'target'>>,
+): string {
+  for (const [node, peer] of [[source, target], [target, source]] as const) {
+    const peerProductName = getNodeProductName(peer)
+    const state = getNodeConnectionRuleStates(node, nodes, edges)
+      .find((rule) => !!peerProductName && rule.products.includes(peerProductName))
+    if (state?.max != null && state.count >= state.max) {
+      return `${state.productName} allows at most ${state.max} connection(s) across ${state.products.join(', ')}`
+    }
+  }
+  return ''
 }
 
 export function hasEdgeBetweenNodes(
@@ -83,21 +124,34 @@ export function hasEdgeBetweenNodesEitherDirection(
   return hasEdgeBetweenNodes(edges, nodeA, nodeB) || hasEdgeBetweenNodes(edges, nodeB, nodeA)
 }
 
-export function toSourceHandle(handle?: string | null): string {
-  if (!handle) return 'bottom-source'
-  if (handle.endsWith('-source')) return handle
-  if (handle.endsWith('-target')) return handle.replace('-target', '-source')
-  return `${handle}-source`
+const HANDLE_SIDES = new Set<TopologyHandleSide>(['top', 'right', 'bottom', 'left'])
+const RUNTIME_HANDLE_PATTERN = /^(top|right|bottom|left)(?:-(?:source|target))?$/
+
+/** Parse a persisted handle side (strict: top | right | bottom | left only). */
+export function parseTopologyHandleSide(handle?: string | null): TopologyHandleSide | null {
+  if (!handle) return null
+  return HANDLE_SIDES.has(handle as TopologyHandleSide) ? (handle as TopologyHandleSide) : null
 }
 
-export function toTargetHandle(handle?: string | null): string {
-  if (!handle) return 'top-target'
-  if (handle.endsWith('-target')) return handle
-  if (handle.endsWith('-source')) return handle.replace('-source', '-target')
-  return `${handle}-target`
+function parseRuntimeHandleSide(handle?: string | null): TopologyHandleSide | null {
+  if (!handle) return null
+  const match = String(handle).match(RUNTIME_HANDLE_PATTERN)
+  return match ? (match[1] as TopologyHandleSide) : null
 }
 
-function normalizeHandleId(handle: string | null | undefined, kind: 'source' | 'target'): string {
+export function isTopologyHandleSide(handle?: string | null): handle is TopologyHandleSide {
+  return parseTopologyHandleSide(handle) !== null
+}
+
+export function toSourceHandle(handle?: string | null): TopologyHandleSide {
+  return parseRuntimeHandleSide(handle) ?? 'bottom'
+}
+
+export function toTargetHandle(handle?: string | null): TopologyHandleSide {
+  return parseRuntimeHandleSide(handle) ?? 'top'
+}
+
+function normalizeHandleId(handle: string | null | undefined, kind: 'source' | 'target'): TopologyHandleSide {
   return kind === 'source' ? toSourceHandle(handle) : toTargetHandle(handle)
 }
 
@@ -127,26 +181,28 @@ export function correctEdgeDirection<T extends {
   }
 }
 
-export function isValidModelConnection(
-  connection: Connection,
+export function canPreviewNodePair(
+  source: FlowNode | null | undefined,
+  target: FlowNode | null | undefined,
   nodes: FlowNode[],
   edges: Array<Pick<FlowEdge, 'source' | 'target'>> = [],
 ): boolean {
-  const source = nodes.find((node) => node.id === connection.source)
-  const target = nodes.find((node) => node.id === connection.target)
-  return !!source
-    && !!target
-    && canConnectNodes(source, target)
+  if (!source || !target || source.id === target.id) return false
+  return canConnectNodes(source, target)
     && !hasEdgeBetweenNodesEitherDirection(edges, source.id, target.id)
+    && !getConnectionLimitHint(source, target, nodes, edges)
 }
 
 export function getConnectionRuleHint(
   source?: FlowNode | null,
   target?: FlowNode | null,
   edges: Array<Pick<FlowEdge, 'source' | 'target'>> = [],
+  nodes: FlowNode[] = [],
 ): string {
   if (!source || !target) return 'Invalid connection'
-  if (!canConnectNodes(source, target)) return 'This connection is not allowed by the product topology configuration'
+  if (!canConnectNodes(source, target)) return 'Both products must allow this connection in their topology configuration'
   if (hasEdgeBetweenNodesEitherDirection(edges, source.id, target.id)) return 'An edge already exists between these two nodes'
+  const limitHint = getConnectionLimitHint(source, target, nodes, edges)
+  if (limitHint) return limitHint
   return ''
 }

@@ -51,11 +51,11 @@
               <template #default="{ row }">
                 <div class="rule-history-dialog__detail">
                   <div
-                    v-if="getHistoryErrors(row).length"
+                    v-if="getHistoryErrors(historyRow(row)).length"
                     class="rule-history-dialog__error-banner"
                   >
                     <div
-                      v-for="(err, errIdx) in getHistoryErrors(row)"
+                      v-for="(err, errIdx) in getHistoryErrors(historyRow(row))"
                       :key="`err-${errIdx}`"
                       class="rule-history-dialog__error-line"
                     >
@@ -69,9 +69,9 @@
                       <span>Trigger Reason</span>
                     </div>
                     <div class="rule-history-dialog__trigger-value">
-                      <span>{{ getTriggerReason(row) }}</span>
+                      <span>{{ getTriggerReason(historyRow(row)) }}</span>
                       <span
-                        v-if="getTriggerReason(row) !== '-'"
+                        v-if="getTriggerReason(historyRow(row)) !== '-'"
                         class="rule-history-dialog__matched-tag"
                       >
                         <span class="rule-history-dialog__matched-dot" />
@@ -82,8 +82,8 @@
 
                   <div class="rule-history-dialog__detail-item">
                     <span class="rule-history-dialog__detail-label">Execution Steps </span>
-                    <div v-if="getExecutionGraph(row)?.nodes.length" class="rule-history-dialog__flow">
-                      <RuleHistoryExecutionFlow :graph="getExecutionGraph(row)!" />
+                    <div v-if="getExecutionGraph(historyRow(row))?.nodes.length" class="rule-history-dialog__flow">
+                      <RuleHistoryExecutionFlow :graph="getExecutionGraph(historyRow(row))!" />
                     </div>
                     <!-- <div
                       v-if="getFlattenedExecutionTree(row).length"
@@ -129,11 +129,11 @@
                     <span v-else class="rule-history-dialog__detail-value">-</span>
                   </div>
 
-                  <div v-if="getDisplayActions(row).length" class="rule-history-dialog__detail-item">
+                  <div v-if="getDisplayActions(historyRow(row)).length" class="rule-history-dialog__detail-item">
                     <span class="rule-history-dialog__detail-label">Actions Excuted</span>
                     <div class="rule-history-dialog__actions-list">
                       <div
-                        v-for="(action, index) in getDisplayActions(row)"
+                        v-for="(action, index) in getDisplayActions(historyRow(row))"
                         :key="`action-${index}`"
                         class="rule-history-dialog__action-card"
                       >
@@ -173,16 +173,16 @@
               <template #default="{ row }">
                 <span
                   class="rule-history-dialog__status"
-                  :class="isHistorySuccess(row) ? 'is-success' : 'is-failed'"
+                  :class="isHistorySuccess(historyRow(row)) ? 'is-success' : 'is-failed'"
                 >
-                  {{ isHistorySuccess(row) ? 'Success' : 'Failed' }}
+                  {{ isHistorySuccess(historyRow(row)) ? 'Success' : 'Failed' }}
                 </span>
               </template>
             </el-table-column>
 
             <el-table-column label="Summary" min-width="200" show-overflow-tooltip>
               <template #default="{ row }">
-                <span>{{ getHistorySummary(row) }}</span>
+                <span>{{ getHistorySummary(historyRow(row)) }}</span>
               </template>
             </el-table-column>
           </el-table>
@@ -221,6 +221,9 @@ import {
   getTriggerReason,
   isHistorySuccess,
 } from '@/utils/ruleHistoryDisplay'
+import { asTableRow } from '@/utils/tableRow'
+
+const historyRow = (row: unknown): RuleHistoryItem => asTableRow<RuleHistoryItem>(row)
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null)
 const loading = ref(false)

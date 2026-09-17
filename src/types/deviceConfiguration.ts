@@ -149,27 +149,28 @@ export interface ProductOption {
 }
 
 // 产品列表
-export interface ProductTopologyComponent {
-  productName?: string
-  name?: string
-  image?: string
-  selectableProductTypes?: string[]
+export interface ProductTopologyConnectionRule {
+  /** 同一规则分组允许连接的对端产品名。 */
+  products: string[]
+  /** 保存拓扑时要求的最少对端实例数。 */
+  min: number
+  /** 最大对端实例数；null 表示不设产品级上限。 */
+  max?: number | null
 }
 
 export interface ProductTopology {
-  enabled: boolean
-  type?: 'standalone' | 'composite' | 'container' | 'top-level'
-  image?: string
-  /** 当前产品可连接的产品名；消费端将单侧声明归一化为无向关系。 */
-  connectableProducts?: string[]
-  components?: ProductTopologyComponent[]
+  image?: string | null
+  description?: string | null
+  connections?: ProductTopologyConnectionRule[]
 }
 
 export interface ProductListItem {
   product_name: string
-  parent_name: string | null
-  can_create_instance?: boolean
-  topology?: ProductTopology
+  type?: string
+  description?: string | null
+  defaultDisplayMeasureIds?: number[]
+  /** null/undefined 表示该产品不能放入拓扑编辑器；不影响创建实例。 */
+  topology?: ProductTopology | null
 }
 export interface ProductListResponse {
   count: number

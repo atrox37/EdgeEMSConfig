@@ -1,0 +1,103 @@
+// visual-modeling-editor BEM — VisualModeling/index.vue 样式入口
+// Block: modeling-editor
+
+@use '@/assets/styles/variables' as *;
+
+@mixin visual-modeling-editor-host() {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0;
+
+  &.is-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    background: #ffffff;
+  }
+
+  .modeling-editor__body {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .modeling-editor__left-panel {
+    position: absolute;
+    top: 16px;
+    bottom: 16px;
+    left: 16px;
+    z-index: 10;
+    display: flex;
+    width: 348px;
+    min-width: 348px;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .modeling-editor__left-panel :deep(.left-panel-shell) {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    pointer-events: auto;
+  }
+
+  .modeling-editor__canvas {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    position: relative;
+    background: #fbfcff;
+  }
+
+  @media (max-width: 900px) {
+    .modeling-editor__canvas .modeling-editor__fixed-bindings {
+      gap: 8px;
+      transform: scale(0.86);
+      transform-origin: top left;
+    }
+  }
+
+  :deep(.el-button.el-button + .el-button.el-button) {
+    margin-left: 0;
+  }
+}
+
+@mixin visual-modeling-editor-global() {
+  @keyframes modeling-editor-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .el-button--cancel {
+    background: #f7f8fa;
+    color: #272e3b;
+  }
+
+  .el-button--confirm {
+    background: #f53f3f;
+    color: #f7f8fa;
+  }
+
+  :global(.visual-modeling-confirm-box) {
+    z-index: 10050 !important;
+  }
+
+  :global(.el-overlay:has(+ .visual-modeling-confirm-box)),
+  :global(.el-overlay.is-message-box) {
+    z-index: 10049 !important;
+  }
+}

@@ -1,13 +1,11 @@
 import { Position, type Edge as FlowEdge, type GraphNode, type Node as FlowNode } from '@vue-flow/core'
 import dagre from '@dagrejs/dagre'
-import { normalizeNodeInstances } from '@/utils/visualModeling'
+import { getNodeInstanceId } from '@/utils/visualModeling'
 import type { ModelNodeData } from '@/types/visualModeling'
 
 const DEFAULT_NODE_SIZE: Record<string, { width: number; height: number }> = {
-  station: { width: 180, height: 90 },
   product: { width: 110, height: 120 },
   productImage: { width: 280, height: 262 },
-  group: { width: 280, height: 254 },
 }
 
 /** 图片设备节点绑定实例后，底部实例标签占用的高度（含间距） */
@@ -17,11 +15,6 @@ const COMPONENT_DETAILS_EXTRA_HEIGHT = 260
 const LAYOUT = {
   stationY: 24,
   rowGapY: 100,
-  childHeaderH: 44,
-  childPaddingX: 12,
-  childPaddingY: 12,
-  childGapX: 12,
-  childGapY: 12,
   topGapX: 36,
   canvasCenterX: 520,
 }
@@ -38,8 +31,7 @@ function hasImage(node: FlowNode): boolean {
 
 function getInstanceBadgeExtraHeight(node: FlowNode): number {
   if (node.type !== 'product' || !hasImage(node)) return 0
-  const instances = normalizeNodeInstances(node.data as ModelNodeData)
-  return instances.length > 0 ? INSTANCE_BADGE_EXTRA_HEIGHT : 0
+  return getNodeInstanceId(node.data as ModelNodeData) !== null ? INSTANCE_BADGE_EXTRA_HEIGHT : 0
 }
 
 function getNodeSize(node: FlowNode | GraphNode): { width: number; height: number } {
@@ -67,78 +59,6 @@ function getNodeSize(node: FlowNode | GraphNode): { width: number; height: numbe
       + ((node.data as { uiExpanded?: boolean } | undefined)?.uiExpanded
         ? COMPONENT_DETAILS_EXTRA_HEIGHT
         : 0),
-  }
-}
-
-function compareChildNodes(a: FlowNode, b: FlowNode): number {
-  const labelA =
-    (a.data as { label?: string })?.label ||
-    (a.data as { productName?: string })?.productName ||
-    a.id
-  const labelB =
-    (b.data as { label?: string })?.label ||
-    (b.data as { productName?: string })?.productName ||
-    b.id
-  return labelA.localeCompare(labelB, undefined, { sensitivity: 'base' })
-}
-
-export function getGroupContentLayout(
-  children: FlowNode[],
-  expanded: boolean,
-  isContainer: boolean,
-): { size: { width: number; height: number }; positions: Map<string, { x: number; y: number }> } {
-  const positions = new Map<string, { x: number; y: number }>()
-  const sortedChildren = [...children].sort(compareChildNodes)
-  const groupBaseWidth = DEFAULT_NODE_SIZE.group.width
-  const groupCollapsedHeight = DEFAULT_NODE_SIZE.group.height
-
-  const cols = Math.max(1, Math.min(2, Math.ceil(Math.sqrt(sortedChildren.length))))
-  const rowHeights: number[] = []
-
-  sortedChildren.forEach((child, index) => {
-    const { height } = getNodeSize(child)
-    const row = Math.floor(index / cols)
-    if (!rowHeights[row]) rowHeights[row] = 0
-    rowHeights[row] = Math.max(rowHeights[row], height)
-  })
-
-  sortedChildren.forEach((child, index) => {
-    const { width, height } = getNodeSize(child)
-    const col = index % cols
-    const row = Math.floor(index / cols)
-
-    let x = LAYOUT.childPaddingX
-    for (let c = 0; c < col; c++) {
-      const prev = sortedChildren[row * cols + c]
-      if (prev) x += getNodeSize(prev).width + LAYOUT.childGapX
-    }
-
-    const detailsHeight = expanded ? (isContainer ? 178 : 222) : 0
-    const childStartY = 54 + 202 + detailsHeight
-    let y = childStartY
-    for (let r = 0; r < row; r++) {
-      y += (rowHeights[r] ?? 0) + LAYOUT.childGapY
-    }
-
-    positions.set(child.id, { x, y })
-  })
-
-  let maxRight = LAYOUT.childPaddingX
-  let maxBottom = 54 + 202 + (expanded ? (isContainer ? 178 : 222) : 0)
-  sortedChildren.forEach((child) => {
-    const pos = positions.get(child.id)
-    if (!pos) return
-    const { width, height } = getNodeSize(child)
-    maxRight = Math.max(maxRight, pos.x + width + LAYOUT.childPaddingX)
-    maxBottom = Math.max(maxBottom, pos.y + height + LAYOUT.childPaddingY)
-  })
-
-  return {
-    size: {
-      width: Math.max(groupBaseWidth, maxRight),
-      height: Math.max(groupCollapsedHeight, maxBottom),
-    },
-    positions,
   }
 }
 
@@ -231,8 +151,8 @@ export function alignEdgeHandlesToLayout(nodes: FlowNode[], edges: FlowEdge[]): 
 
     return {
       ...edge,
-      sourceHandle: `${sourceSide}-source`,
-      targetHandle: `${targetSide}-target`,
+      sourceHandle: sourceSide,
+      targetHandle: targetSide,
     }
   })
 }

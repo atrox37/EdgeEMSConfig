@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { createLogger, defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -14,6 +14,22 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 const host = process.env.TAURI_DEV_HOST
+
+const viteLogger = createLogger()
+const viteLoggerWarn = viteLogger.warn.bind(viteLogger)
+const viteLoggerInfo = viteLogger.info.bind(viteLogger)
+const shouldSuppressBuildNoise = (msg: string) =>
+  msg.includes('#__PURE__')
+  || msg.includes('PURE__')
+  || msg.includes('contains an annotation')
+viteLogger.warn = (msg, options) => {
+  if (shouldSuppressBuildNoise(msg)) return
+  viteLoggerWarn(msg, options)
+}
+viteLogger.info = (msg, options) => {
+  if (shouldSuppressBuildNoise(msg)) return
+  viteLoggerInfo(msg, options)
+}
 
 export default defineConfig(({ command }) => {
   const isBuild = command === 'build'
@@ -70,6 +86,7 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins,
+    customLogger: viteLogger,
 
     // Tauri 开发推荐配置
     clearScreen: false,
@@ -154,17 +171,36 @@ export default defineConfig(({ command }) => {
       minify: process.env.TAURI_DEBUG ? false : 'esbuild',
       sourcemap: !!process.env.TAURI_DEBUG,
       cssCodeSplit: true,
+      chunkSizeWarningLimit: 850,
       rollupOptions: {
+        onLog(level, log, handler) {
+          const message = log.message ?? ''
+          if (shouldSuppressBuildNoise(message)) return
+          handler(level, log)
+        },
+        onwarn(warning, warn) {
+          if (
+            warning.code === 'INVALID_ANNOTATION'
+            || warning.message?.includes('PURE__')
+            || warning.message?.includes('#__PURE__')
+          ) {
+            return
+          }
+          if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
+          warn(warning)
+        },
         output: {
           manualChunks(id) {
             if (!id.includes('node_modules')) return
             if (id.includes('@vue-flow')) return 'vue-flow'
+            if (id.includes('@vueuse')) return 'vueuse'
             if (id.includes('element-plus')) return 'element-plus'
             if (id.includes('echarts')) return 'echarts'
             if (id.includes('xlsx')) return 'xlsx'
             if (id.includes('crypto-js')) return 'crypto-js'
             if (id.includes('@tauri-apps')) return 'tauri'
-            if (id.includes('vue-router') || id.includes('pinia') || id.includes('vue')) {
+            if (id.includes('html-to-image')) return 'html-to-image'
+            if (id.includes('vue-router') || id.includes('pinia') || id.includes('/vue/')) {
               return 'vue-vendor'
             }
             return 'vendor'

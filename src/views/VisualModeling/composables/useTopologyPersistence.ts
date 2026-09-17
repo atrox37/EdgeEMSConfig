@@ -1,5 +1,5 @@
 import type { Edge, Node } from '@vue-flow/core'
-import type { ModelFlowData, ModelInstanceBinding } from '@/types/visualModeling'
+import type { ModelFlowData } from '@/types/visualModeling'
 import { createPersistedTopologyFlow } from '@/utils/topologyNormalize'
 
 type PersistenceOptions = {
@@ -9,13 +9,15 @@ type PersistenceOptions = {
   normalizeEdges: (edges: Edge[], nodes?: Node[]) => Edge[]
   setEdges: (edges: Edge[]) => void
   updateEdges: (edges: Edge[]) => void
-  fixedBindings: () => { station: ModelInstanceBinding | null; environment: ModelInstanceBinding | null }
+  fixedBindings: () => NonNullable<ModelFlowData['fixedBindings']>
   saveFlow: (flow: ModelFlowData) => Promise<boolean>
 }
 
 export function useTopologyPersistence(options: PersistenceOptions) {
   async function syncEdgesFromFlow() {
-    const latest = options.toObject().edges ?? []
+    const fromObject = options.toObject().edges ?? []
+    const fromStore = options.getEdges()
+    const latest = fromStore.length >= fromObject.length ? fromStore : fromObject
     const normalized = options.normalizeEdges(
       JSON.parse(JSON.stringify(latest)) as Edge[],
       options.getNodes(),
@@ -39,10 +41,5 @@ export function useTopologyPersistence(options: PersistenceOptions) {
     })
   }
 
-  async function persistFlow() {
-    await syncEdgesFromFlow()
-    return options.saveFlow(exportCurrentFlow())
-  }
-
-  return { syncEdgesFromFlow, exportCurrentFlow, persistFlow }
+  return { syncEdgesFromFlow, exportCurrentFlow }
 }

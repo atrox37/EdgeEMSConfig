@@ -357,7 +357,8 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/styles/variables' as *;
+@use '@/assets/styles/components/point-table' as pt;
+@use '@/assets/styles/components/points-tables-host' as pth;
 
 .voltage-class.template-detail-page {
   height: 100%;
@@ -370,36 +371,7 @@ onMounted(() => {
     align-items: center;
   }
 
-  .points-tables-page__header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex: 1;
-    min-width: 0;
-
-    .points-tables-page__dropdown-trigger {
-      display: inline-flex;
-      align-items: center;
-      font-size: var(--vt-font-size-lg);
-      font-weight: var(--vt-font-weight-semibold);
-      color: var(--vt-text-primary);
-      cursor: pointer;
-
-      :deep(.el-icon--right) {
-        margin-left: 4px;
-        width: 1em;
-        height: 1em;
-      }
-    }
-
-    .points-tables-page__channel-name {
-      font-size: var(--vt-font-size-lg);
-      font-weight: var(--vt-font-weight-semibold);
-      color: var(--vt-text-primary);
-      flex-shrink: 0;
-      margin-left: 4px;
-    }
-  }
+  @include pth.points-tables-header-content();
 
   .template-detail-page__content {
     flex: 1;
@@ -407,7 +379,6 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    // padding: 20px;
   }
 
   .rule-management__expand-content {
@@ -438,19 +409,7 @@ onMounted(() => {
     height: 100%;
     min-height: 0;
     overflow: hidden;
-  }
-
-  :deep(.point-table) {
-    height: 100%;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  :deep(.point-table__wrapper) {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
+    @include pt.point-table-host-layout();
   }
 }
 </style>

@@ -73,6 +73,7 @@
   /* Table */
   --vt-table-header-bg: #ECEEFA;
   --vt-table-fixed-bg: #ECEEFA;
+  --vt-table-stripe-bg: #F4F6FB;
   --vt-table-row-hover-bg: #FFF0E5;
   --vt-table-sort-color: var(--vt-color-primary);
   --vt-text-empty: #999999;

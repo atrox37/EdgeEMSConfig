@@ -1,6 +1,6 @@
 import { computed, inject, reactive, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 import { MODELING_EDITOR_KEY } from '../modelingEditorContext'
-import { normalizeNodeInstances } from '@/utils/visualModeling'
+import { getNodeInstanceId } from '@/utils/visualModeling'
 import type { ModelNodeData } from '@/types/visualModeling'
 
 export interface TopologyNodeDraft {
@@ -25,14 +25,18 @@ export function useTopologyNodeEditor(
   const allowBinding = computed(() => toValue(options.allowBinding))
   const instanceProductNames = computed(() => toValue(options.instanceProductNames))
 
-  const boundInstances = computed(() => normalizeNodeInstances(props.data))
-  const boundInstance = computed(() => boundInstances.value[0] ?? null)
-  const boundLabel = computed(() => boundInstance.value?.instanceName || 'Not Bound')
-  const boundValue = computed(() => boundInstance.value?.instanceName || '')
+  const boundInstanceId = computed(() => getNodeInstanceId(props.data))
+  const boundInstance = computed(() => {
+    const instanceId = boundInstanceId.value
+    if (instanceId === null) return null
+    return (editorCtx?.instances?.value ?? []).find((item) => item.instance_id === instanceId) ?? null
+  })
+  const boundLabel = computed(() => boundInstance.value?.instance_name || 'Not Bound')
+  const boundValue = computed(() => boundInstance.value?.instance_name || '')
   const draft = reactive<TopologyNodeDraft>({
     label: props.data.label || '',
     description: props.data.description || '',
-    instanceId: (boundInstance.value?.instanceId ?? null) as number | null,
+    instanceId: boundInstanceId.value,
   })
 
   const availableInstances = computed(() => {
@@ -46,24 +50,13 @@ export function useTopologyNodeEditor(
     const matches = all.filter((item) =>
       allowedProductNames.includes(item.product_name) && !occupiedIds.has(item.instance_id),
     )
-    if (boundInstance.value && !matches.some((item) => item.instance_id === boundInstance.value?.instanceId)) {
-      matches.push({
-        instance_id: boundInstance.value.instanceId,
-        instance_name: boundInstance.value.instanceName,
-        product_name: boundInstance.value.productName ?? productName,
-      })
-    }
-    return matches.length ? matches : boundInstance.value ? [{
-      instance_id: boundInstance.value.instanceId,
-      instance_name: boundInstance.value.instanceName,
-      product_name: boundInstance.value.productName ?? productName,
-    }] : []
+    return matches
   })
 
   function resetDraft() {
     draft.label = props.data.label || ''
     draft.description = props.data.description || ''
-    draft.instanceId = boundInstance.value?.instanceId ?? null
+    draft.instanceId = boundInstanceId.value
   }
 
   watch(() => props.data, () => {
@@ -96,15 +89,7 @@ export function useTopologyNodeEditor(
     }
 
     if (allowBinding.value) {
-      Object.assign(nextData, {
-        instances: nextInstance ? [{
-          instanceId: nextInstance.instance_id,
-          instanceName: nextInstance.instance_name,
-          productName: nextInstance.product_name,
-        }] : [],
-        instanceId: nextInstance?.instance_id,
-        instanceName: nextInstance?.instance_name,
-      })
+      nextData.instanceId = nextInstance?.instance_id ?? null
     }
 
     editorCtx?.updateNodeData?.(props.id, nextData)
@@ -116,7 +101,6 @@ export function useTopologyNodeEditor(
     expanded,
     editing,
     draft,
-    boundInstances,
     boundInstance,
     boundLabel,
     boundValue,

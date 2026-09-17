@@ -1,0 +1,450 @@
+@use 'sass:color';
+@use '@/assets/styles/variables' as *;
+
+// point-table BEM 命名（Block = point-table）
+// __toolbar / __toolbar-filters / __toolbar-label / __import-name
+// __wrapper / __table / __pagination
+// __cell / __cell-body / __cell-body--invalid / __cell-edit / __cell-error / __cell-text / __cell-text--value
+// __op / __op-btn / __op-btn--{add,delete,restore,publish,execute} / __op-icon / __op-error
+// __popper--{filter,mapping,reverse,publish}
+// point-table-col--{point-id,signal-name,...}  // el-table-column class-name
+// Modifiers: --device / --routing / --pagination-bordered
+// JS 动态类（composable 生成，保留短名）: row-status-* / row-invalid / field-modified|added|deleted
+//
+// Deprecated 旧名对照（已移除 alias，勿再使用）:
+//   table-action-controls        → point-table__toolbar
+//   table-action-controls__filters → point-table__toolbar-filters
+//   filter-label                   → point-table__toolbar-label
+//   imported-file-name             → point-table__import-name
+//   point-table__el-table          → point-table__table
+//   point-table-cell-wrapper       → point-table__cell
+//   point-table-cell-content       → point-table__cell-body
+//   field-has-error                → point-table__cell-body--invalid
+//   inline-edit-container          → point-table__cell-edit
+//   field-error                    → point-table__cell-error
+//   point-table__operation-cell    → point-table__op
+//   point-table__{delete|restore|publish|add}-btn → point-table__op-btn--{...}
+//   point-table__error-tip         → point-table__op-error
+//   signal-name-popper             → point-table__popper--filter
+//   inline-mapping-popper          → point-table__popper--mapping
+//   inline-reverse-popper          → point-table__popper--reverse
+//   inline-publish-popper          → point-table__popper--publish
+//   point-id-column                → point-table-col--point-id  (POINT_TABLE_COL.pointId)
+//   device-point-table               → point-table--device
+//   device-routing-table           → point-table--routing
+//   value-field                    → point-table__cell-text--value (POINT_TABLE_CELL.value)
+
+// 共享 point-table 样式（Channel / Device 点位表、映射表、路由表）
+@mixin point-table-styles() {
+  .point-table__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: $spacing-sm;
+    padding-bottom: $spacing-sm;
+    width: 100%;
+  }
+
+  .point-table__toolbar-filters {
+    flex: 1;
+    display: flex;
+    gap: $spacing-sm;
+    align-items: center;
+  }
+
+  .point-table__toolbar-label {
+    white-space: nowrap;
+  }
+
+  .point-table__import-name {
+    color: $primary-color;
+    font-size: $font-size-base;
+    padding: 0 $spacing-sm;
+  }
+
+  .voltage-class .point-table {
+    color: $text-color-primary;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+
+    .point-table__toolbar {
+      grid-row: 1;
+    }
+
+    .point-table__wrapper {
+      grid-row: 2;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .point-table__pagination {
+      grid-row: 3;
+    }
+
+    .point-table__table {
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+      width: 100%;
+
+      :deep(.el-table__inner-wrapper) {
+        height: 100%;
+      }
+
+      :deep(.el-table__body-wrapper) {
+        flex: 1;
+        overflow: auto;
+      }
+
+      :deep(.el-table__row--striped .el-table__cell) {
+        background-color: var(--vt-table-stripe-bg);
+      }
+
+      :deep(.el-table__row) {
+        position: relative;
+      }
+
+      // 行状态条：Point ID 列左侧 10px 色条
+      :deep(.row-status-added td.point-table-col--point-id),
+      :deep(.row-status-modified td.point-table-col--point-id),
+      :deep(.row-status-deleted td.point-table-col--point-id) {
+        position: relative;
+        padding-left: 14px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 10px;
+        }
+      }
+
+      :deep(.row-status-added td.point-table-col--point-id::before) {
+        background-color: $success-color;
+      }
+
+      :deep(.row-status-modified td.point-table-col--point-id::before) {
+        background-color: $primary-color;
+      }
+
+      :deep(.row-status-deleted td.point-table-col--point-id::before) {
+        background-color: $danger-color;
+      }
+
+      :deep(.row-status-deleted) {
+        opacity: 0.7;
+      }
+
+      :deep(.row-invalid) {
+        background-color: rgba(167, 0, 0, 0.18);
+      }
+
+      :deep(td.el-table__cell) {
+        position: relative;
+        min-height: 32px;
+        height: auto;
+      }
+
+      :deep(.point-table__cell) {
+        width: 100%;
+        position: relative;
+        box-sizing: border-box;
+      }
+
+      :deep(.point-table__cell-body) {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+      }
+
+      :deep(.point-table__cell-body--invalid) {
+        .el-input__wrapper,
+        .el-select .el-select__wrapper {
+          box-shadow: 0 0 0 1px $danger-color inset;
+        }
+      }
+
+      :deep(.point-table__cell .point-table__cell-error) {
+        position: absolute;
+        bottom: 0;
+        left: 34px;
+        right: 0;
+        height: 9px;
+        line-height: 9px;
+        font-size: 9px;
+        color: #ff4d4f;
+        overflow: hidden;
+      }
+    }
+
+    // 表头 Add 按钮
+    :deep(.point-table__op-btn--add) {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: $success-color;
+      font-size: 16px;
+
+      .point-table__op-icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      span {
+        font-size: $font-size-small;
+      }
+
+      &:hover {
+        color: color.adjust($success-color, $lightness: 8%);
+      }
+    }
+
+    :deep(.point-table__popper--filter) {
+      left: 0 !important;
+      transform: none !important;
+      min-width: 100% !important;
+    }
+
+    .point-table__op {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+
+      .point-table__op-icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .point-table__op-error {
+        color: $danger-color;
+        font-size: 16px;
+        margin-right: 4px;
+      }
+    }
+
+    .point-table__op-btn {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 16px;
+      transition: color 0.3s;
+
+      span {
+        font-size: $font-size-small;
+      }
+
+      &--delete {
+        color: $danger-color;
+
+        &:hover {
+          color: color.adjust($danger-color, $lightness: 8%);
+        }
+      }
+
+      &--restore {
+        color: $success-color;
+
+        &:hover {
+          color: color.adjust($success-color, $lightness: 8%);
+        }
+      }
+
+      &--publish,
+      &--execute {
+        color: $text-color-primary;
+
+        &:hover {
+          color: $text-color-primary;
+        }
+      }
+    }
+
+    .point-table__cell-edit {
+      width: 100%;
+      position: relative;
+      z-index: 10;
+
+      :deep(.el-input),
+      :deep(.el-input-number),
+      :deep(.el-select) {
+        width: 100% !important;
+      }
+
+      :deep(.el-input__inner) {
+        padding: 2px 8px;
+        height: 28px;
+        line-height: 28px;
+      }
+
+      &:has(.el-select.is-focus),
+      &:has(.el-select:hover) {
+        z-index: 100;
+      }
+    }
+
+    :deep(.point-table__popper--mapping),
+    :deep(.point-table__popper--reverse),
+    :deep(.point-table__popper--publish) {
+      z-index: 9999 !important;
+      position: absolute !important;
+    }
+
+    .field-modified {
+      color: $primary-color !important;
+
+      :deep(.el-input__inner),
+      :deep(.el-input__wrapper),
+      :deep(.el-input-number .el-input__inner),
+      :deep(.el-input-number .el-input__wrapper),
+      :deep(.el-select .el-select__placeholder),
+      :deep(.el-select .el-select__wrapper) {
+        color: $primary-color !important;
+      }
+
+      :deep(.el-input__wrapper),
+      :deep(.el-select .el-select__wrapper) {
+        box-shadow: 0 0 0 1px $primary-color inset !important;
+      }
+    }
+
+    .field-added {
+      color: $success-color !important;
+
+      :deep(.el-input__inner),
+      :deep(.el-input__wrapper),
+      :deep(.el-input-number .el-input__inner),
+      :deep(.el-input-number .el-input__wrapper),
+      :deep(.el-select .el-select__placeholder),
+      :deep(.el-select .el-select__wrapper) {
+        color: $success-color !important;
+      }
+
+      :deep(.el-input__wrapper),
+      :deep(.el-select .el-select__wrapper) {
+        box-shadow: 0 0 0 1px $success-color inset !important;
+      }
+    }
+
+    .field-deleted {
+      color: $danger-color !important;
+    }
+
+    .point-table__cell-text--value {
+      color: $text-color-primary !important;
+    }
+
+    .point-table__pagination {
+      flex-shrink: 0;
+      height: 56px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 0;
+
+      :deep(.el-pagination .el-pager .number.is-active) {
+        background-color: var(--vt-color-primary);
+        border-color: var(--vt-color-primary);
+        color: #fff;
+        font-weight: 600;
+        border-radius: $border-radius-base;
+      }
+    }
+
+    &:not(.point-table--editing) {
+      .point-table__table {
+        :deep(.cell) {
+          height: auto;
+          min-height: var(--vt-table-cell-inner-height);
+          max-height: none;
+          line-height: var(--vt-table-cell-line-height);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    &.point-table--device:not(.point-table--editing) {
+      .point-table__toolbar {
+        padding-bottom: $spacing-md;
+      }
+    }
+
+    &.point-table--pagination-bordered .point-table__pagination {
+      padding: $spacing-md 0;
+      border-top: 1px solid $border-color-gray-light;
+    }
+  }
+}
+
+// 父容器内 point-table 填满可用高度（Dialog / Tab 面板）
+@mixin point-table-host-layout($modifier: null, $wrapper-overflow: hidden) {
+  @if $modifier {
+    @include _point-table-host-layout-target('.point-table--#{$modifier}', $wrapper-overflow);
+  } @else {
+    @include _point-table-host-layout-target('.point-table', $wrapper-overflow);
+  }
+}
+
+@mixin _point-table-host-layout-target($selector, $wrapper-overflow) {
+  :deep(#{$selector}) {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  :deep(#{$selector} .point-table__wrapper) {
+    min-height: 0;
+    overflow: $wrapper-overflow;
+  }
+
+  :deep(#{$selector} .point-table__toolbar) {
+    min-height: 0;
+  }
+
+  :deep(#{$selector} .point-table__pagination) {
+    min-height: 0;
+  }
+}
+
+// 非 scoped 父容器（如 Dialog 全局样式块）
+@mixin point-table-host-layout-global($root-selector, $modifier: null, $wrapper-overflow: hidden) {
+  @if $modifier {
+    @include _point-table-host-layout-global-target(
+      '#{$root-selector} .point-table--#{$modifier}',
+      $wrapper-overflow
+    );
+  } @else {
+    @include _point-table-host-layout-global-target('#{$root-selector} .point-table', $wrapper-overflow);
+  }
+}
+
+@mixin _point-table-host-layout-global-target($selector, $wrapper-overflow) {
+  #{$selector} {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  #{$selector} .point-table__wrapper {
+    min-height: 0;
+    overflow: $wrapper-overflow;
+  }
+}

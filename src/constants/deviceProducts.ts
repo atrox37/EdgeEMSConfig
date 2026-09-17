@@ -15,28 +15,17 @@ export interface LeftPanelGroup {
  */
 export function getTopologyPanelGroups(products?: ProductListItem[] | null): LeftPanelGroup[] {
   const groups = new Map<string, LeftPanelGroup>()
-  const productsByName = new Map((products ?? []).map((product) => [product.product_name, product]))
-
   for (const product of products ?? []) {
-    const topologyType = product.topology?.type
-    if (
-      product.topology?.enabled !== true
-      || !['standalone', 'composite', 'container'].includes(topologyType ?? '')
-    ) continue
+    if (!product.topology) continue
 
-    const parentName = product.parent_name?.trim()
-    const key = parentName ? `parent-${parentName}` : 'other'
+    const productType = product.type?.trim() || 'Other'
+    const key = `type-${productType}`
     const group = groups.get(key) ?? {
       key,
-      title: parentName || 'Other',
+      title: productType,
       templates: [],
     }
-    const template = productToTemplate(product)
-    for (const component of template.components ?? []) {
-      const componentProduct = productsByName.get(component.productName)
-      component.imageUrl ||= getProductInstanceImageUrl(componentProduct?.topology?.image)
-    }
-    group.templates.push(template)
+    group.templates.push(productToTemplate(product))
     groups.set(key, group)
   }
 
@@ -53,30 +42,14 @@ export function getProductMeta(productName: string) {
 }
 
 export function productToTemplate(product: ProductListItem): ModelNodeTemplate {
-  const topologyType = product.topology?.type
-  const isGroup = topologyType === 'composite' || topologyType === 'container'
-
   return {
     id: `product-${product.product_name}`,
-    type: topologyType === 'top-level' ? 'station' : isGroup ? 'group' : 'product',
+    type: 'product',
     label: product.product_name,
-    description: topologyType ? topologyType[0].toUpperCase() + topologyType.slice(1) : '',
+    description: product.topology?.description?.trim() || product.description?.trim() || '',
     productName: product.product_name,
-    parentName: product.parent_name ?? undefined,
-    imageUrl: getProductInstanceImageUrl(product.topology?.image),
-    topologyType: topologyType === 'top-level' ? undefined : topologyType,
-    components: (product.topology?.components ?? [])
-      .map((component) => {
-        const productName = component.productName ?? component.name
-        if (!productName) return undefined
-        return {
-          productName,
-          label: component.name ?? productName,
-          imageUrl: getProductInstanceImageUrl(component.image),
-          selectableProductTypes: component.selectableProductTypes ?? [],
-        }
-      })
-      .filter((component): component is NonNullable<typeof component> => !!component),
+    imageUrl: getProductInstanceImageUrl(product.topology?.image ?? undefined),
+    connections: product.topology?.connections ?? [],
   }
 }
 

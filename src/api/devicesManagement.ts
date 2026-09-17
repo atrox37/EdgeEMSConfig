@@ -19,7 +19,6 @@ export const getInstanceDetail = (
 获取产品列表
 */
 export interface ProductListQuery {
-  can_create_instance?: boolean
   topology_enabled?: boolean
 }
 

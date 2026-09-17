@@ -124,6 +124,8 @@ function deepClone<T>(obj: T): T {
 :deep(.rule-card-edit-dialog.el-dialog) {
   display: flex;
   flex-direction: column;
+  width: min(92vw, 1200px) !important;
+  min-width: 720px;
   max-height: calc(100vh - 32px);
 }
 

@@ -4,15 +4,15 @@ import type { ModelFlowData } from '@/types/visualModeling'
 export interface StationTopology {
   station_id: string
   station_name: string
-  description: string | null
+  description?: string | null
   flow_json: ModelFlowData
-  /** 未配置时后端返回 null */
-  created_at: string | null
-  updated_at: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export interface StationTopologySavePayload {
-  station_name?: string
+  station_id: string
+  station_name: string
   description?: string
   flow_json: ModelFlowData
 }

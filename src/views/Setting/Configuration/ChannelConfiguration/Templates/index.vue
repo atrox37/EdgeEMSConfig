@@ -57,19 +57,19 @@
         <el-table-column label="Action" width="390" fixed="right">
           <template #default="{ row }">
             <div class="rule-management__operation">
-              <div class="rule-management__operation-item" @click="openEditDialog(row)">
+              <div class="rule-management__operation-item" @click="openEditDialog(templateRow(row))">
                 <AppIcon name="i-tabler-edit" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Edit</span>
               </div>
-              <div class="rule-management__operation-item" @click="handleView(row)">
+              <div class="rule-management__operation-item" @click="handleView(templateRow(row))">
                 <AppIcon name="i-tabler-transform-point" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Points/Mappings</span>
               </div>
-              <div class="rule-management__operation-item" @click="openApplyDialog(row)">
+              <div class="rule-management__operation-item" @click="openApplyDialog(templateRow(row))">
                 <AppIcon name="i-tabler-send" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Apply</span>
               </div>
-              <div class="rule-management__operation-item" @click="handleDelete(row)">
+              <div class="rule-management__operation-item" @click="handleDelete(templateRow(row))">
                 <AppIcon name="i-tabler-trash" className="rule-management__inline-icon" />
                 <span class="rule-management__operation-text">Delete</span>
               </div>
@@ -115,6 +115,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import type { ChannelTemplateListItem } from '@/types/channelTemplates'
+import { asTableRow } from '@/utils/tableRow'
 import {
   applyTemplateToChannel,
   createTemplate,
@@ -127,6 +128,9 @@ import { getAllChannels } from '@/api/channelsManagement'
 import TemplateEditDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateEditDialog.vue'
 import TemplateApplyDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateApplyDialog.vue'
 import TemplateCreateDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateCreateDialog.vue'
+
+const templateRow = (row: unknown): ChannelTemplateListItem =>
+  asTableRow<ChannelTemplateListItem>(row)
 
 const userAddIcon = 'i-tabler-plus'
 

@@ -1,167 +1,129 @@
 <template>
-  <div class="voltage-class point-table device-point-table">
-    <!-- 按钮控制区域 -->
-    <div v-if="props.viewMode === 'points'" class="table-action-controls">
-      <div
-        class="table-action-controls__filters"
-        style="flex: 1; display: flex; gap: 8px; align-items: center"
+  <PointTableShell variant="device">
+    <template #toolbar>
+      <PointTableToolbar
+        v-if="props.viewMode === 'points'"
+        v-model:signal-name-filter="signalNameFilterRaw"
+        :signal-name-options="signalNameOptions"
       >
-        <span class="filter-label">Point Name:</span>
-        <el-select
-          v-model="signalNameFilterRaw"
-          filterable
-          allow-create
-          clearable
-          placeholder="Search Point Name"
-          style="width: 280px"
-          :fit-input-width="true"
-        >
-          <el-option v-for="name in signalNameOptions" :key="name" :label="name" :value="name" />
-        </el-select>
-      </div>
-      <el-button v-if="!props.publishMode" type="primary" @click="handleExport">Export</el-button>
-    </div>
+        <template #actions>
+          <el-button v-if="!props.publishMode" type="primary" @click="handleExport">Export</el-button>
+        </template>
+      </PointTableToolbar>
+    </template>
 
-    <div class="point-table__wrapper">
-      <el-table
-        :data="paginatedData"
-        :row-key="(row: any) => row.rowKey"
-        :row-class-name="getRowClass"
-        class="point-table__el-table"
-        empty-text="no Data"
-        v-loading="props.loading"
-      >
-        <!-- Point ID -->
-        <el-table-column label="Point ID" width="80" class-name="point-id-column">
-          <template #default="{ row }">
-            <span>{{ getPointId(row) }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- Point Name -->
-        <el-table-column label="Point Name" min-width="220">
-          <template #default="{ row }">
-            <span>{{ row.name }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- Value -->
-        <el-table-column label="Value" min-width="120">
-          <template #default="{ row }">
-            <span class="value-field">{{ row.value ?? '-' }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- Update Time (property 不展示) -->
+    <el-table
+      :data="paginatedData"
+      :row-key="(row: any) => row.rowKey"
+      :row-class-name="getRowClass"
+      :height="tableBodyHeight"
+      stripe
+      class="point-table__table"
+      empty-text="no Data"
+      v-loading="props.loading"
+    >
         <el-table-column
-          v-if="props.category !== 'property'"
-          label="Update Time"
-          min-width="160"
-          class-name="update-time-column"
+          v-for="col in pointColumns"
+          :key="col.key"
+          :label="col.label"
+          :min-width="col.minWidth"
+          :width="col.width"
+          :class-name="col.className"
         >
           <template #default="{ row }">
-            <span>{{ formatUpdateTime((row as any).update_ts) }}</span>
+            <PointTableCell :field-class="col.valueClassName">
+              <template #display>{{ col.display(row, columnCtx) }}</template>
+            </PointTableCell>
           </template>
         </el-table-column>
 
-        <!-- Unit -->
-        <el-table-column label="Unit" min-width="120">
-          <template #default="{ row }">
-            <span>{{ row.unit || '' }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- Description -->
-        <el-table-column label="Description" min-width="220">
-          <template #default="{ row }">
-            <span>{{ row.description || '' }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- Operation -->
         <el-table-column
           v-if="!props.publishMode"
           label="Operation"
           min-width="169"
-          fixed="right"
-          class-name="operation-column"
+          :class-name="POINT_TABLE_COL.operation"
         >
           <template #default="{ row }">
-            <div class="point-table__operation-cell">
-              <div
-                class="point-table__publish-btn point-table__execute-btn"
+            <PointTableOpCell>
+              <PointTableOpBtn
                 v-if="
                   props.category === 'action' ||
                   props.category === 'measurement' ||
                   props.category === 'property'
                 "
+                :variant="props.category === 'property' ? 'execute' : 'publish'"
+                icon="i-tabler-send"
+                :label="props.category === 'property' ? 'Execute' : 'Publish'"
                 @click="handleExecute(row)"
-              >
-                <AppIcon name="i-tabler-send" className="point-table__op-icon" />
-                <span>{{ props.category === 'property' ? 'Execute' : 'Publish' }}</span>
-              </div>
-            </div>
+              />
+            </PointTableOpCell>
           </template>
         </el-table-column>
 
-        <!-- Publish Value -->
         <el-table-column
           v-else
           label="Publish Value"
           min-width="182"
           fixed="right"
-          class-name="publish-value-column"
+          :class-name="POINT_TABLE_COL.publishValue"
         >
           <template #default="{ row }">
-            <el-input-number
-              v-if="props.category === 'action'"
+            <PointTablePublishCell
+              :kind="props.category === 'action' ? 'device-action' : 'empty'"
               v-model="publishValues[getPointId(row)]"
-              :controls="false"
-              align="left"
               @change="notifyPublishChange"
             />
-            <span v-else>-</span>
           </template>
         </el-table-column>
-      </el-table>
-    </div>
+    </el-table>
 
-    <!-- 分页 -->
-    <div class="point-table__pagination">
-      <el-pagination
+    <template #pagination>
+      <PointTablePagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
-        :page-sizes="[10, 20]"
         :total="total"
-        layout="total, prev, pager, next, sizes"
         @size-change="() => (currentPage = 1)"
       />
-    </div>
+    </template>
 
-    <ExecuteDialog ref="executeDialogRef" />
-  </div>
+    <template #append>
+      <ExecuteDialog ref="executeDialogRef" />
+    </template>
+  </PointTableShell>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
-import AppIcon from '@/components/AppIcon.vue'
+import PointTableOpBtn from '@/components/pointTable/PointTableOpBtn.vue'
+import PointTableOpCell from '@/components/pointTable/PointTableOpCell.vue'
+import PointTableCell from '@/components/pointTable/PointTableCell.vue'
+import PointTablePublishCell from '@/components/pointTable/PointTablePublishCell.vue'
+import PointTableShell from '@/components/pointTable/PointTableShell.vue'
+import PointTableToolbar from '@/components/pointTable/PointTableToolbar.vue'
+import PointTablePagination from '@/components/pointTable/PointTablePagination.vue'
 import ExecuteDialog from './ExecuteDialog.vue'
+import { POINT_TABLE_COL } from '@/constants/pointTable'
 import type {
   InstanceActionItem,
   InstanceMeasurementItem,
   InstancePropertyItem,
 } from '@/types/deviceConfiguration'
 import { InstanceNameKey } from '@/utils/key'
-import { usePointTableBase } from '@/composables/usePointTableBase'
+import { usePointTableFilters } from '@/composables/usePointTableFilters'
+import { usePointTableBodyHeight } from '@/composables/usePointTableBodyHeight'
 import { buildCsv } from '@/utils/csvSchema'
 import {
   downloadCsv,
-  formatUpdateTime,
   formatUpdateTimeForCsv,
   getTimestampCompact,
 } from '@/utils/csvExport'
 import { devicePointCsvSchema } from '@/schemas/devicePoints'
+import {
+  getDevicePointColumns,
+  type DevicePointColumnContext,
+  type DevicePointRow,
+} from '@/schemas/deviceTableColumns'
 
 interface Props {
   category: 'measurement' | 'action' | 'property'
@@ -179,6 +141,7 @@ const props = withDefaults(defineProps<Props>(), {
   publishMode: false,
   loading: false,
 })
+const tableBodyHeight = usePointTableBodyHeight()
 const emit = defineEmits<{
   'publish-change': [dirty: boolean]
   'toggle-publish': []
@@ -191,43 +154,18 @@ const executeDialogRef = ref<{
   open: (point_id: string, category: 'action' | 'measurement' | 'property') => void
 } | null>(null)
 
-const { signalNameFilterRaw, signalNameFilter, signalNameOptions, currentPage, pageSize, paginatedData } =
-  usePointTableBase<any>({
-    listRef: editPoints,
-    getSignalName: (p) => String(p?.name || ''),
-    getFiltered: () => filteredPoints.value,
-  })
-
-watch(
-  [signalNameFilter, () => props.editFilters],
-  () => {
-    currentPage.value = 1
-  },
-)
-
-const filteredPoints = computed(() => {
-  const list = Array.isArray(editPoints.value) ? editPoints.value : []
-  let result = [...list]
-  if (signalNameFilter.value) {
-    const kw = String(signalNameFilter.value || '').toLowerCase()
-    result = result.filter((p) =>
-      String(p.name || '')
-        .toLowerCase()
-        .includes(kw),
-    )
-  }
-  if (props.editFilters && props.editFilters.length > 0) {
-    const filterValue = props.editFilters[0]
-    if (filterValue === 'invalid') {
-      result = result.filter((p) => (p as any).isInvalid === true)
-    } else {
-      result = result.filter((p) => (p as any).rowStatus === filterValue)
-    }
-  }
-  return result
+const {
+  signalNameFilterRaw,
+  signalNameOptions,
+  currentPage,
+  pageSize,
+  paginatedData,
+  total,
+} = usePointTableFilters<any>({
+  listRef: editPoints,
+  getSignalName: (p) => String(p?.name || ''),
+  getEditFilters: () => props.editFilters,
 })
-
-const total = computed(() => filteredPoints.value.length)
 
 let rowKeySeed = 1
 function createRowKey(): string {
@@ -249,12 +187,19 @@ watch(
   { immediate: true, deep: true },
 )
 
-function getPointId(item: any): number {
+function getPointId(item: DevicePointRow): number {
   if (props.category === 'measurement') return Number(item.measurement_id)
   if (props.category === 'action') return Number(item.action_id)
   if (props.category === 'property') return Number(item.property_id)
   return 0
 }
+
+const columnCtx = computed<DevicePointColumnContext>(() => ({
+  category: props.category,
+  getPointId,
+}))
+
+const pointColumns = computed(() => getDevicePointColumns(columnCtx.value))
 
 function getRowClass({ row }: { row?: any }) {
   const item = row || {}
@@ -353,154 +298,3 @@ defineExpose({
   applyRealtimeValues,
 })
 </script>
-
-<style scoped lang="scss">
-@use '@/assets/styles/variables' as *;
-.table-action-controls {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 10px;
-  width: 100%;
-
-  .imported-file-name {
-    color: #ff6900;
-    font-size: 14px;
-    padding: 0 10px;
-  }
-}
-
-.voltage-class .point-table {
-  color: #000;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-
-  .point-table__wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-  }
-
-  .point-table__el-table {
-    flex: 1;
-    overflow: hidden;
-    min-height: 0;
-
-    // 表头和固定列统一设置
-    :deep(.el-table__header th),
-    :deep(.el-table__body td),
-    :deep(.el-table__fixed-right th),
-    :deep(.el-table__fixed-right td) {
-      padding: 9px 12px;
-    }
-
-    :deep(.el-table__row) {
-      position: relative;
-    }
-
-    // 根据行状态着色（移除左侧状态条，改为行背景色）
-    // 新增/修改/删除：在 Point ID 单元格左侧显示 10px 状态条
-    :deep(.row-status-added td.point-id-column),
-    :deep(.row-status-modified td.point-id-column),
-    :deep(.row-status-deleted td.point-id-column) {
-      position: relative;
-      padding-left: 14px;
-      :deep(.row-status-deleted td.point-id-column)::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 10px;
-      }
-    }
-    :deep(.row-status-added td.point-id-column::before) {
-      background-color: #67c23a;
-    }
-    :deep(.row-status-modified td.point-id-column::before) {
-      background-color: #409eff;
-    }
-    :deep(.row-status-deleted td.point-id-column::before) {
-      background-color: #f56c6c;
-    }
-    :deep(.row-status-deleted) {
-      opacity: 0.7;
-    }
-    // 错误行：整行背景色（更透明）
-    :deep(.row-invalid) {
-      background-color: rgba(167, 0, 0, 0.18);
-    }
-
-    :deep(td .cell) {
-      position: relative;
-      height: 32px;
-    }
-  }
-
-  // 顶部工具栏中的筛选下拉与输入框左侧对齐
-  :deep(.signal-name-popper) {
-    left: 0 !important;
-    transform: none !important;
-    min-width: 100% !important;
-  }
-
-  .point-table__operation-cell {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    // justify-content: center;
-
-    :deep(.point-table__op-icon) {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-    }
-
-    .point-table__publish-btn {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 16px;
-      transition: color 0.3s;
-
-      span {
-        font-size: 12px;
-      }
-    }
-
-    .point-table__publish-btn,
-    .point-table__execute-btn {
-      color: #000;
-      cursor: pointer;
-      .point-table__execute-btn:hover {
-        color: #000;
-      }
-    }
-  }
-
-  .value-field {
-    color: #000 !important;
-  }
-
-  // 分页样式（固定高度，独立出去）
-  .point-table__pagination {
-    flex-shrink: 0;
-    height: 56px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    :deep(.el-pagination .el-pager .number.is-active) {
-      background-color: var(--vt-color-primary);
-      border-color: var(--vt-color-primary);
-      color: #fff;
-      font-weight: 600;
-      border-radius: 6px;
-    }
-  }
-}
-</style>
