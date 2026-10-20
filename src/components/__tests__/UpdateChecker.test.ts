@@ -70,6 +70,7 @@ const ElProgressStub = defineComponent({
 vi.mock('@/composables/useUpdater', () => ({
   useUpdater: () => ({
     updateInfo: computed(() => mocks.state.updateInfo),
+    checkError: computed(() => mocks.state.checkError ?? null),
     isInstalling: computed(() => mocks.state.isInstalling),
     installPhase: computed(() => mocks.state.installPhase),
     downloadPercent: computed(() => mocks.state.downloadPercent),

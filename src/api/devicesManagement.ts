@@ -8,6 +8,7 @@ import type {
   InstancePointList,
   InstanceMappingList,
   DeviceInstanceListResponse,
+  ProductPointsResponse,
 } from '@/types/deviceConfiguration'
 
 export const getInstanceDetail = (
@@ -26,6 +27,15 @@ export const getProducts = (
   params?: ProductListQuery,
 ): Promise<ApiResponse<ProductListResponse>> => {
   return Request.get('/modApi/api/products', params)
+}
+
+/** 获取产品点位及默认展示元数据。 */
+export const getProductPoints = (
+  productName: string,
+): Promise<ApiResponse<ProductPointsResponse>> => {
+  return Request.get(`/modApi/api/products/${encodeURIComponent(productName)}/points`, undefined, {
+    showErrorMessage: false,
+  })
 }
 export const createInstance = (data: AddDeviceInstanceDetail) => {
   return Request.post('/modApi/api/instances', data)

@@ -32,15 +32,6 @@ export function getTopologyPanelGroups(products?: ProductListItem[] | null): Lef
   return Array.from(groups.values())
 }
 
-/** Generic presentation defaults; the displayed product name always comes from the API. */
-export function getProductMeta(productName: string) {
-  return {
-    icon: 'i-tabler-cpu',
-    color: 'blue',
-    label: productName,
-  }
-}
-
 export function productToTemplate(product: ProductListItem): ModelNodeTemplate {
   return {
     id: `product-${product.product_name}`,

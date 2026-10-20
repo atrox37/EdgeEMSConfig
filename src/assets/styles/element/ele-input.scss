@@ -208,6 +208,48 @@
   // }
 }
 
+// ---- InputTag ----
+// Keep tag inputs visually consistent with regular inputs while preserving
+// their ability to grow vertically as tags wrap onto additional lines.
+.el-input-tag.el-input-tag {
+  --el-input-tag-placeholder-color: var(--vt-text-placeholder);
+  --el-input-tag-text-color: var(--vt-text-primary);
+  --el-input-tag-inner-padding: 0px;
+
+  width: 100%;
+  min-height: var(--vt-control-height);
+  padding: 3px 11px;
+  background-color: var(--vt-bg-input);
+  border: 1px solid var(--vt-border-color);
+  border-radius: var(--vt-radius-none);
+  box-shadow: none;
+  transition:
+    border-color var(--vt-transition-fast),
+    box-shadow var(--vt-transition-fast),
+    background-color var(--vt-transition-fast);
+
+  &:hover,
+  &.is-hovering,
+  &.is-focused {
+    border-color: var(--vt-border-color);
+    box-shadow: none;
+  }
+
+  &.is-disabled {
+    background-color: var(--vt-bg-disabled);
+    border-color: var(--vt-border-color-disabled);
+    box-shadow: none;
+  }
+
+  .el-input-tag__input {
+    color: var(--vt-text-primary);
+
+    &::placeholder {
+      color: var(--vt-text-placeholder);
+    }
+  }
+}
+
 // ---- InputNumber (shared input styling) ----
 .el-input-number.el-input-number {
   width: 100%;

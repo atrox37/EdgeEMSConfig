@@ -71,3 +71,8 @@
   min-height: 6px;
   min-width: 6px;
 }
+
+:root {
+  --topology-accent: #{$topology-accent};
+  --topology-accent-border: #{$topology-accent-border};
+}

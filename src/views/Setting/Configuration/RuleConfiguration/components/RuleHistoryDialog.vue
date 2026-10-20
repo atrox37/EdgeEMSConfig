@@ -209,9 +209,9 @@
 import FormDialog from '@/components/dialog/FormDialog.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import RuleHistoryExecutionFlow from './RuleHistoryExecutionFlow.vue'
-import { listRuleHistoryRecords } from '@/api/rulesManagement'
 import type { Rule } from '@/types/ruleConfiguration'
 import type { RuleHistoryItem } from '@/types/controlRule'
+import { useTableData } from '@/composables/useTableData'
 import { formatDateTime } from '@/utils/date'
 import {
   getDisplayActions,
@@ -226,14 +226,19 @@ import { asTableRow } from '@/utils/tableRow'
 const historyRow = (row: unknown): RuleHistoryItem => asTableRow<RuleHistoryItem>(row)
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null)
-const loading = ref(false)
 const currentRule = ref<Pick<Rule, 'id' | 'name'> | null>(null)
-const historyList = ref<RuleHistoryItem[]>([])
-
-const pagination = reactive({
-  page: 1,
-  pageSize: 20,
-  total: 0,
+const {
+  loading,
+  tableData: historyList,
+  pagination,
+  filters,
+  fetchTableData,
+  handlePageSizeChange,
+  handlePageChange,
+} = useTableData<RuleHistoryItem>({
+  listUrl: '/ruleApi/api/rules/history',
+  defaultPageSize: 20,
+  autoLoad: false,
 })
 
 const historyFilters = reactive({
@@ -302,63 +307,32 @@ const disableEndDate = (time: Date) => {
   return time.getTime() < historyFilters.startTime.getTime()
 }
 
-const fetchHistory = async () => {
-  if (!currentRule.value) return
-  loading.value = true
-  try {
-    const res = await listRuleHistoryRecords({
-      rule_id: currentRule.value.id,
-      page: pagination.page,
-      page_size: pagination.pageSize,
-      ...(historyFilters.start_time != null ? { start_time: historyFilters.start_time } : {}),
-      ...(historyFilters.end_time != null ? { end_time: historyFilters.end_time } : {}),
-    })
-    if (res.success && res.data) {
-      historyList.value = res.data.list || []
-      pagination.total = res.data.total || 0
-    } else {
-      historyList.value = []
-      pagination.total = 0
-    }
-  } catch {
-    historyList.value = []
-    pagination.total = 0
-  } finally {
-    loading.value = false
-  }
-}
-
-const handlePageSizeChange = (pageSize: number) => {
-  pagination.pageSize = pageSize
-  pagination.page = 1
-  void fetchHistory()
-}
-
-const handlePageChange = (page: number) => {
-  pagination.page = page
-  void fetchHistory()
-}
-
 const searchHistory = () => {
-  pagination.page = 1
-  void fetchHistory()
+  if (!currentRule.value) return
+  filters.rule_id = currentRule.value.id
+  filters.start_time = historyFilters.start_time
+  filters.end_time = historyFilters.end_time
+  void fetchTableData(true)
 }
 
 const reloadHistoryFilters = () => {
   resetHistoryFilters()
-  pagination.page = 1
-  void fetchHistory()
+  if (!currentRule.value) return
+  filters.rule_id = currentRule.value.id
+  filters.start_time = null
+  filters.end_time = null
+  void fetchTableData(true)
 }
 
 const open = async (rule: Pick<Rule, 'id' | 'name'>) => {
   currentRule.value = rule
-  pagination.page = 1
   pagination.pageSize = 20
-  pagination.total = 0
-  historyList.value = []
   resetHistoryFilters()
+  filters.rule_id = rule.id
+  filters.start_time = null
+  filters.end_time = null
   dialogRef.value!.dialogVisible = true
-  await fetchHistory()
+  await fetchTableData(true)
 }
 
 defineExpose({ open })

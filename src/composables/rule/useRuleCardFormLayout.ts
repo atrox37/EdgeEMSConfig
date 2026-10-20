@@ -4,7 +4,7 @@ export function useRuleCardFormLayout() {
   const collapsedSection = ref<'variable' | 'rule' | null>(null)
   const isCompact = ref(false)
 
-  const toggleCenterCollapse = () => {
+  const toggleCollapsedSection = () => {
     if (!isCompact.value) return
     collapsedSection.value = collapsedSection.value === 'rule' ? 'variable' : 'rule'
   }
@@ -38,6 +38,6 @@ export function useRuleCardFormLayout() {
   return {
     collapsedSection,
     isCompact,
-    toggleCenterCollapse,
+    toggleCollapsedSection,
   }
 }

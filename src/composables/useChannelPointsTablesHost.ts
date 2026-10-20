@@ -25,7 +25,7 @@ import wsManager from '@/utils/websocket'
 import type { DataType } from '@/types/websocket'
 
 export type ChannelTabName = 'telemetry' | 'signal' | 'control' | 'adjustment'
-export type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+export type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
 
 export const CHANNEL_TAB_NAMES: ChannelTabName[] = [
   'telemetry',
@@ -67,8 +67,8 @@ export interface UseChannelPointsTablesHostOptions {
     forEachTableInstance: (fn: (instance: any, tab: ChannelTabName) => void) => void
     applyRealtimeValues?: (
       dataType: DataType,
-      values: Record<string, number>,
-      ts?: Record<string, number>,
+      values: Record<string, unknown>,
+      ts?: Record<string, unknown>,
     ) => void
     scrollActiveTabToTop?: (tab: ChannelTabName) => void
   } | undefined>
@@ -431,6 +431,7 @@ export function useChannelPointsTablesHost(options: UseChannelPointsTablesHostOp
         onBatchDataUpdate: (payload: any) => {
           if (!payload?.updates?.length) return
           payload.updates.forEach((update: any) => {
+            if (update.source && update.source !== 'comsrv') return
             if (update.channel_id !== localChannelId) return
             channelTabsRef.value?.applyRealtimeValues?.(
               update.data_type as DataType,

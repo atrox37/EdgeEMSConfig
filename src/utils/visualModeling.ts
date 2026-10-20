@@ -11,20 +11,9 @@ export function instanceIds(data: ModelNodeData): number[] {
   return instanceId === null ? [] : [instanceId]
 }
 
-/** 收集某父节点下所有子节点 id（递归） */
-export function collectChildNodeIds(parentId: string, nodes: { id: string; parentNode?: string }[]): string[] {
-  const result: string[] = []
-  for (const node of nodes) {
-    if (node.parentNode === parentId) {
-      result.push(node.id, ...collectChildNodeIds(node.id, nodes))
-    }
-  }
-  return result
-}
-
-/** 删除节点时需一并移除的 id（含自身与子节点） */
-export function collectNodesToDelete(rootId: string, nodes: { id: string; parentNode?: string }[]): string[] {
-  return [rootId, ...collectChildNodeIds(rootId, nodes)]
+/** 扁平拓扑：删除节点时仅移除自身及相关连线。 */
+export function collectNodesToDelete(rootId: string): string[] {
+  return [rootId]
 }
 
 /** 收集画布上已绑定的实例 id */

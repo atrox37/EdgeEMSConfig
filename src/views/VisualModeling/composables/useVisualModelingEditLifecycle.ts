@@ -236,7 +236,6 @@ export function useVisualModelingEditLifecycle(options: UseVisualModelingEditLif
       options.selectedNode.value = null
       options.selectedEdgeId.value = null
       await waitForCanvasLayout()
-      options.fitFlowToViewport(true)
     } finally {
       options.isCanvasLoading.value = false
     }

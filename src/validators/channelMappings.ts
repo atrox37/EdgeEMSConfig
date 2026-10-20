@@ -1,5 +1,9 @@
 import type { PointInfo } from '@/types/channelConfiguration'
 import { BYTE_ORDER_64_OPTIONS, BYTE_ORDER_OPTIONS, CAN_DATA_TYPE_BY_POINT } from '@/types/channelConfiguration'
+import {
+  validateIec61850CtrlModel,
+  validateIec61850MappingAddressField,
+} from '@/validators/iec61850'
 
 export type PointType = 'T' | 'S' | 'C' | 'A'
 
@@ -74,6 +78,62 @@ function validateCanMappingField(item: any, field: string, ctx: MappingValidatio
     default:
       return ''
   }
+}
+
+function validateIec61850MappingField(
+  item: any,
+  field: string,
+  ctx: MappingValidationContext,
+): string {
+  const m = item.protocol_mapping || {}
+  const address = String(m.address ?? '').trim()
+
+  switch (field) {
+    case 'iec61850_address': {
+      if (!address) return ''
+      return validateIec61850MappingAddressField(address)
+    }
+    case 'ctrl_model': {
+      if (ctx.pointType === 'T' || ctx.pointType === 'S') return ''
+      if (!address) return ''
+      return validateIec61850CtrlModel(m.ctrl_model, ctx.pointType)
+    }
+    default:
+      return ''
+  }
+}
+
+function validateIec61850MappingRow(point: PointInfo, ctx: MappingValidationContext): boolean {
+  if ((point as any).rowStatus === 'deleted') {
+    ;(point as any).isInvalid = false
+    return true
+  }
+  const m = point.protocol_mapping as any
+  if (!m) {
+    ;(point as any).isInvalid = false
+    return true
+  }
+
+  const address = String(m.address ?? '').trim()
+  if (!address) {
+    ;(point as any).isInvalid = false
+    return true
+  }
+
+  if (validateIec61850MappingAddressField(address)) {
+    ;(point as any).isInvalid = true
+    return false
+  }
+
+  if (ctx.pointType === 'C' || ctx.pointType === 'A') {
+    if (validateIec61850CtrlModel(m.ctrl_model, ctx.pointType)) {
+      ;(point as any).isInvalid = true
+      return false
+    }
+  }
+
+  ;(point as any).isInvalid = false
+  return true
 }
 
 function validateCanMappingRow(point: PointInfo, ctx: MappingValidationContext): boolean {
@@ -160,6 +220,7 @@ export function validateMappingField(
   field: string,
   ctx: MappingValidationContext,
 ): string {
+  if (ctx.channelProtocol === 'iec61850') return validateIec61850MappingField(item, field, ctx)
   if (ctx.channelProtocol === 'can') return validateCanMappingField(item, field, ctx)
   if (ctx.channelProtocol === 'di_do' && field !== 'gpio_number') return ''
   const m = item.protocol_mapping || {}
@@ -266,6 +327,7 @@ export function validateMappingField(
 }
 
 export function validateMappingRow(point: PointInfo, ctx: MappingValidationContext): boolean {
+  if (ctx.channelProtocol === 'iec61850') return validateIec61850MappingRow(point, ctx)
   if (ctx.channelProtocol === 'can') return validateCanMappingRow(point, ctx)
   if ((point as any).rowStatus === 'deleted') {
     ;(point as any).isInvalid = false

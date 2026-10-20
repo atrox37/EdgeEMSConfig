@@ -7,6 +7,7 @@ export type ChannelProtocol =
   | 'virt'
   | 'can'
   | 'di_do'
+  | 'iec61850'
   | string
 
 export interface PointCsvRow {
@@ -33,6 +34,8 @@ export interface MappingCsvRow {
   can_id?: string
   byte_offset?: string
   bit_length?: string
+  address?: string
+  ctrl_model?: string
 }
 
 const POINT_BASE_FIELDS: CsvFieldDef<PointCsvRow>[] = [
@@ -90,6 +93,14 @@ export function getMappingCsvSchema(
       { key: 'point_id', header: 'point_id' },
       { key: 'point_name', header: 'point_name', required: false },
       { key: 'gpio_number', header: 'gpio_number' },
+    ]
+  }
+  if (protocol === 'iec61850') {
+    return [
+      { key: 'point_id', header: 'point_id' },
+      { key: 'point_name', header: 'point_name', required: false },
+      { key: 'address', header: 'address' },
+      { key: 'ctrl_model', header: 'ctrl_model', required: false },
     ]
   }
   return [

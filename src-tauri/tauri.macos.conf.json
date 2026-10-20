@@ -1,0 +1,20 @@
+{
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Monarch Edge Console",
+        "width": 1270,
+        "height": 750,
+        "minWidth": 1270,
+        "minHeight": 750,
+        "decorations": true,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay",
+        "visible": false,
+        "dragDropEnabled": false,
+        "devtools": true
+      }
+    ]
+  }
+}

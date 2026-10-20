@@ -238,7 +238,7 @@
             </template>
           </el-table-column>
           <!-- <el-table-column prop="error_count" label="Error Count" /> -->
-          <el-table-column label="Action" width="380" fixed="right">
+          <el-table-column label="Operation" width="380" fixed="right">
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div

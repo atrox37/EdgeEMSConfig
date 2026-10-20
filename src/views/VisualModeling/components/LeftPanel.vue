@@ -209,24 +209,6 @@ watch(
     cursor: grabbing;
   }
 
-  .left-panel__node-item--station {
-    background: rgba(26, 35, 126, 0.08);
-    border-color: rgba(26, 35, 126, 0.2);
-  }
-
-  .left-panel__node-item--station:hover {
-    border-color: #3949ab;
-  }
-
-  .left-panel__node-item--container {
-    background: rgba(156, 39, 176, 0.07);
-    border-color: rgba(156, 39, 176, 0.2);
-  }
-
-  .left-panel__node-item--container:hover {
-    border-color: #9c27b0;
-  }
-
   .left-panel__node-icon {
     width: 30px;
     height: 30px;
@@ -241,21 +223,6 @@ watch(
       height: 16px;
     }
 
-    .left-panel__node-icon--station {
-      background: #e8eaf6;
-
-      :deep(svg) {
-        color: #3949ab !important;
-      }
-    }
-
-    .left-panel__node-icon--container {
-      background: #f3e5f5;
-
-      :deep(svg) {
-        color: #9c27b0 !important;
-      }
-    }
   }
 
   .left-panel__node-info {

@@ -1,5 +1,15 @@
 <template>
-  <div class="section variable-section" :class="{ 'is-collapsed': collapsed }">
+  <div
+    class="section variable-section"
+    :class="{ 'is-collapsed': collapsed }"
+    :role="collapsed ? 'button' : undefined"
+    :tabindex="collapsed ? 0 : undefined"
+    :aria-label="collapsed ? 'Show Variable Settings' : undefined"
+    :title="collapsed ? 'Show Variable Settings' : undefined"
+    @click="expandCollapsed"
+    @keydown.enter.prevent="expandCollapsed"
+    @keydown.space.prevent="expandCollapsed"
+  >
     <div class="section__header">
       <span class="section__title">
         <span class="section__title-text">Variable Settings</span>
@@ -7,6 +17,9 @@
           <span class="section__title-line">Variable</span>
           <span class="section__title-line">Settings</span>
         </span>
+      </span>
+      <span class="section__expand-hint" aria-hidden="true">
+        <AppIcon name="i-tabler-chevron-left" className="section__expand-hint-icon" />
       </span>
       <el-button
         class="section__add-btn"
@@ -220,7 +233,7 @@
 import AppIcon from '@/components/AppIcon.vue'
 import RuleFormMiniActionBtn from '@/components/common/RuleFormMiniActionBtn.vue'
 
-defineProps<{
+const props = defineProps<{
   cardData: { config: { variables: any[] } }
   collapsed?: boolean
   includeActionPointType?: boolean
@@ -242,6 +255,12 @@ const emit = defineEmits<{
   'remove-combined-row': [variable: any, pairIndex: number]
   'combined-operand-change': [variable: any, index: number, value: unknown]
   'combined-extra-operand-change': [variable: any, index: number, value: unknown]
+  expand: []
 }>()
+
+const expandCollapsed = () => {
+  if (!props.collapsed) return
+  emit('expand')
+}
 </script>
 

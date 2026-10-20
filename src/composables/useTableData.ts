@@ -12,8 +12,9 @@
  */
 
 import { ref, reactive, computed, readonly, toRaw, onMounted } from 'vue'
-import { Request, type ApiResponse } from '@/utils/request'
+import { Request, type ApiResponse, type RequestConfig } from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { pageForNonEmptyResult } from '@/utils/pagination'
 
 // 分页参数接口
 export interface PaginationParams {
@@ -50,6 +51,8 @@ export interface TableConfig {
 
   // 分页配置
   defaultPageSize?: number // 默认每页大小
+  autoLoad?: boolean // 是否在组件挂载时自动加载，默认为 true
+  requestConfig?: RequestConfig // 列表请求的可选配置
 
   // 注意：URL 路径需要包含完整的前缀，如：
   // - 默认服务：/api/v1/users
@@ -68,10 +71,14 @@ export interface TableDataResponse<T = any> {
  * @param config 表格配置
  * @returns 表格管理的响应式数据和方法
  */
-export function useTableData<T = any>(config: TableConfig) {
+export function useTableData<
+  T = any,
+  TResponse extends TableDataResponse<T> = TableDataResponse<T>,
+>(config: TableConfig) {
   // 响应式数据
   const loading = ref(false) // 加载状态
   const tableData = ref<T[]>([]) // 表格数据
+  const responseData = ref<TResponse | null>(null)
 
   // 分页数据
   const pagination = reactive<PaginationParams>({
@@ -115,20 +122,34 @@ export function useTableData<T = any>(config: TableConfig) {
         }
       }
 
-      const response: ApiResponse<TableDataResponse<T>> = await Request.get(
+      const response: ApiResponse<TResponse> = await Request.get(
         config.listUrl,
         filteredParams,
+        config.requestConfig,
       )
 
       if (response.success) {
+        responseData.value = response.data
         tableData.value = response.data.list || []
         pagination.total = response.data.total || 0
         Object.assign(nowFilters, filteredParams)
+
+        const validPage = pageForNonEmptyResult(
+          pagination.page,
+          pagination.pageSize,
+          pagination.total,
+          tableData.value.length,
+        )
+        if (validPage !== pagination.page) {
+          pagination.page = validPage
+          await fetchTableData()
+        }
       }
     } catch (error) {
       console.error('获取表格数据失败:', error)
       tableData.value = []
       pagination.total = 0
+      responseData.value = null
       return false
     } finally {
       loading.value = false
@@ -334,15 +355,18 @@ export function useTableData<T = any>(config: TableConfig) {
   const hasData = computed(() => tableData.value.length > 0)
 
   // 初始化数据
-  onMounted(async () => {
-    await fetchTableData()
-  })
+  if (config.autoLoad !== false) {
+    onMounted(async () => {
+      await fetchTableData()
+    })
+  }
 
   // 返回响应式数据和方法
   return {
     // 响应式数据
     loading: readonly(loading),
     tableData, // 不使用readonly，保持数组的可变性
+    responseData,
     pagination: pagination,
     queryParams: readonly(queryParams),
     filters,

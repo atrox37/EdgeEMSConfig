@@ -261,6 +261,19 @@ const toPointInfo = (
           ? undefined
           : Number(protocolData.gpio_number),
     }
+  } else if (protocol === 'iec61850') {
+    mappingData = {
+      address:
+        protocolData.address === undefined || protocolData.address === null
+          ? undefined
+          : String(protocolData.address),
+      ctrl_model:
+        protocolData.ctrl_model === undefined || protocolData.ctrl_model === null
+          ? type === 'C' || type === 'A'
+            ? 1
+            : undefined
+          : Number(protocolData.ctrl_model),
+    }
   } else {
     // modbus_tcp / modbus_rtu / virt
     mappingData = {

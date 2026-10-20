@@ -101,10 +101,12 @@ import { useVisualModelingImportExport } from './composables/useVisualModelingIm
 import { useVisualModelingEditLifecycle, type UseVisualModelingEditLifecycleOptions } from './composables/useVisualModelingEditLifecycle'
 
 import { useVisualModelingStore, STATION_EDITOR_ID } from '@/stores/visualModeling'
-import type { ModelFlowNode, ModelInstanceBinding } from '@/types/visualModeling'
+import type { ModelFlowNode, ModelInstanceBinding, ModelNodeData } from '@/types/visualModeling'
 import { collectBoundInstanceIds, collectNodesToDelete } from '@/utils/visualModeling'
 import TopologyIssuesDialog from './components/dialogs/TopologyIssuesDialog.vue'
 import { MODELING_EDITOR_KEY } from './modelingEditorContext'
+import { useTopologyRealtime } from './composables/useTopologyRealtime'
+import { TOPOLOGY_REALTIME_KEY, type RealtimeBinding } from './topologyRealtime'
 import messageWarningIcon from '@/assets/icons/message-warning.svg'
 
 const MessageWarningIcon = defineComponent({
@@ -173,6 +175,28 @@ const edgeTypes = {
 const nodes = ref<FlowNode[]>([])
 const edges = ref<FlowEdge[]>([])
 const isViewMode = ref(true)
+const realtimeNodes = nodes as unknown as Ref<Array<{ data: ModelNodeData }>>
+const realtimeBindings = computed<RealtimeBinding[]>(() => {
+  const bindings = realtimeNodes.value.map((node) => {
+    const instance = store.instances.find((item) => item.instance_id === node.data?.instanceId)
+    return {
+      productName: instance?.product_name || node.data?.productName || '',
+      instanceId: node.data?.instanceId as number | null | undefined,
+    }
+  })
+  for (const [binding, product] of [
+    [fixedStationBinding.value, primaryTopLevelProduct.value],
+    [fixedEnvironmentBinding.value, secondaryTopLevelProduct.value],
+  ] as const) {
+    if (product) bindings.push({
+      productName: binding?.productName || product.product_name,
+      instanceId: binding?.instanceId,
+    })
+  }
+  return bindings
+})
+const topologyRealtime = useTopologyRealtime(isViewMode, realtimeBindings)
+provide(TOPOLOGY_REALTIME_KEY, topologyRealtime)
 const isFullscreen = ref(false)
 const hasUnsavedChanges = ref(false)
 const selectedNode = ref<ModelFlowNode | null>(null)
@@ -295,6 +319,8 @@ const { fitFlowToViewport, handleWindowResize: onWindowResize } = useFlowViewpor
   resizeDelay: 150,
 })
 
+// 卡片尺寸固定；点位加载和模式切换均保留用户当前的缩放及视口。
+
 const editLifecycleOptions = {
   modelId,
   store: store as unknown as UseVisualModelingEditLifecycleOptions['store'],
@@ -383,8 +409,6 @@ function handleNodeClick(event: any) {
       type: fresh.type,
       position: fresh.position,
       data: JSON.parse(JSON.stringify(fresh.data)),
-      parentNode: fresh.parentNode,
-      extent: fresh.extent,
       style: fresh.style,
     } as ModelFlowNode
   }
@@ -411,7 +435,7 @@ function handleDeleteNode(id: string) {
     confirmButtonType : 'danger'
   })
     .then(() => {
-      removeNodesByIds(collectNodesToDelete(id, getFlowNodes()))
+      removeNodesByIds(collectNodesToDelete(id))
     })
     .catch(() => {})
 }

@@ -3,6 +3,8 @@ use tauri::LogicalSize;
 use tauri::Manager;
 use tauri::Size;
 
+#[cfg(target_os = "macos")]
+mod app_menu;
 mod commands;
 
 #[tauri::command]
@@ -12,26 +14,40 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_log::Builder::new().level(log::LevelFilter::Info).build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_dialog::init());
+
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .menu(|handle| app_menu::build(&handle))
+        .on_menu_event(|app, event| {
+            app_menu::handle_event(app, &event);
+        });
+
+    builder
         .setup(|app| {
-            // 获取主窗口并设置无装饰
             let window = app.get_webview_window("main").unwrap();
-            let _ = window.set_decorations(false);
-            // 强制窗口尺寸与居中（避免平台默认行为覆盖）
-            // 强制窗口尺寸与居中（避免平台默认行为覆盖）
+
+            // macOS overlay + traffic lights come from tauri.macos.conf.json.
+            // Do not reset titleBarStyle here, or trafficLightPosition is lost.
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = window.set_decorations(false);
+            }
+
             let _ = window.set_size(Size::Logical(LogicalSize {
                 width: 1270.0,
-                height: 650.0,
+                height: 750.0,
             }));
             let _ = window.center();
             let _ = window.show();
             let _ = window.set_focus();
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -9,6 +9,11 @@ import {
   getMappingByteOrderOptions,
   normalizeType,
 } from '@/validators/channelMappings'
+import {
+  iec61850MappingFieldChanges,
+  validateIec61850CtrlModel,
+  validateIec61850MappingAddressField,
+} from '@/validators/iec61850'
 
 interface UseMappingCsvHandlersOptions {
   pointType: () => 'T' | 'S' | 'C' | 'A'
@@ -41,6 +46,7 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
     }
 
     const isCan = options.channelProtocol() === 'can'
+    const isIec61850 = options.channelProtocol() === 'iec61850'
 
     const byId: Record<
       number,
@@ -56,6 +62,8 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
         can_id?: string | number
         byte_offset?: number
         bit_length?: number
+        address?: string
+        ctrl_model?: number
         isInvalid?: boolean
       }
     > = {}
@@ -88,8 +96,20 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       let can_id: string | number | undefined
       let byte_offset: number | undefined
       let bit_length: number | undefined
+      let address: string | undefined
+      let ctrl_model: number | undefined
 
-      if (isCan) {
+      if (isIec61850) {
+        address = String(row.address ?? '').trim() || undefined
+        const ctrlStr = String(row.ctrl_model ?? '').trim()
+        ctrl_model = ctrlStr !== '' ? Number(ctrlStr) : undefined
+        slave_id = 0
+        function_code = 0
+        register_address = 0
+        data_type = ''
+        byte_order = ''
+        bit_position = 0
+      } else if (isCan) {
         const canIdStr = String(row.can_id ?? '').trim()
         const byteOffsetStr = String(row.byte_offset ?? '').trim()
         const bitPosStr = String(row.bit_position ?? '').trim()
@@ -136,7 +156,18 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
 
       let isInvalid = false
 
-      if (isCan) {
+      if (isIec61850) {
+        if (address) {
+          if (validateIec61850MappingAddressField(address)) isInvalid = true
+          if (
+            !isInvalid &&
+            (options.pointType() === 'C' || options.pointType() === 'A') &&
+            validateIec61850CtrlModel(ctrl_model, options.pointType())
+          ) {
+            isInvalid = true
+          }
+        }
+      } else if (isCan) {
         const hasCanId = can_id !== undefined && can_id !== ''
         const hasByteOffset = byte_offset !== undefined
         const hasBitPos = bit_position !== undefined && !isNaN(bit_position as number)
@@ -230,6 +261,8 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
         can_id: isCan ? can_id : undefined,
         byte_offset: isCan ? byte_offset : undefined,
         bit_length: isCan ? bit_length : undefined,
+        address: isIec61850 ? address : undefined,
+        ctrl_model: isIec61850 ? ctrl_model : undefined,
         isInvalid,
       }
     }
@@ -249,7 +282,12 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       const normStr = (v: any) => String(v || '').toUpperCase()
 
       if (!incoming) {
-        if (isCan) {
+        if (isIec61850) {
+          ;(item as any).protocol_mapping = {
+            address: undefined,
+            ctrl_model: options.pointType() === 'C' || options.pointType() === 'A' ? 1 : undefined,
+          }
+        } else if (isCan) {
           ;(item as any).protocol_mapping = {
             can_id: undefined,
             byte_offset: undefined,
@@ -272,7 +310,9 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
 
         const changes: string[] = []
         const cur = item.protocol_mapping as any
-        if (isCan) {
+        if (isIec61850) {
+          changes.push(...iec61850MappingFieldChanges(cur, origMap as any))
+        } else if (isCan) {
           if (normInt(cur?.can_id) !== normInt((origMap as any)?.can_id)) changes.push('mapping_can_id')
           if (normInt(cur?.byte_offset) !== normInt((origMap as any)?.byte_offset)) changes.push('mapping_can_offset')
           if (normInt(cur?.bit_position) !== normInt((origMap as any)?.bit_position)) changes.push('mapping_can_bit_position')
@@ -298,7 +338,17 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
         return item
       }
 
-      if (isCan) {
+      if (isIec61850) {
+        ;(item as any).protocol_mapping = {
+          address: incoming.address,
+          ctrl_model:
+            incoming.ctrl_model ??
+            (options.pointType() === 'C' || options.pointType() === 'A' ? 1 : undefined),
+        }
+        if (incoming.isInvalid) {
+          ;(item as any).isInvalid = true
+        }
+      } else if (isCan) {
         ;(item as any).protocol_mapping = {
           can_id: incoming.can_id,
           byte_offset: incoming.byte_offset,
@@ -330,7 +380,9 @@ export function useMappingCsvHandlers(options: UseMappingCsvHandlersOptions) {
       const changes: string[] = []
       const cur = item.protocol_mapping as any
       if (cur) {
-        if (isCan) {
+        if (isIec61850) {
+          changes.push(...iec61850MappingFieldChanges(cur, origMap as any))
+        } else if (isCan) {
           if (normInt(cur.can_id) !== normInt((origMap as any)?.can_id)) changes.push('mapping_can_id')
           if (normInt(cur.byte_offset) !== normInt((origMap as any)?.byte_offset)) changes.push('mapping_can_offset')
           if (normInt(cur.bit_position) !== normInt((origMap as any)?.bit_position)) changes.push('mapping_can_bit_position')

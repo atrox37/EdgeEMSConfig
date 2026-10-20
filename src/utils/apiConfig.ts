@@ -16,6 +16,7 @@ export const API_PORTS = {
   mod: 6002,  // /modApi
   his: 6004,  // /hisApi
   net: 6006,  // /netApi
+  alarm: 6007, // /alarmApi
 } as const
 
 export interface ApiConfig {
@@ -26,6 +27,7 @@ export interface ApiConfig {
   modApiURL: string
   hisApiURL: string
   netApiURL: string
+  alarmApiURL?: string // 兼容尚未保存告警服务地址的旧配置
 }
 
 /**
@@ -38,6 +40,7 @@ export function createApiConfig(ipAddress: string): ApiConfig {
   const modApiURL = `http://${ipAddress}:${API_PORTS.mod}`
   const hisApiURL = `http://${ipAddress}:${API_PORTS.his}`
   const netApiURL = `http://${ipAddress}:${API_PORTS.net}`
+  const alarmApiURL = `http://${ipAddress}:${API_PORTS.alarm}`
 
   return {
     ipAddress,
@@ -47,6 +50,7 @@ export function createApiConfig(ipAddress: string): ApiConfig {
     modApiURL,
     hisApiURL,
     netApiURL,
+    alarmApiURL,
   }
 }
 
@@ -97,5 +101,6 @@ export async function setAxiosBaseURL(config: ApiConfig): Promise<void> {
     ruleApiURL: config.ruleApiURL,
     hisApiURL: config.hisApiURL,
     netApiURL: config.netApiURL,
+    alarmApiURL: config.alarmApiURL,
   })
 }

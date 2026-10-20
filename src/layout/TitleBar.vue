@@ -1,7 +1,7 @@
 <template>
-  <div class="titlebar" data-tauri-drag-region>
+  <div class="titlebar" :class="{ 'titlebar--macos': isMacOS }" data-tauri-drag-region>
     <div class="titlebar__left" data-tauri-drag-region>
-      <div class="titlebar__title" data-tauri-drag-region>Monarch Edge Console</div>
+      <div v-if="!isMacOS" class="titlebar__title" data-tauri-drag-region>Monarch Edge Console</div>
     </div>
     <div class="titlebar__right">
       <div class="titlebar__ip-section" v-if="shouldShowUserInfo">
@@ -29,7 +29,7 @@
           </template>
         </el-dropdown>
       </div>
-      <div class="titlebar__controls">
+      <div v-if="!isMacOS" class="titlebar__controls">
         <el-dropdown trigger="click" placement="bottom-start" :teleported="false" @command="handleSystemCommand"
           :show-arrow="false" style="height: 100%;">
           <div class="titlebar__button titlebar__button--settings">
@@ -61,6 +61,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { listen } from '@tauri-apps/api/event'
 import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getApiConfig } from '@/utils/apiConfig'
@@ -81,6 +82,7 @@ const route = useRoute()
 const userStore = useUserStore()
 
 const isMaximized = ref(false)
+const isMacOS = /Mac/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent)
 const appWindow = getCurrentWindow()
 const currentIpAddress = ref<string>('')
 const isUserDropdownOpen = ref(false)
@@ -152,6 +154,8 @@ const handleSystemCommand = async (command: string) => {
 }
 
 let unlistenResize: (() => void) | null = null
+let unlistenMenuSettings: (() => void) | null = null
+let unlistenMenuUpdates: (() => void) | null = null
 
 onMounted(async () => {
   isMaximized.value = await appWindow.isMaximized()
@@ -160,11 +164,25 @@ onMounted(async () => {
   unlistenResize = await appWindow.onResized(async () => {
     isMaximized.value = await appWindow.isMaximized()
   })
+
+  unlistenMenuSettings = await listen('app-menu:settings', () => {
+    settingDialogRef.value?.openDialog()
+  })
+  unlistenMenuUpdates = await listen('app-menu:check-update', () => {
+    window.dispatchEvent(new CustomEvent('titlebar-open-updates-dialog'))
+  })
+
 })
 
 onUnmounted(() => {
   if (unlistenResize) {
     unlistenResize()
+  }
+  if (unlistenMenuSettings) {
+    unlistenMenuSettings()
+  }
+  if (unlistenMenuUpdates) {
+    unlistenMenuUpdates()
   }
 })
 
@@ -195,24 +213,27 @@ const getAvatarName = (name: string): string => {
 .titlebar {
   background: var(--vt-color-secondary);
   color: #ffffff;
-  // position: fixed;
-  // top: 0;
-  // left: 0;
-  // right: 0;
-  // background: var(--vt-bg-muted);
-  // border-bottom: var(--vt-border-width-base) solid var(--vt-border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 100;
   user-select: none;
-  padding-left:16px;
+  padding-left: 16px;
   height: 36px;
+}
+
+.titlebar.titlebar--macos {
+  padding-left: 78px;
+  padding-right: 8px;
+}
+
+.titlebar {
 
   .titlebar__left {
     flex: 1;
     display: flex;
     align-items: center;
+    height: 100%;
   }
 
   .titlebar__title {

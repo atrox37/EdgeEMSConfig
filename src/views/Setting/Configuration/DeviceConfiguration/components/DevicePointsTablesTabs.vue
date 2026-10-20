@@ -178,8 +178,8 @@ defineExpose({
   },
   applyRealtimeValues(
     category: DeviceTabName,
-    values: Record<string, number>,
-    ts?: Record<string, number>,
+    values: Record<string, unknown>,
+    ts?: Record<string, unknown>,
   ) {
     pointsTableRefsByTab[category]?.value?.applyRealtimeValues?.(values, ts)
   },

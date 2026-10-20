@@ -72,9 +72,16 @@
 }
 
 @mixin points-tables-point-table-overrides() {
+  :deep(.point-table__toolbar) {
+    padding-top: $spacing-md;
+  }
+
   :deep(.point-table__table) {
     td.el-table__cell {
-      padding: 9px 12px;
+      // Horizontal padding belongs to .cell (shared table style). Putting it
+      // on td as well makes body text shift relative to the header and breaks
+      // Element Plus column width calculations, especially with fixed columns.
+      padding: 9px 0;
     }
   }
 
@@ -112,7 +119,9 @@
     overflow: hidden;
   }
 
-  .config-section__tabs {
+  // Tabs 由 Channel/DevicePointsTablesTabs 子组件渲染，页面使用 scoped style 时
+  // 需要穿透组件边界，否则 padding 与高度链规则都不会命中 el-tabs。
+  :deep(.config-section__tabs) {
     width: 100%;
     padding: 0 $spacing-lg;
     flex: 1;
@@ -121,25 +130,42 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
 
-    :deep(.el-tabs__header) {
-      position: relative;
-      flex-shrink: 0;
-      margin-bottom: 0;
-    }
+  :deep(.config-section__tabs .el-tabs__header) {
+    position: relative;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
 
-    :deep(.el-tabs__content) {
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
+  :deep(.config-section__tabs .el-tabs__content) {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-    :deep(.el-tab-pane) {
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-      @include pt.point-table-host-layout();
-    }
+  :deep(.config-section__tabs .el-tab-pane) {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  :deep(.config-section__tabs .el-tab-pane .point-table) {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  :deep(.config-section__tabs .el-tab-pane .point-table__wrapper) {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  :deep(.config-section__tabs .el-tab-pane .point-table__toolbar),
+  :deep(.config-section__tabs .el-tab-pane .point-table__pagination) {
+    min-height: 0;
   }
 
   @include points-tables-point-table-overrides();

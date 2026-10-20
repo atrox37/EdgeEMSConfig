@@ -109,6 +109,13 @@
                   :is-editing="isEditing"
                 />
 
+                <Iec61850Params
+                  v-else-if="form.protocol === 'iec61850'"
+                  :form="form"
+                  :is-editing="isEditing"
+                  :mapping-addresses="mappingAddresses"
+                />
+
                 <template v-else-if="form.protocol === 'virt'">
                   <el-form-item label="Update Interval (ms):" class="channel-detail__parameter-item">
                     <span v-if="!isEditing" class="channel-detail__text">{{
@@ -281,6 +288,13 @@ export const PROTOCOL_DEFAULTS = {
     retry_interval_ms: 2000,
     rx_poll_interval_ms: 50,
   },
+  iec61850: {
+    address: '',
+    connect_timeout_ms: 10000,
+    request_timeout_ms: 5000,
+    poll_interval_ms: 1000,
+    reports: [],
+  },
 }
 
 </script>
@@ -302,10 +316,15 @@ import DiDoParams, {
 import CanParams, {
   validationRules as canRules,
 } from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/CanParams.vue'
-import type { ChannelDetail } from '@/types/channelConfiguration'
+import Iec61850Params, {
+  validationRules as iec61850Rules,
+  validateIec61850ParametersReports,
+} from '@/views/Setting/Configuration/ChannelConfiguration/components/ProtocolParams/Iec61850Params.vue'
+import { sanitizeIec61850Reports } from '@/validators/iec61850'
+import type { ChannelDetail, MappingCategoryResponse } from '@/types/channelConfiguration'
 import { PROTOCOL_OPTIONS } from '@/types/channelConfiguration'
 import dayjs from 'dayjs'
-import { getChannelDetail, createChannel, updateChannel } from '@/api/channelsManagement'
+import { getChannelDetail, getChannelMappings, createChannel, updateChannel } from '@/api/channelsManagement'
 
 
 // Props
@@ -358,7 +377,7 @@ const emit = defineEmits<{
 }>()
 const copyForm = ref<{
   description: string | null
-  protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu' | 'di_do'
+  protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu' | 'di_do' | 'iec61850'
   name: string
   parameters: ChannelDetail['parameters']
 }>()
@@ -376,6 +395,7 @@ const channelIdMode = ref<'auto' | 'manual'>('auto')
 const channelIdInput = ref<number | null>(null)
 const didUpdate = ref(false)
 const submitLoading = ref(false)
+const mappingAddresses = ref<string[]>([])
 // 表单数据
 const form = ref<ChannelDetail>({
   id: 0,
@@ -439,6 +459,8 @@ const formRules = computed<Record<string, any[]>>(() => {
     protocolRules = diDoRules
   } else if (form.value.protocol === 'can') {
     protocolRules = canRules
+  } else if (form.value.protocol === 'iec61850') {
+    protocolRules = iec61850Rules as Record<string, any[]>
   }
   const idRules: Record<string, any[]> =
     isAdd.value && channelIdMode.value === 'manual'
@@ -509,10 +531,36 @@ const applyDetail = (detail: ChannelDetail) => {
   }
 }
 
+const collectMappingAddresses = (data: MappingCategoryResponse): string[] => {
+  const groups = [data.telemetry, data.signal, data.control, data.adjustment]
+  return groups.flatMap((group) =>
+    (group ?? [])
+      .map((item) => String((item.protocol_data as { address?: unknown }).address ?? '').trim())
+      .filter(Boolean),
+  )
+}
+
+const loadMappingAddresses = async (id: number) => {
+  mappingAddresses.value = []
+  try {
+    const res = await getChannelMappings(id)
+    if (res.success && res.data) {
+      mappingAddresses.value = collectMappingAddresses(res.data as MappingCategoryResponse)
+    }
+  } catch {
+    mappingAddresses.value = []
+  }
+}
+
 const fetchDetail = async (id: number) => {
   const res = await getChannelDetail(id)
   if (res.success) {
     applyDetail(res.data)
+    if (res.data.protocol === 'iec61850' && res.data.id) {
+      await loadMappingAddresses(res.data.id)
+    } else {
+      mappingAddresses.value = []
+    }
   }
 }
 
@@ -534,6 +582,11 @@ watch(
         Object.assign(form.value.parameters, PROTOCOL_DEFAULTS.di_do)
       } else if (protocol === 'can') {
         Object.assign(form.value.parameters, PROTOCOL_DEFAULTS.can)
+      } else if (protocol === 'iec61850') {
+        Object.assign(form.value.parameters, {
+          ...PROTOCOL_DEFAULTS.iec61850,
+          reports: [],
+        })
       }
     }
     nextTick(() => {
@@ -613,6 +666,16 @@ const handleCancel = () => {
 const handleSubmit = () => {
   formRef.value?.validate(async (valid, fields) => {
     if (valid) {
+      if (form.value.protocol === 'iec61850') {
+        const params = form.value.parameters as Record<string, unknown>
+        params.reports = sanitizeIec61850Reports(params.reports as any)
+        const reportErr = validateIec61850ParametersReports(params.reports)
+        if (reportErr) {
+          ElMessage.error(reportErr)
+          isParamsOpen.value = true
+          return
+        }
+      }
       submitLoading.value = true
       try {
         if (isAdd.value) {
@@ -698,6 +761,7 @@ const open = async (id: number | undefined) => {
 // 关闭
 const handleClose = () => {
   isEditing.value = false
+  mappingAddresses.value = []
   if (didUpdate.value) {
     emit('submit')
   } else {

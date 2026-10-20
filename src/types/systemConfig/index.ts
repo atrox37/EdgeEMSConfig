@@ -142,3 +142,126 @@ export interface InstSyncResponse {
   message: string
   data?: { msgId: string }
 }
+
+export type ConfigVersionOrigin =
+  | 'initial'
+  | 'manual_backup'
+  | 'import'
+  | 'pre_import_snapshot'
+  | 'pre_restore_snapshot'
+  | 'restore'
+  | string
+
+export type ConfigVersionStatus = 'current' | 'history' | string
+
+export interface ConfigVersionOperator {
+  id?: number | null
+  username?: string | null
+}
+
+export interface ConfigCurrentVersion {
+  id: string
+  version: string
+  revision?: number
+  content_hash?: string
+  updated_at?: string | null
+  operator?: ConfigVersionOperator | null
+}
+
+export interface ConfigVersionListItem {
+  id: string
+  version: string
+  status: ConfigVersionStatus
+  origin: ConfigVersionOrigin
+  source_version_id?: string | null
+  source_filename?: string | null
+  activated_at?: string | null
+  operator?: string | null
+  description?: string | null
+  archive_size?: number | null
+}
+
+export interface ConfigVersionStorage {
+  backup_size_mb: number
+  total_size_mb: number
+  used_percent: number
+}
+
+export interface ConfigVersionListData {
+  list: ConfigVersionListItem[]
+  total: number
+  storage?: ConfigVersionStorage | null
+}
+
+export interface ConfigVersionDeleteData {
+  id: string
+  version: string
+  archive_size: number
+  archive_removed: boolean
+  deleted_at: string
+}
+
+export interface ConfigVersionSummary {
+  id?: string
+  revision?: number
+  version?: string
+  origin?: ConfigVersionOrigin
+  description?: string | null
+  operator_name?: string
+  created_at?: string
+  source_filename?: string | null
+  source_version_id?: string | null
+}
+
+export interface ConfigBackupData {
+  created: boolean
+  reason?: string | null
+  version?: ConfigVersionSummary | null
+}
+
+export interface ConfigImportCheck {
+  code: string
+  passed: boolean
+  message?: string
+}
+
+export interface ConfigImportPackageInfo {
+  config_version?: string
+  format_version?: number
+  created_at?: string
+  created_by?: string
+}
+
+export interface ConfigImportValidateData {
+  import_id: string
+  filename?: string
+  size?: number
+  expires_at?: string
+  valid: boolean
+  checks: ConfigImportCheck[]
+  package?: ConfigImportPackageInfo | null
+}
+
+export interface ConfigRestartResult {
+  service: string
+  success: boolean
+  error?: string
+}
+
+export interface ConfigApplyData {
+  version?: ConfigVersionSummary | null
+  files_extracted?: number
+  preserved_local_tables?: string[]
+  restart_results?: ConfigRestartResult[]
+}
+
+export interface ConfigApiErrorBody {
+  success?: boolean
+  message?: string
+  data?: unknown
+  error?: {
+    code?: string
+    message?: string
+    details?: Record<string, unknown>
+  }
+}

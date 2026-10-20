@@ -22,7 +22,6 @@ function normalizeNodeForCompare(node: FlowNode) {
   return {
     id: node.id,
     type: node.type,
-    parentNode: node.parentNode ?? null,
     position: {
       x: roundNum(node.position?.x),
       y: roundNum(node.position?.y),
@@ -31,11 +30,6 @@ function normalizeNodeForCompare(node: FlowNode) {
       label: data.label ?? '',
       description: data.description ?? '',
       productName: data.productName ?? '',
-      parentName: data.parentName ?? '',
-      color: data.color ?? '',
-      isContainer: !!(data as { isContainer?: boolean }).isContainer,
-      width: data.width ?? null,
-      height: data.height ?? null,
       instanceId: getNodeInstanceId(data),
     },
     style: {

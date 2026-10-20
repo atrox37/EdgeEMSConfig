@@ -1,6 +1,6 @@
 import type { PointInfoResponse } from '@/types/channelConfiguration'
 
-export type ChannelTemplateProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+export type ChannelTemplateProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
 
 export interface ChannelTemplatePointCounts {
   telemetry: number

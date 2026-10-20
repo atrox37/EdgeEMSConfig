@@ -5,6 +5,7 @@ import {
   getMappingByteOrderOptions,
   canEditMappingBitPosition,
 } from '@/validators/channelMappings'
+import { iec61850MappingFieldChanges } from '@/validators/iec61850'
 
 interface UseMappingRowEditingOptions {
   channelProtocol: () => string
@@ -24,6 +25,25 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
     const origMap = original?.protocol_mapping
     const cur = item.protocol_mapping
     const changes: string[] = []
+
+    if (options.channelProtocol() === 'iec61850') {
+      const m = (cur as any) || {}
+      const orig = origMap ? (origMap as any) : null
+      changes.push(...iec61850MappingFieldChanges(m, orig))
+
+      if (item.rowStatus === 'added') {
+        item.modifiedFields = changes
+        return
+      }
+      if (changes.length > 0) {
+        item.rowStatus = 'modified'
+        item.modifiedFields = changes
+      } else {
+        item.rowStatus = 'normal'
+        item.modifiedFields = []
+      }
+      return
+    }
 
     if (options.channelProtocol() === 'di_do') {
       const normGpio = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
@@ -203,8 +223,11 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
   }
 
   function handleStartMappingEdit(item: PointInfo) {
+    const createdMapping = !item.protocol_mapping
     if (!item.protocol_mapping) {
-      if (options.channelProtocol() === 'di_do') item.protocol_mapping = {} as any
+      if (options.channelProtocol() === 'iec61850') {
+        item.protocol_mapping = { address: undefined, ctrl_model: undefined } as any
+      } else if (options.channelProtocol() === 'di_do') item.protocol_mapping = {} as any
       else {
         item.protocol_mapping = {
           slave_id: undefined,
@@ -216,7 +239,13 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
         }
       }
     }
-    if (options.channelProtocol() === 'di_do') {
+    if (options.channelProtocol() === 'iec61850') {
+      item.originalData = {
+        mapping_iec61850_address: (item.protocol_mapping as any).address,
+        mapping_ctrl_model: (item.protocol_mapping as any).ctrl_model,
+        mapping_created: createdMapping,
+      }
+    } else if (options.channelProtocol() === 'di_do') {
       item.originalData = {
         mapping_gpio_number: (item.protocol_mapping as any).gpio_number,
       }
@@ -236,7 +265,14 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
 
   function handleCancelMappingEdit(item: PointInfo) {
     if (item.originalData && item.protocol_mapping) {
-      if (options.channelProtocol() === 'di_do') {
+      if (options.channelProtocol() === 'iec61850') {
+        if (item.originalData.mapping_created) {
+          item.protocol_mapping = undefined
+        } else {
+          ;(item.protocol_mapping as any).address = item.originalData.mapping_iec61850_address as string
+          ;(item.protocol_mapping as any).ctrl_model = item.originalData.mapping_ctrl_model as number
+        }
+      } else if (options.channelProtocol() === 'di_do') {
         ;(item.protocol_mapping as any).gpio_number = item.originalData.mapping_gpio_number as number
       } else {
         item.protocol_mapping.slave_id = item.originalData.mapping_slave_id as number
@@ -249,6 +285,7 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
       delete item.originalData
     }
     item.isEditing = false
+    updateMappingChangeStatus(item)
     options.onCancelEdit?.()
   }
 
@@ -257,22 +294,8 @@ export function useMappingRowEditing(options: UseMappingRowEditingOptions) {
     const original = (options.originalPointsList.value as PointInfo[]).find(
       (p) => p.point_id === item.point_id,
     )
-    if (options.channelProtocol() === 'di_do') {
-      const changes: string[] = []
-      const normGpio = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v))
-      const curGpio = normGpio((item.protocol_mapping as any).gpio_number)
-      const origGpio = normGpio((original?.protocol_mapping as any)?.gpio_number)
-      if (curGpio !== origGpio) changes.push('mapping_gpio_number')
-      const isNew = item.rowStatus === 'added'
-      if (!isNew && changes.length > 0) {
-        item.rowStatus = 'modified'
-        item.modifiedFields = [...(item.modifiedFields || []), ...changes]
-      } else if (!isNew && changes.length === 0) {
-        item.rowStatus = 'normal'
-        item.modifiedFields = []
-      } else if (isNew) {
-        item.modifiedFields = changes
-      }
+    if (options.channelProtocol() === 'di_do' || options.channelProtocol() === 'iec61850') {
+      updateMappingChangeStatus(item)
       options.validateMappingValidity(item)
       options.refreshFieldErrorsForRow(item)
       delete item.originalData

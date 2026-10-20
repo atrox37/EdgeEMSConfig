@@ -1,3 +1,4 @@
+import { formatRealtimePointValue } from '@/utils/pointRealtime'
 import { formatUpdateTime } from '@/utils/csvExport'
 import { POINT_TABLE_CELL, POINT_TABLE_COL, POINT_TABLE_POPPER } from '@/constants/pointTable'
 import { getDeviceRoutingTypeLabel } from '@/validators/deviceRouting'
@@ -52,7 +53,9 @@ export function getDevicePointColumns(ctx: DevicePointColumnContext): DevicePoin
       minWidth: 120,
       className: POINT_TABLE_COL.value,
       valueClassName: POINT_TABLE_CELL.value,
-      display: (row) => String(row.value ?? '-'),
+      display: (row) => ctx.category === 'property'
+        ? String(row.value ?? '--')
+        : formatRealtimePointValue(row.value, row.update_ts),
     },
   ]
 

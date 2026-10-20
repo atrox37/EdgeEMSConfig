@@ -3,91 +3,98 @@
     class="fixed-binding-card"
     :class="[
       `fixed-binding-card--${kind}`,
-      readonly ? 'fixed-binding-card--readonly' : 'fixed-binding-card--editable',
+      readonly
+        ? 'fixed-binding-card--readonly'
+        : 'fixed-binding-card--editable',
     ]"
   >
-    <div class="fixed-binding-card__icon">
-      <img
-        class="fixed-binding-card__icon-image"
-        :src="iconImage"
-        alt=""
-        aria-hidden="true"
-      />
-    </div>
-    <div class="fixed-binding-card__content">
-      <div class="fixed-binding-card__title" :title="label">{{ label }}</div>
-      <div class="fixed-binding-card__binding">
+    <header class="fixed-binding-card__header">
+      <div class="fixed-binding-card__icon">
         <img
-          v-if="readonly"
-          class="fixed-binding-card__binding-icon"
-          :src="topologyLinkIcon"
+          class="fixed-binding-card__icon-image"
+          :src="iconImage"
           alt=""
           aria-hidden="true"
         />
-        <span
-          v-if="readonly"
-          class="fixed-binding-card__value"
-          :title="modelValue?.instanceName || 'Not Bound'"
-        >{{
-          modelValue?.instanceName || "Not Bound"
-        }}</span>
-        <template v-else>
-          <span class="fixed-binding-card__binding-label">Bound to</span>
-          <span
-            class="fixed-binding-card__selected-value"
-            :title="modelValue?.instanceName || 'Not Bound'"
-          >{{
-            modelValue?.instanceName || "Not Bound"
-          }}</span>
-        </template>
-        <el-dropdown
-          v-if="!readonly"
-          trigger="click"
-          placement="bottom-end"
-          :show-arrow="false"
-          popper-class="fixed-binding-card-popper"
-          @command="onCommand"
-        >
-          <button
-            type="button"
-            class="fixed-binding-card__dropdown-trigger"
-            :aria-label="`Bind ${label}`"
-          >
-            <AppIcon
-              name="i-tabler-chevron-down"
-              class="fixed-binding-card__arrow"
-            />
-          </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                command="__not-bound__"
-                :class="{ 'is-current': !modelValue }"
-              >
-                Not Bound
-              </el-dropdown-item>
-              <el-dropdown-item
-                v-for="item in selectableInstances"
-                :key="item.instance_id"
-                :command="String(item.instance_id)"
-                :class="{
-                  'is-current': item.instance_id === modelValue?.instanceId,
-                }"
-                :title="item.instance_name"
-              >
-                {{ item.instance_name }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
       </div>
+      <div class="fixed-binding-card__content">
+        <div class="fixed-binding-card__title" :title="label">{{ label }}</div>
+        <div class="fixed-binding-card__binding">
+          <img
+            v-if="readonly"
+            class="fixed-binding-card__binding-icon"
+            :src="topologyLinkIcon"
+            alt=""
+            aria-hidden="true"
+          />
+          <span
+            v-if="readonly"
+            class="fixed-binding-card__value"
+            :title="modelValue?.instanceName || 'Not Bound'"
+            >{{ modelValue?.instanceName || "Not Bound" }}</span
+          >
+          <template v-else>
+            <span class="fixed-binding-card__binding-label">Bound to</span>
+            <span
+              class="fixed-binding-card__selected-value"
+              :title="modelValue?.instanceName || 'Not Bound'"
+              >{{ modelValue?.instanceName || "Not Bound" }}</span
+            >
+          </template>
+          <el-dropdown
+            v-if="!readonly"
+            trigger="click"
+            placement="bottom-end"
+            :show-arrow="false"
+            popper-class="fixed-binding-card-popper"
+            @command="onCommand"
+          >
+            <button
+              type="button"
+              class="fixed-binding-card__dropdown-trigger"
+              :aria-label="`Bind ${label}`"
+            >
+              <ArrowDown class="fixed-binding-card__arrow" />
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  command="__not-bound__"
+                  :class="{ 'is-current': !modelValue }"
+                >
+                  Not Bound
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-for="item in selectableInstances"
+                  :key="item.instance_id"
+                  :command="String(item.instance_id)"
+                  :class="{
+                    'is-current': item.instance_id === modelValue?.instanceId,
+                  }"
+                  :title="item.instance_name"
+                >
+                  {{ item.instance_name }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </div>
+    </header>
+    <div v-if="readonly" class="fixed-binding-card__body nowheel">
+      <TopologyRealtimePoints
+        :product-name="modelValue?.productName || label"
+        :instance-id="modelValue?.instanceId"
+        :max-visible="3"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import AppIcon from "@/components/AppIcon.vue";
+import { ArrowDown } from "@element-plus/icons-vue";
+import TopologyRealtimePoints from "./TopologyRealtimePoints.vue";
 import topologyLinkIcon from "@/assets/icons/topology-link.svg";
 import type { DeviceInstanceBasic } from "@/types/deviceConfiguration";
 import type { ModelInstanceBinding } from "@/types/visualModeling";
@@ -127,15 +134,43 @@ function onCommand(rawValue: string | number) {
 
 <style lang="scss" scoped>
 .fixed-binding-card {
+  width: 254px;
+  flex: 0 0 254px;
+  align-self: flex-start;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid $topology-border-card;
+  border-radius: 10px;
+  background: $white-alpha-100;
+  box-shadow: 0px 6px 12px 0px rgba(0, 0, 0, 0.05);
+}
+
+.fixed-binding-card__header {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 230px;
-  padding: 8px 16px 8px 8px;
-  border: 1px solid #e3e6e9;
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0px 6px 12px 0px rgba(0, 0, 0, 0.05);
+  min-height: 44px;
+  min-width: 0;
+}
+
+.fixed-binding-card--readonly .fixed-binding-card__content {
+  gap: 0;
+}
+
+.fixed-binding-card--readonly .fixed-binding-card__title {
+  line-height: 20px;
+}
+
+.fixed-binding-card__body {
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 1px solid $topology-border;
+}
+
+.fixed-binding-card__body :deep(.topology-realtime) {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .fixed-binding-card__icon {
@@ -146,8 +181,8 @@ function onCommand(rawValue: string | number) {
   height: 38px;
   flex-shrink: 0;
   border-radius: 6px;
-  background: #f0f3fb;
-  color: #0b61e8;
+  background: $topology-icon-bg;
+  color: $topology-accent-strong;
 }
 
 .fixed-binding-card__icon-image {
@@ -165,7 +200,7 @@ function onCommand(rawValue: string | number) {
 }
 
 .fixed-binding-card__title {
-  color: #000000;
+  color: $text-color-primary;
   font-size: 14px;
   font-weight: 700;
   line-height: normal;
@@ -175,7 +210,7 @@ function onCommand(rawValue: string | number) {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #666666;
+  color: $topology-text-muted;
   font-size: 12px;
   font-weight: 450;
   line-height: 1;
@@ -191,18 +226,18 @@ function onCommand(rawValue: string | number) {
 .fixed-binding-card__value {
   max-width: 150px;
   overflow: hidden;
-  color: #666666;
+  color: $topology-text-muted;
   text-overflow: ellipsis;
 }
 
 .fixed-binding-card__binding-label {
-  color: #666666;
+  color: $topology-text-muted;
 }
 
 .fixed-binding-card__selected-value {
   max-width: 150px;
   overflow: hidden;
-  color: #035def;
+  color: $topology-accent;
   font-weight: 700;
   text-overflow: ellipsis;
 }
@@ -215,20 +250,20 @@ function onCommand(rawValue: string | number) {
   height: 12px;
 
   background: transparent;
-  color: #035def;
+  color: $topology-accent;
   cursor: pointer;
 }
 
 .fixed-binding-card__arrow {
   width: 14px;
   height: 14px;
-  color: #035def;
+  color: $topology-accent;
   pointer-events: none;
 }
 
 .fixed-binding-card--readonly .fixed-binding-card__binding {
   gap: 5px;
-  color: #666666;
+  color: $topology-text-muted;
   font-size: 12px;
   font-weight: 400;
   line-height: 1.2;
@@ -243,7 +278,7 @@ function onCommand(rawValue: string | number) {
 :global(.fixed-binding-card-popper) {
   min-width: 136px;
   padding: 4px;
-  border: 1px solid #e2e7ef;
+  border: 1px solid $topology-border-control;
   border-radius: 6px;
   box-shadow: 0 5px 14px rgba(15, 31, 61, 0.16);
 }
@@ -252,19 +287,18 @@ function onCommand(rawValue: string | number) {
   min-height: 32px;
   padding: 0 12px;
   border-radius: 4px;
-  color: #333333;
+  color: $topology-text;
   line-height: 32px;
 }
 
 :global(.fixed-binding-card-popper .el-dropdown-menu__item:hover),
 :global(.fixed-binding-card-popper .el-dropdown-menu__item.is-current) {
-  background: #e7effd;
-  color: #0b61e8;
+  background: $topology-chip-bg;
+  color: $topology-accent-strong;
 }
 
 @media (max-width: 700px) {
   .fixed-binding-card {
-    min-width: 0;
     padding: 8px 10px;
   }
 

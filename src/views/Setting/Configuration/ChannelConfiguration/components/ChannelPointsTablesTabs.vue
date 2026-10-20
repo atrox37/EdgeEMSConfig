@@ -163,7 +163,7 @@ import type { DataType } from '@/types/websocket'
 
 type ChannelTabName = 'telemetry' | 'signal' | 'control' | 'adjustment'
 const CHANNEL_TAB_NAMES: ChannelTabName[] = ['telemetry', 'signal', 'control', 'adjustment']
-type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
 
 const props = withDefaults(
   defineProps<{
@@ -227,7 +227,7 @@ defineExpose({
       if (instance) fn(instance, tab)
     })
   },
-  applyRealtimeValues(dataType: DataType, values: Record<string, number>, ts?: Record<string, number>) {
+  applyRealtimeValues(dataType: DataType, values: Record<string, unknown>, ts?: Record<string, unknown>) {
     const refByType = {
       T: telemetryTableRef,
       S: signalTableRef,

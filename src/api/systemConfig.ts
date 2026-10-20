@@ -1,7 +1,14 @@
 import { Request, cancelPendingRequestsByUrl } from '@/utils/request'
+import type { RequestConfig } from '@/utils/request'
 import type {
   CertificateInfoResponse,
   CertificateType,
+  ConfigApplyData,
+  ConfigBackupData,
+  ConfigCurrentVersion,
+  ConfigImportValidateData,
+  ConfigVersionDeleteData,
+  ConfigVersionListData,
   HisConfigResponse,
   HisServiceConfig,
   InstSyncResponse,
@@ -16,14 +23,97 @@ import type {
   StorageTestRequest,
 } from '@/types/systemConfig'
 
-export const importConfigFile = (formData: FormData) => {
-  return Request.post('/api/v1/config/import', formData, {
-    timeout: 60 * 1000,
-  })
+const CONFIG_MUTATION_TIMEOUT_MS = 120 * 1000
+const CONFIG_MUTATION_REQUEST: RequestConfig = {
+  timeout: CONFIG_MUTATION_TIMEOUT_MS,
+  skipGlobalLoading: true,
+  showErrorMessage: false,
 }
 
 export const downloadConfigExport = (filename: string) => {
-  return Request.download('/api/v1/config/export', {}, filename, { timeout: 60 * 1000 })
+  return Request.download('/api/v1/config/export', {}, filename, { timeout: CONFIG_MUTATION_TIMEOUT_MS })
+}
+
+export const getCurrentConfigVersion = () => {
+  return Request.get<ConfigCurrentVersion>('/api/v1/config/current', {}, {
+    skipGlobalLoading: true,
+  })
+}
+
+export const createConfigBackup = (payload: Record<string, never> | { description: string }) => {
+  return Request.post<ConfigBackupData>('/api/v1/config/backups', payload, CONFIG_MUTATION_REQUEST)
+}
+
+export const listConfigVersions = (page: number, pageSize: number) => {
+  return Request.get<ConfigVersionListData>(
+    '/api/v1/config/versions',
+    { page, page_size: pageSize },
+    { skipGlobalLoading: true },
+  )
+}
+
+export const downloadConfigVersionExport = (versionId: string, filename: string) => {
+  return Request.download(
+    `/api/v1/config/versions/${versionId}/export`,
+    {},
+    filename,
+    { timeout: CONFIG_MUTATION_TIMEOUT_MS },
+  )
+}
+
+export const cancelConfigImportValidate = () => {
+  cancelPendingRequestsByUrl('/api/v1/config/imports/validate', 'post')
+}
+
+export const validateConfigImport = (file: File, config: RequestConfig = {}) => {
+  return Request.upload<ConfigImportValidateData>(
+    '/api/v1/config/imports/validate',
+    file,
+    {},
+    {
+      ...CONFIG_MUTATION_REQUEST,
+      showErrorMessage: false,
+      ...config,
+    },
+  )
+}
+
+export const applyConfigImport = (
+  importId: string,
+  payload: Record<string, never> | { description: string },
+) => {
+  return Request.post<ConfigApplyData>(
+    `/api/v1/config/imports/${importId}/apply`,
+    payload,
+    {
+      ...CONFIG_MUTATION_REQUEST,
+      showErrorMessage: false,
+    },
+  )
+}
+
+export const restoreConfigVersion = (
+  versionId: string,
+  payload: Record<string, never> | { description: string },
+) => {
+  return Request.post<ConfigApplyData>(
+    `/api/v1/config/versions/${versionId}/restore`,
+    payload,
+    {
+      ...CONFIG_MUTATION_REQUEST,
+      showErrorMessage: false,
+    },
+  )
+}
+
+export const deleteConfigVersion = (versionId: string) => {
+  return Request.delete<ConfigVersionDeleteData>(
+    `/api/v1/config/versions/${versionId}`,
+    {
+      ...CONFIG_MUTATION_REQUEST,
+      showErrorMessage: false,
+    },
+  )
 }
 
 export const uploadUpgradePackage = (file: File, config: Record<string, any> = {}) => {

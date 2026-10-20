@@ -41,6 +41,7 @@
           v-if="!props.publishMode"
           label="Operation"
           min-width="169"
+          fixed="right"
           :class-name="POINT_TABLE_COL.operation"
         >
           <template #default="{ row }">
@@ -94,6 +95,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, inject } from 'vue'
+import { applyRealtimePointSnapshot, getRealtimePointValue } from '@/utils/pointRealtime'
 import { ElMessage } from 'element-plus'
 import PointTableOpBtn from '@/components/pointTable/PointTableOpBtn.vue'
 import PointTableOpCell from '@/components/pointTable/PointTableOpCell.vue'
@@ -235,30 +237,18 @@ function getPublishCommands(): Array<{ id: string; value: number }> {
 }
 
 function applyRealtimeValues(
-  values: Record<string | number, number>,
-  ts?: Record<string | number, number>,
+  values: Record<string, unknown>,
+  ts?: Record<string, unknown>,
 ) {
-  if (!values || !Array.isArray(editPoints.value)) return
-  const valueMap = new Map<number, number>()
-  Object.entries(values).forEach(([k, v]) => {
-    const id = Number(k)
-    if (Number.isFinite(id)) valueMap.set(id, Number(v))
-  })
-  const tsMap = new Map<number, number>()
-  if (ts && typeof ts === 'object') {
-    Object.entries(ts).forEach(([k, v]) => {
-      const id = Number(k)
-      if (Number.isFinite(id)) tsMap.set(id, Number(v))
+  if (props.category === 'property') {
+    // 属性是静态值，无采集时间要求，也不能把文本或 null 强制转换为数值。
+    editPoints.value.forEach((point) => {
+      const id = String(getPointId(point))
+      if (Object.prototype.hasOwnProperty.call(values, id)) point.value = values[id]
     })
+    return
   }
-  if (valueMap.size === 0 && tsMap.size === 0) return
-  editPoints.value.forEach((p: any) => {
-    const id = getPointId(p)
-    const newVal = valueMap.get(id)
-    if (newVal !== undefined) p.value = newVal
-    const newTs = tsMap.get(id)
-    if (newTs !== undefined) p.update_ts = newTs
-  })
+  applyRealtimePointSnapshot(editPoints.value, getPointId, values, ts)
 }
 
 function handleExecute(item: any) {
@@ -267,7 +257,7 @@ function handleExecute(item: any) {
 }
 
 const handleExport = async () => {
-  const allPoints = Array.isArray(props.points) ? props.points : editPoints.value || []
+  const allPoints = editPoints.value
   if (!allPoints || allPoints.length === 0) {
     ElMessage.warning('No data to export')
     return
@@ -275,7 +265,9 @@ const handleExport = async () => {
   const rows = allPoints.map((item: any) => ({
     point_id: getPointId(item),
     point_name: String(item.name || ''),
-    value: item.value ?? '',
+    value: props.category === 'property'
+      ? (item.value ?? '')
+      : (getRealtimePointValue(item.value, item.update_ts) ?? ''),
     update_time:
       props.category === 'property' ? '' : formatUpdateTimeForCsv(item.update_ts),
     unit: String(item.unit || ''),

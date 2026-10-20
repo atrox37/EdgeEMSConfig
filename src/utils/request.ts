@@ -211,7 +211,7 @@ const decodeArrayBufferToJsonMessage = (buffer: ArrayBuffer): string | undefined
   try {
     const text = new TextDecoder('utf-8').decode(buffer)
     const parsed = JSON.parse(text)
-    return parsed?.detail?.message || parsed?.message || (text || undefined)
+    return parsed?.detail?.message || parsed?.message || parsed?.error?.message || (text || undefined)
   } catch {
     return undefined
   }
@@ -229,7 +229,7 @@ const extractServerMessage = (responseData: any): string | undefined => {
   if (typeof responseData === 'string') {
     try {
       const parsed = JSON.parse(responseData)
-      return parsed?.detail?.message || parsed?.message || responseData
+      return parsed?.detail?.message || parsed?.message || parsed?.error?.message || responseData
     } catch {
       return responseData
     }
@@ -589,14 +589,14 @@ const requestInterceptor = (config: any) => {
   // 判断是否为开发环境（Vite 开发模式）
   const isDev = import.meta.env.DEV
 
-  // 处理包含 /comApi、/modApi、/ruleApi、/hisApi、/netApi 的请求路径
+  // 处理各业务服务的直连请求路径
   // 使用同步方式获取配置（通过引用）
   const apiConfig = currentApiConfigRef
 
   /**
    * 多后端路由策略说明：
    * - /comApi /modApi /ruleApi：移除前缀后，按对应 baseURL 转发；
-   * - /hisApi /netApi：保留前缀（业务要求），仅切换 baseURL 到 6004/6006。
+   * - /hisApi /netApi /alarmApi：保留前缀，切换到 6004/6006/6007。
    *
    * 这样可以在调用层保持统一路径风格，同时支持不同服务端口。
    */
@@ -631,6 +631,13 @@ const requestInterceptor = (config: any) => {
       targetBaseURL = apiConfig.netApiURL
     } else if (apiConfig?.ipAddress) {
       targetBaseURL = `http://${apiConfig.ipAddress}:6006`
+    }
+  } else if (originalUrl.startsWith('/alarmApi')) {
+    // alarmsrv 的路由包含 /alarmApi，直连时保留该前缀。
+    if (apiConfig?.alarmApiURL) {
+      targetBaseURL = apiConfig.alarmApiURL
+    } else if (apiConfig?.ipAddress) {
+      targetBaseURL = `http://${apiConfig.ipAddress}:6007`
     }
   }
 
@@ -1105,7 +1112,8 @@ class Request {
 
       const status = (error as any)?.response?.status
       const errorMessage =
-        status === 404 ? 'File not found' : getUnifiedErrorMessage(error as any, 'File download failed')
+        extractServerMessage((error as any)?.response?.data) ||
+        (status === 404 ? 'File not found' : getUnifiedErrorMessage(error as any, 'File download failed'))
 
       console.error('File download failed:', error)
       ElMessage.error(errorMessage || 'File download failed')

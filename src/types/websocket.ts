@@ -28,7 +28,7 @@ export type ServerMessageType =
   | 'alarm_num'
 
 // 数据类型枚举
-export type DataType = 'T' | 'S' | 'C' | 'A' // T=遥测, S=遥信, C=遥控, A=遥调
+export type DataType = 'T' | 'S' | 'C' | 'A' | 'M' | 'P' // 通道四遥；实例 M=测量、P=属性
 
 // 告警级别枚举
 export type AlarmLevel = 0 | 1 | 2 | 3 // 0=低, 1=中, 2=高, 3=紧急
@@ -97,27 +97,26 @@ export interface ConnectionEstablishedMessage extends WebSocketMessage {
   type: 'connection_established'
 }
 
+// inst/comsrv 的逐点值与采集时间（毫秒）。消息 timestamp 是发送时间，不能代替 ts。
+export interface RealtimeDataUpdate {
+  source?: 'inst' | 'comsrv'
+  channel_id: number
+  data_type: DataType
+  values: Record<string, unknown>
+  ts?: Record<string, unknown>
+}
+
 // 实时数据更新
 export interface DataUpdateMessage extends WebSocketMessage {
   type: 'data_update'
-  data: {
-    channel_id: number
-    data_type: DataType
-    values: Record<string, number>
-  }
+  data: RealtimeDataUpdate
 }
 
 // 批量数据更新
 export interface DataBatchMessage extends WebSocketMessage {
   type: 'data_batch'
   data:
-    | {
-        updates: Array<{
-          channel_id: number
-          data_type: DataType
-          values: Record<string, number>
-        }>
-      }
+    | { updates: RealtimeDataUpdate[] }
     | {
         rule_id: number
         execution_path: Array<{

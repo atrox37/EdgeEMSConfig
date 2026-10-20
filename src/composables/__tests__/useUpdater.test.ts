@@ -163,4 +163,16 @@ describe('useUpdater', () => {
     expect(updater.updateAvailable.value).toBeNull()
     expect(updater.updateInfo.value).toBeNull()
   })
+
+  it('records a check error instead of treating it as up to date', async () => {
+    checkMock.mockRejectedValueOnce(new Error('the platform `darwin-aarch64` was not found in the response `platforms` object'))
+
+    const updater = useUpdater()
+    const result = await updater.checkUpdate(true)
+
+    expect(result).toBe(false)
+    expect(updater.updateInfo.value).toBeNull()
+    expect(updater.checkError.value).toContain('darwin-aarch64')
+    expect(elMessage.success).not.toHaveBeenCalled()
+  })
 })

@@ -58,8 +58,8 @@ export interface UseDevicePointsTablesHostOptions {
     } | null | undefined
     applyRealtimeValues?: (
       tab: DeviceTabName,
-      values: Record<string, number>,
-      ts?: Record<string, number>,
+      values: Record<string, unknown>,
+      ts?: Record<string, unknown>,
     ) => void
   } | undefined>
   restorePointsOnCancelEdit?: boolean
@@ -298,20 +298,17 @@ export function useDevicePointsTablesHost(options: UseDevicePointsTablesHostOpti
         onBatchDataUpdate: (payload: any) => {
           if (!payload?.updates?.length) return
           payload.updates.forEach((update: any) => {
+            if (update.source && update.source !== 'inst') return
             if (Number(update.channel_id) !== localInstanceId) return
             const dataType = String(update.data_type || '').toUpperCase()
             const values = update.values || {}
             const ts = update.ts || {}
-            const map: Record<string, number> = {}
-            Object.keys(values).forEach((key) => {
-              map[key] = Number(values[key])
-            })
             if (dataType === 'M') {
-              deviceTabsRef.value?.applyRealtimeValues?.('measurement', map, ts)
+              deviceTabsRef.value?.applyRealtimeValues?.('measurement', values, ts)
             } else if (dataType === 'A') {
-              deviceTabsRef.value?.applyRealtimeValues?.('action', map, ts)
+              deviceTabsRef.value?.applyRealtimeValues?.('action', values, ts)
             } else if (dataType === 'P') {
-              deviceTabsRef.value?.applyRealtimeValues?.('property', map, ts)
+              deviceTabsRef.value?.applyRealtimeValues?.('property', values, ts)
             }
           })
         },

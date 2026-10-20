@@ -3,7 +3,7 @@ export interface ChannelBasic {
   id?: number
   name: string
   description: string | null
-  protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu' | 'di_do'
+  protocol: 'modbus_tcp' | 'can' | 'virt' | 'modbus_rtu' | 'di_do' | 'iec61850'
   enabled: boolean
 }
 export interface ChannelListItem extends ChannelBasic {
@@ -88,6 +88,7 @@ export interface PointInfo {
   description: string
   // 实时值（通过WebSocket更新）
   value?: number
+  update_ts?: number
   rowStatus?: 'normal' | 'modified' | 'added' | 'deleted'
   modifiedFields?: string[] // 记录哪些字段被修改了
   isEditing?: boolean // 标记该行是否处于编辑状态
@@ -132,15 +133,31 @@ export interface CanPointMapping {
   bit_length: number
   data_type: string
 }
+export interface Iec61850ReportConfig {
+  rcb_ref: string
+  rpt_id?: string
+  dataset_members: string[]
+}
+export interface Iec61850Params {
+  address: string
+  connect_timeout_ms: number
+  request_timeout_ms: number
+  poll_interval_ms: number
+  reports: Iec61850ReportConfig[]
+}
+export interface Iec61850PointMapping {
+  address: string
+  ctrl_model?: number
+}
 export interface mappingResponse {
   point_id: number
   signal_name?: string
-  protocol_data: modbusPointMapping | virtualPointMapping | CanPointMapping
+  protocol_data: modbusPointMapping | virtualPointMapping | CanPointMapping | Iec61850PointMapping
 }
 export interface UpdateMappingPoint {
   four_remote: PointType
   point_id: number
-  protocol_data: modbusPointMapping | virtualPointMapping | CanPointMapping
+  protocol_data: modbusPointMapping | virtualPointMapping | CanPointMapping | Iec61850PointMapping
 }
 export interface BatchUpdateMappingPointRequest {
   mappings: UpdateMappingPoint[]
@@ -168,6 +185,7 @@ export const PROTOCOL_OPTIONS = [
   { label: 'modbus_rtu', value: 'modbus_rtu' },
   { label: 'di_do', value: 'di_do' },
   { label: 'can', value: 'can' },
+  { label: 'iec61850', value: 'iec61850' },
   // { label: 'virt', value: 'virt' },
 ] as const
 // 发布点位值请求

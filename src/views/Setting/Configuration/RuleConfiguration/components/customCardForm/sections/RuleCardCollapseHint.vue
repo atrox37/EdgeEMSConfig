@@ -3,10 +3,10 @@
     <AppIcon name="i-tabler-info-circle-filled" className="collapse-hint__icon" />
     <span class="collapse-hint__text">
       Tip: Click
-      <AppIcon name="i-tabler-arrow-big-right" className="collapse-hint__arrow" />
-      /
-      <AppIcon name="i-tabler-arrow-big-left" className="collapse-hint__arrow" />
-      to toggle Variable/Rule.
+      <AppIcon name="i-tabler-chevron-left" className="collapse-hint__arrow" />
+      Variable or
+      <AppIcon name="i-tabler-chevron-right" className="collapse-hint__arrow" />
+      Rule on the side to switch.
     </span>
   </div>
 </template>

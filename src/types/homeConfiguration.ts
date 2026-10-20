@@ -71,3 +71,29 @@ export const HOMEPAGE_POINT_IDS = {
 
 /** 点位 ID 到页面模块的映射（用于 PointConfigDialog） */
 export type HomepagePointId = (typeof HOMEPAGE_POINT_IDS)[keyof typeof HOMEPAGE_POINT_IDS]
+
+/** 拓扑图指标展示名与单位（固定，不可在配置页修改） */
+export const TOPOLOGY_POINT_DISPLAY: Record<
+  | typeof HOMEPAGE_POINT_IDS.TOPOLOGY_PV_FIRST
+  | typeof HOMEPAGE_POINT_IDS.TOPOLOGY_LOAD_FIRST
+  | typeof HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_FIRST
+  | typeof HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_SECOND
+  | typeof HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_FIRST
+  | typeof HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_SECOND,
+  { label: string; unit: string }
+> = {
+  [HOMEPAGE_POINT_IDS.TOPOLOGY_PV_FIRST]: { label: 'P', unit: 'kw' },
+  [HOMEPAGE_POINT_IDS.TOPOLOGY_LOAD_FIRST]: { label: 'P', unit: 'kw' },
+  [HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_FIRST]: { label: 'P', unit: 'kw' },
+  [HOMEPAGE_POINT_IDS.TOPOLOGY_DIESEL_SECOND]: { label: 'Oil', unit: '%' },
+  [HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_FIRST]: { label: 'P', unit: 'kw' },
+  [HOMEPAGE_POINT_IDS.TOPOLOGY_ESS_SECOND]: { label: 'SOC', unit: '%' },
+}
+
+export function isTopologyHomepagePointId(pointId: number): boolean {
+  return pointId in TOPOLOGY_POINT_DISPLAY
+}
+
+export function getTopologyPointDisplay(pointId: number): { label: string; unit: string } | null {
+  return (TOPOLOGY_POINT_DISPLAY as Record<number, { label: string; unit: string }>)[pointId] ?? null
+}

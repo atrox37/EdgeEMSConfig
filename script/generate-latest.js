@@ -82,9 +82,9 @@ function extractChangelogForVersion(targetVersion) {
 const platformConfigs = [
   { key: "windows-x86_64", dir: "windows", exts: [".msi", ".msi.zip", ".exe"] },
   { key: "linux-x86_64", dir: "linux", exts: [".AppImage", ".AppImage.tar.gz"] },
-  // Linux ARM64 (AppImage)
   { key: "linux-aarch64", dir: "linux-arm64", exts: [".AppImage", ".AppImage.tar.gz"] },
-  { key: "darwin-x86_64", dir: "macos", exts: [".dmg", ".app.tar.gz"] }
+  { key: "darwin-x86_64", dir: "macos-x86_64", exts: [".app.tar.gz", ".dmg"] },
+  { key: "darwin-aarch64", dir: "macos-aarch64", exts: [".app.tar.gz", ".dmg"] },
 ];
 
 const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;

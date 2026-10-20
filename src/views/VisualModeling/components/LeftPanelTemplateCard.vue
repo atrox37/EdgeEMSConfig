@@ -17,7 +17,7 @@
         @dragstart="handleDragStart"
         @dragend="releaseTooltipSuppression"
       >
-        <div class="left-panel__image-type left-panel__image-type--standalone">Standalone</div>
+        <div class="left-panel__image-type left-panel__image-type--product">Product</div>
         <div class="left-panel__image-content">
           <img
             v-if="template.imageUrl"
@@ -143,7 +143,7 @@ onBeforeUnmount(clearSuppressTimer)
   line-height: 1;
 }
 
-.left-panel__image-type--standalone {
+.left-panel__image-type--product {
   background: rgba(3, 93, 239, 0.1);
   color: #035def;
 }

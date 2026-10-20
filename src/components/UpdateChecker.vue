@@ -12,11 +12,14 @@
       <div class="update-dialog-content">
         <div class="update-header">
           <h3 v-if="updateInfo">v{{ updateInfo.version }} Available</h3>
+          <h3 v-else-if="checkError">Update Check Failed</h3>
           <h3 v-else-if="dialogMode === 'manual'">No New Version Found</h3>
           <h3 v-else>Update Available</h3>
           <p class="update-description">
             {{
-              dialogMode === 'manual'
+              checkError
+                ? checkError
+                : dialogMode === 'manual'
                 ? updateInfo
                   ? `You're running version ${currentVersion || '-'}. A newer version is available.`
                   : `You're running version ${currentVersion || '-'}. This is the latest version.`
@@ -30,6 +33,7 @@
           <div class="update-row">
             <span class="update-label">Latest Version:</span>
             <span v-if="isCheckingUpdate">Checking...</span>
+            <span v-else-if="checkError">Unavailable</span>
             <span v-else-if="updateInfo" class="update-latest">
               <span>{{ `v${updateInfo.version}` }}</span>
               <span class="update-tag-new">NEW</span>
@@ -100,6 +104,7 @@ type DialogMode = 'auto' | 'manual'
 
 const {
   updateInfo,
+  checkError,
   checkUpdate,
   installUpdate: installUpdateFn,
   isInstalling,

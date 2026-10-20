@@ -7,23 +7,36 @@ on:
 
 jobs:
   build:
-    name: Build per platform
+    name: Build ${{ matrix.artifact }}
     environment: prod
     runs-on: ${{ matrix.os }}
     strategy:
-      # Keep independent platform builds running to expose every failure.
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest, ubuntu-22.04-arm]
         include:
           - os: windows-latest
+            artifact: windows-x86_64
             bundle_subdir: msi
+            bundle_root: src-tauri/target/release/bundle
           - os: ubuntu-latest
+            artifact: linux-x86_64
             bundle_subdir: appimage
-          - os: macos-latest
-            bundle_subdir: dmg
+            bundle_root: src-tauri/target/release/bundle
           - os: ubuntu-22.04-arm
+            artifact: linux-aarch64
+            rust_target: aarch64-unknown-linux-gnu
             bundle_subdir: appimage
+            bundle_root: src-tauri/target/aarch64-unknown-linux-gnu/release/bundle
+          - os: macos-latest
+            artifact: darwin-aarch64
+            rust_target: aarch64-apple-darwin
+            bundle_subdir: dmg
+            bundle_root: src-tauri/target/aarch64-apple-darwin/release/bundle
+          - os: macos-latest
+            artifact: darwin-x86_64
+            rust_target: x86_64-apple-darwin
+            bundle_subdir: dmg
+            bundle_root: src-tauri/target/x86_64-apple-darwin/release/bundle
 
     steps:
       - uses: actions/checkout@v5
@@ -41,9 +54,11 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
 
       - name: Install Linux dependencies (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-22.04-arm'
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -62,78 +77,56 @@ jobs:
       - name: Update version from tag
         shell: bash
         run: |
-          # 从 tag 中提取版本号（去掉 'v' 前缀）
           VERSION=${GITHUB_REF_NAME#v}
           echo "Updating version to $VERSION"
-          
-          # 使用 Node.js 更新版本号（跨平台）
+
           node -e "
           const fs = require('fs');
           const version = '$VERSION';
-          
-          // 更新 package.json
+
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           pkg.version = version;
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          
-          // 更新 tauri.conf.json
+
           const tauriConf = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
           tauriConf.version = version;
           fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(tauriConf, null, 2) + '\n');
-          
-          // 更新 Cargo.toml
+
           let cargoToml = fs.readFileSync('src-tauri/Cargo.toml', 'utf8');
           cargoToml = cargoToml.replace(/^version = \".*\"/m, 'version = \"' + version + '\"');
           fs.writeFileSync('src-tauri/Cargo.toml', cargoToml);
-          
+
           console.log('Version updated successfully to', version);
           "
-          
+
           echo "Verification:"
           echo "package.json: $(grep '\"version\"' package.json)"
           echo "tauri.conf.json: $(grep '\"version\"' src-tauri/tauri.conf.json)"
           echo "Cargo.toml: $(grep '^version' src-tauri/Cargo.toml)"
 
       - name: Build app (Tauri)
-        if: matrix.os != 'ubuntu-22.04-arm'
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-
-      - name: Build app (Tauri ARM64)
-        if: matrix.os == 'ubuntu-22.04-arm'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          args: --target aarch64-unknown-linux-gnu
+          args: ${{ matrix.rust_target && format('--target {0}', matrix.rust_target) || '' }}
 
-      - name: Upload bundle artifact (ARM64)
-        if: matrix.os == 'ubuntu-22.04-arm'
+      - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-bundle
-          path: src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/appimage/
-
-      - name: Upload bundle artifact (Other platforms)
-        if: matrix.os != 'ubuntu-22.04-arm'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os }}-bundle
-          path: src-tauri/target/release/bundle/${{ matrix.bundle_subdir }}/
+          name: ${{ matrix.artifact }}-bundle
+          path: ${{ matrix.bundle_root }}/${{ matrix.bundle_subdir }}/
 
       - name: Upload macOS updater artifact
-        if: matrix.os == 'macos-latest'
+        if: startsWith(matrix.artifact, 'darwin-')
         uses: actions/upload-artifact@v4
         with:
-          name: macos-latest-updater
+          name: ${{ matrix.artifact }}-updater
           path: |
-            src-tauri/target/release/bundle/macos/*.app.tar.gz
-            src-tauri/target/release/bundle/macos/*.sig
+            ${{ matrix.bundle_root }}/macos/*.app.tar.gz
+            ${{ matrix.bundle_root }}/macos/*.sig
           if-no-files-found: error
 
   publish:
@@ -161,57 +154,33 @@ jobs:
           ls -la artifacts/ || echo "artifacts directory not found"
           echo ""
           echo "All artifacts:"
-          find artifacts -type f -o -type d | head -30
+          find artifacts -type f -o -type d | head -50
 
       - name: Organize dist for all platforms
         run: |
           mkdir -p dist
-          
-          # Windows (MSI)
-          if [ -d "artifacts/windows-latest-bundle" ]; then
-            mkdir -p dist/windows
-            cp -R artifacts/windows-latest-bundle/* dist/windows/
-            echo "✓ Windows artifacts copied"
-          else
-            echo "⚠ Windows artifacts not found"
-          fi
-          
-          # Linux x86_64 (AppImage)
-          if [ -d "artifacts/ubuntu-latest-bundle" ]; then
-            mkdir -p dist/linux
-            cp -R artifacts/ubuntu-latest-bundle/* dist/linux/
-            echo "✓ Linux x86_64 artifacts copied"
-          else
-            echo "⚠ Linux x86_64 artifacts not found"
-          fi
-          
-          # Linux ARM64 (AppImage)
-          if [ -d "artifacts/ubuntu-22.04-arm-bundle" ]; then
-            mkdir -p dist/linux-arm64
-            cp -R artifacts/ubuntu-22.04-arm-bundle/* dist/linux-arm64/
-            echo "✓ Linux ARM64 artifacts copied"
-          else
-            echo "⚠ Linux ARM64 artifacts not found"
-          fi
-          
-          # macOS (DMG)
-          if [ -d "artifacts/macos-latest-bundle" ]; then
-            mkdir -p dist/macos
-            cp -R artifacts/macos-latest-bundle/* dist/macos/
-            echo "✓ macOS artifacts copied"
-          else
-            echo "⚠ macOS artifacts not found"
-          fi
 
-          # macOS updater bundle (.app.tar.gz and its signature)
-          if [ -d "artifacts/macos-latest-updater" ]; then
-            mkdir -p dist/macos
-            cp -R artifacts/macos-latest-updater/* dist/macos/
-            echo "✓ macOS updater artifacts copied"
-          else
-            echo "⚠ macOS updater artifacts not found"
-          fi
-          
+          copy_artifact() {
+            local src="$1"
+            local dest="$2"
+            local label="$3"
+            if [ -d "artifacts/$src" ]; then
+              mkdir -p "$dest"
+              cp -R "artifacts/$src/"* "$dest/"
+              echo "✓ $label"
+            else
+              echo "⚠ $label not found"
+            fi
+          }
+
+          copy_artifact windows-x86_64-bundle dist/windows "Windows x86_64"
+          copy_artifact linux-x86_64-bundle dist/linux "Linux x86_64"
+          copy_artifact linux-aarch64-bundle dist/linux-arm64 "Linux ARM64"
+          copy_artifact darwin-x86_64-bundle dist/macos-x86_64 "macOS Intel"
+          copy_artifact darwin-x86_64-updater dist/macos-x86_64 "macOS Intel updater"
+          copy_artifact darwin-aarch64-bundle dist/macos-aarch64 "macOS Apple Silicon"
+          copy_artifact darwin-aarch64-updater dist/macos-aarch64 "macOS Apple Silicon updater"
+
           echo ""
           echo "Final dist structure:"
           ls -R dist

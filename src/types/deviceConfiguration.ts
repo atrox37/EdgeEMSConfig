@@ -79,6 +79,21 @@ export interface DeviceInstanceBasic {
   product_name: string
 }
 
+/** 产品模板中的测量定义，保留产品 JSON 的默认展示标记。 */
+export interface ProductMeasurement {
+  measurement_id: number
+  name: string
+  unit: string | null
+  description?: string | null
+  type?: string
+  options?: string[]
+  attr?: { isDisplay?: string | boolean } | null
+}
+
+export interface ProductPointsResponse {
+  product: { product_name: string; measurements: ProductMeasurement[] }
+}
+
 /** GET /api/instances/list 返回的实例条目。 */
 export interface DeviceInstanceListItem {
   id: number

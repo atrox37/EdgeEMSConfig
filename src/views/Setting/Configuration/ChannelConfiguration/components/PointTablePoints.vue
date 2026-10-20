@@ -101,7 +101,7 @@
           v-if="props.showOperationColumn && !props.publishMode"
           label="Operation"
           width="169"
-          :fixed="props.isEditing ? 'right' : false"
+          fixed="right"
           :class-name="POINT_TABLE_COL.operation"
         >
           <template #header>
@@ -207,7 +207,7 @@ interface Props {
   showOperationColumn?: boolean
   showActions?: boolean
   loading?: boolean
-  channelProtocol?: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+  channelProtocol?: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
   showRealtimeColumns?: boolean
 }
 

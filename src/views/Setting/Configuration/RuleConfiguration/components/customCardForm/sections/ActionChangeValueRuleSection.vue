@@ -1,5 +1,15 @@
 <template>
-  <div class="section rule-section" :class="{ 'is-collapsed': collapsed }">
+  <div
+    class="section rule-section"
+    :class="{ 'is-collapsed': collapsed }"
+    :role="collapsed ? 'button' : undefined"
+    :tabindex="collapsed ? 0 : undefined"
+    :aria-label="collapsed ? 'Show Rule Settings' : undefined"
+    :title="collapsed ? 'Show Rule Settings' : undefined"
+    @click="expandCollapsed"
+    @keydown.enter.prevent="expandCollapsed"
+    @keydown.space.prevent="expandCollapsed"
+  >
     <div class="section__header">
       <span class="section__title">
         <span class="section__title-text">Rule Settings</span>
@@ -7,6 +17,9 @@
           <span class="section__title-line">Rule</span>
           <span class="section__title-line">Settings</span>
         </span>
+      </span>
+      <span class="section__expand-hint" aria-hidden="true">
+        <AppIcon name="i-tabler-chevron-right" className="section__expand-hint-icon" />
       </span>
       <el-button class="section__add-btn" type="primary" title="Add rule" @click="emit('add-rule')">
         <AppIcon name="i-tabler-plus" className="section__add-btn-icon" />
@@ -75,7 +88,7 @@
 import AppIcon from '@/components/AppIcon.vue'
 import RuleFormMiniActionBtn from '@/components/common/RuleFormMiniActionBtn.vue'
 
-defineProps<{
+const props = defineProps<{
   cardData: { config: { rule: any[] } }
   collapsed?: boolean
   singleVariableOptions: Array<{ label: string; value: string; tooltip?: string }>
@@ -86,6 +99,12 @@ const emit = defineEmits<{
   'add-rule': []
   'remove-rule': [index: number]
   'rule-value-change': [rule: any, value: unknown]
+  expand: []
 }>()
+
+const expandCollapsed = () => {
+  if (!props.collapsed) return
+  emit('expand')
+}
 </script>
 

@@ -28,11 +28,7 @@
           @remove-combined-row="(variable, pairIndex) => removeCombinedRow(variable, pairIndex)"
           @combined-operand-change="onCombinedOperandChange"
           @combined-extra-operand-change="onCombinedExtraOperandChange"
-        />
-
-        <RuleCardCollapseCenter
-          :collapsed-section="collapsedSection"
-          @toggle="toggleCenterCollapse"
+          @expand="toggleCollapsedSection"
         />
 
         <FunctionSwitchRuleSection
@@ -47,6 +43,7 @@
           @rule-sub-value-change="onRuleSubValueChange"
           @add-default-condition="adddefaultCondition"
           @remove-default-condition="removedefaultCondition"
+          @expand="toggleCollapsedSection"
         />
       </div>
 
@@ -61,7 +58,6 @@ import { useFunctionSwitchRules } from '@/composables/rule/useFunctionSwitchRule
 import { useFunctionSwitchVariables } from '@/composables/rule/useFunctionSwitchVariables'
 import { useRuleCardFormLayout } from '@/composables/rule/useRuleCardFormLayout'
 import RuleCardBasicSection from './sections/RuleCardBasicSection.vue'
-import RuleCardCollapseCenter from './sections/RuleCardCollapseCenter.vue'
 import RuleCardCollapseHint from './sections/RuleCardCollapseHint.vue'
 import RuleCardVariableSection from './sections/RuleCardVariableSection.vue'
 import FunctionSwitchRuleSection from './sections/FunctionSwitchRuleSection.vue'
@@ -79,7 +75,7 @@ watch(
   { immediate: true },
 )
 
-const { collapsedSection, toggleCenterCollapse } = useRuleCardFormLayout()
+const { collapsedSection, toggleCollapsedSection } = useRuleCardFormLayout()
 
 const rulesBridge = {
   clearInvalidVariableReferences: (() => {}) as () => void,

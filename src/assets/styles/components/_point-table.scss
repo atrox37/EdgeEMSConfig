@@ -186,28 +186,9 @@
       }
     }
 
-    // 表头 Add 按钮
-    :deep(.point-table__op-btn--add) {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      color: $success-color;
-      font-size: 16px;
-
-      .point-table__op-icon {
-        width: 16px;
-        height: 16px;
-        flex-shrink: 0;
-      }
-
-      span {
-        font-size: $font-size-small;
-      }
-
-      &:hover {
-        color: color.adjust($success-color, $lightness: 8%);
-      }
+    // 表头 Add 按钮（RuleFormMiniActionBtn，icon-only）
+    :deep(.point-table-col--operation .rule-form-mini-action) {
+      margin: 0 auto;
     }
 
     :deep(.point-table__popper--filter) {
@@ -220,6 +201,10 @@
       display: flex;
       gap: 15px;
       align-items: center;
+
+      :deep(.rule-form-mini-action) {
+        flex-shrink: 0;
+      }
 
       .point-table__op-icon {
         width: 16px;

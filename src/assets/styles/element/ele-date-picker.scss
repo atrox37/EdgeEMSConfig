@@ -18,10 +18,45 @@
 
   &.el-range-editor.el-input__wrapper {
     width: 400px;
+    min-height: var(--vt-control-height);
+    padding: 1px 11px;
+    background-color: var(--vt-bg-input);
+    border: 1px solid var(--vt-border-color);
+    border-radius: var(--vt-radius-none);
+    box-shadow: none;
+    transition:
+      border-color var(--vt-transition-fast),
+      box-shadow var(--vt-transition-fast),
+      background-color var(--vt-transition-fast);
 
     &.is-active,
     &:hover {
+      border-color: var(--vt-border-color);
       box-shadow: none;
+    }
+
+    &.is-disabled {
+      background-color: var(--vt-bg-disabled);
+      border-color: var(--vt-border-color-disabled);
+      box-shadow: none;
+    }
+
+    .el-range-input {
+      height: calc(var(--vt-control-height) - 2px);
+      color: var(--vt-text-primary);
+      font-size: var(--vt-font-size-base);
+      line-height: calc(var(--vt-control-height) - 2px);
+      background-color: transparent;
+
+      &::placeholder {
+        color: var(--vt-text-placeholder);
+      }
+
+      &:disabled {
+        color: var(--vt-text-disabled);
+        background-color: transparent;
+        cursor: not-allowed;
+      }
     }
 
     .el-range__icon,
@@ -32,7 +67,7 @@
       // width: 16px;
       // height: 16px;
       // margin: 0 4px;
-      // color: var(--vt-text-primary);
+      color: var(--vt-text-secondary);
       font-size: 16px;
     }
 

@@ -8,6 +8,7 @@
     "web:dev": "vite",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "tauri:build:local": "tauri build --config '{\"bundle\":{\"createUpdaterArtifacts\":false}}'",
     "tauri:build:arm64": "tauri build --target aarch64-unknown-linux-gnu",
     "build": "vite build",
     "build:type-check": "vue-tsc --noEmit --project tsconfig.build.json --skipLibCheck",

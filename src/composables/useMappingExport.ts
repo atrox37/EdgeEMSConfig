@@ -41,6 +41,14 @@ export function useMappingExport(options: UseMappingExportOptions) {
           data_type: String(mapping.data_type ?? ''),
         }
       }
+      if (options.channelProtocol() === 'iec61850') {
+        return {
+          point_id: String(point.point_id ?? ''),
+          point_name: String(point.signal_name ?? ''),
+          address: String(mapping.address ?? ''),
+          ctrl_model: String(mapping.ctrl_model ?? ''),
+        }
+      }
       return {
         point_id: String(point.point_id ?? ''),
         point_name: String(point.signal_name ?? ''),

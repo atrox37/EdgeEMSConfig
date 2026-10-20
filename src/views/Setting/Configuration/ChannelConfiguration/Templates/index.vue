@@ -14,7 +14,7 @@
             :fit-input-width="true"
             clearable
             placeholder="Select protocol"
-            @change="loadTemplates"
+            @change="handleProtocolChange"
           >
             <el-option
               v-for="option in PROTOCOL_OPTIONS"
@@ -26,7 +26,7 @@
         </el-form-item>
       </el-form>
       <div class="channel-templates-page__toolbar-actions">
-        <div class="rule-management__reload-icon" @click="loadTemplates">
+        <div class="rule-management__reload-icon" @click="() => refreshTemplates()">
           <AppIcon name="i-tabler-refresh" className="rule-management__inline-icon" />
         </div>
       </div>
@@ -45,7 +45,7 @@
     <div class="channel-templates-page__table">
       <el-table
         v-loading="loading"
-        :data="pagedTemplateList"
+        :data="tableData"
         row-key="template_id"
         class="channel-templates-page__table-content"
       >
@@ -54,7 +54,7 @@
         <el-table-column prop="description" label="Description" min-width="220" show-overflow-tooltip />
         <el-table-column prop="protocol" label="Protocol" width="130" />
         <el-table-column prop="created_at" label="Created At" min-width="180" />
-        <el-table-column label="Action" width="390" fixed="right">
+        <el-table-column label="Operation" width="390" fixed="right">
           <template #default="{ row }">
             <div class="rule-management__operation">
               <div class="rule-management__operation-item" @click="openEditDialog(templateRow(row))">
@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
@@ -128,6 +128,7 @@ import { getAllChannels } from '@/api/channelsManagement'
 import TemplateEditDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateEditDialog.vue'
 import TemplateApplyDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateApplyDialog.vue'
 import TemplateCreateDialog from '@/views/Setting/Configuration/ChannelConfiguration/Templates/components/TemplateCreateDialog.vue'
+import { useTableData, type TableConfig } from '@/composables/useTableData'
 
 const templateRow = (row: unknown): ChannelTemplateListItem =>
   asTableRow<ChannelTemplateListItem>(row)
@@ -137,15 +138,23 @@ const userAddIcon = 'i-tabler-plus'
 const router = useRouter()
 const route = useRoute()
 
-const loading = ref(false)
-const protocolFilter = ref<string>('')
+const protocolFilter = ref(typeof route.query.protocol === 'string' ? route.query.protocol : '')
 const templateList = ref<ChannelTemplateListItem[]>([])
 const channelOptions = ref<Array<{ id: number; name: string; protocol: string }>>([])
-const pagination = ref({
-  page: 1,
-  pageSize: 20,
-  total: 0,
-})
+const templateTableConfig: TableConfig = {
+  listUrl: '/comApi/api/templates',
+  defaultPageSize: 20,
+}
+const {
+  loading,
+  tableData,
+  pagination,
+  filters,
+  fetchTableData,
+  handlePageSizeChange,
+  handlePageChange,
+} = useTableData<ChannelTemplateListItem>(templateTableConfig)
+filters.protocol = protocolFilter.value
 
 const editDialogRef = ref<InstanceType<typeof TemplateEditDialog> | null>(null)
 const applyDialogRef = ref<InstanceType<typeof TemplateApplyDialog> | null>(null)
@@ -155,35 +164,20 @@ const handleBack = () => {
   router.push('/channelConfiguration')
 }
 
-const loadTemplates = async () => {
-  loading.value = true
-  try {
-    const res = await getTemplates(protocolFilter.value ? (protocolFilter.value as any) : undefined)
-    if (res.success) {
-      templateList.value = Array.isArray(res.data) ? res.data : []
-      pagination.value.total = templateList.value.length
-      if ((pagination.value.page - 1) * pagination.value.pageSize >= pagination.value.total) {
-        pagination.value.page = 1
-      }
-    }
-  } finally {
-    loading.value = false
+const handleProtocolChange = () => {
+  filters.protocol = protocolFilter.value
+  void refreshTemplates(true)
+}
+
+const loadTemplateOptions = async () => {
+  const res = await getTemplates(protocolFilter.value ? (protocolFilter.value as any) : undefined)
+  if (res.success) {
+    templateList.value = Array.isArray(res.data) ? res.data : []
   }
 }
 
-const pagedTemplateList = computed(() => {
-  const start = (pagination.value.page - 1) * pagination.value.pageSize
-  const end = start + pagination.value.pageSize
-  return templateList.value.slice(start, end)
-})
-
-const handlePageSizeChange = (size: number) => {
-  pagination.value.pageSize = size
-  pagination.value.page = 1
-}
-
-const handlePageChange = (page: number) => {
-  pagination.value.page = page
+const refreshTemplates = async (resetPage = false) => {
+  await Promise.all([fetchTableData(resetPage), loadTemplateOptions()])
 }
 
 const loadChannels = async () => {
@@ -217,7 +211,7 @@ const submitEdit = async (payload: { template_id: number; name: string; descript
   if (res.success) {
     ElMessage.success('Template updated successfully')
     editDialogRef.value?.close()
-    await loadTemplates()
+    await refreshTemplates()
   }
 }
 
@@ -242,7 +236,7 @@ const handleDelete = async (row: ChannelTemplateListItem) => {
   const res = await deleteTemplate(row.template_id)
   if (res.success) {
     ElMessage.success('Template deleted successfully')
-    await loadTemplates()
+    await refreshTemplates()
   }
 }
 
@@ -310,7 +304,7 @@ const submitCreate = async (
     if (res.success) {
       ElMessage.success('Template created successfully')
       createDialogRef.value?.close()
-      await loadTemplates()
+      await refreshTemplates()
     }
     return
   }
@@ -322,7 +316,7 @@ const submitCreate = async (
   if (res.success) {
     ElMessage.success('Snapshot saved as template successfully')
     createDialogRef.value?.close()
-    await loadTemplates()
+    await refreshTemplates()
   }
 }
 
@@ -346,10 +340,7 @@ const processQueryAction = () => {
 }
 
 onMounted(async () => {
-  if (typeof route.query.protocol === 'string') {
-    protocolFilter.value = route.query.protocol
-  }
-  await Promise.all([loadTemplates(), loadChannels()])
+  await Promise.all([loadTemplateOptions(), loadChannels()])
   processQueryAction()
 })
 </script>

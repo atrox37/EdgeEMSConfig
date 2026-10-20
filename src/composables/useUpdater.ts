@@ -47,11 +47,14 @@ export function useUpdater() {
     updateInfo.value = null
   }
 
+  const checkError = ref<string | null>(null)
+
   const checkUpdate = async (silent = false): Promise<boolean> => {
     // Do not interrupt an in-progress installation
     if (isInstalling.value) return false
     try {
       isChecking.value = true
+      checkError.value = null
       await clearUpdateState()
       resetInstallProgress()
 
@@ -79,9 +82,11 @@ export function useUpdater() {
     } catch (error) {
       await clearUpdateState()
       resetInstallProgress()
+      const message = error instanceof Error ? error.message : String(error)
+      checkError.value = message
       console.error('check update failed:', error)
       if (!silent) {
-        ElMessage.error(`check update failed: ${error instanceof Error ? error.message : String(error)}`)
+        ElMessage.error(`check update failed: ${message}`)
       }
       return false
     } finally {
@@ -110,7 +115,7 @@ export function useUpdater() {
       `
         <div style="max-height: 400px; overflow-y: auto;">
           <div style="margin-bottom: 15px;">
-            <h3 style="margin: 0 0 10px 0; color: #409EFF;">?????°„∑⁄ v${version}</h3>
+            <h3 style="margin: 0 0 10px 0; color: #409EFF;">?????ùùù v${version}</h3>
             ${dateStr ? `<p style="color: #909399; font-size: 12px; margin: 0;">????????: ${dateStr}</p>` : ''}
           </div>
           <div style="margin-top: 15px; padding: 10px; background: #f5f7fa; border-radius: 4px;">
@@ -223,6 +228,7 @@ export function useUpdater() {
     progressMessage,
     updateAvailable,
     updateInfo,
+    checkError,
     checkUpdate,
     showUpdateDialog,
     installUpdate,

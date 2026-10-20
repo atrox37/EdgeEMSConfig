@@ -143,7 +143,7 @@ export function useVisualModelingFlowCore(options: UseVisualModelingFlowCoreOpti
 
     const nodeIds = new Set<string>()
     for (const id of selectedNodeIds) {
-      for (const childId of collectNodesToDelete(id, currentNodes)) nodeIds.add(childId)
+      collectNodesToDelete(id).forEach((nodeId) => nodeIds.add(nodeId))
     }
     const edgeIds = new Set(
       currentEdges.filter((edge) => (edge as FlowEdge & { selected?: boolean }).selected).map((edge) => edge.id),
@@ -172,25 +172,6 @@ export function useVisualModelingFlowCore(options: UseVisualModelingFlowCoreOpti
 
   function onNodesChangeHandler(changes: NodeChange[]) {
     if (options.isViewMode.value || isRestoringHistory) return
-
-    const removeChanges = changes.filter((c) => c.type === 'remove')
-    if (removeChanges.length > 0) {
-      const currentNodes = getFlowNodes()
-      const extraIds = new Set<string>()
-      for (const change of removeChanges) {
-        const id = (change as { id: string }).id
-        for (const childId of collectNodesToDelete(id, currentNodes)) {
-          if (childId !== id && currentNodes.some((n) => n.id === childId)) {
-            extraIds.add(childId)
-          }
-        }
-      }
-      if (extraIds.size > 0) {
-        const removedIds = removeChanges.map((c) => (c as { id: string }).id)
-        removeNodesByIds([...removedIds, ...extraIds])
-        return
-      }
-    }
 
     const meaningful = changes.some(
       (c) =>

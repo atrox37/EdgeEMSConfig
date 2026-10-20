@@ -1,3 +1,4 @@
+import { applyRealtimePointSnapshot, getRealtimePointValue } from '@/utils/pointRealtime'
 import { computed, inject, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCsvImportExport } from '@/composables/useCsvImportExport'
@@ -24,7 +25,7 @@ import { asTableRow } from '@/utils/tableRow'
 import { validatePointField, validatePointRow } from '@/validators/channelPoints'
 
 export type ChannelPointType = 'T' | 'S' | 'C' | 'A'
-export type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+export type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
 
 export interface UseChannelPointTableEditorOptions {
   pointType: () => ChannelPointType
@@ -327,30 +328,10 @@ export function useChannelPointTableEditor(options: UseChannelPointTableEditorOp
   }
 
   function applyRealtimeValues(
-    values: Record<string | number, number>,
-    ts?: Record<string | number, number>,
+    values: Record<string, unknown>,
+    ts?: Record<string, unknown>,
   ) {
-    if (!values || !Array.isArray(editPoints.value)) return
-    const valueMap = new Map<number, number>()
-    Object.entries(values).forEach(([key, value]) => {
-      const id = Number(key)
-      if (Number.isFinite(id)) valueMap.set(id, Number(value))
-    })
-    const tsMap = new Map<number, number>()
-    if (ts && typeof ts === 'object') {
-      Object.entries(ts).forEach(([key, value]) => {
-        const id = Number(key)
-        if (Number.isFinite(id)) tsMap.set(id, Number(value))
-      })
-    }
-    if (valueMap.size === 0 && tsMap.size === 0) return
-    editPoints.value.forEach((point) => {
-      const row = point as PointInfo & { value?: number; update_ts?: number }
-      const newVal = valueMap.get(point.point_id)
-      if (newVal !== undefined) row.value = newVal
-      const newTs = tsMap.get(point.point_id)
-      if (newTs !== undefined) row.update_ts = newTs
-    })
+    applyRealtimePointSnapshot(editPoints.value, (point) => point.point_id, values, ts)
   }
 
   function handlePublish(point: PointInfo) {
@@ -383,10 +364,8 @@ export function useChannelPointTableEditor(options: UseChannelPointTableEditorOp
     const rows = editPoints.value.map((point) => ({
       point_id: String(point.point_id ?? ''),
       point_name: String(point.signal_name ?? ''),
-      value: String((point as { value?: unknown }).value ?? ''),
-      update_time: formatUpdateTimeForCsv(
-        (point as { update_ts?: number }).update_ts,
-      ),
+      value: String(getRealtimePointValue(point.value, point.update_ts) ?? ''),
+      update_time: formatUpdateTimeForCsv(point.update_ts),
       scale: String(point.scale ?? ''),
       offset: String(point.offset ?? ''),
       unit: String(point.unit ?? ''),

@@ -9,10 +9,22 @@
         style="height: 80%;min-height: 550px;"
     >
         <el-form ref="formRef" :model="form" :rules="rules" label-width="96px" class="content-form">
-            <LightCollapseCard v-model="basicSettingOpen" title="Basic Setting" :collapsible="false" class="config-section">
+            <LightCollapseCard
+                v-model="basicSettingOpen"
+                title="Basic Setting"
+                :collapsible="false"
+                class="config-section"
+            >
                 <div class="config-section__inner">
+                    <el-form-item v-if="isTopologyPoint" label="Module:">
+                        <el-input :model-value="topologyContextLabel" disabled />
+                    </el-form-item>
                     <el-form-item label="Name:" prop="name">
-                        <el-input v-model="form.name" placeholder="Enter name" />
+                        <el-input
+                            v-model="form.name"
+                            placeholder="Enter name"
+                            :disabled="isTopologyPoint"
+                        />
                     </el-form-item>
                     <el-form-item v-if="showIconSelector" label="Icon:" required prop="icon">
                         <div class="icon-picker">
@@ -31,16 +43,28 @@
                         </div>
                     </el-form-item>
                     <el-form-item label="Unit:" prop="unit">
-                        <el-input v-model="form.unit" placeholder="e.g. kW / kWh / %" />
+                        <el-input
+                            v-model="form.unit"
+                            placeholder="e.g. kW / kWh / %"
+                            :disabled="isTopologyPoint"
+                        />
                     </el-form-item>
                     <el-form-item label="Description:" prop="description">
-                        <el-input v-model="form.description"
-                            placeholder="Enter description (optional)" />
+                        <el-input
+                            v-model="form.description"
+                            placeholder="Enter description (optional)"
+                            :disabled="isTopologyPoint"
+                        />
                     </el-form-item>
                 </div>
             </LightCollapseCard>
 
-            <LightCollapseCard v-model="formulaSettingOpen" title="Formula Setting" :collapsible="false" class="formula-item">
+            <LightCollapseCard
+                v-model="formulaSettingOpen"
+                title="Formula Setting"
+                :collapsible="false"
+                class="formula-item"
+            >
                 <div ref="formulaScrollRef" class="formula-lines">
                         <div v-for="(line, idx) in form.formulaLines" :key="line.id" class="formula-line">
                             <div class="formula-line__operator">
@@ -109,16 +133,22 @@
                             </div>
 
                             <div v-if="idx > 0" class="formula-line__actions">
-                                <el-button class="icon-btn" type="danger" link @click="removeLine(idx)">
-                                    <AppIcon name="i-tabler-circle-x-filled" className="icon-btn__delete" />
-                                </el-button>
+                                <RuleFormMiniActionBtn
+                                    kind="delete"
+                                    size="sm"
+                                    title="Remove formula term"
+                                    @click="removeLine(idx)"
+                                />
                             </div>
                         </div>
 
                         <div class="formula-add">
-                            <el-button class="icon-btn" type="primary" link @click="addLine">
-                                <AppIcon name="i-tabler-circle-plus" className="icon-btn__add" />
-                            </el-button>
+                            <RuleFormMiniActionBtn
+                                kind="add"
+                                size="sm"
+                                title="Add formula term"
+                                @click="addLine"
+                            />
                         </div>
                 </div>
             </LightCollapseCard>
@@ -136,6 +166,7 @@ import { computed, nextTick, reactive, ref, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import AppIcon from '@/components/AppIcon.vue'
 import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
+import RuleFormMiniActionBtn from '@/components/common/RuleFormMiniActionBtn.vue'
 import type { FormRules } from 'element-plus'
 import { getAllChannels, getPointsTables } from '@/api/channelsManagement'
 import { getAllInstances, getInstancePoints } from '@/api/devicesManagement'
@@ -143,6 +174,7 @@ import { Request } from '@/utils/request'
 import type { PointInfoResponse, PointType } from '@/types/channelConfiguration'
 import type { InstancePointList } from '@/types/deviceConfiguration'
 import { AVAILABLE_ICONS } from '../iconOptions'
+import { getTopologyPointDisplay } from '@/types/homeConfiguration'
 export type FormulaType = 'Channel' | 'Instance' | 'Number'
 export type ChannelDataType = 'Telemetry' | 'Signal' | 'Control' | 'Adjustment'
 export type InstanceDataType = 'Property' | 'Measurement' | 'Action'
@@ -191,8 +223,13 @@ const visible = computed({
     set: (v: boolean) => emit('update:modelValue', v),
 })
 
-const dialogTitle = computed(() => {
-    return 'Point Configuration'
+const dialogTitle = computed(() => 'Point Configuration')
+
+const isTopologyPoint = computed(() => props.card?.module === 'Topology')
+
+const topologyContextLabel = computed(() => {
+    const context = props.card?.context?.trim()
+    return context ? `Topology / ${context}` : 'Topology'
 })
 
 const showIconSelector = computed(() => {
@@ -419,9 +456,11 @@ const buildBasicSnapshot = (card: DialogCardInfo | null) => {
 async function initializeFormFromCard(card: DialogCardInfo | null) {
     if (!card) return
     form.cardId = card.id
-    form.name = card.label
+    const pointId = Number(card.id)
+    const fixedDisplay = Number.isFinite(pointId) ? getTopologyPointDisplay(pointId) : null
+    form.name = fixedDisplay?.label ?? card.label
     form.icon = card.icon ?? ''
-    form.unit = card.unit
+    form.unit = fixedDisplay?.unit ?? card.unit
     form.description = card.description ?? ''
     const formulaLines = card.formula
       ? parseFormulaString(card.formula)
@@ -602,7 +641,7 @@ onMounted(() => {
 watch(
     () => [form.cardId, form.name, form.icon, form.unit] as const,
     ([id, name, icon, unit]) => {
-        if (!id) return
+        if (!id || isTopologyPoint.value) return
         emit('updateBasic', {
             id,
             label: String(name ?? ''),
@@ -622,17 +661,21 @@ watch(
 // NOTE: formula string is still generated and will be used in payload/network requests
 const formulaString = computed(() => buildFormulaString())
 
-const rules: FormRules = {
-    name: [{ required: true, message: 'Please enter a name', trigger: 'blur' }],
-}
+const rules = computed<FormRules>(() => (
+    isTopologyPoint.value
+        ? {}
+        : { name: [{ required: true, message: 'Please enter a name', trigger: 'blur' }] }
+))
 
 const buildPayload = (): PointConfigPayload => {
+    const pointId = Number(form.cardId)
+    const fixedDisplay = Number.isFinite(pointId) ? getTopologyPointDisplay(pointId) : null
     return {
         cardId: form.cardId,
-        name: form.name.trim(),
-        unit: form.unit.trim(),
-        description: form.description.trim(),
-        icon: form.icon?.trim() || undefined,
+        name: fixedDisplay?.label ?? form.name.trim(),
+        unit: fixedDisplay?.unit ?? form.unit.trim(),
+        description: isTopologyPoint.value ? '' : form.description.trim(),
+        icon: isTopologyPoint.value ? undefined : (form.icon?.trim() || undefined),
         formula: formulaString.value,
     }
 }
@@ -833,28 +876,13 @@ const handleSave = async () => {
 .formula-line__actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.remove-btn {
-  padding: 0;
-  color: var(--vt-color-danger);
+  align-items: center;
 }
 
 .formula-add {
+  display: grid;
+  grid-template-columns: 88px 1fr 40px;
   margin-top: var(--vt-space-2);
-}
-
-.icon-btn {
-  padding: 0 4px;
-  flex: 0 0 auto;
-}
-
-.icon-btn :deep(.icon-btn__add) {
-  color: var(--vt-color-success) !important;
-}
-
-.icon-btn :deep(.icon-btn__delete) {
-  color: var(--vt-color-danger) !important;
 }
 
 .icon-picker {

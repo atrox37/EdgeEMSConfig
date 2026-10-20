@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
+import wsManager from '@/utils/websocket'
 import { useDevicePointsTablesHost } from '@/composables/useDevicePointsTablesHost'
 import { destroyComposableMount, mountComposable } from './composableTestUtils'
 
@@ -109,6 +110,24 @@ describe('useDevicePointsTablesHost', () => {
     getAllChannelsMock.mockReset()
     getInstancePointsMock.mockResolvedValue({ success: true, data: sampleInstancePoints })
     getAllChannelsMock.mockResolvedValue({ data: { list: [{ id: 1, name: 'Ch-1' }] } })
+  })
+
+  it('forwards raw values and per-point timestamps without converting null or properties into zero', async () => {
+    const { result, wrapper, scope, deviceTabsRef } = await mountHost()
+    result.subscribeWebSocket(7)
+    const listener = vi.mocked(wsManager.subscribe).mock.calls.at(-1)![1]!
+    const values = { 1: null, 2: 0 }
+    const ts = { 1: 0, 2: 1700000000000 }
+    listener.onBatchDataUpdate?.({ updates: [
+      { source: 'inst', channel_id: 7, data_type: 'M', values, ts },
+      { source: 'inst', channel_id: 7, data_type: 'P', values: { 1: 'manufacturer', 2: 0 } },
+      { source: 'comsrv', channel_id: 7, data_type: 'A', values: { 1: 99 }, ts },
+    ] })
+    expect(deviceTabsRef.value.applyRealtimeValues.mock.calls).toEqual([
+      ['measurement', values, ts],
+      ['property', { 1: 'manufacturer', 2: 0 }, {}],
+    ])
+    destroyComposableMount(wrapper, scope)
   })
 
   it('switches away from property tab when entering routing view', async () => {

@@ -175,7 +175,7 @@ interface Props {
   isEditing: boolean
   showActions?: boolean
   loading?: boolean
-  channelProtocol: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+  channelProtocol: 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
 }
 const props = withDefaults(defineProps<Props>(), {
   viewMode: 'mappings',
@@ -245,6 +245,11 @@ const {
   listRef: editPoints,
   validateField: validateMappingFieldOnly,
   getFieldsForRow: () => {
+    if (props.channelProtocol === "iec61850") {
+      const fields = ["iec61850_address"];
+      if (props.pointType === "C" || props.pointType === "A") fields.push("ctrl_model");
+      return fields;
+    }
     if (props.channelProtocol === "can")
       return [
         "can_id",
@@ -264,6 +269,21 @@ const {
     ];
   },
   clearFields: () => {
+    if (props.channelProtocol === "iec61850")
+      return [
+        "slave_id",
+        "function_code",
+        "register_address",
+        "data_type",
+        "byte_order",
+        "bit_position",
+        "gpio_number",
+        "can_id",
+        "can_offset",
+        "can_bit_position",
+        "can_bit_length",
+        "can_data_type",
+      ];
     if (props.channelProtocol === "can")
       return [
         "gpio_number",

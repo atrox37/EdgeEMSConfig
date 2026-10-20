@@ -10,7 +10,7 @@ import {
   validateMappingRow,
 } from '@/validators/channelMappings'
 
-export type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do'
+export type ChannelProtocol = 'modbus_tcp' | 'modbus_rtu' | 'virt' | 'can' | 'di_do' | 'iec61850'
 export type PointTabType = 'T' | 'S' | 'C' | 'A'
 
 interface MappingRowEditingApi {
@@ -63,6 +63,11 @@ export function useMappingEditor(options: UseMappingEditorOptions) {
         bit_position: undefined,
         bit_length: undefined,
         data_type: undefined,
+      }
+    } else if (options.channelProtocol() === 'iec61850') {
+      ;(point as { protocol_mapping: Record<string, unknown> }).protocol_mapping = {
+        address: undefined,
+        ctrl_model: undefined,
       }
     } else if (options.channelProtocol() === 'di_do') {
       ;(point as { protocol_mapping: Record<string, unknown> }).protocol_mapping = {}
@@ -175,6 +180,16 @@ export function useMappingEditor(options: UseMappingEditorOptions) {
           data.bit_length = normIntOrNull(mapping.bit_length)
         if (changed.includes('mapping_can_data_type'))
           data.data_type = normStrOrNull(mapping.data_type)
+      } else if (protocol === 'iec61850') {
+        const mapping = item.protocol_mapping as Record<string, unknown>
+        const addressChanged = changed.includes('mapping_iec61850_address')
+        const modelChanged = changed.includes('mapping_ctrl_model')
+        if (addressChanged || modelChanged) {
+          data.address = normStrOrNull(mapping.address)
+          if (options.pointType() === 'C' || options.pointType() === 'A') {
+            data.ctrl_model = normIntOrNull(mapping.ctrl_model)
+          }
+        }
       } else if (protocol === 'di_do') {
         if (changed.includes('mapping_gpio_number')) {
           data.gpio_number = normIntOrNull(

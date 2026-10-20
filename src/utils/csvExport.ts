@@ -1,15 +1,16 @@
+import { normalizePointTimestamp } from '@/utils/pointRealtime'
 import { saveBytesWithPreferredPath } from '@/utils/downloadSave'
 
 /** 格式化更新时间戳（毫秒）为可读字符串 */
-export function formatUpdateTime(ts: number | undefined): string {
-  if (ts == null || !Number.isFinite(ts)) return '-'
-  return new Date(ts).toLocaleString()
+export function formatUpdateTime(ts: unknown): string {
+  const timestamp = normalizePointTimestamp(ts)
+  return timestamp === undefined ? '--' : new Date(timestamp).toLocaleString()
 }
 
 /** 格式化更新时间戳用于 CSV 导出（ISO 8601） */
-export function formatUpdateTimeForCsv(ts: number | undefined): string {
-  if (ts == null || !Number.isFinite(ts)) return ''
-  return new Date(ts).toISOString()
+export function formatUpdateTimeForCsv(ts: unknown): string {
+  const timestamp = normalizePointTimestamp(ts)
+  return timestamp === undefined ? '' : new Date(timestamp).toISOString()
 }
 
 export function sanitizeFileNamePart(value: string, fallback = 'channel'): string {

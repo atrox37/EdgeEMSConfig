@@ -64,6 +64,27 @@ $info-color: #8c8c8c;
 $info-color-hover: #7a7a7a;
 $info-color-active: #686868;
 
+// 拓扑画布色（建模卡片设计稿）
+$topology-accent: #035def;
+$topology-accent-strong: #0b61e8;
+$topology-accent-border: #b3cefa;
+$topology-accent-soft: rgba(3, 93, 239, 0.1);
+$topology-border: #e8edf5;
+$topology-border-muted: #eeeeee;
+$topology-border-card: #e3e6e9;
+$topology-border-control: #e2e7ef;
+$topology-header-bg: #f7f7fd;
+$topology-icon-bg: #f0f3fb;
+$topology-chip-bg: #e7effd;
+$topology-grid-dot: #e8ebf0;
+$topology-text: #333333;
+$topology-text-muted: #666666;
+$topology-text-subtle: #777777;
+$topology-text-faint: #888888;
+$topology-danger: #f53f3f;
+$topology-danger-soft: #fce8e8;
+$hint-mark-warning: #c47f00;
+
 // 橙色系（用于高亮、链接等，替代蓝色）
 $orange-color: rgba(255, 105, 0, 1);
 $orange-color-light: rgba(255, 138, 0, 1);

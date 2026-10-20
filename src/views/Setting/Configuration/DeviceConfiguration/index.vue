@@ -108,7 +108,7 @@
             label="Product Name"
             min-width="200"
           />
-          <el-table-column label="Action" width="340" fixed="right">
+          <el-table-column label="Operation" width="340" fixed="right">
             <template #default="{ row }">
               <div class="rule-management__operation">
                 <div

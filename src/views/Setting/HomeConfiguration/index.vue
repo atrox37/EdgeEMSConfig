@@ -49,6 +49,7 @@ import PointConfigDialog from './components/PointConfigDialog.vue'
 import type { PointConfigPayload } from './components/PointConfigDialog.vue'
 import { getHomepagePoints, resetHomepageConfig, updateHomepagePoint } from '@/api/homeConfiguration'
 import type { HomepagePointItem } from '@/types/homeConfiguration'
+import { getTopologyPointDisplay, isTopologyHomepagePointId } from '@/types/homeConfiguration'
 import { ElMessage } from 'element-plus'
 
 const DESIGN_WIDTH_PX = 1700
@@ -92,18 +93,25 @@ const activePointId = ref<string | null>(null)
 const homepagePointsLoading = ref(false)
 const resetLoading = ref(false)
 
+function applyTopologyFixedDisplay(pointId: number, config: PointConfig): PointConfig {
+  const fixed = getTopologyPointDisplay(pointId)
+  if (!fixed) return config
+  return { ...config, label: fixed.label, unit: fixed.unit }
+}
+
 /** 从 API 响应合并点位配置到 pointConfigs（使用固定 ID 1–19） */
 function mergeHomepagePointsFromApi(items: HomepagePointItem[]) {
   for (const it of items) {
     const id = String(it.id)
-    pointConfigs[id] = {
+    const pointId = Number(it.id)
+    pointConfigs[id] = applyTopologyFixedDisplay(pointId, {
       ...(pointConfigs[id] || {}),
       label: it.name ?? '',
       unit: it.unit ?? '',
       ...(it.imgurl && { icon: it.imgurl }),
       ...(it.formula && { formula: it.formula }),
       ...(it.description && { description: it.description }),
-    }
+    })
   }
 }
 
@@ -112,11 +120,12 @@ function resetPointConfigsToDefaults() {
     delete pointConfigs[key]
   })
   for (const p of pointRecords.value) {
-    pointConfigs[p.id] = {
+    const pointId = Number(p.id)
+    pointConfigs[p.id] = applyTopologyFixedDisplay(pointId, {
       label: p.defaultLabel,
       unit: p.defaultUnit,
       ...(p.defaultIcon && { icon: p.defaultIcon }),
-    }
+    })
   }
 }
 
@@ -157,22 +166,25 @@ const handleCardClick = (payload: { id: string; title: string }) => {
 const handleSavePointConfig = async (payload: PointConfigPayload) => {
   const pointId = Number(payload.cardId)
   if (!Number.isFinite(pointId) || pointId < 1) return
+  const fixedDisplay = getTopologyPointDisplay(pointId)
+  const name = fixedDisplay?.label ?? payload.name
+  const unit = fixedDisplay?.unit ?? payload.unit
   try {
     await updateHomepagePoint(pointId, {
-      name: payload.name,
+      name,
       formula: payload.formula ?? '',
-      unit: payload.unit ?? '',
+      unit,
       imgurl: payload.icon ?? '',
       description: payload.description ?? '',
     })
-    pointConfigs[payload.cardId] = {
+    pointConfigs[payload.cardId] = applyTopologyFixedDisplay(pointId, {
       ...(pointConfigs[payload.cardId] || {}),
-      label: payload.name,
-      unit: payload.unit,
+      label: name,
+      unit,
       icon: payload.icon,
       formula: payload.formula,
       description: payload.description,
-    }
+    })
   } catch (e) {
     console.warn('[HomeConfiguration] 保存点位配置失败:', e)
   }
@@ -184,6 +196,8 @@ const handleUpdatePointBasic = (payload: {
   unit: string
   icon?: string
 }) => {
+  const pointId = Number(payload.id)
+  if (isTopologyHomepagePointId(pointId)) return
   pointConfigs[payload.id] = {
     ...(pointConfigs[payload.id] || {}),
     label: payload.label,

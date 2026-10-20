@@ -1,7 +1,9 @@
+import { formatRealtimePointValue } from '@/utils/pointRealtime'
 import type { PointInfo } from '@/types/channelConfiguration'
 import { POINT_TABLE_COL, POINT_TABLE_POPPER } from '@/constants/pointTable'
 import { formatUpdateTime } from '@/utils/csvExport'
 import { FC_BY_POINT } from '@/validators/channelMappings'
+import { getIec61850CtrlModelOptions } from '@/validators/iec61850'
 
 export interface PointColumn {
   key: string
@@ -106,7 +108,7 @@ export function getPointColumns(options: {
         isEditable: false,
         fieldClassKey: 'value',
         errorKey: 'value',
-        display: (row) => String((row as any).value ?? '-'),
+        display: (row) => formatRealtimePointValue(row.value, row.update_ts),
       },
       {
         key: 'update_time',
@@ -118,7 +120,7 @@ export function getPointColumns(options: {
         isEditable: false,
         fieldClassKey: 'update_time',
         errorKey: 'update_time',
-        display: (row) => formatUpdateTime((row as any).update_ts),
+        display: (row) => formatUpdateTime(row.update_ts),
       },
     )
   }
@@ -183,7 +185,7 @@ export function getPointColumns(options: {
       key: 'reverse',
       prop: 'reverse',
       label: 'Reverse',
-      minWidth: 80,
+      minWidth: 100,
       className: POINT_TABLE_COL.reverse,
       editor: 'select',
       isEditable: true,
@@ -322,6 +324,48 @@ export function getMappingColumns(options: {
         popperClass: POINT_TABLE_POPPER.mapping,
       },
     ]
+  }
+
+  if (options.channelProtocol === 'iec61850') {
+    const cols: MappingColumn[] = [
+      {
+        key: 'iec61850_address',
+        prop: 'protocol_mapping.address',
+        label: 'MMS Address',
+        minWidth: 280,
+        className: POINT_TABLE_COL.iec61850Address,
+        editor: 'input',
+        fieldClassKey: 'mapping_iec61850_address',
+        errorKey: 'iec61850_address',
+        placeholder: 'e.g. simpleIOGenericIO/GGIO1$MX$AnIn1$mag$f',
+        onInput: (row, val: string) => {
+          const trimmed = String(val ?? '').trim()
+          ;(row.protocol_mapping as any).address = trimmed === '' ? undefined : trimmed
+          options.onMappingFieldChange(row, 'iec61850_address')
+        },
+        display: (row) => String((row.protocol_mapping as any)?.address ?? ''),
+      },
+    ]
+    if (options.pointType === 'C' || options.pointType === 'A') {
+      cols.push({
+        key: 'ctrl_model',
+        prop: 'protocol_mapping.ctrl_model',
+        label: 'Control Model',
+        minWidth: 160,
+        className: POINT_TABLE_COL.ctrlModel,
+        editor: 'select',
+        fieldClassKey: 'mapping_ctrl_model',
+        errorKey: 'ctrl_model',
+        getOptions: () => getIec61850CtrlModelOptions(options.pointType),
+        onChange: (row) => options.onMappingFieldChange(row, 'ctrl_model'),
+        display: (row) => {
+          const model = (row.protocol_mapping as any)?.ctrl_model
+          return model == null ? '' : String(model)
+        },
+        popperClass: POINT_TABLE_POPPER.mapping,
+      })
+    }
+    return cols
   }
 
   if (options.channelProtocol === 'di_do') {

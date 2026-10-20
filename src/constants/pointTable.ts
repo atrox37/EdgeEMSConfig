@@ -29,6 +29,8 @@ export const POINT_TABLE_COL = {
   dataType: 'point-table-col--data-type',
   byteOrder: 'point-table-col--byte-order',
   bitPosition: 'point-table-col--bit-position',
+  iec61850Address: 'point-table-col--iec61850-address',
+  ctrlModel: 'point-table-col--ctrl-model',
   channel: 'point-table-col--channel',
   channelType: 'point-table-col--channel-type',
   channelPoint: 'point-table-col--channel-point',

@@ -5,6 +5,7 @@ import RuleIcon from '@/assets/icons/sidebar-rule.svg'
 import SystemConfigIcon from '@/assets/icons/sidebar-system.svg'
 import HomeConfigIcon from '@/assets/icons/sidebar-home.svg'
 import ModelingIcon from '@/assets/icons/sidebar-topology.svg'
+import AuditIcon from '@/assets/icons/sidebar-audit.svg'
 
 export const staticRoutes: RouteRecordRaw[] = [
   {
@@ -146,6 +147,16 @@ export const staticRoutes: RouteRecordRaw[] = [
           title: 'Home Config',
           activeNav: '/homeConfiguration',
           icon: HomeConfigIcon,
+        },
+      },
+      {
+        path: '/auditLog',
+        name: 'auditLog',
+        component: () => import('@/views/AuditLog/index.vue'),
+        meta: {
+          title: 'Audit Log',
+          activeNav: '/auditLog',
+          icon: AuditIcon,
         },
       },
       {
