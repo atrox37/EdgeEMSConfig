@@ -19,7 +19,7 @@ Each version should follow this structure:
 - Improvement description
 ```
 
-## [1.2.0] - 2026-08-27
+## [1.1.0] - 2026-08-27
 
 ### Added
 - Implemented the visual modeling module foundation, including model list management, a canvas-based editor, custom node types, edge editing, undo/redo, auto layout, fullscreen mode, and JSON/PNG import/export support.
