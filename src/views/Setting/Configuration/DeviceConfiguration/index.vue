@@ -74,15 +74,6 @@
         <IconButton
           v-permission="'engineer'"
           type="primary"
-          icon="i-tabler-refresh-dot"
-          text="Sync Instances"
-          :loading="syncing"
-          custom-class="rule-management__btn"
-          @click="handleSyncInstances"
-        />
-        <IconButton
-          v-permission="'engineer'"
-          type="primary"
           :icon="userAddIcon"
           text="New"
           custom-class="rule-management__btn"
@@ -183,11 +174,8 @@
 import AppIcon from "@/components/AppIcon.vue";
 import PageTitle from "@/components/common/PageTitle.vue";
 import IconButton from "@/components/common/IconButton.vue";
-import { ElMessage } from "element-plus";
-import { triggerInstSync } from "@/api/systemConfig";
 
 const userAddIcon = "i-tabler-plus";
-const syncing = ref(false);
 
 import InstanceDetailDialog from "./components/InstanceDetailDialog.vue";
 import type {
@@ -273,26 +261,6 @@ const handleDesktopFilterChange = (_key?: string, _value?: any) => {
 // 初始化页面，重新发起所有请求（reloadFilters 内部已调用 fetchTableData，避免重复请求）
 const handleReload = () => {
   reloadFilters();
-};
-
-// 触发设备实例同步
-const handleSyncInstances = async () => {
-  syncing.value = true;
-  try {
-    const res = await triggerInstSync();
-    if (res && (res as any).success) {
-      ElMessage.success("Instance sync triggered successfully");
-      await fetchTableData(true);
-    } else {
-      ElMessage.warning(
-        (res as any).message || "Sync failed, please check MQTT connection",
-      );
-    }
-  } catch (err: any) {
-    ElMessage.error(err?.message || "Sync request failed");
-  } finally {
-    syncing.value = false;
-  }
 };
 
 // 监听筛选变

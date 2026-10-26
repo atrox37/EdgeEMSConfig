@@ -203,7 +203,7 @@ export const staticRoutes: RouteRecordRaw[] = [
             name: 'systemConfigMqtt',
             component: () => import('@/views/Setting/SystemConfig/MqttView.vue'),
             meta: {
-              title: 'MQTT',
+              title: 'Cloud Link',
               activeNav: '/systemConfig',
             },
           },

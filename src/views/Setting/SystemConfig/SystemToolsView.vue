@@ -227,14 +227,16 @@ onMounted(() => {
 }
 
 .system-tools__header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .system-tools__title {
-  font-size: var(--vt-font-size-lg);
+  margin: 0;
+  height: 32px;
+  line-height: 32px;
+  font-size: var(--vt-font-size-md);
   font-weight: var(--vt-font-weight-semibold);
   color: var(--vt-text-primary);
-  margin: 0;
 }
 
 .system-tools__desc {

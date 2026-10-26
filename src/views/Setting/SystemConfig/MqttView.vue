@@ -1,128 +1,378 @@
 <template>
   <div class="system-mqtt">
     <div class="system-mqtt__header">
-      <h2 class="system-mqtt__title">MQTT</h2>
+      <div class="system-mqtt__title-row">
+        <h2 class="system-mqtt__title">Cloud Link</h2>
+        <span v-permission="'engineer'" class="system-mqtt__header-sync">
+          <el-button
+            type="primary"
+            :loading="syncing"
+            :disabled="isBusy || mqttStatus.connected !== true"
+            @click="handleSyncToCloud"
+          >
+            <AppIcon v-if="!syncing" name="i-tabler-cloud-upload" />
+            Sync to Cloud
+          </el-button>
+        </span>
+      </div>
       <p class="system-mqtt__desc">
-        Configure MQTT connectivity, topic behavior, and runtime reconnect strategy for device telemetry.
+        Configure MQTT and TLS for the cloud platform, then publish saved device models and topology when linked.
       </p>
     </div>
 
     <div class="system-mqtt__panel">
       <div class="system-mqtt__body">
-        <!-- ── 左侧：折叠区块 ── -->
         <div class="system-mqtt__left">
           <el-card class="system-mqtt__card">
             <div class="system-mqtt__left-panel">
-              <el-form ref="formRef" :model="form" :rules="rules" label-width="200px" class="system-mqtt__form">
+              <el-form
+                ref="formRef"
+                :model="form"
+                :rules="rules"
+                label-width="180px"
+                class="system-mqtt__form"
+              >
                 <div class="system-mqtt__scroll-content">
-
-                <!-- ① Basic Settings -->
-                <LightCollapseCard v-model="openBasic" title="Basic Settings" class="system-mqtt__section-card">
-              <el-form-item label="Alarm Service URL:" prop="alarmsrv_url" required>
-                <el-input v-model="form.alarmsrv_url" :disabled="isBusy" placeholder="Alarm service URL" />
-              </el-form-item>
-              <el-form-item label="Model Service URL:" prop="modsrv_url" required>
-                <el-input v-model="form.modsrv_url" :disabled="isBusy" placeholder="e.g. http://localhost:6002" />
-              </el-form-item>
-              <el-form-item label="Broker Host:" prop="broker_host" required>
-                <el-input v-model="form.broker_host" :disabled="isBusy" placeholder="Broker host" />
-              </el-form-item>
-              <el-form-item label="Broker Port:" prop="broker_port" required>
-                <el-input-number v-model="form.broker_port" :min="1" :max="65535" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="Broker Keepalive (s):" prop="broker_keepalive_secs" required>
-                <el-input-number v-model="form.broker_keepalive_secs" :min="5" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="SSL Enabled:" prop="ssl_enabled" required>
-                <el-switch v-model="form.ssl_enabled" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="Username:" prop="username">
-                <el-input v-model="form.username" :disabled="isBusy" placeholder="MQTT username" />
-              </el-form-item>
-              <el-form-item label="Password:" prop="password">
-                <el-input v-model="form.password" :disabled="isBusy" type="password" show-password
-                  placeholder="MQTT password" />
-              </el-form-item>
-            </LightCollapseCard>
-
-            <!-- ② Device Info -->
-            <LightCollapseCard v-model="openDevice" title="Device Info" class="system-mqtt__section-card">
-              <el-form-item label="Client ID:" prop="client_id" required>
-                <el-input v-model="form.client_id" :disabled="isBusy" placeholder="Client ID" />
-              </el-form-item>
-              <el-form-item label="Device SN:" prop="device_sn" required>
-                <el-input v-model="form.device_sn" :disabled="isBusy" placeholder="Device serial number" />
-              </el-form-item>
-              <el-form-item label="Product SN:" prop="product_sn" required>
-                <el-input v-model="form.product_sn" :disabled="isBusy" placeholder="Product serial number" />
-              </el-form-item>
-            </LightCollapseCard>
-
-            <!-- ③ Reporting -->
-            <LightCollapseCard v-model="openReporting" title="Reporting" class="system-mqtt__section-card">
-              <el-form-item label="Report Batch Size:" prop="report_batch_size" required>
-                <el-input-number v-model="form.report_batch_size" :min="1" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="Report Interval (s):" prop="report_interval_secs" required>
-                <el-input-number v-model="form.report_interval_secs" :min="1" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="Subscribe Patterns:" prop="subscribe_patterns_text" required>
-                <el-input v-model="form.subscribe_patterns_text" :disabled="isBusy" type="textarea" :rows="2"
-                  placeholder="Use commas to separate patterns" />
-              </el-form-item>
-              <el-form-item label="Exclude Patterns:" prop="exclude_patterns_text">
-                <el-input v-model="form.exclude_patterns_text" :disabled="isBusy" type="textarea" :rows="2"
-                  placeholder="Use commas to separate patterns" />
-              </el-form-item>
-            </LightCollapseCard>
-
-            <!-- ④ Advanced -->
-            <LightCollapseCard v-model="openAdvanced" title="Advanced" class="system-mqtt__section-card">
-              <el-form-item label="Reconnect Delay (s):" prop="reconnect_delay_secs" required>
-                <el-input-number v-model="form.reconnect_delay_secs" :min="1" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="Reconnect Max Attempts:" prop="reconnect_max_attempts" required>
-                <el-input-number v-model="form.reconnect_max_attempts" :min="1" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="System Monitor Enabled:" prop="system_monitor_enabled" required>
-                <el-switch v-model="form.system_monitor_enabled" :disabled="isBusy" />
-              </el-form-item>
-              <el-form-item label="System Monitor Interval (s):" prop="system_monitor_interval_secs" required>
-                <el-input-number v-model="form.system_monitor_interval_secs" :min="1" :controls="false" align="left" :disabled="isBusy" />
-              </el-form-item>
-            </LightCollapseCard>
-
-                </div><!-- /.system-mqtt__scroll-content -->
-              </el-form>
-
-              <!-- Apply 按钮 -->
-              <div v-permission="'engineer'" class="system-mqtt__actions">
-                <el-button type="primary" :loading="saving" :disabled="isBusy" @click="handleApply">Apply</el-button>
+          <LightCollapseCard
+            v-model="openBasic"
+            title="Cloud Endpoint"
+            class="system-mqtt__section-card"
+          >
+            <el-form-item label="Broker Host:" prop="broker_host" required>
+              <el-input
+                v-model="form.broker_host"
+                :disabled="isBusy"
+                placeholder="Broker host"
+              />
+            </el-form-item>
+            <el-form-item label="Broker Port:" prop="broker_port" required>
+              <el-input-number
+                v-model="form.broker_port"
+                :min="1"
+                :max="65535"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item label="TLS:" prop="ssl_enabled" required>
+              <el-switch v-model="form.ssl_enabled" :disabled="isBusy" />
+            </el-form-item>
+            <el-form-item v-if="form.ssl_enabled" label="TLS Files:" required>
+              <div
+                ref="certificatesPanelRef"
+                class="system-mqtt__certificates"
+                role="group"
+                aria-label="TLS certificates"
+              >
+                <p
+                  v-if="certificateValidationError"
+                  class="system-mqtt__certificate-error"
+                  role="alert"
+                >
+                  {{ certificateValidationError }}
+                </p>
+                <div
+                  v-for="item in certTypeOptions"
+                  :key="item.type"
+                  class="system-mqtt__certificate-row"
+                >
+                  <div class="system-mqtt__certificate-meta">
+                    <span class="system-mqtt__certificate-label">{{ item.label }}:</span>
+                    <code class="system-mqtt__certificate-file">{{ item.savedAs }}</code>
+                  </div>
+                  <el-tag
+                    size="small"
+                    :type="
+                      getCertExists(item.type)
+                        ? 'success'
+                        : certificateInfoLoaded
+                          ? 'danger'
+                          : 'info'
+                    "
+                  >
+                    {{
+                      !certificateInfoLoaded
+                        ? 'Unknown'
+                        : getCertExists(item.type)
+                          ? 'Installed'
+                          : 'Missing'
+                    }}
+                  </el-tag>
+                  <div
+                    v-permission="'engineer'"
+                    class="system-mqtt__certificate-actions"
+                  >
+                    <button
+                      type="button"
+                      class="system-mqtt__icon-button"
+                      :aria-label="`Upload ${item.label}`"
+                      :title="`Upload ${item.label}`"
+                      :disabled="isBusy"
+                      @click="triggerCertificateUpload(item.type)"
+                    >
+                      <el-icon>
+                        <component
+                          :is="certUploadingType === item.type ? Loading : Upload"
+                        />
+                      </el-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="system-mqtt__icon-button is-danger"
+                      :aria-label="`Delete ${item.label}`"
+                      :title="`Delete ${item.label}`"
+                      :disabled="isBusy || !getCertExists(item.type)"
+                      @click="handleDeleteCertificate(item.type)"
+                    >
+                      <el-icon>
+                        <component
+                          :is="certDeletingType === item.type ? Loading : Delete"
+                        />
+                      </el-icon>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div><!-- /.system-mqtt__left-panel -->
+            </el-form-item>
+            <el-form-item label="Username:" prop="username">
+              <el-input
+                v-model="form.username"
+                :disabled="isBusy"
+                placeholder="MQTT username"
+              />
+            </el-form-item>
+            <el-form-item label="Password:" prop="password">
+              <el-input
+                v-model="form.password"
+                :disabled="isBusy"
+                type="password"
+                show-password
+                placeholder="MQTT password"
+              />
+            </el-form-item>
+          </LightCollapseCard>
+          <LightCollapseCard
+            v-model="openDevice"
+            title="Device Identity"
+            class="system-mqtt__section-card"
+          >
+            <el-form-item label="Client ID:" prop="client_id" required>
+              <el-input
+                v-model="form.client_id"
+                :disabled="isBusy"
+                placeholder="Client ID"
+              />
+            </el-form-item>
+            <el-form-item label="Device SN:" prop="device_sn" required>
+              <el-input
+                v-model="form.device_sn"
+                :disabled="isBusy"
+                placeholder="Device serial number"
+              />
+            </el-form-item>
+            <el-form-item label="Product SN:" prop="product_sn" required>
+              <el-input
+                v-model="form.product_sn"
+                :disabled="isBusy"
+                placeholder="Product serial number"
+              />
+            </el-form-item>
+          </LightCollapseCard>
+          <LightCollapseCard
+            v-model="openReporting"
+            title="Reporting"
+            class="system-mqtt__section-card"
+          >
+            <el-form-item
+              label="Report Batch Size:"
+              prop="report_batch_size"
+              required
+            >
+              <el-input-number
+                v-model="form.report_batch_size"
+                :min="1"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item
+              label="Report Interval (s):"
+              prop="report_interval_secs"
+              required
+            >
+              <el-input-number
+                v-model="form.report_interval_secs"
+                :min="1"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item
+              label="Subscribe Patterns:"
+              prop="subscribe_patterns_text"
+              required
+            >
+              <el-input
+                v-model="form.subscribe_patterns_text"
+                :disabled="isBusy"
+                type="textarea"
+                :rows="2"
+                placeholder="Use commas to separate patterns"
+              />
+            </el-form-item>
+            <el-form-item
+              label="Exclude Patterns:"
+              prop="exclude_patterns_text"
+            >
+              <el-input
+                v-model="form.exclude_patterns_text"
+                :disabled="isBusy"
+                type="textarea"
+                :rows="2"
+                placeholder="Use commas to separate patterns"
+              />
+            </el-form-item>
+          </LightCollapseCard>
+          <LightCollapseCard
+            v-model="openAdvanced"
+            title="Advanced Settings"
+            class="system-mqtt__section-card"
+          >
+            <el-form-item
+              label="Alarm Service URL:"
+              prop="alarmsrv_url"
+              required
+            >
+              <el-input
+                v-model="form.alarmsrv_url"
+                :disabled="isBusy"
+                placeholder="Alarm service URL"
+              />
+            </el-form-item>
+            <el-form-item label="Model Service URL:" prop="modsrv_url" required>
+              <el-input
+                v-model="form.modsrv_url"
+                :disabled="isBusy"
+                placeholder="e.g. http://localhost:6002"
+              />
+            </el-form-item>
+            <el-form-item
+              label="Broker Keepalive (s):"
+              prop="broker_keepalive_secs"
+              required
+            >
+              <el-input-number
+                v-model="form.broker_keepalive_secs"
+                :min="5"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item
+              label="Reconnect Delay (s):"
+              prop="reconnect_delay_secs"
+              required
+            >
+              <el-input-number
+                v-model="form.reconnect_delay_secs"
+                :min="1"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item
+              label="Reconnect Max Attempts:"
+              prop="reconnect_max_attempts"
+              required
+            >
+              <el-input-number
+                v-model="form.reconnect_max_attempts"
+                :min="1"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item
+              label="System Monitor Enabled:"
+              prop="system_monitor_enabled"
+              required
+            >
+              <el-switch
+                v-model="form.system_monitor_enabled"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+            <el-form-item
+              label="System Monitor Interval (s):"
+              prop="system_monitor_interval_secs"
+              required
+            >
+              <el-input-number
+                v-model="form.system_monitor_interval_secs"
+                :min="1"
+                :controls="false"
+                align="left"
+                :disabled="isBusy"
+              />
+            </el-form-item>
+          </LightCollapseCard>
+                </div>
+              </el-form>
+              <div v-permission="'engineer'" class="system-mqtt__actions">
+                <el-button
+                  type="primary"
+                  :loading="saving"
+                  :disabled="isBusy"
+                  @click="handleApply"
+                >
+                  Apply
+                </el-button>
+              </div>
+            </div>
           </el-card>
         </div>
 
-        <!-- ── 右侧：状态 + TLS ── -->
         <div class="system-mqtt__right">
           <el-card class="system-mqtt__status-card">
             <template #header>
-              <div class="system-mqtt__status-header">
-                <div class="system-mqtt__status-title">Connection Status</div>
-              </div>
+              <div class="system-mqtt__status-title">Connection Status</div>
             </template>
-
             <div class="system-mqtt__status-line">
-              <el-icon :class="statusIconClass">
-                <component :is="statusIconComponent" />
-              </el-icon>
-              <span class="system-mqtt__status-text">{{ statusText }}</span>
-              <el-button size="small" type="primary" class="system-mqtt__refresh-btn"
-                :loading="statusLoading" :disabled="isBusy" @click="loadMqttStatus">
-                Refresh
-              </el-button>
+              <div
+                class="system-mqtt__status-main"
+                role="status"
+                aria-live="polite"
+              >
+                <el-icon :class="statusIconClass">
+                  <component :is="statusIconComponent" />
+                </el-icon>
+                <span class="system-mqtt__status-text">{{ statusText }}</span>
+              </div>
+              <el-tooltip content="Refresh status" placement="top">
+                <button
+                  type="button"
+                  class="system-mqtt__status-refresh"
+                  aria-label="Refresh status"
+                  :disabled="isBusy"
+                  @click="loadMqttStatus"
+                >
+                  <el-icon v-if="statusLoading" class="is-spinning">
+                    <Loading />
+                  </el-icon>
+                  <AppIcon
+                    v-else
+                    name="i-tabler-refresh"
+                    className="system-mqtt__status-refresh-icon"
+                  />
+                </button>
+              </el-tooltip>
             </div>
-
             <div class="system-mqtt__status-field">
               <span>Broker</span>
               <span class="system-mqtt__status-value">{{ mqttStatus.broker || '-' }}</span>
@@ -136,50 +386,32 @@
               <span class="system-mqtt__status-value">{{ mqttStatus.product_sn || mqttStatus.product_name || '-' }}</span>
             </div>
             <div class="system-mqtt__status-field">
-              <span>SSL Enabled</span>
+              <span>TLS</span>
               <span class="system-mqtt__status-value">{{ sslStatusText }}</span>
             </div>
+            <div v-if="effectiveTlsEnabled" class="system-mqtt__status-field">
+              <span>TLS Files</span>
+              <span class="system-mqtt__status-value">{{ tlsFilesStatusText }}</span>
+            </div>
             <div v-permission="'engineer'" class="system-mqtt__status-actions">
-              <el-button v-if="mqttStatus.connected === true" size="small"
-                :loading="disconnecting" :disabled="isBusy" @click="handleDisconnect">
-                Disconnect
-              </el-button>
-              <el-button size="small" type="primary" :loading="reconnecting" :disabled="isBusy" @click="handleReconnect">
+              <el-button
+                size="small"
+                type="primary"
+                :loading="reconnecting"
+                :disabled="isBusy"
+                @click="handleReconnect"
+              >
                 Reconnect
               </el-button>
-            </div>
-          </el-card>
-
-          <el-card class="system-mqtt__tls-card">
-            <template #header>
-              <div class="system-mqtt__tls-title">TLS Certificate</div>
-            </template>
-            <div class="system-mqtt__tls-list" v-loading="certLoading">
-              <div v-for="item in certTypeOptions" :key="item.type" class="system-mqtt__tls-row">
-                <div class="system-mqtt__tls-meta">
-                  <div class="system-mqtt__tls-meta-main">
-                    <span class="system-mqtt__tls-label">{{ item.label }}</span>
-                    <el-tag class="system-mqtt__cert-tag" size="small" :type="getCertExists(item.type) ? 'success' : 'info'">
-                      {{ getCertExists(item.type) ? 'Exists' : 'Missing' }}
-                    </el-tag>
-                  </div>
-                  <div class="system-mqtt__tls-file-name" :title="getCertFileName(item.type)">
-                    {{ getCertFileName(item.type) }}
-                  </div>
-                </div>
-                <div v-permission="'engineer'" class="system-mqtt__tls-actions">
-                  <el-icon class="system-mqtt__icon-btn is-update"
-                    :class="{ 'is-disabled': isBusy || certDeletingType === item.type }"
-                    @click="!(isBusy || certDeletingType === item.type) && triggerCertificateUpload(item.type)">
-                    <component :is="certUploadingType === item.type ? Loading : Upload" />
-                  </el-icon>
-                  <el-icon class="system-mqtt__icon-btn is-danger"
-                    :class="{ 'is-disabled': isBusy || !getCertExists(item.type) || certUploadingType === item.type }"
-                    @click="!(isBusy || !getCertExists(item.type) || certUploadingType === item.type) && handleDeleteCertificate(item.type)">
-                    <component :is="certDeletingType === item.type ? Loading : Delete" />
-                  </el-icon>
-                </div>
-              </div>
+              <el-button
+                v-if="mqttStatus.connected === true"
+                size="small"
+                :loading="disconnecting"
+                :disabled="isBusy"
+                @click="handleDisconnect"
+              >
+                Disconnect
+              </el-button>
             </div>
           </el-card>
         </div>
@@ -192,6 +424,10 @@
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { CircleCheckFilled, Delete, InfoFilled, Loading, Upload, WarningFilled } from '@element-plus/icons-vue'
 import LightCollapseCard from '@/components/common/LightCollapseCard.vue'
+import AppIcon from '@/components/AppIcon.vue'
+import { useUserStore } from '@/stores/user'
+import { canAccessConfigTool } from '@/utils/rolePermission'
+import { isRequestCanceled } from '@/utils/request'
 import type {
   CertificateFileSnapshot,
   CertificateInfoSnapshot,
@@ -203,6 +439,7 @@ import {
   cancelCertificateDeleteRequests,
   cancelCertificateInfoRequests,
   cancelCertificateUploadRequests,
+  cancelInstSyncRequests,
   cancelMqttConfigGetRequests,
   cancelMqttConfigUpdateRequests,
   cancelMqttDisconnectRequests,
@@ -216,9 +453,13 @@ import {
   reconnectMqtt,
   uploadCertificateFile,
   updateMqttConfig,
+  triggerInstSync,
 } from '@/api/systemConfig'
 
-// ── 折叠面板开关：默认仅展开 Basic ───────────────────────────
+const userStore = useUserStore()
+const canManageConnection = computed(() => canAccessConfigTool(userStore.userInfo?.role?.name_en))
+
+// Connection and identity stay visible; secondary settings start collapsed.
 const openBasic = ref(true)
 const openDevice = ref(false)
 const openReporting = ref(false)
@@ -230,8 +471,12 @@ interface MqttFormModel extends Omit<MqttConfigPayload, 'exclude_patterns' | 'su
 }
 
 const formRef = ref<FormInstance>()
+const certificatesPanelRef = ref<HTMLElement>()
+const certificateInfoLoaded = ref(false)
+const certificateValidationAttempted = ref(false)
 const loading = ref(false)
 const saving = ref(false)
+const syncing = ref(false)
 const disconnecting = ref(false)
 const reconnecting = ref(false)
 const statusLoading = ref(false)
@@ -240,15 +485,21 @@ const certUploadingType = ref<CertificateType | ''>('')
 const certDeletingType = ref<CertificateType | ''>('')
 
 const mqttStatus = reactive<MqttStatusSnapshot>({
-  broker: '', connected: false, device_sn: '', product_name: '', product_sn: '', ssl_enabled: undefined,
+  broker: '', connected: undefined, device_sn: '', product_name: '', product_sn: '', ssl_enabled: undefined,
 })
 
 const certInfo = reactive<CertificateInfoSnapshot>({ cert_dir: '', files: [] })
 
-const certTypeOptions: Array<{ type: CertificateType; label: string }> = [
-  { type: 'ca_cert', label: 'CA Cert' },
-  { type: 'client_cert', label: 'Client Cert' },
-  { type: 'client_key', label: 'Client Key' },
+interface CertTypeOption {
+  type: CertificateType
+  label: string
+  savedAs: string
+}
+
+const certTypeOptions: CertTypeOption[] = [
+  { type: 'ca_cert', label: 'CA Cert', savedAs: 'AmazonRootCA1.pem' },
+  { type: 'client_cert', label: 'Client Cert', savedAs: 'certificate.pem.crt' },
+  { type: 'client_key', label: 'Client Key', savedAs: 'private.pem.key' },
 ]
 
 const form = reactive<MqttFormModel>({
@@ -274,7 +525,8 @@ const form = reactive<MqttFormModel>({
 })
 
 const isBusy = computed(
-  () => loading.value || saving.value || disconnecting.value || reconnecting.value || statusLoading.value,
+  () => loading.value || saving.value || disconnecting.value || reconnecting.value || statusLoading.value || syncing.value || certLoading.value
+    || Boolean(certUploadingType.value) || Boolean(certDeletingType.value),
 )
 
 const statusText = computed(() => {
@@ -292,11 +544,31 @@ const statusIconClass = computed(() => {
   if (mqttStatus.connected === false) return 'is-disconnected'
   return 'is-unknown'
 })
+const effectiveTlsEnabled = computed(() => {
+  if (typeof mqttStatus.ssl_enabled === 'boolean') return mqttStatus.ssl_enabled
+  return form.ssl_enabled
+})
 const sslStatusText = computed(() => {
-  if (typeof mqttStatus.ssl_enabled === 'boolean') return mqttStatus.ssl_enabled ? 'Enabled' : 'Disabled'
-  return form.ssl_enabled ? 'Enabled' : 'Disabled'
+  if (typeof mqttStatus.ssl_enabled === 'boolean') {
+    return mqttStatus.ssl_enabled ? 'Enabled' : 'Disabled'
+  }
+  return form.ssl_enabled ? 'Enabled (pending apply)' : 'Disabled (pending apply)'
 })
 const certFileList = computed(() => certInfo.files || [])
+const installedCertificateCount = computed(() =>
+  certTypeOptions.filter((item) => getCertExists(item.type)).length,
+)
+const tlsFilesStatusText = computed(() => {
+  if (!certificateInfoLoaded.value) return 'Unknown'
+  return `${installedCertificateCount.value} / ${certTypeOptions.length} installed`
+})
+const missingCertificates = computed(() => certTypeOptions.filter((item) => !getCertExists(item.type)))
+const certificateValidationError = computed(() => {
+  if (!form.ssl_enabled || !certificateValidationAttempted.value || certLoading.value) return ''
+  if (!certificateInfoLoaded.value) return 'Could not verify TLS files. Apply settings again to retry.'
+  if (!missingCertificates.value.length) return ''
+  return `Upload the missing TLS files: ${missingCertificates.value.map((item) => item.label).join(', ')}.`
+})
 
 const splitPatterns = (text: string) =>
   text.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
@@ -352,11 +624,11 @@ const rules: FormRules = {
 
 /** 校验失败时，自动展开对应折叠面板 */
 const sectionFieldMap: Record<string, () => void> = {
-  alarmsrv_url: () => { openBasic.value = true },
-  modsrv_url: () => { openBasic.value = true },
+  alarmsrv_url: () => { openAdvanced.value = true },
+  modsrv_url: () => { openAdvanced.value = true },
   broker_host: () => { openBasic.value = true },
   broker_port: () => { openBasic.value = true },
-  broker_keepalive_secs: () => { openBasic.value = true },
+  broker_keepalive_secs: () => { openAdvanced.value = true },
   ssl_enabled: () => { openBasic.value = true },
   username: () => { openBasic.value = true },
   password: () => { openBasic.value = true },
@@ -429,15 +701,18 @@ const loadMqttConfig = async () => {
 const loadMqttStatus = async () => {
   cancelMqttStatusGetRequests()
   statusLoading.value = true
+  mqttStatus.connected = undefined
+  mqttStatus.ssl_enabled = undefined
   try {
     const res = await getMqttStatus()
     const payload = parseMqttStatusPayload(res)
     mqttStatus.broker = String(payload.broker || '')
-    mqttStatus.connected = typeof payload.connected === 'boolean' ? payload.connected : false
+    mqttStatus.connected = typeof payload.connected === 'boolean' ? payload.connected : undefined
     mqttStatus.device_sn = String(payload.device_sn || '')
     mqttStatus.product_name = String(payload.product_name || '')
     mqttStatus.product_sn = String(payload.product_sn || '')
-    mqttStatus.ssl_enabled = typeof payload.ssl_enabled === 'boolean' ? payload.ssl_enabled : undefined
+    const tlsEnabled = payload.ssl_enabled ?? payload.ssl
+    mqttStatus.ssl_enabled = typeof tlsEnabled === 'boolean' ? tlsEnabled : undefined
   } finally {
     statusLoading.value = false
   }
@@ -446,29 +721,29 @@ const loadMqttStatus = async () => {
 const loadCertificateInfo = async () => {
   cancelCertificateInfoRequests()
   certLoading.value = true
+  certificateInfoLoaded.value = false
   try {
     const res = await getCertificateInfo()
     const payload = (res?.data && typeof res.data === 'object' ? res.data : res) as CertificateInfoSnapshot
-    certInfo.cert_dir = String(payload?.cert_dir || '')
-    certInfo.files = Array.isArray(payload?.files) ? payload.files : []
+    if (!Array.isArray(payload?.files)) throw new Error('Certificate status is unavailable')
+    certInfo.cert_dir = String(payload.cert_dir || '')
+    certInfo.files = payload.files
+    certificateInfoLoaded.value = true
   } finally {
     certLoading.value = false
   }
 }
 
 const getCertRecord = (certType: CertificateType): CertificateFileSnapshot | undefined => {
-  const keywordsMap: Record<CertificateType, string[]> = {
-    ca_cert: ['ca', 'rootca', 'amazonrootca'],
-    client_cert: ['client', 'certificate'],
-    client_key: ['private', 'key'],
+  const fileNames: Record<CertificateType, string[]> = {
+    ca_cert: ['amazonrootca1.pem', 'ca.pem'],
+    client_cert: ['certificate.pem.crt', 'client.crt'],
+    client_key: ['private.pem.key', 'client.key'],
   }
-  const keywords = keywordsMap[certType]
-  return certFileList.value.find((item) => {
-    const fileName = String(item.file || '').toLowerCase()
-    return keywords.some((keyword) => fileName.includes(keyword))
-  })
+  const matches = certFileList.value.filter((item) => fileNames[certType].includes(String(item.file || '').toLowerCase()))
+  return matches.find((item) => item.exists) || matches[0]
 }
-const getCertExists = (certType: CertificateType) => Boolean(getCertRecord(certType)?.exists)
+const getCertExists = (certType: CertificateType) => certificateInfoLoaded.value && Boolean(getCertRecord(certType)?.exists)
 const getCertFileName = (certType: CertificateType) => String(getCertRecord(certType)?.file || '-')
 
 const uploadTlsCertificate = async (certType: CertificateType, file: File) => {
@@ -514,25 +789,58 @@ const handleDeleteCertificate = async (certType: CertificateType) => {
   }
 }
 
-const handleApply = async () => {
-  let valid = false
+// The endpoint confirms publication, not cloud-side application.
+const handleSyncToCloud = async () => {
+  if (!canManageConnection.value || isBusy.value || mqttStatus.connected !== true) return
+  syncing.value = true
   try {
-    await formRef.value?.validate()
-    valid = true
-  } catch (error: any) {
-    const invalidField = Object.keys(error || {})[0]
-    if (invalidField && sectionFieldMap[invalidField]) {
-      sectionFieldMap[invalidField]()
-    }
-    valid = false
+    const res = await triggerInstSync()
+    if (res.success === true) ElMessage.success('Configuration sent to cloud.')
+    else ElMessage.warning(res.message || 'Could not send configuration. Check the cloud connection and try again.')
+  } catch (error: unknown) {
+    // Request errors are displayed centrally by the request wrapper.
+    if (isRequestCanceled(error)) return
+  } finally {
+    syncing.value = false
   }
-  if (!valid) return
+}
 
-  cancelMqttConfigUpdateRequests()
+const revealCertificates = async () => {
+  openBasic.value = true
+  await nextTick()
+  certificatesPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
+const handleApply = async () => {
+  if (isBusy.value) return
   saving.value = true
   try {
+    if (form.ssl_enabled) {
+      certificateValidationAttempted.value = true
+      // Refresh before saving; files may have changed since this page was loaded.
+      try {
+        await loadCertificateInfo()
+      } catch (error: unknown) {
+        if (!isRequestCanceled(error)) await revealCertificates()
+        return
+      }
+      if (missingCertificates.value.length) {
+        await revealCertificates()
+        return
+      }
+    }
+
+    try {
+      await formRef.value?.validate()
+    } catch (error: any) {
+      const invalidField = Object.keys(error || {})[0]
+      if (invalidField && sectionFieldMap[invalidField]) sectionFieldMap[invalidField]()
+      return
+    }
+
+    cancelMqttConfigUpdateRequests()
     await updateMqttConfig(buildPayload())
-    ElMessage.success('MQTT configuration applied')
+    ElMessage.success('Cloud link settings applied')
     await loadMqttStatus()
   } finally {
     saving.value = false
@@ -564,12 +872,11 @@ const handleReconnect = async () => {
 }
 
 onMounted(async () => {
-  await loadMqttConfig()
-  await loadMqttStatus()
-  await loadCertificateInfo()
+  await Promise.allSettled([loadMqttConfig(), loadMqttStatus(), loadCertificateInfo()])
 })
 
 onUnmounted(() => {
+  cancelInstSyncRequests()
   cancelCertificateInfoRequests()
   cancelCertificateUploadRequests()
   cancelCertificateDeleteRequests()
@@ -589,12 +896,22 @@ onUnmounted(() => {
 }
 
 .system-mqtt__header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.system-mqtt__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
 }
 
 .system-mqtt__title {
   margin: 0;
-  font-size: var(--vt-font-size-lg);
+  height: 32px;
+  line-height: 32px;
+  font-size: var(--vt-font-size-md);
   font-weight: var(--vt-font-weight-semibold);
   color: var(--vt-text-primary);
 }
@@ -606,12 +923,20 @@ onUnmounted(() => {
   line-height: 1.6;
 }
 
+.system-mqtt__header-sync {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.system-mqtt__header-sync .iconify {
+  margin-right: 8px;
+}
+
 .system-mqtt__panel {
   flex: 1;
   min-height: 0;
   border: var(--vt-border-width-base) solid var(--vt-border-color);
   border-radius: var(--vt-radius-md);
-  // background: var(--vt-bg-overlay);
   box-shadow: var(--vt-shadow-base);
 }
 
@@ -667,33 +992,43 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-// form-item 间距
-:deep(.light-collapse-card) {
-  .el-form-item {
-    margin-bottom: 14px;
-    .el-form-item:last-child { margin-bottom: 0; }
+.system-mqtt__form :deep(.el-form-item) {
+  margin-bottom: 14px;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 
+.system-mqtt__section-card :deep(.light-collapse-card__body),
+.system-mqtt__section-card :deep(.light-collapse-card__body-inner) {
+  height: auto;
+}
+
+.system-mqtt__form :deep(.el-form-item__content) {
+  min-width: 0;
+}
+.system-mqtt__field-hint {
+  font-size: var(--vt-font-size-sm);
+  color: var(--vt-text-secondary);
+  line-height: 1.5;
+}
+
 .system-mqtt__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
   border-top: var(--vt-border-width-base) solid var(--vt-border-color);
   padding-top: 12px;
   margin-top: 12px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
 }
 
-// ── Right Panel ───────────────────────────────────────────────
 .system-mqtt__right {
-  width: 320px;
+  width: 280px;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 0;
-  overflow-y: auto;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
 }
 
 .system-mqtt__status-card {
@@ -706,149 +1041,88 @@ onUnmounted(() => {
   color: var(--vt-text-primary);
 }
 
-.system-mqtt__status-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 .system-mqtt__status-line {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  color: var(--vt-text-primary);
   margin-bottom: 12px;
+}
 
-  .el-icon {
-    font-size: 16px;
-    .el-icon.is-connected { color: var(--vt-color-success); }
-    .el-icon.is-disconnected { color: var(--vt-color-danger); }
-    .el-icon.is-unknown { color: var(--vt-text-secondary); }
+.system-mqtt__status-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--vt-text-primary);
+
+  .el-icon.is-connected {
+    color: var(--vt-color-success);
+  }
+  .el-icon.is-disconnected {
+    color: var(--vt-color-danger);
+  }
+  .el-icon.is-unknown {
+    color: var(--vt-text-secondary);
   }
 }
 
-.system-mqtt__refresh-btn { margin-left: auto; }
+.system-mqtt__status-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--vt-radius-sm);
+  background: transparent;
+  color: var(--vt-color-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--vt-bg-elevated);
+    color: var(--vt-color-primary);
+    box-shadow: inset 0 0 0 1px var(--vt-border-color);
+  }
+  &:active:not(:disabled) {
+    background: var(--vt-border-color);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--vt-color-primary);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .el-icon.is-spinning,
+  .system-mqtt__status-refresh-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .el-icon.is-spinning {
+    animation: system-mqtt-status-spin 0.9s linear infinite;
+  }
+}
+
+@keyframes system-mqtt-status-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .system-mqtt__status-text {
   font-size: var(--vt-font-size-base);
   font-weight: var(--vt-font-weight-medium);
-}
-
-.system-mqtt__status-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--vt-border-color);
-}
-
-.system-mqtt__tls-card {
-  flex-shrink: 0;
-}
-
-.system-mqtt__tls-card :deep(.el-card__body) {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.system-mqtt__tls-title {
-  font-size: var(--vt-font-size-base);
-  font-weight: var(--vt-font-weight-semibold);
-  color: var(--vt-text-primary);
-}
-
-.system-mqtt__tls-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.system-mqtt__tls-row {
-  border: var(--vt-border-width-base) solid var(--vt-border-color);
-  border-radius: var(--vt-radius-sm);
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.system-mqtt__tls-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.system-mqtt__tls-meta-main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.system-mqtt__tls-file-name {
-  align-self: stretch;
-  min-width: 0;
-  max-width: 100%;
-  color: var(--vt-text-secondary);
-  font-size: var(--vt-font-size-sm);
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.system-mqtt__tls-label {
-  color: var(--vt-text-primary);
-  font-weight: var(--vt-font-weight-medium);
-}
-
-.system-mqtt__cert-tag {
-  :deep(.el-tag__content) {
-    font-size: 11px;
-    line-height: 16px;
-  }
-}
-
-.system-mqtt__tls-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.system-mqtt__icon-btn {
-  font-size: 18px;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--vt-radius-sm);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
-
-  .system-mqtt__icon-btn.is-danger {
-    color: var(--vt-color-danger);
-    .system-mqtt__icon-btn.is-danger:hover { background-color: color-mix(in srgb, var(--vt-color-danger) 14%, transparent); }
-  }
-  .system-mqtt__icon-btn.is-disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-    .system-mqtt__icon-btn.is-disabled:hover { background-color: transparent; }
-  }
-  .system-mqtt__icon-btn.is-update {
-    color: #409eff;
-    .system-mqtt__icon-btn.is-update:hover { background-color: rgba(64, 158, 255, 0.14); }
-  }
 }
 
 .system-mqtt__status-field {
@@ -859,13 +1133,186 @@ onUnmounted(() => {
   margin-top: 10px;
   border-top: 1px solid var(--vt-border-color);
   color: var(--vt-text-secondary);
+  font-size: var(--vt-font-size-sm);
 }
 
 .system-mqtt__status-value {
   color: var(--vt-text-primary);
   text-align: right;
   margin-left: 10px;
+  word-break: break-all;
 }
 
-:deep(.el-input-number) { width: 100%; }
+.system-mqtt__status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vt-border-color);
+}
+
+.system-mqtt__certificates {
+  width: 100%;
+  border: 1px solid var(--vt-border-color);
+  border-radius: var(--vt-radius-sm);
+  background: var(--vt-bg-page);
+  overflow: hidden;
+}
+
+.system-mqtt__certificate-error {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--vt-color-danger);
+  font-size: var(--vt-font-size-sm);
+  line-height: 1.5;
+  border-bottom: 1px solid var(--vt-border-color);
+  background: color-mix(in srgb, var(--vt-color-danger) 6%, var(--vt-bg-page));
+}
+
+.system-mqtt__certificate-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--vt-border-color);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.system-mqtt__certificate-meta {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.system-mqtt__certificate-label {
+  color: var(--vt-text-secondary);
+  font-size: var(--vt-font-size-sm);
+  font-weight: var(--vt-font-weight-medium);
+  white-space: nowrap;
+}
+
+.system-mqtt__certificate-file {
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: var(--vt-radius-sm);
+  background: rgba(57, 85, 131, 0.04);
+  color: var(--vt-text-primary);
+  font-size: var(--vt-font-size-xs);
+  font-family: var(--vt-font-family-mono, ui-monospace, monospace);
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.system-mqtt__certificate-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.system-mqtt__certificate-actions .system-mqtt__icon-button {
+  width: 26px;
+  height: 26px;
+  font-size: 16px;
+}
+
+.system-mqtt__icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--vt-radius-sm);
+  background: transparent;
+  color: var(--vt-color-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--vt-bg-elevated);
+    color: var(--vt-color-primary);
+    box-shadow: inset 0 0 0 1px var(--vt-border-color);
+  }
+  &:active:not(:disabled) {
+    background: var(--vt-border-color);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--vt-color-primary);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  &.is-danger {
+    color: var(--vt-color-danger);
+
+    &:hover:not(:disabled) {
+      color: var(--vt-color-danger);
+      background: color-mix(in srgb, var(--vt-color-danger) 10%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vt-color-danger) 35%, transparent);
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .system-mqtt__body {
+    flex-direction: column;
+  }
+
+  .system-mqtt__right {
+    width: 100%;
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .system-mqtt__title-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .system-mqtt__body {
+    padding: 12px;
+  }
+
+  .system-mqtt__form :deep(.el-form-item) {
+    flex-direction: column;
+  }
+
+  .system-mqtt__form :deep(.el-form-item__label) {
+    width: 100% !important;
+    justify-content: flex-start;
+  }
+
+  .system-mqtt__form :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+  }
+
+  .system-mqtt__certificate-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .system-mqtt__certificate-meta {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
 </style>

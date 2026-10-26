@@ -24,8 +24,8 @@
       <el-tab-pane name="mqtt">
         <template #label>
           <span class="system-config-shell__tab-label">
-            <AppIcon name="i-tabler-wifi" className="system-config-shell__tab-icon" />
-            <span>MQTT</span>
+            <AppIcon name="i-tabler-cloud" className="system-config-shell__tab-icon" />
+            <span>Cloud Link</span>
           </span>
         </template>
       </el-tab-pane>

@@ -169,7 +169,10 @@
               <div class="system-storage__status-title">Connection Status</div>
             </template>
             <div class="system-storage__status-line">
-              <AppIcon :name="statusIconName" className="system-storage__status-icon" :class="statusIconClass" />
+              <AppIcon
+                :name="statusIconName"
+                :className="`system-storage__status-icon ${statusIconClass}`"
+              />
               <span class="system-storage__status-text">{{ statusText }}</span>
             </div>
             <div class="system-storage__status-field">
@@ -525,12 +528,14 @@ onUnmounted(() => {
 }
 
 .system-storage__header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .system-storage__title {
   margin: 0;
-  font-size: var(--vt-font-size-lg);
+  height: 32px;
+  line-height: 32px;
+  font-size: var(--vt-font-size-md);
   font-weight: var(--vt-font-weight-semibold);
   color: var(--vt-text-primary);
 }
@@ -719,10 +724,20 @@ onUnmounted(() => {
 }
 
 .system-storage__status-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
   font-size: 16px;
-  .system-storage__status-icon.is-connected { color: var(--vt-color-success); }
-  .system-storage__status-icon.is-disconnected { color: var(--vt-color-danger); }
-  .system-storage__status-icon.is-unknown { color: var(--vt-text-secondary); }
+
+  &.is-connected {
+    color: var(--vt-color-success);
+  }
+  &.is-disconnected {
+    color: var(--vt-color-danger);
+  }
+  &.is-unknown {
+    color: var(--vt-text-secondary);
+  }
 }
 
 .system-storage__status-text {

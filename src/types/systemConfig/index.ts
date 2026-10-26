@@ -83,6 +83,7 @@ export interface MqttConfigResponse {
 }
 
 export interface MqttStatusSnapshot {
+  ssl?: boolean
   broker?: string
   connected?: boolean
   device_sn?: string
