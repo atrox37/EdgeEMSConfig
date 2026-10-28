@@ -2,6 +2,10 @@
 import en from 'element-plus/es/locale/lang/en'
 import UpdateChecker from '@/components/UpdateChecker.vue'
 import TitleBar from '@/layout/TitleBar.vue'
+import ConfigOperationDialog from '@/components/dialog/ConfigOperationDialog.vue'
+import { useConfigOperationStore } from '@/stores/configOperation'
+
+const configOperation = useConfigOperationStore()
 
 const locale = {
   ...en,
@@ -17,13 +21,14 @@ const locale = {
 
 <template>
   <el-config-provider :locale="locale">
-    <div class="app-shell">
+    <div class="app-shell" :inert="configOperation.busy || undefined">
       <TitleBar />
       <div class="app-shell__body">
         <router-view />
       </div>
     </div>
     <UpdateChecker />
+    <ConfigOperationDialog />
   </el-config-provider>
 </template>
 

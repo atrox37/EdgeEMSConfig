@@ -1,9 +1,11 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { createApiConfig, setAxiosBaseURL } from '@/utils/apiConfig'
 import { Request, service, setApiConfigRef } from '@/utils/request'
+import { createPinia, setActivePinia } from 'pinia'
 
 const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
+  operation: { busy: false, generation: 0 },
   user: {
     token: 'access-token',
     refreshUserToken: vi.fn(),
@@ -14,6 +16,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@tauri-apps/plugin-http', () => ({ fetch: mocks.fetch }))
 vi.mock('@/stores/user', () => ({ useUserStore: () => mocks.user }))
 vi.mock('@/stores/global', () => ({ useGlobalStore: () => ({ loading: false }) }))
+vi.mock('@/stores/configOperation', () => ({ useConfigOperationStore: () => mocks.operation }))
 vi.mock('@/utils/secureStore', () => ({
   setItem: vi.fn(),
   getItem: vi.fn(),
@@ -52,6 +55,9 @@ const assertRequest = (url: string, options: RequestInit, port: number, path: st
 
 describe('direct service requests', () => {
   beforeEach(async () => {
+    setActivePinia(createPinia())
+    mocks.operation.busy = false
+    mocks.operation.generation = 0
     vi.clearAllMocks()
     for (const method of ['log', 'error', 'warn', 'groupCollapsed', 'groupEnd'] as const) {
       vi.spyOn(console, method).mockImplementation(() => {})
@@ -63,6 +69,7 @@ describe('direct service requests', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     setApiConfigRef(null)
     service.defaults.baseURL = ''
     vi.restoreAllMocks()
@@ -116,5 +123,119 @@ describe('direct service requests', () => {
     const [url, options] = mocks.fetch.mock.calls[1]
     assertRequest(url, options, port, targetPath, 'refreshed-token')
     expect(mocks.user.clearUserData).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [200, { success: true }, true],
+    [200, { success: 'true', code: 200 }, false],
+    [200, { success: false, code: 200 }, false],
+    [201, { success: true }, false],
+    [503, { success: true }, false],
+  ])('requires the exact final configuration contract (%s, %j)', async (status, body, accepted) => {
+    mocks.fetch.mockImplementation(async () => new Response(JSON.stringify(body), { status }));
+    const request = Request.post('/api/v1/config/restart-services', {}, {
+      requireConfigSuccess: true, showErrorMessage: false, skipGlobalLoading: true,
+    });
+    if (accepted) await expect(request).resolves.toEqual(body);
+    else await expect(request).rejects.toMatchObject({ response: { status, data: body } });
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+  })
+
+  it('preserves the full 503 failure and rollback body', async () => {
+    const body = { success: false, error: { code: 'CONFIG_SERVICE_RESTART_FAILED', details: { rollback: { succeeded: true } } } };
+    mocks.fetch.mockImplementation(async () => new Response(JSON.stringify(body), { status: 503 }));
+    await expect(Request.post('/api/v1/config/versions/v1/restore', {}, {
+      requireConfigSuccess: true, showErrorMessage: false, skipGlobalLoading: true,
+    })).rejects.toMatchObject({ response: { status: 503, data: body } });
+  })
+
+  it('does not replay a configuration mutation after 401', async () => {
+    mocks.fetch.mockImplementation(async () => response(401));
+    await expect(Request.post('/api/v1/config/restart-services', {}, {
+      requireConfigSuccess: true, showErrorMessage: false, skipGlobalLoading: true,
+    })).rejects.toMatchObject({ response: { status: 401 } });
+    expect(mocks.user.refreshUserToken).not.toHaveBeenCalled();
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+  })
+
+  it('does not fallback and resend a configuration ZIP', async () => {
+    mocks.fetch.mockRejectedValue(new Error('Invalid array length'));
+    const nativeFetch = vi.spyOn(globalThis, 'fetch');
+    await expect(Request.upload('/api/v1/config/import', new File(['zip'], 'config.zip'), {}, {
+      requireConfigSuccess: true, showErrorMessage: false, skipGlobalLoading: true,
+    })).rejects.toThrow('Invalid array length');
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    expect(nativeFetch).not.toHaveBeenCalled();
+  })
+
+  it('bounds the full response wait even if the transport ignores abort', async () => {
+    vi.useFakeTimers();
+    mocks.fetch.mockImplementation(async () => new Promise(() => {}));
+    const request = Request.post('/api/v1/config/restart-services', {}, {
+      requireConfigSuccess: true, showErrorMessage: false, skipGlobalLoading: true, timeout: 180000,
+    });
+    const rejected = expect(request).rejects.toMatchObject({ code: 'ECONNABORTED' });
+    await vi.advanceTimersByTimeAsync(179999);
+    expect(mocks.fetch.mock.calls[0][1].signal.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    await rejected;
+    expect(mocks.fetch.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+  })
+
+  it('pauses background requests without sending them or showing an error', async () => {
+    mocks.operation.busy = true;
+    await expect(Request.get('/api/v1/config/current')).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  })
+
+  it('does not clear login when an in-flight ordinary request returns 401 during a config operation', async () => {
+    let finish!: (value: Response) => void;
+    mocks.fetch.mockImplementation(() => new Promise<Response>((resolve) => { finish = resolve }));
+    const request = Request.get('/api/v1/config/current');
+    const rejected = expect(request).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    await vi.waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(1));
+    mocks.operation.busy = true;
+    finish(response(401));
+    await rejected;
+    expect(mocks.user.clearUserData).not.toHaveBeenCalled();
+    expect(mocks.user.refreshUserToken).not.toHaveBeenCalled();
+  })
+
+  it('keeps login when a refresh started before the configuration operation fails afterwards', async () => {
+    mocks.fetch.mockImplementation(async () => response(401));
+    let finishRefresh!: (value: any) => void;
+    mocks.user.refreshUserToken.mockImplementation(() => new Promise((resolve) => { finishRefresh = resolve }));
+    const request = Request.get('/api/v1/config/current');
+    const rejected = expect(request).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    await vi.waitFor(() => expect(mocks.user.refreshUserToken).toHaveBeenCalledTimes(1));
+    mocks.operation.busy = true;
+    finishRefresh({ success: false });
+    await rejected;
+    expect(mocks.user.clearUserData).not.toHaveBeenCalled();
+  })
+
+  it('discards old ordinary responses even after the config operation has completed', async () => {
+    let finish!: (value: Response) => void;
+    mocks.fetch.mockImplementation(() => new Promise<Response>((resolve) => { finish = resolve }));
+    const request = Request.get('/api/v1/config/current');
+    const rejected = expect(request).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    await vi.waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(1));
+    mocks.operation.generation += 1;
+    finish(response());
+    await rejected;
+  })
+
+  it('preserves login when a pre-operation refresh fails after the operation has completed', async () => {
+    mocks.fetch.mockImplementation(async () => response(401));
+    let finishRefresh!: (value: any) => void;
+    mocks.user.refreshUserToken.mockImplementation(() => new Promise((resolve) => { finishRefresh = resolve }));
+    const request = Request.get('/api/v1/config/current');
+    const rejected = expect(request).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    await vi.waitFor(() => expect(mocks.user.refreshUserToken).toHaveBeenCalledTimes(1));
+    mocks.operation.generation += 1;
+    finishRefresh({ success: false });
+    await rejected;
+    expect(mocks.user.clearUserData).not.toHaveBeenCalled();
   })
 })

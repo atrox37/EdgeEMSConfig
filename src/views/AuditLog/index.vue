@@ -127,7 +127,7 @@ const operationLogRow = (row: unknown) => asTableRow<OperationLogRecord>(row)
 
 const createDefaultTimeRange = (): [Date, Date] => {
   const end = new Date()
-  return [new Date(end.getTime() - DAY_MS), end]
+  return [new Date(end.getTime() - 7 * DAY_MS), end]
 }
 
 const filters = reactive({

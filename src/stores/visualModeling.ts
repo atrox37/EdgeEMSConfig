@@ -25,6 +25,7 @@ function topologyToVisualModel(topology: StationTopology): VisualModel {
 }
 
 export const useVisualModelingStore = defineStore('visualModeling', () => {
+  let configurationGeneration = 0
   const stationTopology = ref<StationTopology | null>(null)
   const topologyLoading = ref(false)
   const topologyLoaded = ref(false)
@@ -50,38 +51,46 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   )
 
   async function loadStationTopology(force = false) {
+    const generation = configurationGeneration
     if (topologyLoaded.value && !force) return
     topologyLoading.value = true
     try {
       const response = await getStationTopology()
+      if (generation !== configurationGeneration) return
       stationTopology.value = response?.data
         ? { ...response.data, flow_json: normalizeTopologyFixedBindings(response.data.flow_json) }
         : null
       topologyLoaded.value = true
     } catch (error) {
+      if (generation !== configurationGeneration) return
       console.error('[VisualModeling] 加载站点拓扑失败', error)
       stationTopology.value = null
       topologyLoaded.value = true
     } finally {
-      topologyLoading.value = false
+      if (generation === configurationGeneration) topologyLoading.value = false
     }
   }
 
   async function loadProducts(force = false) {
+    const generation = configurationGeneration
     if (productsLoaded.value && !force) return
     productsLoading.value = true
     try {
       // Station/Env have topology=null but are still needed by the fixed binding cards.
       const response = await getProducts()
+      if (generation !== configurationGeneration) return
       products.value = response?.data?.products ?? []
       productsLoaded.value = true
     } catch (error) {
+      if (generation !== configurationGeneration) return
       console.error('[VisualModeling] 加载产品列表失败', error)
       products.value = []
       productsLoaded.value = true
     } finally {
-      setModelFlowProductRules(products.value)
-      productsLoading.value = false
+      if (generation === configurationGeneration) {
+        setModelFlowProductRules(products.value)
+        productsLoading.value = false
+      }
     }
   }
 
@@ -94,36 +103,42 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   }
 
   async function loadInstances(force = false) {
+    const generation = configurationGeneration
     if (instancesLoaded.value && !force) return
     instancesLoading.value = true
     try {
       const response = await getAllInstances()
+      if (generation !== configurationGeneration) return
       const list = Array.isArray(response?.data?.list) ? response.data.list : []
       instances.value = list.map((item) => mapInstance(item))
         .filter((item) => item.instance_id > 0)
       instancesLoaded.value = true
     } catch (error) {
+      if (generation !== configurationGeneration) return
       console.error('[VisualModeling] 加载设备实例失败', error)
       instances.value = []
       instancesLoaded.value = true
     } finally {
-      instancesLoading.value = false
+      if (generation === configurationGeneration) instancesLoading.value = false
     }
   }
 
   async function loadChannelBindings(force = false) {
+    const generation = configurationGeneration
     if (channelBindingsLoaded.value && !force) return
     channelBindingsLoading.value = true
     try {
       const response = await getChannelBindings()
+      if (generation !== configurationGeneration) return
       channelBindings.value = response?.data?.bindings ?? []
       channelBindingsLoaded.value = true
     } catch (error) {
+      if (generation !== configurationGeneration) return
       console.error('[VisualModeling] 加载通道绑定失败', error)
       channelBindings.value = []
       channelBindingsLoaded.value = true
     } finally {
-      channelBindingsLoading.value = false
+      if (generation === configurationGeneration) channelBindingsLoading.value = false
     }
   }
 
@@ -201,12 +216,29 @@ export const useVisualModelingStore = defineStore('visualModeling', () => {
   function deleteModel(_id: string) { stationTopology.value = null }
   async function resetTopology() { deleteModel(STATION_EDITOR_ID); return false }
 
+  function invalidateConfiguration() {
+    configurationGeneration += 1
+    topologyLoading.value = false
+    productsLoading.value = false
+    instancesLoading.value = false
+    channelBindingsLoading.value = false
+    topologyLoaded.value = false
+    instancesLoaded.value = false
+    productsLoaded.value = false
+    channelBindingsLoaded.value = false
+    stationTopology.value = null
+    instances.value = []
+    products.value = []
+    channelBindings.value = []
+    setModelFlowProductRules([])
+  }
+
   return {
     stationTopology, topologyLoading, topologyLoaded, models, currentModelId, currentModel,
     hasUnsavedChanges, instances, instancesLoaded, instancesLoading, products, productsLoaded,
     productsLoading, channelBindings, channelBindingsLoaded, channelBindingsLoading,
     loadStationTopology, loadProducts, loadInstances, loadChannelBindings, getLiveChannelIds,
     getModels, getModelById, createModel, updateModelInfo, saveFlowJson, deleteModel, resetTopology,
-    setCurrentModel, markUnsaved, exportModel, importModel,
+    setCurrentModel, markUnsaved, exportModel, importModel, invalidateConfiguration,
   }
 })

@@ -5,6 +5,7 @@ import wsManager from '@/utils/websocket'
 import { getEncryptedItem, removeItem, setEncryptedItem } from '@/utils/secureStore'
 import MD5 from 'crypto-js/md5'
 import { isValidRole, normalizeRoleName } from '@/utils/rolePermission'
+import { useConfigOperationStore } from '@/stores/configOperation'
 // 用户状态管理
 export const useUserStore = defineStore(
   'user',
@@ -77,6 +78,7 @@ export const useUserStore = defineStore(
 
     // 用户登出
     const logout = async () => {
+      if (useConfigOperationStore().busy) return
       try {
         // 调用登出API
         if (token.value) {
@@ -134,6 +136,9 @@ export const useUserStore = defineStore(
 
     // 清除用户数据（手动清除持久化数据）
     const clearUserData = async () => {
+      // A background authentication failure must not tear down the session
+      // while a synchronous configuration request is still in progress.
+      if (useConfigOperationStore().busy) return
       // 断开WebSocket连接
       wsManager.disconnect()
 

@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { useConfigOperationStore } from '@/stores/configOperation'
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { getVersion } from '@tauri-apps/api/app'
 import { useUpdater } from '@/composables/useUpdater'
@@ -116,6 +117,8 @@ const {
 } = useUpdater()
 
 const { isAppUpdating } = useAppUpdateState()
+const configOperation = useConfigOperationStore()
+const deferredOpen = ref(false)
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null)
 const isCheckingUpdate = ref(false)
@@ -208,6 +211,10 @@ const parseChangelogSections = (notes?: string): ChangelogSection[] => {
 }
 
 const openDialog = () => {
+  if (configOperation.visible) {
+    deferredOpen.value = true
+    return
+  }
   progressBarStatus.value = ''
   if (dialogRef.value) {
     dialogRef.value.dialogVisible = true
@@ -235,6 +242,7 @@ const handleBeforeClose = (done: () => void) => {
 }
 
 const handleInstall = async () => {
+  if (configOperation.visible) return
   progressBarStatus.value = ''
   try {
     const installed = await installUpdateFn()
@@ -254,6 +262,7 @@ const handleInstall = async () => {
 }
 
 const openManualCheckDialog = async () => {
+  if (configOperation.visible) return
   dialogMode.value = 'manual'
   dismissed.value = false
   openDialog()
@@ -281,6 +290,13 @@ watch(
 
 watch(isInstalling, (val) => {
   isAppUpdating.value = val
+})
+
+watch(() => configOperation.visible, (visible) => {
+  if (!visible && deferredOpen.value) {
+    deferredOpen.value = false
+    openDialog()
+  }
 })
 
 onMounted(async () => {

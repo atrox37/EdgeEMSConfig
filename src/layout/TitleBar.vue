@@ -67,6 +67,7 @@ import { useUserStore } from '@/stores/user'
 import { getApiConfig } from '@/utils/apiConfig'
 import { ensureDefaultDownloadPath } from '@/utils/downloadPath'
 import { useAppUpdateState } from '@/composables/useAppUpdateState'
+import { useConfigOperationStore } from '@/stores/configOperation'
 
 import logoutIcon from '@/assets/icons/user-logout.svg'
 import arrowDownIcon from '@/assets/icons/arrowDownIcon.svg'
@@ -80,6 +81,7 @@ import buttonSettingIcon from '@/assets/icons/button-setting.svg'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const configOperation = useConfigOperationStore()
 
 const isMaximized = ref(false)
 const isMacOS = /Mac/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent)
@@ -123,6 +125,7 @@ const toggleMaximize = async () => {
 }
 
 const closeWindow = async () => {
+  if (configOperation.busy) return
   if (isAppUpdating.value) {
     try {
       await ElMessageBox.confirm(
@@ -144,6 +147,7 @@ const closeWindow = async () => {
 }
 
 const handleSystemCommand = async (command: string) => {
+  if (configOperation.busy) return
   if (command === 'setting') {
     settingDialogRef.value?.openDialog()
     return
@@ -156,8 +160,12 @@ const handleSystemCommand = async (command: string) => {
 let unlistenResize: (() => void) | null = null
 let unlistenMenuSettings: (() => void) | null = null
 let unlistenMenuUpdates: (() => void) | null = null
+let unlistenClose: (() => void) | null = null
 
 onMounted(async () => {
+  unlistenClose = await appWindow.onCloseRequested((event) => {
+    if (configOperation.busy) event.preventDefault()
+  })
   isMaximized.value = await appWindow.isMaximized()
   await ensureDefaultDownloadPath()
 
@@ -166,15 +174,18 @@ onMounted(async () => {
   })
 
   unlistenMenuSettings = await listen('app-menu:settings', () => {
+    if (configOperation.busy) return
     settingDialogRef.value?.openDialog()
   })
   unlistenMenuUpdates = await listen('app-menu:check-update', () => {
+    if (configOperation.busy) return
     window.dispatchEvent(new CustomEvent('titlebar-open-updates-dialog'))
   })
 
 })
 
 onUnmounted(() => {
+  if (unlistenClose) unlistenClose()
   if (unlistenResize) {
     unlistenResize()
   }

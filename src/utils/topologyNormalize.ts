@@ -7,6 +7,7 @@ import {
   parseTopologyHandleSide,
 } from '@/utils/modelFlowRules'
 import { getNodeInstanceId } from '@/utils/visualModeling'
+import { countMeterNodes, MAX_METER_NODES, METER_NODE_LIMIT_MESSAGE } from '@/utils/topologyNodeLimits'
 
 export type TopologyIssueLevel = 'error' | 'warning'
 
@@ -123,6 +124,10 @@ export function validateTopologyForPersistence(
   const instanceOwners = new Map<number, string>()
   const productsByName = new Map(products.map((product) => [product.product_name, product]))
   const instancesById = new Map((options?.instances ?? []).map((instance) => [instance.instance_id, instance]))
+
+  if (countMeterNodes(nodes) > MAX_METER_NODES) {
+    issues.push({ level: 'error', code: 'meter_node_limit', message: METER_NODE_LIMIT_MESSAGE })
+  }
 
   for (const node of nodes) {
     if (!node.id || nodeById.has(node.id)) {

@@ -6,6 +6,8 @@
 import { fetch as httpFetch } from '@tauri-apps/plugin-http'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
+import { getActivePinia } from 'pinia'
+import { useConfigOperationStore } from '@/stores/configOperation'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 import type { ApiConfig } from '@/utils/apiConfig'
@@ -14,6 +16,13 @@ import { goToLogin } from '@/utils/navigation'
 
 // 存储所有pending的请求（使用 ref 包装 Map 以确保响应式）
 const pendingRequests = ref(new Map<string, AbortController>())
+
+const isConfigOperationBusy = () => !!getActivePinia() && useConfigOperationStore().busy
+const isConfigRequestStale = (config?: RequestConfig) => config?._configOperationGeneration !== undefined
+  && !!getActivePinia() && config._configOperationGeneration !== useConfigOperationStore().generation
+const operationCanceledError = (config: RequestConfig) => Object.assign(
+  new Error('Request paused during configuration operation'), { code: 'ERR_CANCELED', config },
+)
 
 // 存储当前 API 配置的引用（用于同步访问）
 let currentApiConfigRef: ApiConfig | null = null
@@ -103,6 +112,8 @@ export interface RequestConfig {
   showErrorMessage?: boolean // 是否显示错误消息，默认true
   showSuccessMessage?: boolean // 是否显示成功消息，默认false
   skipGlobalLoading?: boolean // 是否跳过全局loading，默认false
+  requireConfigSuccess?: boolean // Configuration mutations require HTTP 200 + success === true; never replay automatically.
+  _configOperationGeneration?: number
   _isRefreshTokenRequest?: boolean // 是否为刷新token请求（内部使用，避免重复刷新）
   _retry?: boolean
   _requestKey?: string
@@ -366,14 +377,16 @@ const service = {
         mergedConfig = await this.interceptors.request.onFulfilled(mergedConfig)
       } catch (error) {
         if (this.interceptors.request.onRejected) {
-          return Promise.reject(this.interceptors.request.onRejected(error))
+          return this.interceptors.request.onRejected(error)
         }
         return Promise.reject(error)
       }
     }
 
     try {
-      const response = await performRequest(mergedConfig)
+      const response = await (mergedConfig.requireConfigSuccess
+        ? performConfigRequest(mergedConfig)
+        : performRequest(mergedConfig))
       if (this.interceptors.response.onFulfilled) {
         return this.interceptors.response.onFulfilled(response)
       }
@@ -404,6 +417,27 @@ const service = {
 
 const isInvalidArrayLengthError = (err: any) =>
   err?.message === 'Invalid array length' || String(err?.message || '').includes('Invalid array length')
+
+// connectTimeout alone does not bound the time spent waiting for a final body.
+const performConfigRequest = async (config: RequestConfig): Promise<HttpResponse> => {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      performRequest(config),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => {
+          const error = Object.assign(new Error('Configuration request timed out'), {
+            code: 'ECONNABORTED', config,
+          })
+          reject(error)
+          config._abortController?.abort('configuration request timeout')
+        }, config.timeout ?? 180_000)
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
 
 const performRequestWithNativeFetch = async (
   fullUrl: string,
@@ -524,7 +558,7 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
     }
 
     if (
-      isInvalidArrayLengthError(error) &&
+      !config.requireConfigSuccess && isInvalidArrayLengthError(error) &&
       body instanceof FormData &&
       ['POST', 'PUT', 'PATCH'].includes(method)
     ) {
@@ -582,6 +616,8 @@ const performRequest = async (config: RequestConfig): Promise<HttpResponse> => {
  * 在发送请求之前做一些统一处理
  */
 const requestInterceptor = (config: any) => {
+  if (!config.requireConfigSuccess && isConfigOperationBusy()) throw operationCanceledError(config)
+  if (getActivePinia()) config._configOperationGeneration = useConfigOperationStore().generation
   const originalUrl = config.url || ''
   let targetBaseURL = config.baseURL || service.defaults.baseURL || ''
   let processedUrl = originalUrl
@@ -721,6 +757,7 @@ const requestInterceptor = (config: any) => {
 }
 
 const requestErrorInterceptor = (error: any) => {
+  if (isRequestCanceled(error)) return Promise.reject(error)
   console.error('[请求错误]', error)
   // 如果错误对象有 config，尝试清除 pendingRequests
   const requestErrorConfig = error.config as any
@@ -780,6 +817,15 @@ const createResponseInterceptor = (
 
     const { data } = response
     const customConfig = response.config as any
+    if (!customConfig.requireConfigSuccess && (isConfigOperationBusy() || isConfigRequestStale(response.config))) {
+      return Promise.reject(operationCanceledError(response.config))
+    }
+    if (customConfig.requireConfigSuccess) {
+      if (response.status === 200 && data?.success === true) return response
+      return Promise.reject(Object.assign(new Error(extractServerMessage(data) || 'Final configuration result not confirmed'), {
+        response, config: response.config, request: response.request,
+      }))
+    }
     // 开发模式下分组输出请求/响应，便于在 DevTools Console 中查看
     if (import.meta.env.DEV) {
       const label = `${response.config.method?.toUpperCase()} ${response.config.url}`
@@ -876,6 +922,14 @@ const createResponseInterceptor = (
     const originalRequest = error.config
     const requestConfig = originalRequest as any
 
+    if (!requestConfig?.requireConfigSuccess && (isConfigOperationBusy() || isConfigRequestStale(requestConfig))) {
+      return Promise.reject(operationCanceledError(requestConfig || {}))
+    }
+
+    // Let the operation UI show the complete failure body. Do not refresh and
+    // replay a configuration mutation, or emit a second global error toast.
+    if (requestConfig?.requireConfigSuccess) return Promise.reject(error)
+
     if (error.response?.status === 403) {
       if (requestConfig?.showErrorMessage !== false) {
         ElMessage.warning('Insufficient permissions. Please contact your administrator.')
@@ -916,6 +970,7 @@ const createResponseInterceptor = (
           failedQueue.push({ resolve, reject })
         })
           .then((token) => {
+            if (isConfigOperationBusy() || isConfigRequestStale(originalRequest)) throw operationCanceledError(originalRequest)
             originalRequest.headers['Authorization'] = `Bearer ${token}`
             return serviceInstance.request(originalRequest)
           })
@@ -932,6 +987,8 @@ const createResponseInterceptor = (
         // 调用 userStore 的 refreshUserToken 方法
         const result = await userStore.refreshUserToken()
 
+        if (isConfigOperationBusy() || isConfigRequestStale(originalRequest)) throw operationCanceledError(originalRequest)
+
         if (result.success && userStore.token) {
           // 更新当前请求的Authorization头
           originalRequest.headers['Authorization'] = `Bearer ${userStore.token}`
@@ -945,6 +1002,11 @@ const createResponseInterceptor = (
           throw new Error(result.message || 'Token refresh failed')
         }
       } catch (refreshError) {
+        if (isConfigOperationBusy() || isConfigRequestStale(originalRequest)) {
+          const paused = operationCanceledError(originalRequest)
+          processQueue(paused, null)
+          return Promise.reject(paused)
+        }
         // 刷新token失败，清除用户数据并跳转到登录页
         const userStoreRefresh = useUserStore()
         userStoreRefresh.clearUserData()

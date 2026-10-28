@@ -1,9 +1,11 @@
 import { Request, cancelPendingRequestsByUrl } from '@/utils/request'
 import type { RequestConfig } from '@/utils/request'
+import { useConfigOperationStore } from '@/stores/configOperation'
 import type {
   CertificateInfoResponse,
   CertificateType,
   ConfigApplyData,
+  ConfigRestartData,
   ConfigBackupData,
   ConfigCurrentVersion,
   ConfigImportValidateData,
@@ -29,6 +31,22 @@ const CONFIG_MUTATION_REQUEST: RequestConfig = {
   skipGlobalLoading: true,
   showErrorMessage: false,
 }
+
+const CONFIG_SERVICE_REQUEST: RequestConfig = {
+  ...CONFIG_MUTATION_REQUEST,
+  timeout: 180 * 1000,
+  requireConfigSuccess: true,
+}
+
+export const importConfigPackage = (file: File) =>
+  useConfigOperationStore().run('import', () => Request.upload<ConfigApplyData>(
+    '/api/v1/config/import', file, {}, CONFIG_SERVICE_REQUEST,
+  ))
+
+export const restartCoreServices = () =>
+  useConfigOperationStore().run('restart', () => Request.post<ConfigRestartData>(
+    '/api/v1/config/restart-services', {}, CONFIG_SERVICE_REQUEST,
+  ))
 
 export const downloadConfigExport = (filename: string) => {
   return Request.download('/api/v1/config/export', {}, filename, { timeout: CONFIG_MUTATION_TIMEOUT_MS })
@@ -82,28 +100,22 @@ export const applyConfigImport = (
   importId: string,
   payload: Record<string, never> | { description: string },
 ) => {
-  return Request.post<ConfigApplyData>(
+  return useConfigOperationStore().run('import', () => Request.post<ConfigApplyData>(
     `/api/v1/config/imports/${importId}/apply`,
     payload,
-    {
-      ...CONFIG_MUTATION_REQUEST,
-      showErrorMessage: false,
-    },
-  )
+    CONFIG_SERVICE_REQUEST,
+  ))
 }
 
 export const restoreConfigVersion = (
   versionId: string,
   payload: Record<string, never> | { description: string },
 ) => {
-  return Request.post<ConfigApplyData>(
+  return useConfigOperationStore().run('restore', () => Request.post<ConfigApplyData>(
     `/api/v1/config/versions/${versionId}/restore`,
     payload,
-    {
-      ...CONFIG_MUTATION_REQUEST,
-      showErrorMessage: false,
-    },
-  )
+    CONFIG_SERVICE_REQUEST,
+  ))
 }
 
 export const deleteConfigVersion = (versionId: string) => {

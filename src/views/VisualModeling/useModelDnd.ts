@@ -1,6 +1,8 @@
 import { useVueFlow } from '@vue-flow/core'
 import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { ModelNodeTemplate } from '@/types/visualModeling'
+import { countMeterNodes, MAX_METER_NODES, METER_NODE_LIMIT_MESSAGE } from '@/utils/topologyNodeLimits'
 
 let nodeCounter = 0
 
@@ -13,7 +15,7 @@ const isDragOver = ref(false)
 const isDragging = ref(false)
 
 export default function useModelDnd() {
-  const { addNodes, screenToFlowCoordinate, onNodesInitialized, updateNode } = useVueFlow()
+  const { addNodes, getNodes, screenToFlowCoordinate, onNodesInitialized, updateNode } = useVueFlow()
 
   watch(isDragging, (dragging) => {
     document.body.style.userSelect = dragging ? 'none' : ''
@@ -50,6 +52,12 @@ export default function useModelDnd() {
   function onDrop(event: DragEvent) {
     const template = draggedTemplate.value
     if (!template?.productName) return
+
+    if (template.productName.trim() === 'Meter' && countMeterNodes(getNodes.value) >= MAX_METER_NODES) {
+      ElMessage.warning(METER_NODE_LIMIT_MESSAGE)
+      onDragEnd()
+      return
+    }
 
     const id = createNodeId()
     const position = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })

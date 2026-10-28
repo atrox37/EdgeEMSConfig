@@ -3,6 +3,7 @@ import { cancelAllPendingRequests } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
 import { hasGatewayFirstSetupBeenSeen } from '@/utils/firstGatewaySetup'
 import { assertValidUserRole } from '@/utils/roleGuard'
+import { useConfigOperationStore } from '@/stores/configOperation'
 
 const WHITE_LIST = ['/login', '/setup']
 const debugGuard = (...args: any[]) => {
@@ -12,6 +13,10 @@ const debugGuard = (...args: any[]) => {
 }
 
 router.beforeEach(async (to, _from, next) => {
+  if (useConfigOperationStore().busy) {
+    next(false)
+    return
+  }
   cancelAllPendingRequests()
 
   const userStore = useUserStore()

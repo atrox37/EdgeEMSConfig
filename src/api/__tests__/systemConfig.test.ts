@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createPinia, setActivePinia } from 'pinia';
 import {
   applyConfigImport,
   createConfigBackup,
@@ -7,6 +8,8 @@ import {
   listConfigVersions,
   restoreConfigVersion,
   validateConfigImport,
+  importConfigPackage,
+  restartCoreServices,
 } from "../systemConfig";
 
 vi.mock("@/utils/request", () => ({
@@ -21,6 +24,7 @@ vi.mock("@/utils/request", () => ({
 }));
 
 describe("systemConfig API", () => {
+  beforeEach(() => setActivePinia(createPinia()));
   it("lists restore points with pagination", async () => {
     const mockData = {
       success: true,
@@ -96,7 +100,7 @@ describe("systemConfig API", () => {
     expect(Request.post).toHaveBeenCalledWith(
       "/api/v1/config/imports/import-1/apply",
       {},
-      expect.objectContaining({ showErrorMessage: false }),
+      expect.objectContaining({ showErrorMessage: false, timeout: 180000, requireConfigSuccess: true }),
     );
   });
 
@@ -110,7 +114,7 @@ describe("systemConfig API", () => {
     expect(Request.post).toHaveBeenCalledWith(
       "/api/v1/config/versions/version-2/restore",
       {},
-      expect.objectContaining({ showErrorMessage: false }),
+      expect.objectContaining({ showErrorMessage: false, timeout: 180000, requireConfigSuccess: true }),
     );
   });
 
@@ -147,5 +151,16 @@ describe("systemConfig API", () => {
       "Config_V1_20260923-153000.zip",
       expect.objectContaining({ timeout: 120000 }),
     );
+  });
+
+  it('uses the same synchronous-operation policy for legacy import and standalone restart', async () => {
+    const { Request } = await import('@/utils/request');
+    vi.mocked(Request.upload).mockResolvedValue({ success: true, data: {} } as any);
+    vi.mocked(Request.post).mockResolvedValue({ success: true, data: { results: [] } } as any);
+    const file = new File(['zip'], 'config.zip');
+    await importConfigPackage(file);
+    await restartCoreServices();
+    expect(Request.upload).toHaveBeenCalledWith('/api/v1/config/import', file, {}, expect.objectContaining({ timeout: 180000, requireConfigSuccess: true }));
+    expect(Request.post).toHaveBeenCalledWith('/api/v1/config/restart-services', {}, expect.objectContaining({ timeout: 180000, requireConfigSuccess: true }));
   });
 });

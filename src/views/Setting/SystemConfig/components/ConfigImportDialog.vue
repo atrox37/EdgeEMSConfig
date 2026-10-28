@@ -7,7 +7,7 @@
     :before-close="handleDialogBeforeClose"
   >
     <template #dialog-body>
-      <div class="config-import-dialog" v-loading="applying">
+      <div class="config-import-dialog">
         <el-upload
           ref="uploadRef"
           class="config-import-dialog__upload"
@@ -120,6 +120,7 @@
 </template>
 
 <script setup lang="ts">
+import { ConfigOperationError } from '@/utils/configOperation';
 import {
   ElMessage,
   type UploadFile,
@@ -150,7 +151,6 @@ import {
 
 const emit = defineEmits<{
   (e: "busy-change", busy: boolean): void;
-  (e: "applied"): void;
 }>();
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null);
@@ -173,7 +173,7 @@ const canApply = computed(
     !validating.value,
 );
 const importNotice =
-  "Applying this package replaces the current configuration. Local users and roles are kept, and an automatic safety restore point is created first.";
+  "Applying this package replaces the current configuration. Local users and roles are kept, and an automatic safety restore point is created first. Services will restart; keep the application open until the operation finishes.";
 const defaultChecks: ConfigImportCheck[] = [
   { code: "archive_safety", passed: false },
   { code: "package_structure", passed: false },
@@ -345,14 +345,12 @@ const handleApply = async () => {
       ElMessage.error("Failed to apply backup package");
       return;
     }
-    ElMessage.success("Backup package applied successfully");
-    emit("applied");
     if (dialogRef.value) dialogRef.value.dialogVisible = false;
     resetState();
   } catch (error) {
-    ElMessage.error(
-      getConfigErrorMessage(error, "Failed to apply backup package"),
-    );
+    if (!(error instanceof ConfigOperationError)) {
+      ElMessage.error(getConfigErrorMessage(error, "Failed to apply backup package"));
+    }
     if (isConfigImportSessionUnavailableError(error)) {
       resetImportSession();
     }

@@ -106,6 +106,12 @@ export default defineConfig(({ command }) => {
         ignored: ['**/src-tauri/**'],
       },
       proxy: {
+        '/api/v1/config': {
+          target: 'http://192.168.30.21:6005',
+          changeOrigin: true,
+          timeout: 210_000,
+          proxyTimeout: 210_000,
+        },
         '/api': {
           target: 'http://192.168.30.21:6005',
           changeOrigin: true,

@@ -102,18 +102,18 @@
     <ConfigImportDialog
       ref="importDialogRef"
       @busy-change="importBusy = $event"
-      @applied="refreshCurrentVersion"
     />
     <ConfigVersionHistoryDialog
       ref="historyDialogRef"
       @busy-change="historyBusy = $event"
-      @restored="refreshCurrentVersion"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useConfigOperationStore } from '@/stores/configOperation';
+import { isRequestCanceled } from '@/utils/request';
 import { ElMessage } from "element-plus";
 import {
   downloadConfigExport,
@@ -132,6 +132,7 @@ import { formatDateTime } from "@/utils/date";
 import type { ConfigCurrentVersion } from "@/types/systemConfig";
 
 const systemToolsRef = ref<HTMLElement | null>(null);
+const configOperation = useConfigOperationStore();
 const configExportLoading = ref(false);
 const currentVersionLoading = ref(false);
 const currentInitialized = ref(false);
@@ -156,6 +157,7 @@ const configDialogBusy = computed(
 
 const configBusy = computed(
   () =>
+    configOperation.busy ||
     configExportLoading.value ||
     configDialogBusy.value ||
     firmwareBusy.value,
@@ -171,17 +173,21 @@ const currentOperatorText = computed(
   () => currentVersion.value?.operator?.username || "-",
 );
 
+let currentVersionRequest = 0;
 const refreshCurrentVersion = async () => {
+  const requestId = ++currentVersionRequest;
   currentVersionLoading.value = true;
   try {
     const res = await getCurrentConfigVersion();
+    if (requestId !== currentVersionRequest) return;
     currentInitialized.value = Boolean(res.initialized && res.data);
     currentVersion.value = res.data || null;
-  } catch {
+  } catch (error) {
+    if (requestId !== currentVersionRequest || isRequestCanceled(error)) return;
     currentInitialized.value = false;
     currentVersion.value = null;
   } finally {
-    currentVersionLoading.value = false;
+    if (requestId === currentVersionRequest) currentVersionLoading.value = false;
   }
 };
 
@@ -214,6 +220,10 @@ const handleConfigExport = async () => {
 };
 
 onMounted(() => {
+  void refreshCurrentVersion();
+});
+
+watch(() => configOperation.configurationRevision, () => {
   void refreshCurrentVersion();
 });
 </script>

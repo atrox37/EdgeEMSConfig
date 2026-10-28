@@ -1,6 +1,8 @@
 import { computed, defineComponent, h, reactive } from 'vue'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { useConfigOperationStore } from '@/stores/configOperation'
 
 const mocks = vi.hoisted(() => ({
   state: {
@@ -90,6 +92,7 @@ import UpdateChecker from '@/components/UpdateChecker.vue'
 
 describe('UpdateChecker', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     mocks.state.updateInfo = {
       version: '1.1.0',
       notes: '### Changes\n- Fix updater flow',
@@ -103,6 +106,22 @@ describe('UpdateChecker', () => {
     mocks.checkUpdateMock.mockReset()
     mocks.installUpdateMock.mockReset()
     mocks.getVersionMock.mockClear()
+  })
+
+  it('defers update dialogs and blocks installation while a configuration result is displayed', async () => {
+    const operation = useConfigOperationStore()
+    operation.visible = true
+    const wrapper = mount(UpdateChecker, {
+      global: { stubs: { FormDialog: FormDialogStub, ElButton: ElButtonStub, ElProgress: ElProgressStub } },
+    })
+    const dialog = wrapper.findComponent(FormDialogStub).vm.$.exposed as { dialogVisible: boolean }
+    dialog.dialogVisible = false
+    await wrapper.find('button[data-type="primary"]').trigger('click')
+    expect(mocks.installUpdateMock).not.toHaveBeenCalled()
+    operation.visible = false
+    await Promise.resolve()
+    expect(dialog.dialogVisible).toBe(true)
+    wrapper.unmount()
   })
 
   it('renders progress details inside the dialog while downloading', async () => {

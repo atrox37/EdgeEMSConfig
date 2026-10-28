@@ -30,7 +30,7 @@
 
           <el-table
             stripe
-            v-loading="loading || restoring || deleting"
+            v-loading="loading || deleting"
             :data="tableRows"
             :tooltip-options="tableTooltipOptions"
             class="config-history-dialog__table"
@@ -181,6 +181,7 @@
 </template>
 
 <script setup lang="ts">
+import { ConfigOperationError } from '@/utils/configOperation';
 import { ElMessage, ElMessageBox } from "element-plus";
 import FormDialog from "@/components/dialog/FormDialog.vue";
 import {
@@ -217,7 +218,6 @@ interface ConfigVersionTableRow extends ConfigVersionListItem {
 
 const emit = defineEmits<{
   (e: "busy-change", busy: boolean): void;
-  (e: "restored"): void;
 }>();
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null);
@@ -328,12 +328,11 @@ const handleRestore = async (row: ConfigVersionListItem) => {
   let description = "";
   try {
     const prompt = await ElMessageBox.prompt(
-      "This replaces the current configuration with the selected restore point. Local users and roles are kept, and an automatic safety restore point is created first.",
+      "",
       `Restore ${formatRestorePointLabel(row.version)}`,
       {
         confirmButtonText: "Restore",
         cancelButtonText: "Cancel",
-        type: "warning",
         center: true,
         inputPlaceholder: "Description (optional)",
         inputValidator: (value: string) => {
@@ -359,15 +358,13 @@ const handleRestore = async (row: ConfigVersionListItem) => {
       ElMessage.error("Failed to restore configuration");
       return;
     }
-    ElMessage.success(
-      `Configuration restored from ${formatRestorePointLabel(row.version)}`,
-    );
-    emit("restored");
-    await fetchVersions();
+    void fetchVersions();
   } catch (error) {
-    ElMessage.error(
-      getConfigErrorMessage(error, "Failed to restore configuration"),
-    );
+    if (error instanceof ConfigOperationError) {
+      if (error.result.status === 'recovered') void fetchVersions();
+    } else {
+      ElMessage.error(getConfigErrorMessage(error, "Failed to restore configuration"));
+    }
   } finally {
     restoring.value = false;
     restoringId.value = "";

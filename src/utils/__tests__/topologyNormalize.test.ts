@@ -76,6 +76,29 @@ describe('canonical topology persistence', () => {
     expect(result.canSave).toBe(true)
   })
 
+  it('rejects multiple Meter devices on save and import even with distinct valid bindings', () => {
+    const flow = canonicalFlow()
+    flow.nodes.push(
+      { ...flow.nodes[0], id: 'battery-2', data: { ...flow.nodes[0].data, instanceId: 12 } },
+      { ...flow.nodes[1], id: 'meter-2', data: { ...flow.nodes[1].data, instanceId: 13 } },
+    )
+    flow.edges.push({ ...flow.edges[0], id: 'edge-2', source: 'battery-2', target: 'meter-2' })
+    const options = {
+      ...validationOptions,
+      instances: [
+        ...instances,
+        { instance_id: 12, instance_name: 'battery-02', product_name: 'Battery' },
+        { instance_id: 13, instance_name: 'meter-02', product_name: 'Meter' },
+      ],
+    }
+
+    for (const validate of [validateTopologyForPersistence, validateTopologyImport]) {
+      const result = validate(flow, products, options)
+      expect(result.canSave).toBe(false)
+      expect(result.errors.map((issue) => issue.code)).toEqual(['meter_node_limit'])
+    }
+  })
+
   it('allows Station and Env bindings to be cleared', () => {
     const flow: ModelFlowData = {
       nodes: [],

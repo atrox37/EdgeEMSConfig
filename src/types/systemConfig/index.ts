@@ -246,7 +246,12 @@ export interface ConfigImportValidateData {
 export interface ConfigRestartResult {
   service: string
   success: boolean
+  state?: string
   error?: string
+}
+
+export interface ConfigRestartData {
+  results: ConfigRestartResult[]
 }
 
 export interface ConfigApplyData {
