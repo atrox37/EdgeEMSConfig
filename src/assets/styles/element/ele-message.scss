@@ -31,6 +31,11 @@
     flex-direction: column;
     gap: 24px;
 
+    &.delete-confirm-box .el-message-box__title {
+      justify-content: flex-start;
+      text-align: left;
+    }
+
     .el-message-box__header {
       // max-width: 420px;
       padding: 0;

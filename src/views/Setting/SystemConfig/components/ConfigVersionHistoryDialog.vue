@@ -178,6 +178,40 @@
       <el-button :disabled="restoring || deleting" @click="close">Close</el-button>
     </template>
   </FormDialog>
+
+  <FormDialog
+    ref="restoreDialogRef"
+    :title="`Restore ${formatRestorePointLabel(restoreTarget?.version)}`"
+    width="480px"
+    dialog-class="config-restore-dialog-wrapper"
+    append-to-body
+  >
+    <template #dialog-body>
+      <el-form class="config-restore-dialog" @submit.prevent="confirmRestore">
+        <el-form-item label="Description:" required :error="restoreDescriptionError">
+          <el-input
+            v-model="restoreDescription"
+            :maxlength="CONFIG_DESCRIPTION_MAX_CHARS"
+            :count-graphemes="countUnicodeChars"
+            show-word-limit
+            placeholder="Enter restore reason"
+            @input="restoreDescriptionError = ''"
+          />
+        </el-form-item>
+      </el-form>
+      <div class="config-restore-dialog__hint">
+        <AppIcon
+          name="i-tabler-info-circle"
+          className="config-restore-dialog__hint-icon"
+        />
+        <span>Record why you are restoring this version for future reference.</span>
+      </div>
+    </template>
+    <template #dialog-footer>
+      <el-button @click="closeRestoreDialog">Cancel</el-button>
+      <el-button type="primary" @click="confirmRestore">Restore</el-button>
+    </template>
+  </FormDialog>
 </template>
 
 <script setup lang="ts">
@@ -198,6 +232,8 @@ import { useTableData } from "@/composables/useTableData";
 import { asTableRow } from "@/utils/tableRow";
 import { formatDateTime } from "@/utils/date";
 import {
+  CONFIG_DESCRIPTION_MAX_CHARS,
+  countUnicodeChars,
   buildConfigDescriptionPayload,
   buildConfigExportFilename,
   formatBackupStorageLabel,
@@ -221,6 +257,10 @@ const emit = defineEmits<{
 }>();
 
 const dialogRef = ref<InstanceType<typeof FormDialog> | null>(null);
+const restoreDialogRef = ref<InstanceType<typeof FormDialog> | null>(null);
+const restoreTarget = ref<ConfigVersionListItem | null>(null);
+const restoreDescription = ref("");
+const restoreDescriptionError = ref("");
 const restoring = ref(false);
 const restoringId = ref("");
 const deleting = ref(false);
@@ -322,30 +362,28 @@ const handleExport = async (row: ConfigVersionListItem) => {
   }
 };
 
-const handleRestore = async (row: ConfigVersionListItem) => {
+const handleRestore = (row: ConfigVersionListItem) => {
   if (!row.id || row.status === "current" || busy.value) return;
+  restoreTarget.value = row;
+  restoreDescription.value = "";
+  restoreDescriptionError.value = "";
+  if (restoreDialogRef.value) restoreDialogRef.value.dialogVisible = true;
+};
 
-  let description = "";
-  try {
-    const prompt = await ElMessageBox.prompt(
-      "",
-      `Restore ${formatRestorePointLabel(row.version)}`,
-      {
-        confirmButtonText: "Restore",
-        cancelButtonText: "Cancel",
-        center: true,
-        inputPlaceholder: "Description (optional)",
-        inputValidator: (value: string) => {
-          const error = validateConfigDescription(value || "");
-          return error || true;
-        },
-      },
-    );
-    description = String(prompt.value || "");
-  } catch {
-    return;
-  }
+const closeRestoreDialog = () => {
+  if (restoreDialogRef.value) restoreDialogRef.value.dialogVisible = false;
+};
 
+const confirmRestore = async () => {
+  const row = restoreTarget.value;
+  if (!row?.id || row.status === "current" || busy.value) return;
+  const description = restoreDescription.value;
+  restoreDescriptionError.value = description.trim()
+    ? validateConfigDescription(description) || ""
+    : "Please enter a reason for restoring this version";
+  if (restoreDescriptionError.value) return;
+
+  closeRestoreDialog();
   restoring.value = true;
   restoringId.value = row.id;
   emitBusy();
@@ -384,6 +422,7 @@ const handleDelete = async (row: ConfigVersionListItem) => {
         cancelButtonText: "Cancel",
         type: "warning",
         center: true,
+        customClass: 'delete-confirm-box',
       },
     );
   } catch {
@@ -421,6 +460,29 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+:global(.el-overlay.el-overlay .el-dialog.config-restore-dialog-wrapper .el-dialog__footer) {
+  border-top: none;
+}
+
+.config-restore-dialog {
+  padding-top: $spacing-xs;
+}
+
+.config-restore-dialog__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-xs;
+  color: $text-color-secondary;
+  font-size: $font-size-small;
+  line-height: 1.5;
+}
+
+.config-restore-dialog__hint-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 16px;
+}
+
 :global(.config-history-dialog-wrapper.el-dialog) {
   box-sizing: border-box;
   overflow: hidden;

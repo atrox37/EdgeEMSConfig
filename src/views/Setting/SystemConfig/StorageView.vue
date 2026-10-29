@@ -107,6 +107,7 @@
                     >
                       <el-input
                         v-model="row.pattern"
+                        class="system-storage__pattern-input"
                         placeholder="e.g. inst:*:M"
                         :disabled="hisSaving"
                       />
@@ -601,6 +602,11 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+.system-storage__section-card :deep(.light-collapse-card__body),
+.system-storage__section-card :deep(.light-collapse-card__body-inner) {
+  height: auto;
+}
+
 .system-storage__form {
   display: flex;
   flex-direction: column;
@@ -639,7 +645,9 @@ onUnmounted(() => {
 }
 
 .system-storage__patterns {
+  container-type: inline-size;
   width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -647,7 +655,7 @@ onUnmounted(() => {
 
 .system-storage__patterns-header {
   display: grid;
-  grid-template-columns: 1fr 300px 36px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 1.2fr) 28px;
   gap: 8px;
   padding: 0 2px 4px;
   border-bottom: 1px solid var(--vt-color-white-10);
@@ -660,27 +668,46 @@ onUnmounted(() => {
 
 .system-storage__pattern-row {
   display: grid;
-  grid-template-columns: 1fr 300px 36px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 1.2fr) 28px;
   gap: 8px;
   align-items: center;
 }
 
+.system-storage__pattern-input {
+  min-width: 0;
+}
+
 .system-storage__interval-cell {
   display: flex;
+  min-width: 0;
   gap: 6px;
   align-items: center;
 }
 
 .system-storage__interval-select {
-  width: 150px;
-  flex-shrink: 0;
+  width: 0;
+  min-width: 0;
+  flex: 2.2 1 0;
 }
 
 .system-storage__interval-input {
-  // width: 100px !important;
+  width: 0;
+  min-width: 0;
+  flex: 1 1 0;
+}
 
-  // flex-shrink: 0;
-  flex:1;
+@container (max-width: 360px) {
+  .system-storage__patterns-header {
+    display: none;
+  }
+
+  .system-storage__pattern-row {
+    grid-template-columns: minmax(0, 1fr) 28px;
+  }
+
+  .system-storage__pattern-input {
+    grid-column: 1 / -1;
+  }
 }
 
 .system-storage__add-btn {

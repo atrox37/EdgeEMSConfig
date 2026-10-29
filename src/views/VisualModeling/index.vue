@@ -429,6 +429,7 @@ function handleDeleteNode(id: string) {
     confirmButtonText: 'Confirm',
     cancelButtonText: 'Cancel',
     center: true,
+    customClass: 'delete-confirm-box',
     showClose: false,
     icon: MessageWarningIcon,
     cancelButtonType : 'text',

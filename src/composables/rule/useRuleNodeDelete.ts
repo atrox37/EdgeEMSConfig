@@ -38,6 +38,7 @@ export function useRuleNodeDelete(options: UseRuleNodeDeleteOptions) {
           cancelButtonText: 'Cancel',
           type: 'warning',
           center: true,
+          customClass: 'delete-confirm-box',
           showClose: false,
         },
       )

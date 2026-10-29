@@ -225,6 +225,7 @@ const handleDelete = async (row: ChannelTemplateListItem) => {
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
         center: true,
+        customClass: 'delete-confirm-box',
         showClose: false,
         cancelButtonType: 'text',
         confirmButtonType: 'danger',

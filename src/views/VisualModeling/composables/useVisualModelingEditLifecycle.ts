@@ -347,15 +347,23 @@ export function useVisualModelingEditLifecycle(options: UseVisualModelingEditLif
       target?.tagName === 'TEXTAREA' ||
       target?.tagName === 'SELECT'
 
-    if (options.isViewMode.value) {
-      if (e.key === 'Backspace' || e.key === 'Delete') {
+    if (e.key === 'Backspace') {
+      if (!isEditableTarget) {
         e.preventDefault()
         e.stopPropagation()
       }
       return
     }
 
-    if ((e.key === 'Backspace' || e.key === 'Delete') && !isEditableTarget) {
+    if (options.isViewMode.value) {
+      if (e.key === 'Delete') {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+      return
+    }
+
+    if (e.key === 'Delete' && !isEditableTarget) {
       const hasSelectedElements =
         options.getNodes.value.some(
           (node) => (node as FlowNode & { selected?: boolean }).selected,
